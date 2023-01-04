@@ -24,7 +24,7 @@ return new class extends Migration
             $table->unsignedInteger('sold_by');
             $table->unsignedInteger('event_id')->nullable();
             $table->unsignedInteger('bucket_id')->nullable();
-            $table->foreign('bucket_id')->references('id')->on('buckets');
+            // $table->foreign('bucket_id')->references('id')->on('buckets');
             $table->unsignedInteger('courier_type')->nullable();
             $table->string('shipping_number')->nullable();
             $table->string('shipping_remarks')->nullable();

@@ -12,14 +12,14 @@
         <li class="nav-heading">Orders</li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="/orders">
+          <a class="nav-link collapsed" href="/orders/overall">
             <i class="bi bi-inboxes"></i>
             <span>Overall</span>
           </a>
         </li><!-- End Overall Order Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="/orders">
+          <a class="nav-link collapsed" href="/orders/pending">
             <i class="bi bi-clock-history"></i>
             <span>Pending List</span>
           </a>

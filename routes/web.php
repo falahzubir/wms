@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,14 +14,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome', [
-        'title' => 'Dashboard'
-    ]);
-});
+Route::get('/', fn () => view('dashboard', [ 'title' => 'Dashboard' ]));
 Route::get('login', fn () => view('login', ['title' => 'Login']));
 Route::get('404', fn () => view('404'));
 Route::get('blank', fn () => view('blank', ['title' => 'Blank']));
 
-Route::get('orders', fn () => view('orders.index', ['title' => 'List Orders']));
+Route::get('orders/overall', [OrderController::class, 'index'])->name('orders.index');
+Route::get('orders/pending', [OrderController::class, 'pending'])->name('order.pending');
+
 Route::get('buckets', fn () => view('buckets.index', ['title' => 'List Buckets']));
