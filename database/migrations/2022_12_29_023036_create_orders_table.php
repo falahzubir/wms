@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('sales_id');
-            $table->integer('company_id')->comment('1-EMZI Holding, 2-EMZI Digital');
+            $table->string('company', 2)->comment('EH-EMZI Holding, ED-EMZI Digital');
             $table->text('customer_data');
             $table->integer('order_price');
             $table->integer('shipping_price');

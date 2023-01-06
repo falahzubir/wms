@@ -3,7 +3,7 @@
     <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-            <a class="nav-link {{ (Request::segment(1) != "") ?? 'collapsed' }}" href="/">
+            <a class="nav-link {{ (Request::segment(1) != "") ? 'collapsed':'' }}" href="/">
                 <i class="bi bi-grid"></i>
                 <span>Dashboard</span>
             </a>
@@ -12,7 +12,7 @@
         <li class="nav-heading">Orders</li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="/orders/overall">
+          <a class="nav-link {{ Request::segment(1) != 'orders' ? 'collapsed':'' }}" href="/orders/overall">
             <i class="bi bi-inboxes"></i>
             <span>Overall</span>
           </a>
@@ -26,7 +26,7 @@
         </li><!-- End Pending List Nav -->
 
         <li class="nav-item">
-          <a class="nav-link  {{ (Request::segment(1) != "bucket") ?? 'collapsed' }}" href="/buckets">
+          <a class="nav-link  {{ (Request::segment(1) != "buckets") ? 'collapsed' : '' }}" href="/buckets">
             <i class="bi bi-basket"></i>
             <span>Bucket List</span>
           </a>
@@ -68,7 +68,7 @@
         </a>
       </li><!-- End Profile Page Nav -->
 
-      <li class="nav-item">
+      {{-- <li class="nav-item">
         <a class="nav-link collapsed" href="pages-faq.html">
           <i class="bi bi-question-circle"></i>
           <span>F.A.Q</span>
@@ -108,7 +108,7 @@
           <i class="bi bi-file-earmark"></i>
           <span>Blank</span>
         </a>
-      </li><!-- End Blank Page Nav -->
+      </li><!-- End Blank Page Nav --> --}}
 
     </ul>
 

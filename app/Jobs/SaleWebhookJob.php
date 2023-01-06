@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Http\Controllers\OrderController;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,7 +33,8 @@ class SaleWebhookJob extends ProcessWebhookJob implements ShouldQueue
     public function handle()
     {
         $data = $this->webhookCall->payload;
-
-        
+        // send to controller
+        $orderController = new OrderController();
+        $orderController->create($data);
     }
 }
