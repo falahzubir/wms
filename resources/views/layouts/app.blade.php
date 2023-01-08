@@ -2,9 +2,6 @@
     <!-- ======= HTML Header ======= -->
     <x-header :title="$title" />
 
-    <!-- ======= Top Header ======= -->
-    <x-top-header />
-
     <!-- ======= Sidebar ======= -->
     <x-sidebar />
 
