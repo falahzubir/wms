@@ -19,7 +19,12 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->string('code');
             $table->integer('price');
-            $table->integer('is_foc');
+            $table->integer('weight')->default(0);
+            $table->integer('is_foc')->default(0);
+            $table->unsignedBigInteger('main_product_id')->nullable();
+            // $table->foreign('main_product_id')->references('id')->on('products');
+            $table->integer('is_active')->default(1)->comment('1-Active, 2-Inactive');
+            $table->boolean('sensitive')->default(0)->comment('0-No, 1-Yes');
             $table->timestamps();
         });
     }

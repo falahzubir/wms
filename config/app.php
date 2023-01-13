@@ -69,7 +69,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Kuala_Lumpur',
 
     /*
     |--------------------------------------------------------------------------
@@ -194,6 +194,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        \App\Providers\FortifyServiceProvider::class,
 
     ],
 
@@ -212,4 +213,19 @@ return [
         // 'ExampleClass' => App\Example\ExampleClass::class,
     ])->toArray(),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Configurations
+    |--------------------------------------------------------------------------
+    |
+    | This array of custom configurations will be registered when this application
+    | is started. However, feel free to register as many as you wish as
+    | the configurations are "lazy" loaded so they don't hinder performance.
+    |
+    */
+
+    'staff_prefix' => env('STAFF_PREFIX', '@'),
+    'currency' => env('CURRENCY', 'MYR'), // MYR, USD, EUR, etc
+    'currency_symbol' => env('CURRENCY_SYMBOL', 'RM'), // RM, $, €, etc
+    'currency_position' => env('CURRENCY_POSITION', 'before'), // before, after
 ];

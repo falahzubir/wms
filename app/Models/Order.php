@@ -17,7 +17,7 @@ class Order extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class);
+        return $this->belongsToMany(Product::class, 'order_items');
     }
 
     public function tracking()
@@ -34,4 +34,30 @@ class Order extends Model
     {
         return $this->hasMany(OrderEvent::class);
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(OrderLog::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function shipping()
+    {
+        return $this->hasOne(Shipping::class);
+    }
+
 }

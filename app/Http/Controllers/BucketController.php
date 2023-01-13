@@ -3,13 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bucket;
+use App\Models\Order;
+use App\Models\OrderLog;
 use Illuminate\Http\Request;
 
 class BucketController extends Controller
 {
+    /**
+     * List all buckets
+     * @return view
+     */
     public function index()
     {
-        $buckets = Bucket::where('status', ACTIVE)->get();
+        $buckets = Bucket::where('status', IS_ACTIVE)->get();
         return view('buckets.index', [
             'title' => 'List Buckets',
             'buckets' => $buckets,
@@ -49,7 +55,7 @@ class BucketController extends Controller
 
     /**
      * Edit bucket
-     * @param $id
+     * @param Request $request, $id
      * @return view
      */
     public function update(Request $request, $id)
@@ -65,5 +71,47 @@ class BucketController extends Controller
         $bucket->save();
 
         return redirect()->route('buckets.index')->with('success', 'Bucket updated successfully.');
+    }
+
+    /**
+     * Delete bucket
+     * @param none
+     * @return json
+     */
+    public function list()
+    {
+        $buckets = Bucket::where('status', IS_ACTIVE)->get();
+        return response()->json($buckets);
+    }
+
+    /**
+     * Add order to bucket
+     * @param Request $request
+     * @return json
+     */
+    public function add_order(Request $request)
+    {
+
+        $request->validate([
+            'bucket_id' => 'required',
+            'order_ids' => 'required',
+        ]);
+
+        Order::whereIn('id', $request->order_ids)->update([
+            'bucket_id' => $request->bucket_id,
+            'status' => ORDER_STATUS_BUCKET
+        ]);
+
+
+        foreach ($request->order_ids as $order_id) {
+            OrderLog::create([
+                'order_id' => $order_id,
+                'order_status_id' => ORDER_STATUS_BUCKET,
+                'remarks' => 'Order added to bucket',
+                'created_by' => 1,
+            ]);
+        }
+
+        return response()->json(['message' => 'Order added to bucket successfully.']);
     }
 }

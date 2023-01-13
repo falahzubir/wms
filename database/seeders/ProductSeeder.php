@@ -15,7 +15,28 @@ class ProductSeeder extends Seeder
      */
     public function run()
     {
-        Product::factory()->count(10)->create();
+        // Product::factory()->count(10)->create();
+        $csvData = fopen(base_path('database/imports/product_main.csv'), 'r');
+        $transRow = true;
+        while (($data = fgetcsv($csvData, 555, ',')) !== false) {
+            if (!$transRow) {
+                Product::create([
+                    'id' => $data['0'],
+                    'name' => $data['1'],
+                    'price' => $data['2'],
+                    'description' => $data['3'],
+                    'code' => $data['4'],
+                    'is_foc' => $data['5'],
+                    'weight' => $data['6'],
+                    'main_product_id' => $data['7'],
+                    'is_active' => $data['8'],
+                    'sensitive' => $data['9'],
+                    'updated_at' => $data['10'],
+                ]);
+            }
+            $transRow = false;
+        }
+        fclose($csvData);
 
     }
 }

@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\BucketController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Row;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,4 +22,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('bucket/{id}', [BucketController::class, 'show']);
+Route::get('buckets', [BucketController::class, 'list']);
+Route::post('add-to-bucket', [BucketController::class, 'add_order']);
+
+Route::post('request-cn', [ShippingController::class, 'request_cn']);
+Route::post('check-cn-company', [ShippingController::class, 'check_cn_company']);
+
+Route::get('dhl-store', [ShippingController::class, 'dhl_store']);
+
 Route::webhooks('webhook/sales');

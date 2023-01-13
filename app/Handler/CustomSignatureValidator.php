@@ -30,8 +30,8 @@ class CustomSignatureValidator implements SignatureValidator
             throw InvalidConfig::signingSecretNotSet();
         }
 
-        $computedSignature = hash('sha256', $secret);
-        // $computedSignature = hash_hmac('sha256', $request->getContent(), $secret); //use this on production
+        // $computedSignature = hash('sha256', $secret);
+        $computedSignature = hash_hmac('sha256', $request->getContent(), $secret); //use this on production
 
         return hash_equals($signature, $computedSignature);
     }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ShippingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', fn () => view('dashboard', [ 'title' => 'Dashboard' ]));
+Route::get('/dashboard', fn () => view('dashboard', [ 'title' => 'Dashboard' ]));
 Route::get('login', fn () => view('login', ['title' => 'Login']));
 Route::get('404', fn () => view('404'));
 Route::get('blank', fn () => view('blank', ['title' => 'Blank']));
@@ -32,6 +33,8 @@ Route::group(['prefix' => 'buckets'], function () {
     Route::post('update/{id}', [BucketController::class, 'update'])->name('buckets.update');
     Route::get('delete/{id}', [BucketController::class, 'destroy'])->name('buckets.destroy');
 });
+
+Route::get('dhl-access-token', [ShippingController::class, 'dhl_generate_access_token']);
 
 Auth::routes();
 

@@ -13,17 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('order_products', function (Blueprint $table) {
+        Schema::create('shippings', function (Blueprint $table) {
             $table->id();
+            $table->string('shipment_number')->unique();
             $table->unsignedBigInteger('order_id');
             $table->foreign('order_id')->references('id')->on('orders');
-            $table->unsignedBigInteger('product_id');
-            $table->foreign('product_id')->references('id')->on('products');
-            $table->integer('quantity');
-            $table->integer('price');
-            $table->integer('total_price');
+            $table->string('tracking_number')->nullable();
+            $table->string('courier');
             $table->integer('status')->default(1)->comment('1-Active, 2-Inactive');
-            $table->integer('is_foc');
+            $table->timestamp('ship_date')->nullable();
+            $table->string('attachment')->nullable();
+            $table->unsignedBigInteger('created_by');
             $table->timestamps();
         });
     }
@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('order_products');
+        Schema::dropIfExists('shippings');
     }
 };
