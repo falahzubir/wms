@@ -27,6 +27,7 @@ Route::post('add-to-bucket', [BucketController::class, 'add_order']);
 
 Route::post('request-cn', [ShippingController::class, 'request_cn']);
 Route::post('check-cn-company', [ShippingController::class, 'check_cn_company']);
+Route::post('download-consignment-note', [ShippingController::class, 'download_cn']);
 
 Route::get('dhl-store', [ShippingController::class, 'dhl_store']);
 

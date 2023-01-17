@@ -47,7 +47,7 @@ if (! function_exists('shipment_num_format')) {
      */
     function shipment_num_format($order)
     {
-        return "MYAAH".$order->company->code."0110".$order->id;
-        // return "SH".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->id);
+        // return "MYAAH".$order->company->code."00".$order->id;
+        return "MYAAH".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->id);
     }
 }

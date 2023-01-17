@@ -21,8 +21,18 @@ Route::get('login', fn () => view('login', ['title' => 'Login']));
 Route::get('404', fn () => view('404'));
 Route::get('blank', fn () => view('blank', ['title' => 'Blank']));
 
-Route::get('orders/overall', [OrderController::class, 'index'])->name('orders.index');
-Route::get('orders/pending', [OrderController::class, 'pending'])->name('order.pending');
+Route::group(['prefix' => 'orders'], function () {
+    Route::get('overall', [OrderController::class, 'overall'])->name('orders.overall');
+    Route::get('pending', [OrderController::class, 'pending'])->name('orders.pending');
+    Route::get('packing', [OrderController::class, 'packing'])->name('orders.packing');
+    Route::get('shipping', [OrderController::class, 'shipping'])->name('orders.shipping');
+    Route::get('delivered', [OrderController::class, 'delivered'])->name('orders.delivered');
+    Route::get('returned', [OrderController::class, 'returned'])->name('orders.returned');
+    Route::get('scan', [OrderController::class, 'scan'])->name('orders.scan');
+
+    // Route::get('show/{id}', [OrderController::class, 'show'])->name('orders.show');
+    // Route::get('load', [OrderController::class, 'load'])->name('orders.load');
+});
 
 // group routes for buckets
 Route::group(['prefix' => 'buckets'], function () {

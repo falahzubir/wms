@@ -5,3 +5,9 @@ function toggleCheckboxes(source, cls) {
         checkboxes[i].checked = source.checked;
     }
 }
+
+function linkTrack(num) {
+    TrackButton.track({
+        tracking_no: num
+    });
+}

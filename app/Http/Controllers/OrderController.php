@@ -11,22 +11,34 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+
+    /**
+     * Initiate orders list
+     * @param  null
+     * @return Order
+     */
+    public function index()
+    {
+        return Order::with(['customer', 'items', 'items.product', 'shipping'])
+            ->where('is_active', IS_ACTIVE);
+
+        // return $orders;
+
+    }
     /**
      * List all active orders
      * @return view
      */
-    public function index(Request $request)
+    public function overall(Request $request)
     {
-        $orders = Order::with(['customer', 'items', 'items.product', 'shipping'])
-            ->where('is_active', IS_ACTIVE);
+        $orders = $this->index();
 
-        if ($request->bucket) {
-            $orders->where('bucket_id', $request->bucket);
-        }
+        $orders = $this->filter_order($request, $orders);
 
-        return view('orders.overall', [
+        return view('orders.index', [
             'title' => 'List Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
 
@@ -43,9 +55,114 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Lists pending order
+     * @param  Request $request
+     * @return view
+     */
     public function pending(Request $request)
     {
-        return view('orders.pending', ['title' => 'Pending Orders']);
+        $orders =$this->index()->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_BUCKET]);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Pending Orders',
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
+        ]);
+    }
+
+    /**
+     * Lists packing order
+     * @param  Request $request
+     * @return view
+     */
+    public function packing(Request $request)
+    {
+        $orders = $this->index()->where('status', ORDER_STATUS_PACKING);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Packing Orders',
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
+        ]);
+    }
+
+    /**
+     * Lists shipped order
+     * @param  Request $request
+     * @return view
+     */
+    public function shipping(Request $request)
+    {
+        $orders = $this->index()->where('status', ORDER_STATUS_SHIPPING);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Shipping Orders',
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
+        ]);
+    }
+
+    /**
+     * Lists delivered order
+     * @param  Request $request
+     * @return view
+     */
+    public function delivered(Request $request)
+    {
+        $orders = $this->index()->where('status', ORDER_STATUS_DELIVERED);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Delivered Orders',
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
+        ]);
+    }
+
+    /**
+     * Lists returned order
+     * @param  Request $request
+     * @return view
+     */
+
+    public function returned(Request $request)
+    {
+        $orders = $this->index()->where('status', ORDER_STATUS_RETURNED);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Rejected Orders',
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'actions' => [ACTION_DOWNLOAD_ORDER],
+        ]);
+    }
+
+    /**
+     * Lists completed order
+     * @param  Request $request
+     * @return view
+     */
+
+    public function completed(Request $request)
+    {
+        $orders = $this->index()->where('status', ORDER_STATUS_COMPLETED);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Completed Orders',
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'actions' => [ACTION_DOWNLOAD_ORDER],
+        ]);
     }
 
     /**
@@ -90,5 +207,32 @@ class OrderController extends Controller
         }
 
         return response()->json(['message' => 'Order created successfully'], 201);
+    }
+
+    /**
+     * filter order by request
+     *
+     * @param  Request $request
+     * @return object
+     */
+    public function filter_order($request, $orders)
+    {
+        $orders->when($request->has('bucketId'), function ($query) use ($request) {
+            return $query->where('bucket_id', $request->bucketId);
+        });
+
+        return $orders;
+    }
+
+    /**
+     * Scan barcode page
+     * @param  null
+     * @return view
+     */
+    public function scan()
+    {
+        return view('orders.scan', [
+            'title' => 'Scan Barcode',
+        ]);
     }
 }

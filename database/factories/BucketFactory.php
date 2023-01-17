@@ -19,8 +19,8 @@ class BucketFactory extends Factory
         $region = ['North', 'South', 'East', 'West'];
         return [
             'name' => $region[array_rand($region)].'ern Region '.fake()->randomNumber(2),
-            'description' => fake()->text(),
-            'created_by' => fake()->randomNumber(1, 10),
+            'description' => "Example Description",
+            'created_by' => 1,
         ];
     }
 }

@@ -45,12 +45,12 @@
                                 </div>
                                 <hr>
                                 <div>
-                                    <div>Pending: <strong><span id="pending-count">{{ '23' }}</span></strong></div>
+                                    <div>Pending: <strong><span id="pending-count">{{ $bucket->orders->count() }}</span></strong></div>
                                     <div>Last out: {{ date('d/m/Y') }}</div>
                                 </div>
                                 <div class="text-end">
                                     <button class="btn btn-primary rounded-pill" id="download-consignment"><i class="bi bi-download"></i></button>
-                                    <a href="/orders/overall?bucket={{ $bucket->id }}" class="btn btn-info rounded-pill"><i
+                                    <a href="/orders/overall?bucketId={{ $bucket->id }}" class="btn btn-info rounded-pill"><i
                                             class="bi bi-list"></i></a>
                                     <button class="btn btn-warning rounded-pill" class="edit-bucket" onclick="edit_bucket(this)" data-bs-toggle="modal"
                                         data-bs-target="#bucket-modal" data-bucket-id="{{ $bucket->id }}"><i class="bi bi-pencil"></i></button>

@@ -7,7 +7,7 @@
 
         @case(2)
             <span class="badge bg-secondary text-light">Pending</span>
-            <span class="badge bg-primary text-light">On Bucket</span>
+            {{-- <span class="badge bg-primary text-light">On Bucket</span> --}}
         @break
 
         @case(3)
@@ -39,5 +39,5 @@
 </div>
 
 @if ($bucket != null)
-    {{ $bucket }}
+    <div class="text-nowrap very-small-text">[{{ $bucket->name }}]</div>
 @endif

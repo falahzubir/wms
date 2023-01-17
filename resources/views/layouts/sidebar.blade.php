@@ -3,7 +3,7 @@
     <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-            <a class="nav-link {{ (Request::segment(1) != "dashboard") ? 'collapsed':'' }}" href="/dashboard">
+            <a class="nav-link {{ Request::segment(1) != 'dashboard' ? 'collapsed' : '' }}" href="/dashboard">
                 <i class="bi bi-grid"></i>
                 <span>Dashboard</span>
             </a>
@@ -12,63 +12,70 @@
         <li class="nav-heading">Orders</li>
 
         <li class="nav-item">
-          <a class="nav-link {{ Request::segment(1) != 'orders' ? 'collapsed':'' }}" href="/orders/overall">
-            <i class="bi bi-inboxes"></i>
-            <span>Overall</span>
-          </a>
+            <a class="nav-link {{ Request::segment(1) != 'orders' ? 'collapsed' : '' }}" href="/orders/overall">
+                <i class="bi bi-inboxes"></i>
+                <span>Overall</span>
+            </a>
         </li><!-- End Overall Order Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="/orders/pending">
-            <i class="bi bi-clock-history"></i>
-            <span>Pending List</span>
-          </a>
+            <a class="nav-link collapsed" href="/orders/pending">
+                <i class="bi bi-clock-history"></i>
+                <span>Pending List</span>
+            </a>
         </li><!-- End Pending List Nav -->
 
         <li class="nav-item">
-          <a class="nav-link  {{ (Request::segment(1) != "buckets") ? 'collapsed' : '' }}" href="/buckets">
-            <i class="bi bi-basket"></i>
-            <span>Bucket List</span>
-          </a>
+            <a class="nav-link  {{ Request::segment(1) != 'buckets' ? 'collapsed' : '' }}" href="/buckets">
+                <i class="bi bi-basket"></i>
+                <span>Bucket List</span>
+            </a>
         </li><!-- End Bucket List Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="/orders">
-            <i class="bi bi-box-seam"></i>
-            <span>Packing List</span>
-          </a>
+            <a class="nav-link collapsed" href="/orders/packing">
+                <i class="bi bi-box-seam"></i>
+                <span>Packing List</span>
+            </a>
         </li><!-- End Packing List Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="/orders">
-            <i class="bi bi-truck"></i>
-            <span>Shipping List</span>
-          </a>
+            <a class="nav-link collapsed" href="/orders/shipping">
+                <i class="bi bi-truck"></i>
+                <span>Shipping List</span>
+            </a>
         </li><!-- End Shipping List Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="/orders">
-            <i class="bi bi-file-x"></i>
-            <span>Rejected List</span>
-          </a>
-        </li><!-- End Shipping List Nav -->
+            <a class="nav-link collapsed" href="/orders/delivered">
+                <i class="bi bi-check-circle"></i>
+                <span>Delivered List</span>
+            </a>
+        </li><!-- End delivered List Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="/orders">
-            <i class="bi bi-check-circle"></i>
-            <span>Delivered List</span>
-          </a>
-        </li><!-- End Shipping List Nav -->
+            <a class="nav-link collapsed" href="/orders/returned">
+                <i class="bi bi-file-x"></i>
+                <span>Return List</span>
+            </a>
+        </li><!-- End return List Nav -->
+
+        <!-- Scan Parcel link -->
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="/orders/scan">
+                <i class="bi bi-barcode"></i>
+                <span>Scan Parcel</span>
+            </a>
 
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="users-profile.html">
-          <i class="bi bi-person"></i>
-          <span>Profile</span>
-        </a>
-      </li><!-- End Profile Page Nav -->
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="users-profile.html">
+                <i class="bi bi-person"></i>
+                <span>Profile</span>
+            </a>
+        </li><!-- End Profile Page Nav -->
 
-      {{-- <li class="nav-item">
+        {{-- <li class="nav-item">
         <a class="nav-link collapsed" href="pages-faq.html">
           <i class="bi bi-question-circle"></i>
           <span>F.A.Q</span>
@@ -112,4 +119,4 @@
 
     </ul>
 
-  </aside><!-- End Sidebar-->
+</aside><!-- End Sidebar-->

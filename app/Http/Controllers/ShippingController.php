@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 
 class ShippingController extends Controller
 {
@@ -95,9 +96,15 @@ class ShippingController extends Controller
 
         $url = $this->dhl_label;
 
-        $orders = Order::with(['customer', 'items', 'items.product'])
+        // filter only selected order shipping not exists
+        $orders = Order::doesntHave('shipping')->with(['customer', 'items', 'items.product',])
             ->whereIn('id', $request->order_ids)->get();
 
+        if (count($orders) == 0) {
+            return 0;
+        }
+
+        logger($orders);
         $company = Company::find($orders[0]->company_id); //temporary, need to check if all orders are from same company
 
         $access_token = AccessToken::where('company_id', $company->id)->where('type', 'dhl')->first(); // DHL API access token, expires every 24 hours, could be refreshed every 12 hours
@@ -257,8 +264,25 @@ class ShippingController extends Controller
             Storage::put('public/labels/' . $label->shipmentID . '.pdf', base64_decode($label->content));
 
             //update tracking number
-            Shipping::where('shipment_number', $label->shipmentID)->update(['tracking_number' => $label->deliveryConfirmationNo, 'attachment' => 'storage/labels/' . $label->shipmentID . '.pdf']);
+            Shipping::where('shipment_number', $label->shipmentID)->update(['tracking_number' => $label->deliveryConfirmationNo, 'attachment' => 'labels/' . $label->shipmentID . '.pdf']);
         }
 
+    }
+
+    public function download_cn(Request $request)
+    {
+        // return $request;
+        $attachments = Shipping::select('attachment')->whereIn('order_id', $request->order_ids)->get();
+        $attachments = $attachments->pluck('attachment')->toArray();
+
+        $pdf = PDFMerger::init();
+        foreach ($attachments as $attachment) {
+            $pdf->addPDF(storage_path('app/public/' . $attachment), 'all');
+        }
+
+        $filename = 'CN_' . date('YmdHis') . '.pdf';
+        $pdf->merge();
+        $pdf->save(public_path('generated_labels/' . $filename), 'file');
+        return response()->download(public_path('generated_labels/' . $filename));
     }
 }

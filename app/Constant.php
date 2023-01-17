@@ -36,3 +36,9 @@ if(!defined('MY_STATES')) define('MY_STATES', [
     15 => 'Kuala Lumpur',
     16 => 'Putrajaya',
 ]);
+
+// actions
+if(!defined('ACTION_ADD_TO_BUCKET')) define('ACTION_ADD_TO_BUCKET', 'add-to-bucket');
+if(!defined('ACTION_GENERATE_CN')) define('ACTION_GENERATE_CN', 'generate-cn');
+if(!defined('ACTION_DOWNLOAD_CN')) define('ACTION_DOWNLOAD_CN', 'download-cn');
+if(!defined('ACTION_DOWNLOAD_ORDER')) define('ACTION_DOWNLOAD_ORDER', 'download-order');

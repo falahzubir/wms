@@ -78,10 +78,23 @@
             <div class="card" style="font-size:0.8rem" id="order-table">
                 <div class="card-body">
                     <div class="card-title text-end">
-                        <button class="btn btn-info" id="add-to-bucket-btn"><i class="bi bi-paid"></i>
-                            Add to Bucket</button>
-                        <button class="btn btn-warning" id="generate-cn-btn"><i class="bi bi-packing"></i>
-                            Generate CN</button>
+                        @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
+                            <button class="btn btn-info" id="add-to-bucket-btn"><i class="bi bi-basket"></i> Add to
+                                Bucket</button>
+                        @endif
+                        @if (in_array(ACTION_GENERATE_CN, $actions))
+                            <button class="btn btn-warning" id="generate-cn-btn"><i
+                                    class="bi bi-file-earmark-ruled"></i> Generate CN</button>
+                        @endif
+                        @if (in_array(ACTION_DOWNLOAD_CN, $actions))
+                            <button class="btn btn-success" id="download-cn-btn"><i class="bi bi-cloud-download"></i>
+                                Download CN</button>
+                        @endif
+                        @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
+                            <button class="btn btn-primary" id="download-order-btn"><i class="bi bi-cloud-download"></i>
+                                Download CSV</button>
+                        @endif
+
                     </div>
                     <!-- Default Table -->
                     <table class="table">
@@ -102,7 +115,8 @@
                             @foreach ($orders as $order)
                                 <tr style="font-size: 0.8rem;">
                                     <th scope="row">{{ $loop->iteration }}</th>
-                                    <td><input type="checkbox" name="check_order[]" class="check-order" id="" value="{{ $order->id }}">
+                                    <td><input type="checkbox" name="check_order[]" class="check-order" id=""
+                                            value="{{ $order->id }}">
                                     </td>
                                     <td>
                                         <a href="#" class="btn btn-warning p-0 px-1"><i
@@ -112,8 +126,7 @@
                                     </td>
                                     <td class="text-center">
                                         <div>
-                                            <a
-                                                href="#"><strong>{{ order_num_format($order) }}</strong></a>
+                                            <a href="#"><strong>{{ order_num_format($order) }}</strong></a>
                                         </div>
                                         <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
                                             data-bs-placement="right" data-bs-original-title="Date Inserted">
@@ -165,20 +178,24 @@
                                             @endswitch
                                         </div>
                                         @isset($order->shipping)
-                                            <div title="Shipment Number: {{ $order->shipping->shipment_number }}">
-                                                <span class="badge bg-warning text-dark">
-                                                    {{ $order->shipping->courier }}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <span class="">
-                                                    {{ $order->shipping->tracking_number }}
-                                                </span>
+                                            <div onclick="linkTrack('{{ $order->shipping->tracking_number }}')">
+
+                                                <div title="Shipment Number: {{ $order->shipping->shipment_number }}">
+                                                    <span class="badge bg-warning text-dark">
+                                                        {{ $order->shipping->courier }}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <span class="">
+                                                        {{ $order->shipping->tracking_number }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         @endisset
                                     </td>
                                     <td>
-                                        {{-- <x-order_status :status="$order->status" :bucket="$order->bucket->name" /> --}}
+
+                                        <x-order_status :status="$order->status" :bucket="$order->bucket" />
 
                                     </td>
                                 </tr>
@@ -209,6 +226,7 @@
             document.querySelector('#add-to-bucket-btn').onclick = function() {
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
+
                 // sweet alert
                 if (checkedValue == 0) {
                     Swal.fire({
@@ -223,7 +241,6 @@
                 axios.get('/api/buckets')
                     .then(function(response) {
                         // handle success
-                        console.log(response.data);
                         let buckets = response.data;
                         let bucketOptions = {};
                         buckets.forEach(bucket => {
@@ -260,7 +277,6 @@
                                     })
                                     .then(function(response) {
                                         // handle success
-                                        console.log(response.data);
                                         Swal.fire({
                                             title: 'Success!',
                                             text: "Order added to bucket.",
@@ -344,15 +360,52 @@
                 //confirmation to generate cn
                 Swal.fire({
                     title: 'Are you sure to generate shipping label?',
-                    text: `You are about to generate shipping label for ${checkedValue} order(s).`,
+                    html: `You are about to generate shipping label for ${checkedValue} order(s).`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, generate it!'
+                    confirmButtonText: 'Yes, generate it!',
+                    footer: '<small>Note: Order with existing Consignment Note will be ignored.</small>',
                 }).then((result) => {
                     if (result.isConfirmed) {
                         generateCN();
+                    }
+                })
+            }
+
+            // download cn
+            document.querySelector('#download-cn-btn').onclick = function() {
+                const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                let checkedValue = inputElements.filter(chk => chk.checked).length;
+                // sweet alert
+                if (checkedValue == 0) {
+                    Swal.fire({
+                        title: 'No order selected!',
+                        text: "Please select at least one order to download shipping label.",
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    })
+                    return;
+                }
+                let checkedOrder = [];
+                inputElements.forEach(input => {
+                    if (input.checked) {
+                        checkedOrder.push(input.value);
+                    }
+                });
+                //confirmation to generate cn
+                Swal.fire({
+                    title: 'Are you sure to download shipping label?',
+                    html: `You are about to download shipping label for ${checkedValue} order(s).`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, download it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        download_cn(checkedOrder);
                     }
                 })
             }
@@ -378,7 +431,7 @@
                 });
 
                 let sameCompany = await check_same_company(checkedOrder);
-                if(sameCompany != 1){
+                if (sameCompany != 1) {
                     Swal.fire({
                         title: 'Error!',
                         text: "You have selected orders from different company.",
@@ -392,14 +445,27 @@
                         order_ids: checkedOrder,
                     })
                     .then(function(response) {
-                        // handle success
+                        if (response.data == 0) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: "Selected order already has CN.",
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            })
+                            return;
+                        }
+                        // handle success, close or download
                         Swal.fire({
                             title: 'Success!',
                             text: "Shipping label generated.",
                             icon: 'success',
-                            confirmButtonText: 'OK'
+                            confirmButtonText: 'Download',
+                            showCancelButton: true,
+                            cancelButtonText: 'Ok',
                         }).then((result) => {
                             if (result.isConfirmed) {
+                                download_cn(order_ids)
+                            } else {
                                 location.reload();
                             }
                         });
@@ -414,11 +480,61 @@
 
             } //end of generateCN
 
+
+            function download_cn(checkedOrder) {
+                axios({
+                        url: '/api/download-consignment-note',
+                        method: 'POST',
+                        responseType: 'blob', // important
+                        data: {
+                            order_ids: checkedOrder,
+                        }
+                    })
+                    .then(function(response) {
+                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                        const link = document.createElement('a');
+                        link.href = url;
+                        //link setattribute download and rename tu ccurent time
+                        let d = new Date();
+                        let cnname = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + "-" + d.getHours() + d
+                            .getMinutes() + d.getSeconds();
+                        link.setAttribute('download', `CN_${get_current_date_time()}.pdf`);
+                        document.body.appendChild(link);
+                        link.click();
+                        // handle success, close or download
+                        Swal.fire({
+                            title: 'Success!',
+                            text: "Shipment Note Downloaded.",
+                            icon: 'success',
+                        });
+                    })
+                    .catch(function(error) {
+                        // handle error
+                        console.log(error);
+                    })
+                    .then(function() {
+                        // always executed
+                    });
+            }
+
             async function check_same_company(checkedOrder) {
                 let result = await axios.post('/api/check-cn-company', {
                     order_ids: checkedOrder,
                 });
                 return result.data;
+            }
+
+            function get_current_date_time() {
+                var today = new Date();
+                var currentMonth = ('0' + (today.getMonth() + 1)).substr(-2);
+                var currentDate = ('0' + today.getDate()).substr(-2);
+                var date = today.getFullYear() + currentMonth + currentDate;
+                var currentHours = ('0' + today.getHours()).substr(-2);
+                var currentMins = ('0' + today.getMinutes()).substr(-2);
+                var currentSecs = ('0' + today.getSeconds()).substr(-2);
+                var time = currentHours + currentMins + currentSecs;
+                var dateTime = date + '_' + time;
+                return dateTime;
             }
         </script>
     </x-slot>
