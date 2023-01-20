@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\OrderLog;
+
 if (! function_exists('currency')) {
     /**
      * Convert cents to ringgit, add true to show currency symbol
@@ -49,5 +51,51 @@ if (! function_exists('shipment_num_format')) {
     {
         // return "MYAAH".$order->company->code."00".$order->id;
         return "MYAAH".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->id);
+    }
+}
+
+if (! function_exists('update_order_status')) {
+    /**
+     * Update order status
+     *
+     * @param  object $order, string $status
+     * @return void
+     */
+    function update_order_status($order, $status)
+    {
+        $order->status = $status;
+        $order->save();
+
+        OrderLog::create([
+            'order_id' => $order->id,
+            'order_status_id' => $status,
+            'remarks' => 'Order status updated to ' . $status,
+            'created_by' => auth()->user()->id ?? 1,
+        ]);
+    }
+}
+
+if(! function_exists('order_num_id')){
+    /**
+     * Get order id from order number
+     *
+     * @param  string $order_num
+     * @return int
+     */
+    function order_num_id($order_num)
+    {
+        return (int)substr($order_num, ORDER_NUMBER_LENGTH * -1);
+    }
+}
+
+if(! function_exists('get_couriers')){
+    /**
+     * Get all couriers
+     *
+     * @return json
+     */
+    function get_couriers()
+    {
+        return \App\Models\Courier::where('status', 1)->get();
     }
 }

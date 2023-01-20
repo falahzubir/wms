@@ -98,15 +98,14 @@ class BucketController extends Controller
         ]);
 
         Order::whereIn('id', $request->order_ids)->update([
-            'bucket_id' => $request->bucket_id,
-            'status' => ORDER_STATUS_BUCKET
+            'bucket_id' => $request->bucket_id
         ]);
 
 
         foreach ($request->order_ids as $order_id) {
             OrderLog::create([
                 'order_id' => $order_id,
-                'order_status_id' => ORDER_STATUS_BUCKET,
+                'order_status_id' => ORDER_STATUS_PENDING_ON_BUCKET,
                 'remarks' => 'Order added to bucket',
                 'created_by' => 1,
             ]);

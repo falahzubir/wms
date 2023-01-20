@@ -9,6 +9,10 @@
 
         <x-breadcrumb :title="$title" />
 
+        <!-- ======= Notification Alert ======= -->
+        <x-notification-alert />
+
+
         {{ $slot }}
 
     </main><!-- End #main -->

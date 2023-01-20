@@ -14,4 +14,9 @@ class Shipping extends Model
     {
         return $this->belongsTo(Order::class);
     }
+
+    public function scannedBy()
+    {
+        return $this->belongsTo(User::class, 'scanned_by');
+    }
 }

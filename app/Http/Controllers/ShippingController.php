@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ShippingsImport;
 use App\Models\AccessToken;
 use App\Models\Company;
 use App\Models\Order;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 
 class ShippingController extends Controller
@@ -284,5 +286,59 @@ class ShippingController extends Controller
         $pdf->merge();
         $pdf->save(public_path('generated_labels/' . $filename), 'file');
         return response()->download(public_path('generated_labels/' . $filename));
+    }
+
+    /**
+     * Update tracking number to order.
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+
+    public function upload_bulk_tracking(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,txt'
+        ]);
+
+
+        Excel::import(new ShippingsImport, $request->file);
+
+        return back()->with('success', 'Shipping Numbers Imported Successfully');
+    }
+
+    /**
+     * Update tracking number to order.
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function update_tracking(Request $request)
+    {
+        $request->validate([
+            'tracking_number' => 'required',
+            'courier' => 'required',
+            'order_id' => 'required',
+            'shipment_date' => 'date',
+        ]);
+
+        Shipping::create([
+            'order_id' => $request->order_id,
+            'tracking_number' => $request->tracking_number,
+            'courier' => $request->courier,
+            'created_by' => auth()->user()->id ?? 1,
+            // 'shipment_date' => $request->shipment_date,
+        ]);
+
+        update_order_status(Order::find($request->order_id), ORDER_STATUS_PACKING);
+
+        return back()->with('success', 'Tracking Number Updated Successfully');
+    }
+
+    /**
+     * Update order to shipping on first shipping milestone.
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function update_shipping(Request $request){
+        return true;
     }
 }

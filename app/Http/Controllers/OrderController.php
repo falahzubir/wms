@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -38,7 +39,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'List Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
         ]);
     }
 
@@ -62,14 +63,32 @@ class OrderController extends Controller
      */
     public function pending(Request $request)
     {
-        $orders =$this->index()->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_BUCKET]);
+        $orders =$this->index()->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_ON_BUCKET]);
 
         $orders = $this->filter_order($request, $orders);
 
         return view('orders.index', [
             'title' => 'Pending Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
+        ]);
+    }
+
+    /**
+     * Lists Ready to Ship order
+     * @param  Request $request
+     * @return view
+     */
+    public function ready_to_ship(Request $request)
+    {
+        $orders =$this->index()->whereIn('status', [ORDER_STATUS_READY_TO_SHIP]);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Ready To Ship Orders',
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
         ]);
     }
 
@@ -234,5 +253,48 @@ class OrderController extends Controller
         return view('orders.scan', [
             'title' => 'Scan Barcode',
         ]);
+    }
+
+    /**
+     * Scan barcode
+     * @param  Request $request
+     * @return view
+     */
+    public function scan_barcode(Request $request)
+    {
+        $request->validate([
+            'code' => 'required',
+        ]);
+
+        $order = Order::with(['shipping', 'items', 'items.product'])->where('is_active', IS_ACTIVE);
+
+        //filter tracking number on shipping table
+        $order->whereHas('shipping', function ($query) use ($request) {
+            $query->where('tracking_number', $request->code);
+        });
+
+        $order = $order->first();
+
+        //if not scanned, store scan time
+        if ($order->shipping->scanned_at == null) {
+            $order->shipping->scanned_at = Carbon::now();
+            $order->shipping->scanned_by = auth()->user()->id ?? 1;
+            $order->shipping->save();
+
+            //update order status
+            update_order_status($order, ORDER_STATUS_READY_TO_SHIP);
+
+            return back()->with('success', 'Parcel Scanned Successfully')->with('order', $order);
+        }
+        else{
+            return back()->with('error', 'Parcel Already Scanned')->with('order', $order);
+        }
+
+        // if ($order) {
+        //     return back()->with('error', 'This Parcel was Already Scanned')->with('order', $order);
+        // } else {
+        //     return back()->with('success', 'Parcel Scan Successful');
+        // }
+
     }
 }

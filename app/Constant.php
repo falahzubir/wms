@@ -9,7 +9,7 @@ if(!defined('ORDER_NUMBER_LENGTH')) define('ORDER_NUMBER_LENGTH', '09');
 
 // order status
 if(!defined('ORDER_STATUS_PENDING')) define('ORDER_STATUS_PENDING', '1');
-if(!defined('ORDER_STATUS_BUCKET')) define('ORDER_STATUS_BUCKET', '2');
+if(!defined('ORDER_STATUS_PENDING_ON_BUCKET')) define('ORDER_STATUS_PENDING_ON_BUCKET', '2');
 if(!defined('ORDER_STATUS_PACKING')) define('ORDER_STATUS_PACKING', '3');
 if(!defined('ORDER_STATUS_READY_TO_SHIP')) define('ORDER_STATUS_READY_TO_SHIP', '4');
 if(!defined('ORDER_STATUS_SHIPPING')) define('ORDER_STATUS_SHIPPING', '5');
@@ -42,3 +42,4 @@ if(!defined('ACTION_ADD_TO_BUCKET')) define('ACTION_ADD_TO_BUCKET', 'add-to-buck
 if(!defined('ACTION_GENERATE_CN')) define('ACTION_GENERATE_CN', 'generate-cn');
 if(!defined('ACTION_DOWNLOAD_CN')) define('ACTION_DOWNLOAD_CN', 'download-cn');
 if(!defined('ACTION_DOWNLOAD_ORDER')) define('ACTION_DOWNLOAD_ORDER', 'download-order');
+if(!defined('ACTION_UPLOAD_TRACKING_BULK')) define('ACTION_UPLOAD_TRACKING_BULK', 'upload-tracking-bulk');

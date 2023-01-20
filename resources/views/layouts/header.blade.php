@@ -25,6 +25,9 @@
     {{-- Vite Processing --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- CDN CSS Files -->
+    <link rel="stylesheet" href="https://unpkg.com/@jarstone/dselect/dist/css/dselect.css">
+
     <!-- Vendor CSS Files -->
     <link href="{{ asset("assets/vendor/bootstrap/css/bootstrap.min.css") }}" rel="stylesheet">
     <link href="{{ asset("assets/vendor/bootstrap-icons/bootstrap-icons.css") }}" rel="stylesheet">

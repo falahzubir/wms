@@ -1,36 +1,36 @@
 @props(['status', 'bucket' => null])
 <div>
     @switch($status)
-        @case(1)
+        @case(ORDER_STATUS_PENDING)
             <span class="badge bg-secondary text-light">Pending</span>
         @break
 
-        @case(2)
+        @case(ORDER_STATUS_PENDING_ON_BUCKET)
             <span class="badge bg-secondary text-light">Pending</span>
             {{-- <span class="badge bg-primary text-light">On Bucket</span> --}}
         @break
 
-        @case(3)
+        @case(ORDER_STATUS_PACKING)
             <span class="badge bg-primary text-light">Packing</span>
         @break
 
-        @case(4)
+        @case(ORDER_STATUS_READY_TO_SHIP)
             <span class="badge bg-primary text-light">Ready To Ship</span>
         @break
 
-        @case(5)
+        @case(ORDER_STATUS_SHIPPING)
             <span class="badge bg-info text-light">Shipping</span>
         @break
 
-        @case(6)
+        @case(ORDER_STATUS_DELIVERED)
             <span class="badge bg-warning text-light">Delivered</span>
         @break
 
-        @case(7)
+        @case(ORDER_STATUS_RETURNED)
             <span class="badge bg-danger text-light">Returned</span>
         @break
 
-        @case(8)
+        @case(ORDER_STATUS_COMPLETED)
             <span class="badge bg-success text-light">Completed</span>
         @break
 

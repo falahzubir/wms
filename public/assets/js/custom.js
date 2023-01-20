@@ -11,3 +11,8 @@ function linkTrack(num) {
         tracking_no: num
     });
 }
+
+//auto close alert span js
+setTimeout(function() {
+    document.querySelector('.alert-autoclose').style.display = 'none';
+}, 3000);

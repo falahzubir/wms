@@ -67,6 +67,15 @@
                                 <strong>Advance Filter <i class="ri-arrow-down-s-fill"></i></strong>
                             </span>
                         </div>
+                        <div class="expand row">
+                            {{-- <x-filter_select name="courier" label="Courier(s)" id="courier-filter" class="col-4 mt-2" />
+                            <x-filter_select name="purchase_type" label="Purchase Type(s)" id="purchase-type-filter" class="col-4 mt-2" />
+                            <x-filter_select name="team" label="Team(s)" id="team-filter" class="col-4 mt-2" />
+                            <x-filter_select name="customer_type" label="Customer Type(s)" id="customer-type-filter" class="col-4 mt-2" />
+                            <x-filter_select name="product" label="Product(s)" id="product-filter" class="col-4 mt-2" />
+                            <x-filter_select name="op_model" label="Operational Model(s)" id="operational-model-filter" class="col-4 mt-2" />
+                            <x-filter_select name="sales_event" label="Sales Event" id="sales-event-filter" class="col-4 mt-2" /> --}}
+                        </div>
                         <div class="text-end">
                             <button type="button" class="btn btn-primary" id="filter-order">Submit</button>
                         </div>
@@ -85,6 +94,13 @@
                         @if (in_array(ACTION_GENERATE_CN, $actions))
                             <button class="btn btn-warning" id="generate-cn-btn"><i
                                     class="bi bi-file-earmark-ruled"></i> Generate CN</button>
+                        @endif
+                        @if (in_array(ACTION_UPLOAD_TRACKING_BULK, $actions))
+                            <!-- Button trigger modal upload csv -->
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#upload-csv-modal">
+                                <i class="bi bi-truck"></i> Bulk Upload Tracking
+                            </button>
                         @endif
                         @if (in_array(ACTION_DOWNLOAD_CN, $actions))
                             <button class="btn btn-success" id="download-cn-btn"><i class="bi bi-cloud-download"></i>
@@ -115,15 +131,24 @@
                             @foreach ($orders as $order)
                                 <tr style="font-size: 0.8rem;">
                                     <th scope="row">{{ $loop->iteration }}</th>
-                                    <td><input type="checkbox" name="check_order[]" class="check-order" id=""
-                                            value="{{ $order->id }}">
+                                    <td><input type="checkbox" name="check_order[]" class="check-order"
+                                            id="" value="{{ $order->id }}">
                                     </td>
                                     <td>
                                         <a href="#" class="btn btn-warning p-0 px-1"><i
                                                 class="ri-ball-pen-line"></i></a>
                                         <a href="#" class="btn btn-danger p-0 px-1"><i
                                                 class="bx bx-trash"></i></a>
-                                    </td>
+                                        {{-- add shipping number modal --}}
+                                        @empty($order->shipping)
+
+                                        <button type="button" class="btn btn-primary p-0 px-1 add-shipping-number" data-bs-toggle="modal"
+                                            data-bs-target="#add-shipping-number-modal"
+                                            data-orderid="{{ $order->id }}">
+                                            <i class="bi bi-truck"></i>
+                                        </button>
+                                        @endempty
+                                      </td>
                                     <td class="text-center">
                                         <div>
                                             <a href="#"><strong>{{ order_num_format($order) }}</strong></a>
@@ -160,7 +185,7 @@
                                     <td>
                                         <div>{{ currency($order->total_price, true) }}</div>
                                         <div>
-                                            @switch($order->payment_type)
+                                            @switch($order->purchase_type)
                                                 @case(1)
                                                     <span class="badge bg-warning text-dark">COD</span>
                                                 @break
@@ -169,12 +194,9 @@
                                                     <span class="badge bg-success text-light">Paid</span>
                                                 @break
 
-                                                @case(3)
-                                                    <span class="badge bg-warning text-dark">COD</span>
-                                                @break
 
                                                 @default
-                                                    <span class="badge bg-success text-light">Paid</span>
+                                                    <span class="badge bg-danger text-light">Error</span>
                                             @endswitch
                                         </div>
                                         @isset($order->shipping)
@@ -212,10 +234,113 @@
                     <!-- End Default Table Example -->
                 </div>
             </div>
-
         </div>
-
     </section>
+
+    <!-- upload csv modal -->
+    <div class="modal fade" id="upload-csv-modal" tabindex="-1" aria-labelledby="upload-csv-modalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="upload-csv-modalLabel">Upload CSV</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="text-start mb-3 very-small-text font-weight-bold">
+                        <div>
+                            + Easily add tracking number bulk by hitting the "Upload CSV" button. System will
+                            automatically
+                            update the tracking number for the selected order.
+                        </div>
+                        <div>
+                            + Feel free to change the Shipping Date accordingly.
+                        </div>
+                    </div>
+                    <form action="{{ route('shipping.upload_bulk_tracking') }}" method="POST"
+                        enctype="multipart/form-data">
+                        @csrf
+                        <div class="row justify-content-center align-items-center g-2">
+                            <div class="col">
+                                <input type="date" class="form-control" name="shipping_date" id="shipping-date"
+                                    aria-describedby="dateShipping" placeholder="date" value="{{ date('Y-m-d') }}"
+                                    required>
+                                <small id="dateShipping" class="form-text text-muted">Shipping Date</small>
+                            </div>
+                            <div class="col">
+                                <input class="form-control" type="file" id="csv-file" name="file"
+                                    accept=".csv" aria-describedby="uploadCsv" required>
+                                <small id="uploadCsv" class="form-text text-muted">Upload CSV File</small>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <!-- button submit show loading on submit -->
+                            <button type="submit" class="btn btn-primary mt-3" id="upload-csv-btn">
+                                <span class="spinner-border spinner-border-sm d-none" role="status"
+                                    aria-hidden="true"></span>
+                                <span class="d-none">Loading...</span>
+                                <span class="d-inline">Upload CSV</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div> <!-- end upload csv modal -->
+
+    <!-- add shipping number to order modal -->
+    <div class="modal fade" id="add-shipping-number-modal" tabindex="-1"
+        aria-labelledby="add-shipping-number-modalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="add-shipping-number-modalLabel">Add Tracking Number</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="add-shipping-number-modal-body">
+
+                    <form action="{{ route('shipping.update_tracking') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="order_id" id="order-id">
+                        <div class="justify-content-center align-items-center g-2">
+                            <div class="input-group mb-3">
+                                <label class="input-group-text" for="input-select-courier">Courier</label>
+                                <select class="form-select" id="input-select-courier" name="courier">
+                                    <option selected>Choose...</option>
+                                    @foreach (get_couriers() as $courier)
+                                        <option value="{{ $courier->code }}">{{ $courier->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="input-group mb-3">
+                                <label class="input-group-text" for="input-tracking-number">Tracking No</label>
+                                <input type="text" class="form-control" name="tracking_number"
+                                    id="input-tracking-number" aria-describedby="trackingNumber"
+                                    placeholder="Tracking Number" required>
+                            </div>
+                            <div class="input-group mb-3">
+                                <label class="input-group-text" for="input-shipment-date">Shipment Date</label>
+                                <input type="date" value="{{ date("Y-m-d") }}" class="form-control" name="shipment_date"
+                                    id="input-shipment-date" aria-describedby="shipmentDate"
+                                    placeholder="Shipment Date" required>
+                            </div>
+
+                        </div>
+                        <div class="mb-3">
+
+                            <button type="submit" class="btn btn-primary mt-3" id="add-shipping-number-btn">
+                                <span class="spinner-border spinner-border-sm d-none" role="status"
+                                    aria-hidden="true"></span>
+                                <span class="d-none">Loading...</span>
+                                <span class="d-inline">Add Tracking Number</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div> <!-- end add shipping number to order modal -->
+
 
     <x-slot name="script">
         <script>
@@ -302,45 +427,7 @@
                         // handle error
                         console.log(error);
                     })
-                    .then(function() {
-                        // always executed
-                    });
-                // Swal.fire({
-                //     title: 'Please select bucket!',
-                //     input: 'select',
-                //     inputOptions: {
-                //         '1': 'Bucket 1',
-                //         '2': 'Bucket 2',
-                //         '3': 'Bucket 3',
-                //         '4': 'Bucket 4',
-                //         '5': 'Bucket 5',
-                //         '6': 'Bucket 6',
-                //         '7': 'Bucket 7',
-                //         '8': 'Bucket 8',
-                //         '9': 'Bucket 9',
-                //         '10': 'Bucket 10',
-                //     },
-                //     inputPlaceholder: 'Select a bucket',
-                //     showCancelButton: true,
-                //     inputValidator: (value) => {
-                //         return new Promise((resolve) => {
-                //             if (value !== '') {
-                //                 resolve()
-                //             } else {
-                //                 resolve('You need to select a bucket!')
-                //             }
-                //         })
-                //     }
-                // }).then((result) => {
-                //     if (result.isConfirmed) {
-                //         Swal.fire({
-                //             title: 'Added to bucket!',
-                //             text: "You have added " + checkedValue + " order(s) to bucket " + result.value,
-                //             icon: 'success',
-                //             confirmButtonText: 'OK'
-                //         })
-                //     }
-                // })
+
             }
 
             // generate shipping label
@@ -409,6 +496,15 @@
                     }
                 })
             }
+
+            document.querySelectorAll('.add-shipping-number').forEach(btn => {
+                btn.onclick = function() {
+
+                    let order_id = btn.dataset.orderid;
+                    document.querySelector('#order-id').value = order_id;
+                }
+            })
+
 
             async function generateCN() {
                 //show loading modal
@@ -536,6 +632,8 @@
                 var dateTime = date + '_' + time;
                 return dateTime;
             }
+
+            dselect(document.querySelector('.tomsel'))
         </script>
     </x-slot>
 

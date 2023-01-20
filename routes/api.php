@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\BucketController;
+use App\Http\Controllers\CourierController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
@@ -28,6 +29,11 @@ Route::post('add-to-bucket', [BucketController::class, 'add_order']);
 Route::post('request-cn', [ShippingController::class, 'request_cn']);
 Route::post('check-cn-company', [ShippingController::class, 'check_cn_company']);
 Route::post('download-consignment-note', [ShippingController::class, 'download_cn']);
+
+Route::patch('orders/update-tracking', [ShippingController::class, 'update_tracking']);
+Route::post('shipping/first-milestone', [ShippingController::class, 'first_milestone']);
+
+Route::get('get-couriers', [CourierController::class, 'list']);
 
 Route::get('dhl-store', [ShippingController::class, 'dhl_store']);
 
