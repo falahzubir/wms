@@ -128,9 +128,9 @@
                             </tr>
                         </thead>
                         <tbody class="text-center">
-                            @foreach ($orders as $order)
+                            @foreach ($orders as $key => $order)
                                 <tr style="font-size: 0.8rem;">
-                                    <th scope="row">{{ $loop->iteration }}</th>
+                                    <th scope="row">{{ $key + $orders->firstItem() }}</th>
                                     <td><input type="checkbox" name="check_order[]" class="check-order"
                                             id="" value="{{ $order->id }}">
                                     </td>
@@ -231,6 +231,7 @@
                             </tr> --}}
                         </tbody>
                     </table>
+                    {{ $orders->withQueryString()->links() }}
                     <!-- End Default Table Example -->
                 </div>
             </div>
