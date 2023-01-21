@@ -282,7 +282,7 @@ class OrderController extends Controller
             $order->shipping->save();
 
             //update order status
-            update_order_status($order, ORDER_STATUS_READY_TO_SHIP);
+            set_order_status($order, ORDER_STATUS_READY_TO_SHIP);
 
             return back()->with('success', 'Parcel Scanned Successfully')->with('order', $order);
         }

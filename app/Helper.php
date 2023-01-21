@@ -29,14 +29,18 @@ if (! function_exists('currency')) {
 
 if (! function_exists('order_num_format')) {
     /**
-     * Get order number format
+     * Get order number format, use object if order is already loaded, do not use int if page has multiple orders
      *
-     * @param object  $order
+     * @param object $order or int $order_id
      * @return string
      */
     function order_num_format($order)
     {
-        return "SO".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->id);
+        if(is_object($order)){
+            return "SO".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->sales_id);
+        }
+        $order = \App\Models\Order::with(['company'])->find($order);
+        return "SO".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->sales_id);
     }
 }
 
@@ -54,14 +58,14 @@ if (! function_exists('shipment_num_format')) {
     }
 }
 
-if (! function_exists('update_order_status')) {
+if (! function_exists('set_order_status')) {
     /**
      * Update order status
      *
      * @param  object $order, string $status
      * @return void
      */
-    function update_order_status($order, $status)
+    function set_order_status($order, $status)
     {
         $order->status = $status;
         $order->save();
@@ -72,6 +76,8 @@ if (! function_exists('update_order_status')) {
             'remarks' => 'Order status updated to ' . $status,
             'created_by' => auth()->user()->id ?? 1,
         ]);
+
+        return true;
     }
 }
 

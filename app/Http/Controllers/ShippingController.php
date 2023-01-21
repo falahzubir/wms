@@ -328,7 +328,7 @@ class ShippingController extends Controller
             // 'shipment_date' => $request->shipment_date,
         ]);
 
-        update_order_status(Order::find($request->order_id), ORDER_STATUS_PACKING);
+        set_order_status(Order::find($request->order_id), ORDER_STATUS_PACKING);
 
         return back()->with('success', 'Tracking Number Updated Successfully');
     }
@@ -338,7 +338,22 @@ class ShippingController extends Controller
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function update_shipping(Request $request){
-        return true;
+    public function first_milestone(Request $request)
+    {
+        $request->validate([
+            'tracking_id' => 'required',
+        ]);
+
+        $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
+
+        if(set_order_status($shipping->order, ORDER_STATUS_SHIPPING))
+        {
+            return response()->json(['success' => 'ok']);
+        }
+        else
+        {
+            return response()->json(['error' => 'error']);
+        }
+
     }
 }
