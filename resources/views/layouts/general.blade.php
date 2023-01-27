@@ -26,7 +26,7 @@
   <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
 
    <!-- Scripts -->
-   @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+   @vite(['resources/sass/app.css', 'resources/js/app.js'])
 
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
