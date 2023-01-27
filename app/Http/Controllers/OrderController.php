@@ -238,7 +238,7 @@ class OrderController extends Controller
     public function filter_order($request, $orders)
     {
         $orders->when($request->filled('bucket_id'), function ($query) use ($request) {
-            return $query->where('bucket_id', $request->bucketId);
+            return $query->where('bucket_id', $request->bucket_id);
         });
         $orders->when($request->has('search'), function ($query) use ($request) {
             return $query->where('sales_id', 'LIKE', "%$request->search%")
@@ -255,6 +255,9 @@ class OrderController extends Controller
         });
         $orders->when($request->filled('date_to'), function ($query) use ($request) {
             return $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
+        });
+        $orders->when($request->filled('status'), function ($query) use ($request) {
+            return $query->where('status', $request->status);
         });
 
         return $orders;

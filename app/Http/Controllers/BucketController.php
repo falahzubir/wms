@@ -15,7 +15,9 @@ class BucketController extends Controller
      */
     public function index()
     {
-        $buckets = Bucket::where('status', IS_ACTIVE)->get();
+        $buckets = Bucket::with(['orders' => function($query){
+            $query->where('status', ORDER_STATUS_PENDING_ON_BUCKET);
+        }])->where('status', IS_ACTIVE)->get();
         return view('buckets.index', [
             'title' => 'List Buckets',
             'buckets' => $buckets,

@@ -21,7 +21,7 @@
                     <form class="row g-3" action="{{ url()->current() }}">
                         <div class="col-md-12">
                             <input type="text" class="form-control" placeholder="Search" name="search"
-                                value="{{ old('search') }}">
+                                value="{{ old('search', Request::get('search')) }}">
                         </div>
                         <div class="col-md-12">
                             <div class="btn-group" data-toggle="buttons">
@@ -58,10 +58,10 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <input type="date" class="form-control" placeholder="From" name="date_from">
+                            <input type="date" class="form-control" placeholder="From" name="date_from" value="{{old('date_from',Request::get('date_from'))}}">
                         </div>
                         <div class="col-md-3">
-                            <input type="date" class="form-control" placeholder="To" name="date_to">
+                            <input type="date" class="form-control" placeholder="To" name="date_to" value="{{old('date_to',Request::get('date_to'))}}">
                         </div>
                         <div>
                             <span role="button">
@@ -670,7 +670,7 @@
             }
 
             function download_csv(checkedOrder) {
-                const params = `{!! $_SERVER['QUERY_STRING'] !!}`;
+                const params = `{!! $_SERVER['QUERY_STRING']?? '' !!}`;
                 // const param_obj = queryStringToJSON(params);
                 axios.post('/api/download-order-csv?'+params, {
                         order_ids: checkedOrder,
