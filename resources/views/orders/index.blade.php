@@ -18,9 +18,10 @@
                     <h5 class="card-title">Filters..</h5>
 
                     <!-- No Labels Form -->
-                    <form class="row g-3">
+                    <form class="row g-3" action="{{ url()->current() }}">
                         <div class="col-md-12">
-                            <input type="text" class="form-control" placeholder="Search">
+                            <input type="text" class="form-control" placeholder="Search" name="search"
+                                value="{{ old('search') }}">
                         </div>
                         <div class="col-md-12">
                             <div class="btn-group" data-toggle="buttons">
@@ -48,7 +49,7 @@
 
                         </div>
                         <div class="col-md-3">
-                            <select id="inputState" class="form-select">
+                            <select id="inputState" class="form-select" name="date_type">
                                 <option selected>Date Added</option>
                                 <option>Date Shipping</option>
                                 <option>Date Payment Received</option>
@@ -57,10 +58,10 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <input type="date" class="form-control" placeholder="From">
+                            <input type="date" class="form-control" placeholder="From" name="date_from">
                         </div>
                         <div class="col-md-3">
-                            <input type="date" class="form-control" placeholder="To">
+                            <input type="date" class="form-control" placeholder="To" name="date_to">
                         </div>
                         <div>
                             <span role="button">
@@ -77,7 +78,7 @@
                             <x-filter_select name="sales_event" label="Sales Event" id="sales-event-filter" class="col-4 mt-2" /> --}}
                         </div>
                         <div class="text-end">
-                            <button type="button" class="btn btn-primary" id="filter-order">Submit</button>
+                            <button type="submit" class="btn btn-primary" id="filter-order">Submit</button>
                         </div>
                     </form><!-- End No Labels Form -->
 
@@ -141,14 +142,13 @@
                                                 class="bx bx-trash"></i></a>
                                         {{-- add shipping number modal --}}
                                         @empty($order->shipping)
-
-                                        <button type="button" class="btn btn-primary p-0 px-1 add-shipping-number" data-bs-toggle="modal"
-                                            data-bs-target="#add-shipping-number-modal"
-                                            data-orderid="{{ $order->id }}">
-                                            <i class="bi bi-truck"></i>
-                                        </button>
+                                            <button type="button" class="btn btn-primary p-0 px-1 add-shipping-number"
+                                                data-bs-toggle="modal" data-bs-target="#add-shipping-number-modal"
+                                                data-orderid="{{ $order->id }}">
+                                                <i class="bi bi-truck"></i>
+                                            </button>
                                         @endempty
-                                      </td>
+                                    </td>
                                     <td class="text-center">
                                         <div>
                                             <a href="#"><strong>{{ order_num_format($order) }}</strong></a>
@@ -193,7 +193,6 @@
                                                 @case(2)
                                                     <span class="badge bg-success text-light">Paid</span>
                                                 @break
-
 
                                                 @default
                                                     <span class="badge bg-danger text-light">Error</span>
@@ -321,8 +320,8 @@
                             </div>
                             <div class="input-group mb-3">
                                 <label class="input-group-text" for="input-shipment-date">Shipment Date</label>
-                                <input type="date" value="{{ date("Y-m-d") }}" class="form-control" name="shipment_date"
-                                    id="input-shipment-date" aria-describedby="shipmentDate"
+                                <input type="date" value="{{ date('Y-m-d') }}" class="form-control"
+                                    name="shipment_date" id="input-shipment-date" aria-describedby="shipmentDate"
                                     placeholder="Shipment Date" required>
                             </div>
 
@@ -498,6 +497,42 @@
                 })
             }
 
+            // download csv
+            document.querySelector('#download-order-btn').onclick = function() {
+                const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                let checkedValue = inputElements.filter(chk => chk.checked).length;
+
+                if (checkedValue == 0) {
+                    Swal.fire({
+                        title: 'No order selected!',
+                        html: `<div>Are you sure to download {{ isset($order) ? $order->count() : 0 }} order(s).</div>
+                            <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
+                        icon: 'warning',
+                        confirmButtonText: 'Download',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            let checkedOrder = [];
+                            inputElements.forEach(input => {
+                                if (input.checked) {
+                                    checkedOrder.push(input.value);
+                                }
+                            });
+                            download_csv(checkedOrder);
+                        }
+                    })
+                } else {
+                    let checkedOrder = [];
+                    inputElements.forEach(input => {
+                        if (input.checked) {
+                            checkedOrder.push(input.value);
+                        }
+                    });
+                    download_csv(checkedOrder);
+                }
+            }
+
             document.querySelectorAll('.add-shipping-number').forEach(btn => {
                 btn.onclick = function() {
 
@@ -632,6 +667,26 @@
                 var time = currentHours + currentMins + currentSecs;
                 var dateTime = date + '_' + time;
                 return dateTime;
+            }
+
+            function download_csv(checkedOrder) {
+                const params = `{!! $_SERVER['QUERY_STRING'] !!}`;
+                // const param_obj = queryStringToJSON(params);
+                axios.post('/api/download-order-csv?'+params, {
+                        order_ids: checkedOrder,
+                    })
+                    .then(function(response) {
+                        // handle success, close or download
+                        Swal.fire({
+                            title: 'Success!',
+                            text: "Order CSV Downloaded.",
+                            icon: 'success',
+                        });
+                    })
+                    .catch(function(error) {
+                        // handle error
+                        console.log(error);
+                    })
             }
 
             dselect(document.querySelector('.tomsel'))

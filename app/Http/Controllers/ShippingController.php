@@ -18,8 +18,8 @@ use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 class ShippingController extends Controller
 {
 
-    private $dhl_access = "https://apitest.dhlecommerce.asia/rest/v1/OAuth/AccessToken";
-    private $dhl_label = "https://apitest.dhlecommerce.asia/rest/v2/Label";
+    protected $dhl_access = "https://apitest.dhlecommerce.asia/rest/v1/OAuth/AccessToken";
+    protected $dhl_label = "https://apitest.dhlecommerce.asia/rest/v2/Label";
 
 
     /**
@@ -49,27 +49,6 @@ class ShippingController extends Controller
         // OrderLog::create($data);
 
         return $this->dhl_label($request); // for dhl orders
-    }
-
-    /**
-     * DHL access token request, response and save to database, CRON job to run every 20 hours
-     * @return void
-     */
-    public function dhl_generate_access_token()
-    {
-        $url = $this->dhl_access;
-        $dhl_tokens = AccessToken::where('type', 'dhl')->get();
-
-        foreach ($dhl_tokens as $token) {
-
-            $response = Http::get($url . "?clientId=" . $token->client_id . "&password=" . $token->client_secret)->json();
-
-            if ($response['accessTokenResponse']['responseStatus']['code'] == 100000) {
-                $data['token'] = $response['accessTokenResponse']['token'];
-                $data['expires_at'] = date('Y-m-d H:i:s', strtotime('+' . $response['accessTokenResponse']['expires_in_seconds'] . ' seconds'));
-                $token->update($data);
-            }
-        }
     }
 
     /**
@@ -282,10 +261,10 @@ class ShippingController extends Controller
             $pdf->addPDF(storage_path('app/public/' . $attachment), 'all');
         }
 
-        $filename = 'CN_' . date('YmdHis') . '.pdf';
+        $filename = 'CN_' . auth()->user()->id ?? 1 . '_' . date('YmdHis') . '.pdf';
         $pdf->merge();
         $pdf->save(public_path('generated_labels/' . $filename), 'file');
-        return response()->download(public_path('generated_labels/' . $filename));
+        return response()->json(['download_url' => '/generated_labels/' . $filename]);
     }
 
     /**
@@ -341,7 +320,7 @@ class ShippingController extends Controller
     public function first_milestone(Request $request)
     {
         $request->validate([
-            'tracking_id' => 'required',
+            'tracking_id' => 'required|exists:table,column',
         ]);
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
@@ -356,4 +335,6 @@ class ShippingController extends Controller
         }
 
     }
+
+
 }

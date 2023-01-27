@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\OrderExport;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Order;
@@ -63,7 +64,7 @@ class OrderController extends Controller
      */
     public function pending(Request $request)
     {
-        $orders =$this->index()->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_ON_BUCKET]);
+        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_ON_BUCKET]);
 
         $orders = $this->filter_order($request, $orders);
 
@@ -81,7 +82,7 @@ class OrderController extends Controller
      */
     public function ready_to_ship(Request $request)
     {
-        $orders =$this->index()->whereIn('status', [ORDER_STATUS_READY_TO_SHIP]);
+        $orders = $this->index()->whereIn('status', [ORDER_STATUS_READY_TO_SHIP]);
 
         $orders = $this->filter_order($request, $orders);
 
@@ -236,8 +237,24 @@ class OrderController extends Controller
      */
     public function filter_order($request, $orders)
     {
-        $orders->when($request->has('bucketId'), function ($query) use ($request) {
+        $orders->when($request->filled('bucket_id'), function ($query) use ($request) {
             return $query->where('bucket_id', $request->bucketId);
+        });
+        $orders->when($request->has('search'), function ($query) use ($request) {
+            return $query->where('sales_id', 'LIKE', "%$request->search%")
+                ->orWhereHas('customer', function ($q) use ($request) {
+                    return $q->where('name', 'LIKE', "%$request->search%")
+                        ->orWhere('phone', 'LIKE', "%$request->search%");
+                })
+                ->orwhereHas('shipping', function ($q) use ($request) {
+                    return $q->where('tracking_number', 'LIKE', "%$request->search%");
+                });
+        });
+        $orders->when($request->filled('date_from'), function ($query) use ($request) {
+            return $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
+        });
+        $orders->when($request->filled('date_to'), function ($query) use ($request) {
+            return $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
         });
 
         return $orders;
@@ -285,8 +302,7 @@ class OrderController extends Controller
             set_order_status($order, ORDER_STATUS_READY_TO_SHIP);
 
             return back()->with('success', 'Parcel Scanned Successfully')->with('order', $order);
-        }
-        else{
+        } else {
             return back()->with('error', 'Parcel Already Scanned')->with('order', $order);
         }
 
@@ -296,5 +312,24 @@ class OrderController extends Controller
         //     return back()->with('success', 'Parcel Scan Successful');
         // }
 
+    }
+
+    /**
+     * Download order csv
+     * @param  Request $request
+     * @return json
+     */
+    public function download_order_csv(Request $request)
+    {
+        return $request;
+        $orders = $this->index();
+
+        $orders->whereIn('id', $request->order_ids);
+
+        $orders = $this->filter_order($request, $orders);
+
+        $orders = $orders->get();
+
+        return Excel::download(new OrderExport($orders), 'orders_'.date('Ymdhis').'.csv');
     }
 }

@@ -37,8 +37,8 @@
                                     <div class="col-12">
                                         <label for="id" class="form-label">Staff ID</label>
                                         <div class="input-group has-validation">
-                                            <span class="input-group-text" id="inputGroupPrepend">@</span>
-                                            <input type="text" name="id" class="form-control" id="id"
+                                            <span class="input-group-text" id="inputGroupPrepend">{{ config('app.staff_prefix') }}</span>
+                                            <input type="text" name="staff_id" class="form-control" id="id"
                                                 required>
                                             <div class="invalid-feedback">Please enter your staff ID.</div>
                                         </div>
