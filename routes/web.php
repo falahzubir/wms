@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ShippingController;
@@ -44,6 +45,13 @@ Route::middleware(['auth'])->group(function() {
         Route::get('edit/{id}', [BucketController::class, 'edit'])->name('buckets.edit');
         Route::post('update/{id}', [BucketController::class, 'update'])->name('buckets.update');
         Route::get('delete/{id}', [BucketController::class, 'destroy'])->name('buckets.destroy');
+        Route::post('download_cn', [ShippingController::class, 'download_cn_bucket'])->name('buckets.download_cn');
+    });
+
+    // group routes for bucket batches
+    Route::group(['prefix' => 'bucket-batches'], function () {
+        Route::post('generate_pl', [BucketBatchController::class, 'generate_pl'])->name('buckets.generate_pl');
+        Route::get('download_pl/{batch}', [BucketBatchController::class, 'download_pl'])->name('bucket-batches.download_pl');
     });
 
     Route::group(['prefix' => 'shipping'], function () {

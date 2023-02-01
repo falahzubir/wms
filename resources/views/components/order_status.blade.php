@@ -1,12 +1,12 @@
-@props(['status', 'bucket' => null])
+@props(['order'])
 <div>
-    @switch($status)
+    @switch($order->status)
         @case(ORDER_STATUS_PENDING)
             <span class="badge bg-secondary text-light">Pending</span>
         @break
 
         @case(ORDER_STATUS_PENDING_ON_BUCKET)
-            <span class="badge bg-secondary text-light">Pending</span>
+            <span class="badge bg-warning text-light">Processing</span>
             {{-- <span class="badge bg-primary text-light">On Bucket</span> --}}
         @break
 
@@ -38,6 +38,9 @@
     @endswitch
 </div>
 
-@if ($bucket != null)
-    <div class="text-nowrap very-small-text">[{{ $bucket->name }}]</div>
+@if ($order->bucket != null)
+    <div class="text-nowrap very-small-text">[{{ $order->bucket->name }}]</div>
+@endif
+@if ($order->batch != null)
+    <div class="text-nowrap very-small-text">[{{ get_picking_batch($order) }}]</div>
 @endif

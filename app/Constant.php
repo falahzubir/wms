@@ -5,7 +5,7 @@ if(!defined('IS_INACTIVE')) define('IS_INACTIVE', 1);
 
 // paginate limit
 if(!defined('PAGINATE_LIMIT')) define('PAGINATE_LIMIT', 10);
-if(!defined('ORDER_NUMBER_LENGTH')) define('ORDER_NUMBER_LENGTH', '09');
+if(!defined('ORDER_NUMBER_LENGTH')) define('ORDER_NUMBER_LENGTH', '09'); // must have leading zero
 
 // order status
 if(!defined('ORDER_STATUS_PENDING')) define('ORDER_STATUS_PENDING', '1');
@@ -43,3 +43,6 @@ if(!defined('ACTION_GENERATE_CN')) define('ACTION_GENERATE_CN', 'generate-cn');
 if(!defined('ACTION_DOWNLOAD_CN')) define('ACTION_DOWNLOAD_CN', 'download-cn');
 if(!defined('ACTION_DOWNLOAD_ORDER')) define('ACTION_DOWNLOAD_ORDER', 'download-order');
 if(!defined('ACTION_UPLOAD_TRACKING_BULK')) define('ACTION_UPLOAD_TRACKING_BULK', 'upload-tracking-bulk');
+
+// box minimum quantity
+if(!defined('BOX_MINIMUM_QUANTITY')) define('BOX_MINIMUM_QUANTITY', 4);

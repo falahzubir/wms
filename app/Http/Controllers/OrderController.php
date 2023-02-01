@@ -21,7 +21,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        return Order::with(['customer', 'items', 'items.product', 'shipping'])
+        return Order::with(['customer', 'items', 'items.product', 'shipping', 'bucket', 'batch', 'company'])
             ->where('is_active', IS_ACTIVE);
 
         // return $orders;
@@ -64,7 +64,7 @@ class OrderController extends Controller
      */
     public function pending(Request $request)
     {
-        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_ON_BUCKET]);
+        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING]);
 
         $orders = $this->filter_order($request, $orders);
 

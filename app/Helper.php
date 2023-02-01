@@ -53,8 +53,8 @@ if (! function_exists('shipment_num_format')) {
      */
     function shipment_num_format($order)
     {
-        // return "MYAAH".$order->company->code."00".$order->id;
-        return "MYAAH".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->id);
+        return "MYAAH".$order->company->code."10".$order->id;
+        // return "MYAAH".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->id);
     }
 }
 
@@ -103,5 +103,22 @@ if(! function_exists('get_couriers')){
     function get_couriers()
     {
         return \App\Models\Courier::where('status', 1)->get();
+    }
+}
+
+if(! function_exists('get_picking_batch')){
+    /**
+     * Get courier by id
+     *
+     * @param  Object $order or int $batch
+     * @return json
+     */
+    function get_picking_batch($order_or_batch)
+    {
+        if(is_object($order_or_batch)){
+            return date("ymd", strtotime($order_or_batch->batch->created_at)) .'\\'. sprintf("%03d", $order_or_batch->batch->batch_id);
+        }
+        $batch = \App\Models\BucketBatch::find($order_or_batch);
+        return date("ymd", strtotime($batch->created_at)) .'\\'. sprintf("%03d", $batch->batch_id);
     }
 }

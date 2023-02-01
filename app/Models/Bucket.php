@@ -14,4 +14,9 @@ class Bucket extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function batches()
+    {
+        return $this->hasMany(BucketBatch::class);
+    }
 }

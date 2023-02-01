@@ -14,7 +14,7 @@
         <li class="nav-item">
             <a class="nav-link {{ Route::current()->getName() != 'orders.overall' ? 'collapsed' : '' }}" href="/orders/overall">
                 <i class="bi bi-inboxes"></i>
-                <span>Overall</span>
+                <span>Overall List</span>
             </a>
         </li><!-- End Overall Order Nav -->
 

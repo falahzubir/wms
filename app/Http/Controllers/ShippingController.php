@@ -48,7 +48,7 @@ class ShippingController extends Controller
 
         // OrderLog::create($data);
 
-        return $this->dhl_label($request); // for dhl orders
+        return $this->dhl_label($request->order_ids); // for dhl orders
     }
 
     /**
@@ -72,20 +72,19 @@ class ShippingController extends Controller
      * @param Request $request
      * @return boolean
      */
-    public function dhl_label($request)
+    public function dhl_label($order_ids)
     {
 
         $url = $this->dhl_label;
 
         // filter only selected order shipping not exists
         $orders = Order::doesntHave('shipping')->with(['customer', 'items', 'items.product',])
-            ->whereIn('id', $request->order_ids)->get();
+            ->whereIn('id', $order_ids)->get();
 
         if (count($orders) == 0) {
             return 0;
         }
 
-        logger($orders);
         $company = Company::find($orders[0]->company_id); //temporary, need to check if all orders are from same company
 
         $access_token = AccessToken::where('company_id', $company->id)->where('type', 'dhl')->first(); // DHL API access token, expires every 24 hours, could be refreshed every 12 hours
@@ -261,10 +260,35 @@ class ShippingController extends Controller
             $pdf->addPDF(storage_path('app/public/' . $attachment), 'all');
         }
 
-        $filename = 'CN_' . auth()->user()->id ?? 1 . '_' . date('YmdHis') . '.pdf';
+        $filename = 'CN_' . date('Ymd_His') . '.pdf';
         $pdf->merge();
         $pdf->save(public_path('generated_labels/' . $filename), 'file');
-        return response()->json(['download_url' => '/generated_labels/' . $filename]);
+        //download
+        return response()->download(public_path('generated_labels/' . $filename));//return $pdf->download($filename);
+        // return response()->json(['download_url' => '/generated_labels/' . $filename]);
+    }
+
+    public function download_cn_bucket(Request $request)
+    {
+        $orders = Order::select('id')->where('bucket_id', $request->bucket_id)
+            ->where('status', ORDER_STATUS_PENDING_ON_BUCKET)->get();
+        $order_list = $orders->pluck('id')->toArray();
+
+        $this->dhl_label($order_list);
+
+        // return $request;
+        // $attachments = Shipping::select('attachment')->get();
+        // $attachments = $attachments->pluck('attachment')->toArray();
+
+        // $pdf = PDFMerger::init();
+        // foreach ($attachments as $attachment) {
+        //     $pdf->addPDF(storage_path('app/public/' . $attachment), 'all');
+        // }
+
+        // $filename = 'CN_' . auth()->user()->id ?? 1 . '_' . date('YmdHis') . '.pdf';
+        // $pdf->merge();
+        // $pdf->save(public_path('generated_labels/' . $filename), 'file');
+        // return response()->json(['download_url' => '/generated_labels/' . $filename]);
     }
 
     /**

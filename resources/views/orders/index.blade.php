@@ -215,8 +215,7 @@
                                         @endisset
                                     </td>
                                     <td>
-
-                                        <x-order_status :status="$order->status" :bucket="$order->bucket" />
+                                        <x-order_status :order="$order" />
 
                                     </td>
                                 </tr>
@@ -630,7 +629,7 @@
                         let d = new Date();
                         let cnname = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + "-" + d.getHours() + d
                             .getMinutes() + d.getSeconds();
-                        link.setAttribute('download', `CN_${get_current_date_time()}.pdf`);
+                        // link.setAttribute('download', `CN_${get_current_date_time()}.pdf`);
                         document.body.appendChild(link);
                         link.click();
                         // handle success, close or download

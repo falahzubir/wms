@@ -60,4 +60,9 @@ class Order extends Model
         return $this->hasOne(Shipping::class);
     }
 
+    public function batch()
+    {
+        return $this->belongsTo(BucketBatch::class, 'bucket_batch_id');
+    }
+
 }

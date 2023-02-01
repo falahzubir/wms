@@ -100,7 +100,8 @@ class BucketController extends Controller
         ]);
 
         Order::whereIn('id', $request->order_ids)->update([
-            'bucket_id' => $request->bucket_id
+            'bucket_id' => $request->bucket_id,
+            'status' => ORDER_STATUS_PENDING_ON_BUCKET,
         ]);
 
 
@@ -114,5 +115,13 @@ class BucketController extends Controller
         }
 
         return response()->json(['message' => 'Order added to bucket successfully.']);
+    }
+
+    public function download_cn(Request $request)
+    {
+        $bucket = Bucket::find($request->bucket_id);
+        $orders = $bucket->orders;
+        $pdf = PDF::loadView('buckets.cn', compact('orders'));
+        return $pdf->download('CN.pdf');
     }
 }
