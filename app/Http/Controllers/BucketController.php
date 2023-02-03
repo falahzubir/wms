@@ -16,7 +16,7 @@ class BucketController extends Controller
     public function index()
     {
         $buckets = Bucket::with(['orders' => function($query){
-            $query->where('status', ORDER_STATUS_PENDING_ON_BUCKET);
+            $query->where('status', ORDER_STATUS_PROCESSING);
         }])->where('status', IS_ACTIVE)->get();
         return view('buckets.index', [
             'title' => 'List Buckets',
@@ -101,14 +101,14 @@ class BucketController extends Controller
 
         Order::whereIn('id', $request->order_ids)->update([
             'bucket_id' => $request->bucket_id,
-            'status' => ORDER_STATUS_PENDING_ON_BUCKET,
+            'status' => ORDER_STATUS_PROCESSING,
         ]);
 
 
         foreach ($request->order_ids as $order_id) {
             OrderLog::create([
                 'order_id' => $order_id,
-                'order_status_id' => ORDER_STATUS_PENDING_ON_BUCKET,
+                'order_status_id' => ORDER_STATUS_PROCESSING,
                 'remarks' => 'Order added to bucket',
                 'created_by' => 1,
             ]);

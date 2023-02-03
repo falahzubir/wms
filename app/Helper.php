@@ -51,9 +51,9 @@ if (! function_exists('shipment_num_format')) {
      * @param object  $shipment
      * @return string
      */
-    function shipment_num_format($order)
+    function shipment_num_format($order, $access_token)
     {
-        return "MYAAH".$order->company->code."10".$order->id;
+        return $access_token->prefix.$order->company->code."\\".date("ymd", strtotime($order->batch->created_at))."\\".sprintf('%03d', $order->batch->batch_id);
         // return "MYAAH".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->id);
     }
 }
@@ -110,15 +110,15 @@ if(! function_exists('get_picking_batch')){
     /**
      * Get courier by id
      *
-     * @param  Object $order or int $batch
+     * @param  Object $order or int $batch, string $delimiter
      * @return json
      */
-    function get_picking_batch($order_or_batch)
+    function get_picking_batch($order_or_batch, $delimiter="\\")
     {
         if(is_object($order_or_batch)){
-            return date("ymd", strtotime($order_or_batch->batch->created_at)) .'\\'. sprintf("%03d", $order_or_batch->batch->batch_id);
+            return date("ymd", strtotime($order_or_batch->batch->created_at)) .$delimiter. sprintf("%03d", $order_or_batch->batch->batch_id);
         }
         $batch = \App\Models\BucketBatch::find($order_or_batch);
-        return date("ymd", strtotime($batch->created_at)) .'\\'. sprintf("%03d", $batch->batch_id);
+        return date("ymd", strtotime($batch->created_at)) .$delimiter. sprintf("%03d", $batch->batch_id);
     }
 }

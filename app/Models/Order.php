@@ -65,4 +65,9 @@ class Order extends Model
         return $this->belongsTo(BucketBatch::class, 'bucket_batch_id');
     }
 
+    public function courier()
+    {
+        return $this->belongsTo(Courier::class);
+    }
+
 }

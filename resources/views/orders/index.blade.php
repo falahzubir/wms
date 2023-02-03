@@ -58,10 +58,12 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <input type="date" class="form-control" placeholder="From" name="date_from" value="{{old('date_from',Request::get('date_from'))}}">
+                            <input type="date" class="form-control" placeholder="From" name="date_from" id="start-date"
+                                value="{{ old('date_from', Request::get('date_from')) }}">
                         </div>
                         <div class="col-md-3">
-                            <input type="date" class="form-control" placeholder="To" name="date_to" value="{{old('date_to',Request::get('date_to'))}}">
+                            <input type="date" class="form-control" placeholder="To" name="date_to" id="end-date"
+                                value="{{ old('date_to', Request::get('date_to')) }}">
                         </div>
                         <div>
                             <span role="button">
@@ -69,13 +71,49 @@
                             </span>
                         </div>
                         <div class="expand row">
-                            {{-- <x-filter_select name="courier" label="Courier(s)" id="courier-filter" class="col-4 mt-2" />
-                            <x-filter_select name="purchase_type" label="Purchase Type(s)" id="purchase-type-filter" class="col-4 mt-2" />
-                            <x-filter_select name="team" label="Team(s)" id="team-filter" class="col-4 mt-2" />
-                            <x-filter_select name="customer_type" label="Customer Type(s)" id="customer-type-filter" class="col-4 mt-2" />
-                            <x-filter_select name="product" label="Product(s)" id="product-filter" class="col-4 mt-2" />
-                            <x-filter_select name="op_model" label="Operational Model(s)" id="operational-model-filter" class="col-4 mt-2" />
-                            <x-filter_select name="sales_event" label="Sales Event" id="sales-event-filter" class="col-4 mt-2" /> --}}
+                            @isset($filter_data->couriers)
+                                <x-filter_select name="couriers" label="Courier(s)" id="courier-filter" class="col-4 mt-2">
+                                    @foreach ($filter_data->couriers as $courier)
+                                        <option value="{{ $courier->id }}" {{ (request('couriers') != null) ? (in_array($courier->id, request('couriers')) ? 'selected': '') : '' }}>{{ $courier->name }}</option>
+                                    @endforeach
+                                </x-filter_select>
+                            @endisset
+                            @isset($filter_data->purchase_types)
+                                <x-filter_select name="purchase_types" label="Purchase Type(s)" id="purchase-type-filter"
+                                    class="col-4 mt-2">
+                                    @foreach ($filter_data->purchase_types as $id => $name)
+                                        <option value="{{ $id }}" {{ (request('purchase_types') != null) ? (in_array($id, request('purchase_types')) ? 'selected': '') : '' }}>{{ $name }}</option>
+                                    @endforeach
+                                </x-filter_select>
+                            @endisset
+                            @isset($filter_data->teams)
+                                <x-filter_select name="teams" label="Team(s)" id="team-filter" class="col-4 mt-2" />
+                            @endisset
+                            @isset($filter_data->customer_types)
+                                <x-filter_select name="customer_types" label="Customer Type(s)" id="customer-type-filter"
+                                    class="col-4 mt-2">
+                                    @foreach ($filter_data->customer_types as $id => $name)
+                                        <option value="{{ $id }}" {{ (request('customer_types') != null) ? (in_array($id, request('customer_types')) ? 'selected': '') : '' }}>{{ $name }}</option>
+                                    @endforeach
+                                </x-filter_select>
+                            @endisset
+                            @isset($filter_data->products)
+                                <x-filter_select name="products" label="Product(s)" id="product-filter" class="col-4 mt-2">
+                                    @foreach ($filter_data->products as $product)
+                                        <option value="{{ $product->id }}" {{ (request('products') != null) ? (in_array($product->id, request('products')) ? 'selected': '') : '' }}>{{ $product->name }}</option>
+                                    @endforeach
+                                </x-filter_select>
+                            @endisset
+                            @isset($filter_data->operational_models)
+                                <x-filter_select name="op_models" label="Operational Model(s)" id="operational-model-filter"
+                                    class="col-4 mt-2">
+                                </x-filter_select>
+                            @endisset
+                            @isset($filter_data->sales_events)
+                                <x-filter_select name="sales_events" label="Sales Event" id="sales-event-filter"
+                                    class="col-4 mt-2">
+                                </x-filter_select>
+                            @endisset
                         </div>
                         <div class="text-end">
                             <button type="submit" class="btn btn-primary" id="filter-order">Submit</button>
@@ -88,6 +126,10 @@
             <div class="card" style="font-size:0.8rem" id="order-table">
                 <div class="card-body">
                     <div class="card-title text-end">
+                        @if (in_array(ACTION_GENERATE_PICKING, $actions))
+                            <button class="btn btn-primary" id="generate-picking-btn"><i
+                                    class="bi bi-file-earmark-ruled"></i> Generate Picking</button>
+                        @endif
                         @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
                             <button class="btn btn-info" id="add-to-bucket-btn"><i class="bi bi-basket"></i> Add to
                                 Bucket</button>
@@ -108,9 +150,11 @@
                                 Download CN</button>
                         @endif
                         @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
-                            <button class="btn btn-primary" id="download-order-btn"><i class="bi bi-cloud-download"></i>
+                            <button class="btn btn-primary" id="download-order-btn"><i
+                                    class="bi bi-cloud-download"></i>
                                 Download CSV</button>
                         @endif
+
 
                     </div>
                     <!-- Default Table -->
@@ -129,6 +173,7 @@
                             </tr>
                         </thead>
                         <tbody class="text-center">
+                            @if($orders->count())
                             @foreach ($orders as $key => $order)
                                 <tr style="font-size: 0.8rem;">
                                     <th scope="row">{{ $key + $orders->firstItem() }}</th>
@@ -220,6 +265,15 @@
                                     </td>
                                 </tr>
                             @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="100%" class="text-center">
+                                        <div class="alert alert-warning" role="alert">
+                                            No order found!
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
                             {{-- <tr>
                                 <td colspan="100%" class="text-center">
                                     <div class="spinner-border text-secondary" role="status">
@@ -343,6 +397,30 @@
 
     <x-slot name="script">
         <script>
+            let start = document.querySelector('#start-date');
+            let end = document.querySelector('#end-date');
+            document.querySelector('#btn-check-today').onclick = function() {
+                start.value = moment().format('YYYY-MM-DD');
+                end.value = moment().format('YYYY-MM-DD');
+            }
+            document.querySelector('#btn-check-yesterday').onclick = function() {
+                start.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
+                end.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
+            }
+            document.querySelector('#btn-check-this-month').onclick = function() {
+                start.value = moment().startOf('month').format('YYYY-MM-DD');
+                end.value = moment().endOf('month').format('YYYY-MM-DD');
+            }
+            document.querySelector('#btn-check-last-month').onclick = function() {
+                start.value = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
+                end.value = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+            }
+            document.querySelector('#btn-check-overall').onclick = function() {
+                start.value = '';
+                end.value = '';
+            }
+
+
             document.querySelector('#filter-order').onclick = function() {
                 document.querySelector('#order-table').style.display = 'block';
             }
@@ -540,6 +618,72 @@
                 }
             })
 
+            @if (in_array(ACTION_GENERATE_PICKING, $actions))
+                document.querySelector('#generate-picking-btn').onclick = function() {
+                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                    let checkedValue = inputElements.filter(chk => chk.checked).length;
+                    let bucket_id = {{ $_GET['bucket_id'] }};
+                    // sweet alert
+                    if (checkedValue == 0) {
+                        Swal.fire({
+                            title: 'No order selected!',
+                            text: "Please select at least one order to generate picking list.",
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        })
+                    } else {
+                        //cnfirmation to generate picking list
+                        Swal.fire({
+                            title: 'Are you sure to generate picking list separately?',
+                            html: `You are about to generate picking list for ${checkedValue} order(s).`,
+                            footer: '<small>Note: Shipment Note will be generated separately.</small>',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Yes, generate it!',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                let checkedOrder = [];
+                                inputElements.forEach(input => {
+                                    if (input.checked) {
+                                        checkedOrder.push(input.value);
+                                    }
+                                });
+                                axios.post(`{{ route('buckets.generate_pl') }}`, {
+                                        order_ids: checkedOrder,
+                                        bucket_id: bucket_id
+                                    })
+                                    .then(function(response) {
+                                        window.location.href = '/bucket-batches/download_pl/' + response.data
+                                            .batch_id;
+                                        // reload when click ok
+                                        Swal.fire({
+                                            title: 'Success',
+                                            text: 'Picking list generated successfully.',
+                                            icon: 'success',
+                                            confirmButtonText: 'OK'
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                document.querySelectorAll('.check-order').forEach(
+                                                    input => {
+                                                        input.checked = false;
+                                                    })
+                                                location.reload();
+                                            }
+                                        })
+                                    })
+                                    .catch(function(error) {
+                                        if (error.response) {
+                                            Swal.fire('Error', error.response.data.message, 'error')
+                                        }
+                                    })
+                            }
+                        })
+                    }
+                }
+            @endif
+
 
             async function generateCN() {
                 //show loading modal
@@ -669,9 +813,9 @@
             }
 
             function download_csv(checkedOrder) {
-                const params = `{!! $_SERVER['QUERY_STRING']?? '' !!}`;
+                const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
                 // const param_obj = queryStringToJSON(params);
-                axios.post('/api/download-order-csv?'+params, {
+                axios.post('/api/download-order-csv?' + params, {
                         order_ids: checkedOrder,
                     })
                     .then(function(response) {
@@ -688,7 +832,16 @@
                     })
             }
 
-            dselect(document.querySelector('.tomsel'))
+            document.querySelectorAll('.tomsel').forEach((el) => {
+                let settings = {
+                    plugins: {
+                        remove_button: {
+                            title: 'Remove this item',
+                        }
+                    },
+                };
+                new TomSelect(el, settings);
+            });
         </script>
     </x-slot>
 

@@ -1330,3 +1330,16 @@ h6 {
     z-index: 9999;
     border-radius: 0px
 }
+
+.ts-control{
+    flex-wrap: nowrap;
+    overflow: scroll;
+}
+
+.ts-control .item{
+    white-space: nowrap;
+}
+.multi{
+    padding: 0;
+    border: 0;
+}

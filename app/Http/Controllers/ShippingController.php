@@ -60,7 +60,7 @@ class ShippingController extends Controller
         foreach ($orders as $order) {
             $data[$order->id]['order_id'] = $order->id;
             $data[$order->id]['courier'] = $courier;
-            $data[$order->id]['shipment_number'] = shipment_num_format($order);
+            $data[$order->id]['shipment_number'] = shipment_num_format($order,);
             $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
         }
 
@@ -78,8 +78,12 @@ class ShippingController extends Controller
         $url = $this->dhl_label;
 
         // filter only selected order shipping not exists
-        $orders = Order::doesntHave('shipping')->with(['customer', 'items', 'items.product',])
-            ->whereIn('id', $order_ids)->get();
+        $orders = Order::doesntHave('shipping')->with([
+            'customer', 'items', 'items.product',
+            'company.access_tokens'=> function($query){
+                $query->where('type', 'dhl');
+            }
+        ])->whereIn('id', $order_ids)->get();
 
         if (count($orders) == 0) {
             return 0;
@@ -168,7 +172,7 @@ class ShippingController extends Controller
             $data['labelRequest']['bd']['shipmentItems'][$order_count]['returnAddress']['phone'] = $company->phone ?? null;
             $data['labelRequest']['bd']['shipmentItems'][$order_count]['returnAddress']['email'] = $company->email ?? null;
 
-            $data['labelRequest']['bd']['shipmentItems'][$order_count]['shipmentID'] = shipment_num_format($order); //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
+            $data['labelRequest']['bd']['shipmentItems'][$order_count]['shipmentID'] = shipment_num_format($order, $access_token); //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
             $data['labelRequest']['bd']['shipmentItems'][$order_count]['returnMode'] = "02"; //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
             $data['labelRequest']['bd']['shipmentItems'][$order_count]['deliveryConfirmationNo'] = null; //not used
             $data['labelRequest']['bd']['shipmentItems'][$order_count]['packageDesc'] = substr($package_description, 0, 50); // required
@@ -271,7 +275,7 @@ class ShippingController extends Controller
     public function download_cn_bucket(Request $request)
     {
         $orders = Order::select('id')->where('bucket_id', $request->bucket_id)
-            ->where('status', ORDER_STATUS_PENDING_ON_BUCKET)->get();
+            ->where('status', ORDER_STATUS_PROCESSING)->get();
         $order_list = $orders->pluck('id')->toArray();
 
         $this->dhl_label($order_list);
@@ -360,5 +364,52 @@ class ShippingController extends Controller
 
     }
 
+    /**
+     * Update order to shipping on delivered milestone.
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function delivered_milestone(Request $request)
+    {
+        $request->validate([
+            'tracking_id' => 'required|exists:table,column',
+        ]);
+
+        $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
+
+        if(set_order_status($shipping->order, ORDER_STATUS_DELIVERED))
+        {
+            return response()->json(['success' => 'ok']);
+        }
+        else
+        {
+            return response()->json(['error' => 'error']);
+        }
+
+    }
+
+    /**
+     * Update order to shipping on returned milestone.
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function returned_milestone(Request $request)
+    {
+        $request->validate([
+            'tracking_id' => 'required|exists:table,column',
+        ]);
+
+        $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
+
+        if(set_order_status($shipping->order, ORDER_STATUS_RETURNED))
+        {
+            return response()->json(['success' => 'ok']);
+        }
+        else
+        {
+            return response()->json(['error' => 'error']);
+        }
+
+    }
 
 }

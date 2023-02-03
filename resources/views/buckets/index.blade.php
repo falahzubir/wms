@@ -63,7 +63,7 @@
                                     <button class="btn btn-primary rounded-pill" id="download-consignment"
                                         data-bs-toggle="modal" data-bs-target="#download-modal" onclick="download_consignment({{ $bucket->id }})"><i
                                             class="bi bi-download"></i></button>
-                                    <a href="/orders/overall?bucket_id={{ $bucket->id }}&status={{ ORDER_STATUS_PENDING_ON_BUCKET }}"
+                                    <a href="/orders/processing?bucket_id={{ $bucket->id }}&status={{ ORDER_STATUS_PROCESSING }}"
                                         class="btn btn-info rounded-pill"><i class="bi bi-list"></i></a>
                                     <button class="btn btn-warning rounded-pill" class="edit-bucket"
                                         onclick="edit_bucket(this)" data-bs-toggle="modal"

@@ -14,7 +14,7 @@ class BucketBatchController extends Controller
 {
     /**
      * Generate Picking List for the orders in the bucket by batch
-     *
+     * @param Obj $request bucket_id & order_ids (list of order ids)
      * @return \Illuminate\Http\Response
      */
     public function generate_pl(Request $request)
@@ -22,14 +22,19 @@ class BucketBatchController extends Controller
         $prev_batch = BucketBatch::whereDate('created_at', date('Y-m-d'))->latest('created_at')->first()->batch_id ?? 0;
         // $prev_batch = BucketBatch::where('bucket_id', $request->bucket_id)->whereDate('created_at', Carbon::now()->month)->latest('created_at')->first()->batch_id ?? 0;
 
+        $orders = Order::whereIn('id', $request->order_ids)->whereNull('bucket_batch_id')->get();
+        if($orders->count() == 0){
+            return response()->json([
+                'message' => 'No orders or all orders already added to to picking list',
+            ], 422);
+        }
         $batch = BucketBatch::create([
             'batch_id' => $prev_batch + 1,
             'bucket_id' => $request->bucket_id,
         ]);
 
-        Order::whereIn('id', $request->order_ids)->update([
-            'bucket_batch_id' => $batch->id,
-        ]);
+        $ids = $orders->pluck('id')->toArray();
+        Order::whereIn('id', $ids)->update(['bucket_batch_id' => $batch->id]);
 
         return response()->json([
             'message' => 'Orders added to batch successfully',
@@ -68,13 +73,9 @@ class BucketBatchController extends Controller
             }
         }
 
-        // return view('exports.picking_list', compact('products', 'total_products'));
-        // $pdf = \PDF::loadView('pdf.picking_list', compact('orders', 'batch'));
-        return Excel::download(new PickingListExport($products, $total_products), 'picking_list.csv', \Maatwebsite\Excel\Excel::CSV, [
+        return Excel::download(new PickingListExport($products, $total_products), 'picking_list_' . get_picking_batch($batch->id, '_') .'.csv', \Maatwebsite\Excel\Excel::CSV, [
             'Content-Type' => 'text/csv',
         ]);
-
-        // return $pdf->download('picking_list.pdf');
     }
 
 }

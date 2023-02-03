@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\OrderExport;
 use App\Models\Company;
+use App\Models\Courier;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -23,10 +24,54 @@ class OrderController extends Controller
     {
         return Order::with(['customer', 'items', 'items.product', 'shipping', 'bucket', 'batch', 'company'])
             ->where('is_active', IS_ACTIVE);
-
-        // return $orders;
-
     }
+
+    /**
+     * List all filter data, exclude some data
+     * @param  array $exclude
+     * @return object
+     */
+    public function filter_data_exclude($exclude = [])
+    {
+        $filter_data = [];
+        if (!in_array(ORDER_FILTER_COURIER, $exclude)) {
+            $filter_data['couriers'] = Courier::where('status', IS_ACTIVE)->get();
+        }
+        if (!in_array(ORDER_FILTER_PRODUCT, $exclude)) {
+            $filter_data['products'] = Product::where('is_active', IS_ACTIVE)->get();
+        }
+        if (!in_array(ORDER_FILTER_COMPANY, $exclude)) {
+            $filter_data['companies'] = Company::get();
+        }
+        if (!in_array(ORDER_FILTER_PURCHASE_TYPE, $exclude)) {
+            $filter_data['purchase_types'] = [
+                PURCHASE_TYPE_COD => 'COD',
+                PURCHASE_TYPE_PAID => 'Paid',
+                PURCHASE_TYPE_INSTALLMENT => 'Installment'
+            ];
+        }
+        if (!in_array(ORDER_FILTER_CUSTOMER_TYPE, $exclude)) {
+            $filter_data['customer_types'] = [
+                CUSTOMER_TYPE_LEAD => 'Lead',
+                CUSTOMER_TYPE_PROSPECT => 'Prospect',
+                CUSTOMER_TYPE_FOLLOWUP => 'Followup',
+                CUSTOMER_TYPE_BUYER => 'Buyer',
+                CUSTOMER_TYPE_DEBTOR => 'Debtor'
+            ];
+        }
+        if (!in_array(ORDER_FILTER_SALES_EVENT, $exclude)) {
+            $filter_data['sale_events'] = true; // http request
+        }
+        if (!in_array(ORDER_FILTER_TEAM, $exclude)) {
+            $filter_data['teams'] = true; //http request
+        }
+        if (!in_array(ORDER_FILTER_OP_MODEL, $exclude)) {
+            $filter_data['operational_models'] = true; //http request
+        }
+
+        return (object) $filter_data;
+    }
+
     /**
      * List all active orders
      * @return view
@@ -40,6 +85,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'List Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude(),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
         ]);
     }
@@ -71,7 +117,27 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Pending Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude(),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
+        ]);
+    }
+
+    /**
+     * Lists processing order
+     * @param  Request $request
+     * @return view
+     */
+    public function processing(Request $request)
+    {
+        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PROCESSING]);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Processing Orders',
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude(),
+            'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
         ]);
     }
 
@@ -89,6 +155,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Ready To Ship Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude(),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
         ]);
     }
@@ -107,6 +174,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Packing Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude(),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -125,6 +193,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Shipping Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude(),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -143,6 +212,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Delivered Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude(),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -162,6 +232,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Rejected Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude(),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -181,6 +252,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Completed Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude(),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -209,6 +281,10 @@ class OrderController extends Controller
         $data['total_price'] = $webhook['total_price'] * 100;
         $data['sold_by'] = $webhook['sold_by'];
         $data['event_id'] = $webhook['event_id'];
+        $data['courier_id'] = $webhook['courier_id'];
+        $data['customer_type'] = $webhook['customer_type'];
+        $data['operational_model_id'] = $webhook['operational_model_id'];
+        $data['team_id'] = $webhook['team_id'];
 
         $customer = Customer::updateorCreate($webhook['customer']);
         $data['customer_id'] = $customer->id;
@@ -238,26 +314,55 @@ class OrderController extends Controller
     public function filter_order($request, $orders)
     {
         $orders->when($request->filled('bucket_id'), function ($query) use ($request) {
-            return $query->where('bucket_id', $request->bucket_id);
+             $query->where('bucket_id', $request->bucket_id);
         });
         $orders->when($request->has('search'), function ($query) use ($request) {
-            return $query->where('sales_id', 'LIKE', "%$request->search%")
-                ->orWhereHas('customer', function ($q) use ($request) {
-                    return $q->where('name', 'LIKE', "%$request->search%")
-                        ->orWhere('phone', 'LIKE', "%$request->search%");
-                })
-                ->orwhereHas('shipping', function ($q) use ($request) {
-                    return $q->where('tracking_number', 'LIKE', "%$request->search%");
-                });
+             $query->where(function ($query) use ($request) {
+                $query->where('sales_id', 'LIKE', "%$request->search%")
+                    ->orWhereHas('customer', function ($q) use ($request) {
+                        $q->where('name', 'LIKE', "%$request->search%")
+                            ->orWhere('phone', 'LIKE', "%$request->search%");
+                    })
+                    ->orwhereHas('shipping', function ($q) use ($request) {
+                        $q->where('tracking_number', 'LIKE', "%$request->search%");
+                    });
+            });
         });
+        $orders->when($request->filled('companies'), function ($query) use ($request) {
+             $query->whereIn('company_id', $request->companies);
+        });
+        $orders->when($request->filled('couriers'), function ($query) use ($request) {
+             $query->whereIn('courier_id', $request->couriers);
+        });
+        $orders->when($request->filled('events'), function ($query) use ($request) {
+             $query->whereIn('event_id', $request->events);
+        });
+        $orders->when($request->filled('op_models'), function ($query) use ($request) {
+             $query->whereIn('operational_model_id', $request->op_models);
+        });
+        $orders->when($request->filled('teams'), function ($query) use ($request) {
+             $query->whereIn('team_id', $request->teams);
+        });
+        $orders->when($request->filled('customer_types'), function ($query) use ($request) {
+             $query->whereIn('customer_type', $request->customer_types);
+        });
+        $orders->when($request->filled('purchase_types'), function ($query) use ($request) {
+             $query->whereIn('purchase_type', $request->purchase_types);
+        });
+        $orders->when($request->filled('products'), function ($query) use ($request) {
+             $query->whereHas('items', function ($q) use ($request) {
+                 $q->whereIn('product_id', $request->products);
+            });
+        });
+
         $orders->when($request->filled('date_from'), function ($query) use ($request) {
-            return $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
+             $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
         });
         $orders->when($request->filled('date_to'), function ($query) use ($request) {
-            return $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
+             $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
         });
         $orders->when($request->filled('status'), function ($query) use ($request) {
-            return $query->where('status', $request->status);
+             $query->where('status', $request->status);
         });
 
         return $orders;
@@ -333,6 +438,6 @@ class OrderController extends Controller
 
         $orders = $orders->get();
 
-        return Excel::download(new OrderExport($orders), 'orders_'.date('Ymdhis').'.csv');
+        return Excel::download(new OrderExport($orders), 'orders_' . date('Ymdhis') . '.csv');
     }
 }

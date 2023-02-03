@@ -5,7 +5,7 @@
             <span class="badge bg-secondary text-light">Pending</span>
         @break
 
-        @case(ORDER_STATUS_PENDING_ON_BUCKET)
+        @case(ORDER_STATUS_PROCESSING)
             <span class="badge bg-warning text-light">Processing</span>
             {{-- <span class="badge bg-primary text-light">On Bucket</span> --}}
         @break
@@ -42,5 +42,5 @@
     <div class="text-nowrap very-small-text">[{{ $order->bucket->name }}]</div>
 @endif
 @if ($order->batch != null)
-    <div class="text-nowrap very-small-text">[{{ get_picking_batch($order) }}]</div>
+    <div class="text-nowrap very-small-text"><a href="/orders/bucket-batch/{{ $order->bucket_batch_id }}">[{{ get_picking_batch($order) }}]</a></div>
 @endif

@@ -15,4 +15,9 @@ class Company extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function access_tokens()
+    {
+        return $this->hasMany(AccessToken::class);
+    }
 }

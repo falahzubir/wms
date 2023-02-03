@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function() {
     Route::group(['prefix' => 'orders'], function () {
         Route::get('overall', [OrderController::class, 'overall'])->name('orders.overall');
         Route::get('pending', [OrderController::class, 'pending'])->name('orders.pending');
+        Route::get('processing', [OrderController::class, 'processing'])->name('orders.processing');
         Route::get('packing', [OrderController::class, 'packing'])->name('orders.packing');
         Route::get('ready-to-ship', [OrderController::class, 'ready_to_ship'])->name('orders.readyToShip');
         Route::get('shipping', [OrderController::class, 'shipping'])->name('orders.shipping');

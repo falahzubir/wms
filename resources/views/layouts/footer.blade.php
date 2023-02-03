@@ -20,7 +20,7 @@
 <script src="{{ asset('assets/vendor/php-email-form/validate.js') }}"></script>
 
 <!-- dselect -->
-<script src="https://unpkg.com/@jarstone/dselect/dist/js/dselect.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
 <!-- Template Main JS File -->
 <script src="{{ asset('assets/js/main.js') }}"></script>
