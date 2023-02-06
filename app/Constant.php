@@ -14,8 +14,8 @@ if(!defined('ORDER_STATUS_PACKING')) define('ORDER_STATUS_PACKING', 3);
 if(!defined('ORDER_STATUS_READY_TO_SHIP')) define('ORDER_STATUS_READY_TO_SHIP', 4);
 if(!defined('ORDER_STATUS_SHIPPING')) define('ORDER_STATUS_SHIPPING', 5);
 if(!defined('ORDER_STATUS_DELIVERED')) define('ORDER_STATUS_DELIVERED', 6);
-if(!defined('ORDER_STATUS_COMPLETED')) define('ORDER_STATUS_RETURN_PENDING', 7);
-if(!defined('ORDER_STATUS_COMPLETED')) define('ORDER_STATUS_RETURN_SHIPPING', 8);
+if(!defined('ORDER_STATUS_RETURN_PENDING')) define('ORDER_STATUS_RETURN_PENDING', 7);
+if(!defined('ORDER_STATUS_RETURN_SHIPPING')) define('ORDER_STATUS_RETURN_SHIPPING', 8);
 if(!defined('ORDER_STATUS_RETURNED')) define('ORDER_STATUS_RETURNED', 9);
 if(!defined('ORDER_STATUS_REJECTED')) define('ORDER_STATUS_REJECTED', 10);
 
@@ -71,3 +71,31 @@ if(!defined('ORDER_FILTER_OP_MODEL')) define('ORDER_FILTER_OP_MODEL', 5);
 if(!defined('ORDER_FILTER_PRODUCT')) define('ORDER_FILTER_PRODUCT', 6);
 if(!defined('ORDER_FILTER_SALES_EVENT')) define('ORDER_FILTER_SALES_EVENT', 7);
 if(!defined('ORDER_FILTER_COMPANY')) define('ORDER_FILTER_COMPANY', 8);
+if(!defined('ORDER_FILTER_STATE')) define('ORDER_FILTER_STATE', 9);
+
+// date types
+if(!defined('ORDER_DATE_TYPES')) define('ORDER_DATE_TYPES', [
+    1 => 'Order Added',
+    2 => 'Request Shipping',
+    3 => 'Scan Parcel',
+    4 => 'Shipping',
+]);
+
+//DHL
+if(!defined('DHL_ID')) define('DHL_ID',15);
+
+// DHL EH
+if(!defined('DHL_SOLD_PICKUP_ACCT')) define('DHL_SOLD_PICKUP_ACCT',[
+    1=>'5264574522',//5265434590', // EH
+    2=>'5264574522'//5265241234', // ED
+]);
+if(!defined('DHL_PREFIX')) define('DHL_PREFIX',[
+    1=>'MYAAH2', // EH
+    2=>'MYAAH2', // ED
+]);
+if(!defined('DHL_CLIENT_ID')) define('DHL_CLIENT_ID','LTE2MDAwOTg0NTI=');
+if(!defined('DHL_CLIENT_PASS')) define('DHL_CLIENT_PASS','MjAzMDI5MTU');
+
+#32 DHL ED
+if(!defined('DHL_AA_CLIENT_ID')) define('DHL_AA_CLIENT_ID','LTEyNDQ5ODgzODg=');
+if(!defined('DHL_AA_CLIENT_PASS')) define('DHL_AA_CLIENT_PASS','MTQwMDA0N1904211618820882');

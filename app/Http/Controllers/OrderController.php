@@ -68,6 +68,9 @@ class OrderController extends Controller
         if (!in_array(ORDER_FILTER_OP_MODEL, $exclude)) {
             $filter_data['operational_models'] = true; //http request
         }
+        if (!in_array(ORDER_FILTER_STATE, $exclude)) {
+            $filter_data['states'] = MY_STATES; //http request
+        }
 
         return (object) $filter_data;
     }
@@ -85,7 +88,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'List Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude(),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
         ]);
     }
@@ -117,7 +120,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Pending Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude(),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
         ]);
     }
@@ -136,7 +139,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Processing Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude(),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
         ]);
     }
@@ -155,7 +158,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Ready To Ship Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude(),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
         ]);
     }
@@ -174,7 +177,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Packing Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude(),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -193,7 +196,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Shipping Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude(),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -212,7 +215,7 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Delivered Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude(),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -232,30 +235,11 @@ class OrderController extends Controller
         return view('orders.index', [
             'title' => 'Rejected Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude(),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
 
-    /**
-     * Lists completed order
-     * @param  Request $request
-     * @return view
-     */
-
-    public function completed(Request $request)
-    {
-        $orders = $this->index()->where('status', ORDER_STATUS_COMPLETED);
-
-        $orders = $this->filter_order($request, $orders);
-
-        return view('orders.index', [
-            'title' => 'Completed Orders',
-            'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude(),
-            'actions' => [ACTION_DOWNLOAD_ORDER],
-        ]);
-    }
 
     /**
      * Create a new order from webhook data.
@@ -353,6 +337,11 @@ class OrderController extends Controller
              $query->whereHas('items', function ($q) use ($request) {
                  $q->whereIn('product_id', $request->products);
             });
+        });
+        $orders->when($request->filled('states'), function ($query) use ($request) {
+                $query->whereHas('customer', function ($q) use ($request) {
+                    $q->whereIn('state', $request->states);
+                });
         });
 
         $orders->when($request->filled('date_from'), function ($query) use ($request) {

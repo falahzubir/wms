@@ -51,9 +51,9 @@ if (! function_exists('shipment_num_format')) {
      * @param object  $shipment
      * @return string
      */
-    function shipment_num_format($order, $access_token)
+    function shipment_num_format($order)
     {
-        return $access_token->prefix.$order->company->code."\\".date("ymd", strtotime($order->batch->created_at))."\\".sprintf('%03d', $order->batch->batch_id);
+        return DHL_PREFIX[$order->company_id].$order->company->code.$order->id."\\".date("ymd", strtotime($order->batch->created_at))."\\".sprintf('%03d', $order->batch->batch_id);
         // return "MYAAH".$order->company->code . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->id);
     }
 }

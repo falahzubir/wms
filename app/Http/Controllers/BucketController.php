@@ -124,4 +124,13 @@ class BucketController extends Controller
         $pdf = PDF::loadView('buckets.cn', compact('orders'));
         return $pdf->download('CN.pdf');
     }
+
+    public function check_empty_batch(Request $request)
+    {
+        $orders = Order::where('bucket_id', $request->bucket_id)->whereNull('bucket_batch_id')->get();
+        if (count($orders) == 0) {
+            return response()->json(['message' => 'All orders are batched.', 'status' => 'proceed']);
+        }
+        return response()->json(['message' => 'There are orders not batched.', 'status' => 'stop']);
+    }
 }

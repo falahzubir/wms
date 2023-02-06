@@ -33,6 +33,8 @@ Route::post('check-cn-company', [ShippingController::class, 'check_cn_company'])
 Route::post('download-consignment-note', [ShippingController::class, 'download_cn']);
 Route::patch('orders/update-tracking', [ShippingController::class, 'update_tracking']);
 Route::post('shipping/first-milestone', [ShippingController::class, 'first_milestone']);
+Route::post('buckets/check-empty-batch', [BucketController::class, 'check_empty_batch']);
+Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
 
 Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
 
