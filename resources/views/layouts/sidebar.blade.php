@@ -41,7 +41,7 @@
 
         <li class="nav-item">
             <a class="nav-link {{ Route::current()->getName() != 'orders.readyToShip' ? 'collapsed' : '' }}" href="/orders/ready-to-ship">
-                <i class="bi bi-box-seam"></i>
+                <i class="bi bi-truck-flatbed"></i>
                 <span>Pending Shipping List</span>
             </a>
         </li><!-- End Packing List Nav -->
@@ -75,12 +75,12 @@
             </a>
 
 
-        <li class="nav-item">
+        {{-- <li class="nav-item">
             <a class="nav-link collapsed" href="users-profile.html">
                 <i class="bi bi-person"></i>
                 <span>Profile</span>
             </a>
-        </li><!-- End Profile Page Nav -->
+        </li><!-- End Profile Page Nav --> --}}
 
         {{-- <li class="nav-item">
         <a class="nav-link collapsed" href="pages-faq.html">

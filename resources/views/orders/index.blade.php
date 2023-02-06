@@ -50,8 +50,8 @@
                         <div class="col-md-3">
                             <select id="inputState" class="form-select" name="date_type">
                                 @foreach (ORDER_DATE_TYPES as $i => $type)
-                                    <option value="{{ $i }}" {{ Request::get('date_type') == $i ? 'selected' : '' }}>
-                                        {{ $type }}</option>
+                                    <option value="{{ $i }}" {{ Request::get('date_type') == $i ? 'selected' : '' }} {{ $type[1] }}>
+                                        {{ $type[0] }}</option>
                                 @endforeach
                             </select>
                         </div>

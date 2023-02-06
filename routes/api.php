@@ -34,6 +34,7 @@ Route::post('download-consignment-note', [ShippingController::class, 'download_c
 Route::patch('orders/update-tracking', [ShippingController::class, 'update_tracking']);
 Route::post('shipping/first-milestone', [ShippingController::class, 'first_milestone']);
 Route::post('buckets/check-empty-batch', [BucketController::class, 'check_empty_batch']);
+Route::post('buckets/delete', [BucketController::class, 'delete']);
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
 
 Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);

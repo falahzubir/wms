@@ -133,4 +133,20 @@ class BucketController extends Controller
         }
         return response()->json(['message' => 'There are orders not batched.', 'status' => 'stop']);
     }
+
+    public function delete(Request $request)
+    {
+        $request->validate([
+            'bucket_id' => 'required',
+        ]);
+
+        $bucket = Bucket::find($request->bucket_id);
+        $bucket->status = IS_INACTIVE;
+        $bucket->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket deleted successfully.'
+        ]);
+    }
 }

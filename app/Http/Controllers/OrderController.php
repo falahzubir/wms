@@ -389,6 +389,10 @@ class OrderController extends Controller
 
         $order = $order->first();
 
+        if($order == null){
+            return back()->with('error', 'Parcel Not Found')->with('order', $order);
+        }
+
         //if not scanned, store scan time
         if ($order->shipping->scanned_at == null) {
             $order->shipping->scanned_at = Carbon::now();

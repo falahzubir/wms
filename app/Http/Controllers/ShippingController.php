@@ -207,7 +207,7 @@ class ShippingController extends Controller
             Storage::put('public/labels/' . str_replace("\\", "_", $label->shipmentID) . '.pdf', base64_decode($label->content));
 
             //update tracking number
-            Shipping::where('shipment_number', $label->shipmentID)->update(['tracking_number' => $label->deliveryConfirmationNo, 'attachment' => 'labels/' . $label->shipmentID . '.pdf']);
+            Shipping::where('shipment_number', $label->shipmentID)->update(['tracking_number' => $label->deliveryConfirmationNo, 'attachment' => 'labels/' . str_replace("\\", "_", $label->shipmentID) . '.pdf']);
         }
     }
 
@@ -226,8 +226,8 @@ class ShippingController extends Controller
         $pdf->merge();
         $pdf->save(public_path('generated_labels/' . $filename), 'file');
         //download
-        return response()->download(public_path('generated_labels/' . $filename)); //return $pdf->download($filename);
-        // return response()->json(['download_url' => '/generated_labels/' . $filename]);
+        // return response()->download(public_path('generated_labels/' . $filename)); //return $pdf->download($filename);
+        return response()->json(['download_url' => '/generated_labels/' . $filename]);
     }
 
     public function download_cn_bucket(Request $request)
