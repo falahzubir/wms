@@ -121,7 +121,7 @@ class OrderController extends Controller
             'title' => 'Pending Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
         ]);
     }
 

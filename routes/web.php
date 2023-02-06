@@ -23,7 +23,7 @@ Route::get('404', fn () => view('404'));
 // Route::get('blank', fn () => view('blank', ['title' => 'Blank']));
 
 Route::middleware(['auth'])->group(function() {
-    Route::get('dashboard', fn () => view('dashboard', [ 'title' => 'Dashboard' ]))->name('dashboard');
+    Route::get('dashboard', fn () => view('dashboard', [ 'title' => 'Dashboard (In Progress)' ]))->name('dashboard');
 
     Route::group(['prefix' => 'orders'], function () {
         Route::get('overall', [OrderController::class, 'overall'])->name('orders.overall');

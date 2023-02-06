@@ -103,7 +103,7 @@
                                 Download CN</button>
                         @endif
                         @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
-                            <button class="btn btn-primary" id="download-order-btn"><i class="bi bi-cloud-download"></i>
+                            <button class="btn btn-secondary" id="download-order-btn"><i class="bi bi-cloud-download"></i>
                                 Download CSV</button>
                         @endif
 
@@ -133,10 +133,10 @@
                                                 id="" value="{{ $order->id }}">
                                         </td>
                                         <td>
-                                            <a href="#" class="btn btn-warning p-0 px-1"><i
-                                                    class="ri-ball-pen-line"></i></a>
-                                            <a href="#" class="btn btn-danger p-0 px-1"><i
-                                                    class="bx bx-trash"></i></a>
+                                            <button class="btn btn-warning p-0 px-1 edit-order"><i
+                                                    class="ri-ball-pen-line" onclick="not_ready()"></i></button>
+                                            <button class="btn btn-danger p-0 px-1"><i
+                                                    class="bx bx-trash" onclick="not_ready()"></i></button>
                                             {{-- add shipping number modal --}}
                                             @empty($order->shipping)
                                                 <button type="button"

@@ -42,3 +42,13 @@ function queryStringToJSON(qs) {
 
     return JSON.parse(JSON.stringify(result));
 };
+
+function not_ready() {
+    // sweet alert
+    Swal.fire({
+        title: 'Not Ready!',
+        text: "This feature still in progress.",
+        icon: 'warning',
+        confirmButtonText: 'OK'
+    })
+}
