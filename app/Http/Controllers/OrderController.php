@@ -250,12 +250,13 @@ class OrderController extends Controller
     public function create($webhook)
     {
         // array of products
-        $get_product = Product::whereIn('code', array_column($webhook['product'], 'code'))
-            ->whereIn('name', array_column($webhook['product'], 'name'))
-            ->get();
+        //$get_product = Product::whereIn('code', array_column($webhook['product'], 'code'))
+        //    ->whereIn('name', array_column($webhook['product'], 'name'))
+        //    ->get();
+        $get_product = Product::get();
 
         foreach ($get_product as $key => $value) {
-            $products[$value->code] = $value->id;
+            $products["$value->code"] = $value->id;
         }
 
         // create order
