@@ -181,7 +181,8 @@
                                             @endforeach
                                         </td>
                                         <td>
-                                            <div>{{ currency($order->total_price, true) }}</div>
+                                            <div class="small-text" title="Total Price">{{ currency($order->total_price, true) }}</div>
+                                            <div class="text-danger small-text" title="Total Refund">{{ currency($order->refund, true) }}</div>
                                             <div>
                                                 @switch($order->purchase_type)
                                                     @case(1)

@@ -269,6 +269,7 @@ class OrderController extends Controller
         $data['customer_type'] = $webhook['customer_type'];
         $data['operational_model_id'] = $webhook['operation_model_id'];
         $data['team_id'] = $webhook['team_id'];
+        $data['payment_refund'] = isset($webhook['payment_refund']) ? $webhook['payment_refund'] * 100 : 0;
 
         $customer = Customer::updateorCreate($webhook['customer']);
         $data['customer_id'] = $customer->id;
@@ -298,10 +299,10 @@ class OrderController extends Controller
     public function filter_order($request, $orders)
     {
         $orders->when($request->filled('bucket_id'), function ($query) use ($request) {
-             $query->where('bucket_id', $request->bucket_id);
+            $query->where('bucket_id', $request->bucket_id);
         });
         $orders->when($request->has('search'), function ($query) use ($request) {
-             $query->where(function ($query) use ($request) {
+            $query->where(function ($query) use ($request) {
                 $query->where('sales_id', 'LIKE', "%$request->search%")
                     ->orWhereHas('customer', function ($q) use ($request) {
                         $q->where('name', 'LIKE', "%$request->search%")
@@ -313,45 +314,45 @@ class OrderController extends Controller
             });
         });
         $orders->when($request->filled('companies'), function ($query) use ($request) {
-             $query->whereIn('company_id', $request->companies);
+            $query->whereIn('company_id', $request->companies);
         });
         $orders->when($request->filled('couriers'), function ($query) use ($request) {
-             $query->whereIn('courier_id', $request->couriers);
+            $query->whereIn('courier_id', $request->couriers);
         });
         $orders->when($request->filled('events'), function ($query) use ($request) {
-             $query->whereIn('event_id', $request->events);
+            $query->whereIn('event_id', $request->events);
         });
         $orders->when($request->filled('op_models'), function ($query) use ($request) {
-             $query->whereIn('operational_model_id', $request->op_models);
+            $query->whereIn('operational_model_id', $request->op_models);
         });
         $orders->when($request->filled('teams'), function ($query) use ($request) {
-             $query->whereIn('team_id', $request->teams);
+            $query->whereIn('team_id', $request->teams);
         });
         $orders->when($request->filled('customer_types'), function ($query) use ($request) {
-             $query->whereIn('customer_type', $request->customer_types);
+            $query->whereIn('customer_type', $request->customer_types);
         });
         $orders->when($request->filled('purchase_types'), function ($query) use ($request) {
-             $query->whereIn('purchase_type', $request->purchase_types);
+            $query->whereIn('purchase_type', $request->purchase_types);
         });
         $orders->when($request->filled('products'), function ($query) use ($request) {
-             $query->whereHas('items', function ($q) use ($request) {
-                 $q->whereIn('product_id', $request->products);
+            $query->whereHas('items', function ($q) use ($request) {
+                $q->whereIn('product_id', $request->products);
             });
         });
         $orders->when($request->filled('states'), function ($query) use ($request) {
-                $query->whereHas('customer', function ($q) use ($request) {
-                    $q->whereIn('state', $request->states);
-                });
+            $query->whereHas('customer', function ($q) use ($request) {
+                $q->whereIn('state', $request->states);
+            });
         });
 
         $orders->when($request->filled('date_from'), function ($query) use ($request) {
-             $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
+            $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
         });
         $orders->when($request->filled('date_to'), function ($query) use ($request) {
-             $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
+            $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
         });
         $orders->when($request->filled('status'), function ($query) use ($request) {
-             $query->where('status', $request->status);
+            $query->where('status', $request->status);
         });
 
         return $orders;
@@ -389,7 +390,7 @@ class OrderController extends Controller
 
         $order = $order->first();
 
-        if($order == null){
+        if ($order == null) {
             return back()->with('error', 'Parcel Not Found')->with('order', $order);
         }
 

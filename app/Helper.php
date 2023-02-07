@@ -62,7 +62,7 @@ if (! function_exists('set_order_status')) {
     /**
      * Update order status
      *
-     * @param  object $order, string $status
+     * @param  object $order, int $status
      * @return void
      */
     function set_order_status($order, $status)

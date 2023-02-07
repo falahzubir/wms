@@ -39,8 +39,8 @@
 </div>
 
 @if ($order->bucket != null)
-    <div class="text-nowrap very-small-text">[{{ $order->bucket->name }}]</div>
+    <div class="text-nowrap small-text">[{{ $order->bucket->name }}]</div>
 @endif
 @if ($order->batch != null)
-    <div class="text-nowrap very-small-text"><a href="/orders/bucket-batch/{{ $order->bucket_batch_id }}">[{{ get_picking_batch($order) }}]</a></div>
+    <div class="text-nowrap small-text"><a href="/orders/bucket-batch/{{ $order->bucket_batch_id }}">[{{ get_picking_batch($order) }}]</a></div>
 @endif

@@ -1318,6 +1318,10 @@ h6 {
     font-size: .675em;
 }
 
+.small-text {
+    font-size: .875em;
+}
+
 .barcode-big {
     font-size: 9em;
 }
