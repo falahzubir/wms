@@ -54,15 +54,15 @@
                                 <div class="text-center">
                                     {{-- modal button --}}
 
-                                    <button class="btn btn-warning rounded-pill generate-cn" title="Generate CN"
-                                        onclick="generate_cn({{ $bucket->id }}, {{ $bucket->orders->pluck('id') }})"
-                                        data-bucketId="{{ $bucket->id }}">
-                                        <i class="bi bi-truck"></i>
-                                    </button>
                                     <button class="btn btn-primary rounded-pill" title="Generate Picking List"
                                         id="generate-pl"
                                         onclick="generate_pl({{ $bucket->id }},{{ $bucket->orders->pluck('id') }})">
                                         <i class="bi bi-card-text"></i>
+                                    </button>
+                                    <button class="btn btn-warning rounded-pill generate-cn" title="Generate CN"
+                                        onclick="generate_cn({{ $bucket->id }}, {{ $bucket->orders->pluck('id') }})"
+                                        data-bucketId="{{ $bucket->id }}">
+                                        <i class="bi bi-truck"></i>
                                     </button>
                                     {{-- <button class="btn btn-primary rounded-pill" id="download-consignment"
                                         data-bs-toggle="modal" data-bs-target="#download-modal"
