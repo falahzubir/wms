@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn() => redirect()->route('dashboard'));
 Route::get('login', fn () => view('login', ['title' => 'Login']));
 Route::get('404', fn () => view('404'));
-// Route::get('blank', fn () => view('blank', ['title' => 'Blank']));
+Route::get('php', fn () => phpinfo());
 
 Route::middleware(['auth'])->group(function() {
     Route::get('dashboard', fn () => view('dashboard', [ 'title' => 'Dashboard (In Progress)' ]))->name('dashboard');
