@@ -433,6 +433,11 @@ class OrderController extends Controller
 
         $orders = $orders->get();
 
-        return Excel::download(new OrderExport($orders), 'orders_' . date('Ymdhis') . '.csv');
+        $response =  Excel::download(new OrderExport($orders), 'orders_' . date('Ymdhis') . '.csv');
+
+        ob_end_clean();
+
+        return $response;
+
     }
 }

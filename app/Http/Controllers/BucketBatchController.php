@@ -73,9 +73,12 @@ class BucketBatchController extends Controller
             }
         }
 
-        return Excel::download(new PickingListExport($products, $total_products), 'picking_list_' . get_picking_batch($batch->id, '_') .'.csv', \Maatwebsite\Excel\Excel::CSV, [
+        $response = Excel::download(new PickingListExport($products, $total_products), 'picking_list_' . get_picking_batch($batch->id, '_') .'.csv', \Maatwebsite\Excel\Excel::CSV, [
             'Content-Type' => 'text/csv',
         ]);
+        ob_end_clean();
+
+        return $response;
     }
 
 }
