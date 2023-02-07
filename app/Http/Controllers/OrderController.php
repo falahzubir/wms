@@ -267,7 +267,7 @@ class OrderController extends Controller
         $data['event_id'] = $webhook['event_id'];
         $data['courier_id'] = $webhook['courier_id'];
         $data['customer_type'] = $webhook['customer_type'];
-        $data['operational_model_id'] = $webhook['operational_model_id'];
+        $data['operational_model_id'] = $webhook['operation_model_id'];
         $data['team_id'] = $webhook['team_id'];
 
         $customer = Customer::updateorCreate($webhook['customer']);
