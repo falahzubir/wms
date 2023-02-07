@@ -724,22 +724,16 @@
                 axios({
                         url: '/api/download-consignment-note',
                         method: 'POST',
-                        responseType: 'blob', // important
+                        responseType: 'json', // important
                         data: {
                             order_ids: checkedOrder,
                         }
                     })
-                    .then(function(response) {
-                        const url = window.URL.createObjectURL(new Blob([response.data]));
-                        const link = document.createElement('a');
-                        link.href = url;
-                        //link setattribute download and rename tu ccurent time
-                        let d = new Date();
-                        let cnname = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + "-" + d.getHours() + d
-                            .getMinutes() + d.getSeconds();
-                        // link.setAttribute('download', `CN_${get_current_date_time()}.pdf`);
-                        document.body.appendChild(link);
-                        link.click();
+                    .then(function(res) {
+                        let a= document.createElement('a');
+                        a.target= '_blank';
+                        a.href= res.data.download_url;
+                        a.click();
                         // handle success, close or download
                         Swal.fire({
                             title: 'Success!',
