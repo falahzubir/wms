@@ -50,7 +50,8 @@
                         <div class="col-md-3">
                             <select id="inputState" class="form-select" name="date_type">
                                 @foreach (ORDER_DATE_TYPES as $i => $type)
-                                    <option value="{{ $i }}" {{ Request::get('date_type') == $i ? 'selected' : '' }} {{ $type[1] }}>
+                                    <option value="{{ $i }}"
+                                        {{ Request::get('date_type') == $i ? 'selected' : '' }} {{ $type[1] }}>
                                         {{ $type[0] }}</option>
                                 @endforeach
                             </select>
@@ -68,7 +69,7 @@
                             <x-additional_filter :filter_data="$filter_data" />
 
                         </div>
-                        @if(request('bucket_id') != null)
+                        @if (request('bucket_id') != null)
                             <input type="hidden" name="bucket_id" value="{{ request('bucket_id') }}">
                         @endif
                         <div class="text-end">
@@ -106,7 +107,8 @@
                                 Download CN</button>
                         @endif
                         @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
-                            <button class="btn btn-secondary" id="download-order-btn"><i class="bi bi-cloud-download"></i>
+                            <button class="btn btn-secondary" id="download-order-btn"><i
+                                    class="bi bi-cloud-download"></i>
                                 Download CSV</button>
                         @endif
 
@@ -138,14 +140,15 @@
                                         <td>
                                             <button class="btn btn-warning p-0 px-1 edit-order"><i
                                                     class="ri-ball-pen-line" onclick="not_ready()"></i></button>
-                                            <button class="btn btn-danger p-0 px-1"><i
-                                                    class="bx bx-trash" onclick="not_ready()"></i></button>
+                                            <button class="btn btn-danger p-0 px-1"><i class="bx bx-trash"
+                                                    onclick="reject_order({{ $order->id }})"></i></button>
                                             {{-- add shipping number modal --}}
                                             @empty($order->shipping)
                                                 <button type="button"
                                                     class="btn btn-primary p-0 px-1 add-shipping-number"
                                                     data-bs-toggle="modal" data-bs-target="#add-shipping-number-modal"
-                                                    data-orderid="{{ $order->id }}">
+                                                    data-orderid="{{ $order->id }}"
+                                                    data-couriercode={{ $order->courier->code }}>
                                                     <i class="bi bi-truck"></i>
                                                 </button>
                                             @endempty
@@ -156,9 +159,31 @@
                                             </div>
                                             <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Inserted">
-                                                <i
-                                                    class="bi bi-calendar"></i>&nbsp;{{ date('d/m/Y H:i', strtotime($order->created_at)) }}
+                                                {{-- <i class="bi bi-calendar"></i>&nbsp; --}}
+                                                {{ date('d/m/Y H:i', strtotime($order->created_at)) }}
                                             </div>
+
+                                            @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->count() > 0)
+                                                <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                                    data-bs-placement="right" data-bs-original-title="Date Scanned">
+                                                    {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
+                                                    {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->first()->created_at->format('d/m/Y H:i') }}
+                                                </div>
+                                            @endif
+                                            @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->count() > 0)
+                                                <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                                    data-bs-placement="right" data-bs-original-title="Date Shipping">
+                                                    {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
+                                                    {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->first()->created_at->format('d/m/Y H:i') }}
+                                                </div>
+                                            @endif
+                                            @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->count() > 0)
+                                                <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                                    data-bs-placement="right" data-bs-original-title="Date Delivered">
+                                                    {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
+                                                    {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->first()->created_at->format('d/m/Y H:i') }}
+                                                </div>
+                                            @endif
 
                                             {{-- <div>
                                             {{ date('H:i', strtotime($order->created_at)) }}
@@ -184,8 +209,10 @@
                                             @endforeach
                                         </td>
                                         <td>
-                                            <div class="small-text" title="Total Price">{{ currency($order->total_price, true) }}</div>
-                                            <div class="text-danger small-text" title="Total Refund">{{ currency($order->refund, true) }}</div>
+                                            <div class="small-text" title="Total Price">
+                                                {{ currency($order->total_price, true) }}</div>
+                                            <div class="text-danger small-text" title="Total Refund">
+                                                {{ currency($order->payment_refund, true) }}</div>
                                             <div>
                                                 @switch($order->purchase_type)
                                                     @case(1)
@@ -200,14 +227,13 @@
                                                         <span class="badge bg-danger text-light">Error</span>
                                                 @endswitch
                                             </div>
+                                            <span class="badge bg-warning text-dark">
+                                                {{ $order->courier->name }}
+                                            </span>
+
                                             @isset($order->shipping)
                                                 <div onclick="linkTrack('{{ $order->shipping->tracking_number }}')">
 
-                                                    <div title="Shipment Number: {{ $order->shipping->shipment_number }}">
-                                                        <span class="badge bg-warning text-dark">
-                                                            {{ $order->shipping->courier }}
-                                                        </span>
-                                                    </div>
                                                     <div>
                                                         <span class="">
                                                             {{ $order->shipping->tracking_number }}
@@ -316,7 +342,6 @@
                             <div class="input-group mb-3">
                                 <label class="input-group-text" for="input-select-courier">Courier</label>
                                 <select class="form-select" id="input-select-courier" name="courier">
-                                    <option selected>Choose...</option>
                                     @foreach (get_couriers() as $courier)
                                         <option value="{{ $courier->code }}">{{ $courier->name }}</option>
                                     @endforeach
@@ -575,15 +600,17 @@
                 }
             @endif
 
-            @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
-                document.querySelectorAll('.add-shipping-number').forEach(btn => {
-                    btn.onclick = function() {
+            document.querySelectorAll('.add-shipping-number').forEach(btn => {
+                btn.onclick = function() {
 
-                        let order_id = btn.dataset.orderid;
-                        document.querySelector('#order-id').value = order_id;
-                    }
-                })
-            @endif
+                    let order_id = btn.dataset.orderid;
+                    let couriercode = btn.dataset.couriercode;
+                    console.log(order_id)
+                    document.querySelector('#order-id').value = order_id;
+                    document.querySelector(`#input-select-courier option[value="${couriercode}"]`).setAttribute(
+                        'selected', 'selected');
+                }
+            });
 
             @if (in_array(ACTION_GENERATE_PICKING, $actions))
                 document.querySelector('#generate-picking-btn').onclick = function() {
@@ -733,9 +760,9 @@
                         }
                     })
                     .then(function(res) {
-                        let a= document.createElement('a');
-                        a.target= '_blank';
-                        a.href= res.data.download_url;
+                        let a = document.createElement('a');
+                        a.target = '_blank';
+                        a.href = res.data.download_url;
                         a.click();
                         // handle success, close or download
                         Swal.fire({
@@ -751,6 +778,50 @@
                     .then(function() {
                         // always executed
                     });
+            }
+
+            function reject_order(orderId){
+                Swal.fire({
+                    title: 'Are you sure to reject this order?',
+                    html: `You are about to reject order ${orderId}.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, reject it!',
+                }).then((result) => {
+                    // function not ready
+                    Swal.fire(
+                        'Error!',
+                        'This function is not ready yet.',
+                        'error'
+                    )
+                    // if (result.isConfirmed) {
+                    //     axios.post('/api/orders/reject', {
+                    //             order_id: orderId,
+                    //         })
+                    //         .then(function(response) {
+                    //             // handle success, close or download
+                    //             Swal.fire({
+                    //                 title: 'Success!',
+                    //                 text: "Order rejected.",
+                    //                 icon: 'success',
+                    //                 confirmButtonText: 'OK'
+                    //             }).then((result) => {
+                    //                 if (result.isConfirmed) {
+                    //                     location.reload();
+                    //                 }
+                    //             });
+                    //         })
+                    //         .catch(function(error) {
+                    //             // handle error
+                    //             console.log(error);
+                    //         })
+                    //         .then(function() {
+                    //             // always executed
+                    //         });
+                    // }
+                })
             }
 
             async function check_same_company(checkedOrder) {
