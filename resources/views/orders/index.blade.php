@@ -68,6 +68,9 @@
                             <x-additional_filter :filter_data="$filter_data" />
 
                         </div>
+                        @if(request('bucket_id') != null)
+                            <input type="hidden" name="bucket_id" value="{{ request('bucket_id') }}">
+                        @endif
                         <div class="text-end">
                             <button type="submit" class="btn btn-primary" id="filter-order">Submit</button>
                         </div>
