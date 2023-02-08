@@ -22,7 +22,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        return Order::with(['customer', 'items', 'items.product', 'shipping', 'bucket', 'batch', 'company'])
+        return Order::with(['customer', 'items', 'items.product', 'shipping', 'bucket', 'batch', 'company', 'courier'])
             ->where('is_active', IS_ACTIVE);
     }
 
@@ -240,6 +240,25 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Lists rejected order
+     * @param  Request $request
+     * @return view
+     */
+    public function rejected(Request $request)
+    {
+        $orders = $this->index()->where('status', ORDER_STATUS_REJECTED);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Rejected Orders',
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'actions' => [ACTION_DOWNLOAD_ORDER],
+        ]);
+    }
+
 
     /**
      * Create a new order from webhook data.
@@ -259,9 +278,12 @@ class OrderController extends Controller
             $products["$value->code"] = $value->id;
         }
 
+        $company_id = Company::where('code', $webhook['company'])->first()->id;
+
         // create order
         $ids['sales_id'] = $webhook['sales_id'];
-        $data['company_id'] = Company::where('code', $webhook['company'])->first()->id;
+        $ids['company_id'] = $company_id;
+        $data['company_id'] = $company_id;
         $data['purchase_type'] = $webhook['purchase_type'];
         $data['total_price'] = $webhook['total_price'] * 100;
         $data['sold_by'] = $webhook['sold_by'];
