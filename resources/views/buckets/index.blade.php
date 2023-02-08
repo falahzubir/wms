@@ -342,8 +342,10 @@
                                             Swal.fire({
                                                 icon: 'success',
                                                 title: 'Success',
-                                                text: 'Download CN Successful.',
-                                                footer: '<small class="text-danger">Please enable popup if required</small>'
+                                                html: `<div>Download CN Successful.</div>
+                                                    <div>Click <a href="${res.data.download_url}" target="_blank">here</a> if CN not downloaded.</div>`,
+                                                    footer: '<small class="text-danger">Please enable popup if required</small>',
+                                                    allowOutsideClick: false
                                             }).then((result) => {
                                                 location.reload();
                                             })

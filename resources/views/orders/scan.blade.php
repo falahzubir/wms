@@ -44,6 +44,11 @@
                         <div class="col-1">:</div>
                         <div class="col-8"><strong>{{ currency(session('order')->total_price, true) }}</strong></div>
                     </div>
+                    <div class="row text-danger">
+                        <div class="col-3">Refund</div>
+                        <div class="col-1">:</div>
+                        <div class="col-8"><strong>{{ currency(session('order')->payment_refund, true) }}</strong></div>
+                    </div>
                     <div class="row">
                         <div class="col-3">Scanned By</div>
                         <div class="col-1">:</div>
