@@ -63,10 +63,11 @@ class ShippingController extends Controller
             $data[$order->id]['courier'] = $courier;
             $data[$order->id]['shipment_number'] = shipment_num_format($order);
             $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
-            set_order_status($order, ORDER_STATUS_READY_TO_SHIP);
+            set_order_status($order, ORDER_STATUS_PACKING);
         }
 
         Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+
     }
 
     /**
