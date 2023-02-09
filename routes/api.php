@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\CourierController;
@@ -23,7 +24,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('bucket/{id}', [BucketController::class, 'show']);
 Route::get('buckets', [BucketController::class, 'list']);
 Route::post('add-to-bucket', [BucketController::class, 'add_order']);
 
@@ -31,10 +31,23 @@ Route::get('dhl-store', [ShippingController::class, 'dhl_store']);
 Route::post('request-cn', [ShippingController::class, 'request_cn']);
 Route::post('check-cn-company', [ShippingController::class, 'check_cn_company']);
 Route::post('download-consignment-note', [ShippingController::class, 'download_cn']);
-Route::patch('orders/update-tracking', [ShippingController::class, 'update_tracking']);
 Route::post('shipping/first-milestone', [ShippingController::class, 'first_milestone']);
-Route::post('buckets/check-empty-batch', [BucketController::class, 'check_empty_batch']);
-Route::post('buckets/delete', [BucketController::class, 'delete']);
+
+Route::prefix('buckets')->group(function () {
+    Route::get('show/{id}', [BucketController::class, 'show']);
+    Route::post('check-empty-batch', [BucketController::class, 'check_empty_batch']);
+    Route::post('delete', [BucketController::class, 'delete']);
+});
+
+Route::prefix('orders')->group(function () {
+    Route::patch('update-tracking', [ShippingController::class, 'update_tracking']);
+    Route::post('reject', [OrderApiController::class, 'reject']);
+});
+
+Route::prefix('shippings')->group(function () {
+    Route::post('update-tracking', [ShippingController::class, 'update_bulk_tracking']);
+});
+
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
 
 Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);

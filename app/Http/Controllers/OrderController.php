@@ -89,7 +89,7 @@ class OrderController extends Controller
             'title' => 'List Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
+            'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
 
@@ -121,7 +121,7 @@ class OrderController extends Controller
             'title' => 'Pending Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER],
         ]);
     }
 
@@ -140,7 +140,7 @@ class OrderController extends Controller
             'title' => 'Processing Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
         ]);
     }
 
@@ -159,7 +159,7 @@ class OrderController extends Controller
             'title' => 'Ready To Ship Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK],
+            'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
 
@@ -178,7 +178,7 @@ class OrderController extends Controller
             'title' => 'Packing Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
 
@@ -197,7 +197,7 @@ class OrderController extends Controller
             'title' => 'Shipping Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
 
@@ -216,7 +216,7 @@ class OrderController extends Controller
             'title' => 'Delivered Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
 

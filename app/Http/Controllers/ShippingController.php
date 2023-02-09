@@ -300,6 +300,36 @@ class ShippingController extends Controller
     }
 
     /**
+     * Update bulk tracking number to order.
+     * @param \Illuminate\Http\Request  $request
+     * @return json
+     */
+    public function update_bulk_tracking(Request $request)
+    {
+        $request->validate([
+            'company_id' => 'required',
+            'created_by' => 'required|int',
+            'trackings.*.tracking_number' => 'required',
+            'trackings.*.courier' => 'required',
+            'trackings.*.sales_id' => 'required',
+        ]);
+return $request;
+        $orders = Order::whereIn('id', $request->order_id)->get();
+
+        Shipping::create([
+            'order_id' => $orders->id->where('sales_id', $request->sales_id)->where('company_id', $request->company_id),
+            'tracking_number' => $request->tracking_number,
+            'courier' => $request->courier,
+            'created_by' => auth()->user()->id ?? 1,
+            // 'shipment_date' => $request->shipment_date,
+        ]);
+
+        set_order_status(Order::find($request->order_id), ORDER_STATUS_PACKING);
+
+        return response()->json(['success' => 'ok']);
+    }
+
+    /**
      * Update order to shipping on first shipping milestone.
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response

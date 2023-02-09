@@ -69,11 +69,11 @@
                                         onclick="download_consignment({{ $bucket->id }})"><i
                                             class="bi bi-download"></i></button> --}}
                                     <a href="/orders/processing?bucket_id={{ $bucket->id }}&status={{ ORDER_STATUS_PROCESSING }}"
-                                        class="btn btn-info rounded-pill" title="Order List" >
+                                        class="btn btn-info rounded-pill" title="Order List">
                                         <i class="bi bi-list"></i>
                                     </a>
-                                    <button class="btn btn-warning rounded-pill" class="edit-bucket" title="Edit/Delete Bucket"
-                                        onclick="edit_bucket(this)" data-bs-toggle="modal"
+                                    <button class="btn btn-warning rounded-pill" class="edit-bucket"
+                                        title="Edit/Delete Bucket" onclick="edit_bucket(this)" data-bs-toggle="modal"
                                         data-bs-target="#bucket-modal" data-bucket-id="{{ $bucket->id }}"><i
                                             class="bi bi-pencil"></i></button>
                                 </div>
@@ -158,7 +158,8 @@
                     <div class="modal-footer">
                         <!-- Delete Bucket Button -->
 
-                        <a href="#" class="text-danger" data-bucketId="" id="delete-bucket"><i class="bi bi-trash"></i>
+                        <a href="#" class="text-danger" data-bucketId="" id="delete-bucket"><i
+                                class="bi bi-trash"></i>
                             Delete</a>
                         <button type="submit" class="btn btn-primary">Submit</button>
                     </div>
@@ -216,7 +217,7 @@
                 bucket_id = params.attributes['data-bucket-id'].value;
                 document.querySelector('#bucket-form').setAttribute('action', '/buckets/update/' + bucket_id);
                 document.querySelector('.modal-title').innerHTML = 'Edit bucket';
-                axios.get('api/bucket/' + bucket_id)
+                axios.get('api/buckets/show/' + bucket_id)
                     .then(function(response) {
                         console.log(response.data);
                         document.querySelector('#bucket-name').value = response.data.name;
@@ -334,48 +335,48 @@
                                         })
                                         .then(function(res) {
                                             // redirect
-                                            let a= document.createElement('a');
-                                            a.target= '_blank';
-                                            a.href= res.data.download_url;
+                                            let a = document.createElement('a');
+                                            a.target = '_blank';
+                                            a.href = res.data.download_url;
                                             a.click();
                                             // window.location.href = res.data.download_url;
                                             Swal.fire({
                                                 icon: 'success',
                                                 title: 'Success',
-                                                html: `<div>Download CN Successful.</div>
+                                                html: `<div>Download Request CN Successful.</div>
                                                     <div>Click <a href="${res.data.download_url}" target="_blank">here</a> if CN not downloaded.</div>`,
-                                                    footer: '<small class="text-danger">Please enable popup if required</small>',
-                                                    allowOutsideClick: false
+                                                footer: '<small class="text-danger">Please enable popup if required</small>',
+                                                allowOutsideClick: false
                                             }).then((result) => {
                                                 location.reload();
                                             })
 
-                                    //         const url = window.URL.createObjectURL(new Blob([response
-                                    //             .data.download_url
-                                    //         ]));
-                                    //         const link = document.createElement('a');
-                                    //         link.href = url;
-                                    //         //link setattribute download and rename tu ccurent time
-                                    //         let d = new Date();
-                                    //         let cnname = d.getFullYear() + "-" + (d.getMonth() + 1) +
-                                    //             "-" + d.getDate() + "-" + d.getHours() + d
-                                    //             .getMinutes() + d.getSeconds();
-                                    //         // link.setAttribute('download', `CN_${get_current_date_time()}.pdf`);
-                                    //         document.body.appendChild(link);
-                                    //         link.click();
-                                    //         // handle success, close or download
-                                    //         Swal.fire({
-                                    //             title: 'Success!',
-                                    //             text: "Shipment Note Downloaded.",
-                                    //             icon: 'success',
-                                    //         });
-                                    //     })
-                                    //     .catch(function(error) {
-                                    //         // handle error
-                                    //         console.log(error);
-                                    //     })
-                                    //     .then(function() {
-                                    //         // always executed
+                                            //         const url = window.URL.createObjectURL(new Blob([response
+                                            //             .data.download_url
+                                            //         ]));
+                                            //         const link = document.createElement('a');
+                                            //         link.href = url;
+                                            //         //link setattribute download and rename tu ccurent time
+                                            //         let d = new Date();
+                                            //         let cnname = d.getFullYear() + "-" + (d.getMonth() + 1) +
+                                            //             "-" + d.getDate() + "-" + d.getHours() + d
+                                            //             .getMinutes() + d.getSeconds();
+                                            //         // link.setAttribute('download', `CN_${get_current_date_time()}.pdf`);
+                                            //         document.body.appendChild(link);
+                                            //         link.click();
+                                            //         // handle success, close or download
+                                            //         Swal.fire({
+                                            //             title: 'Success!',
+                                            //             text: "Shipment Note Downloaded.",
+                                            //             icon: 'success',
+                                            //         });
+                                            //     })
+                                            //     .catch(function(error) {
+                                            //         // handle error
+                                            //         console.log(error);
+                                            //     })
+                                            //     .then(function() {
+                                            //         // always executed
                                         });
                                     // window.location.reload();
                                 })
@@ -433,7 +434,7 @@
             /*
             function download_consignment(bucket_id) {
                 document.querySelector('#download-modal').setAttribute('data-bucket-id', bucket_id);
-                axios.get('api/bucket/' + bucket_id)
+                axios.get('api/show/' + bucket_id)
                     .then(function(response) {
                         document.querySelector('#bucket-name-dl').innerHTML = response.data.name;
                         document.querySelector('#bucket-id-dl').value = response.data.id;

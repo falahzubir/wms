@@ -12,64 +12,71 @@
         <li class="nav-heading">Orders</li>
 
         <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.overall' ? 'collapsed' : '' }}" href="/orders/overall">
+            <a class="nav-link {{ Route::current()->getName() != 'orders.overall' ? 'collapsed' : '' }}" href="{{ route('orders.overall') }}">
                 <i class="bi bi-inboxes"></i>
                 <span>Overall List</span>
             </a>
         </li><!-- End Overall Order Nav -->
 
         <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.pending' ? 'collapsed' : '' }}" href="/orders/pending">
+            <a class="nav-link {{ Route::current()->getName() != 'orders.pending' ? 'collapsed' : '' }}" href="{{ route('orders.pending') }}">
                 <i class="bi bi-clock-history"></i>
                 <span>Pending List</span>
             </a>
         </li><!-- End Pending List Nav -->
 
         <li class="nav-item">
-            <a class="nav-link  {{ Route::current()->getName() != 'buckets.index' ? 'collapsed' : '' }}" href="/buckets">
+            <a class="nav-link  {{ Route::current()->getName() != 'buckets.index' ? 'collapsed' : '' }}" href="{{ route('buckets.index') }}">
                 <i class="bi bi-basket"></i>
                 <span>Bucket List</span>
             </a>
         </li><!-- End Bucket List Nav -->
 
         <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.packing' ? 'collapsed' : '' }}" href="/orders/packing">
+            <a class="nav-link {{ Route::current()->getName() != 'orders.packing' ? 'collapsed' : '' }}" href="{{ route('orders.packing') }}">
                 <i class="bi bi-box-seam"></i>
                 <span>Packing List</span>
             </a>
         </li><!-- End Packing List Nav -->
 
         <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.readyToShip' ? 'collapsed' : '' }}" href="/orders/ready-to-ship">
+            <a class="nav-link {{ Route::current()->getName() != 'orders.readyToShip' ? 'collapsed' : '' }}" href="{{ route('orders.readyToShip') }}">
                 <i class="bi bi-truck-flatbed"></i>
                 <span>Pending Shipping List</span>
             </a>
         </li><!-- End Packing List Nav -->
 
         <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.shipping' ? 'collapsed' : '' }}" href="/orders/shipping">
+            <a class="nav-link {{ Route::current()->getName() != 'orders.shipping' ? 'collapsed' : '' }}" href="{{ route('orders.shipping') }}">
                 <i class="bi bi-truck"></i>
                 <span>Shipping List</span>
             </a>
         </li><!-- End Shipping List Nav -->
 
         <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.delivered' ? 'collapsed' : '' }}" href="/orders/delivered">
+            <a class="nav-link {{ Route::current()->getName() != 'orders.delivered' ? 'collapsed' : '' }}" href="{{ route('orders.delivered') }}">
                 <i class="bi bi-check-circle"></i>
                 <span>Delivered List</span>
             </a>
         </li><!-- End delivered List Nav -->
 
         <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.returned' ? 'collapsed' : '' }}" href="/orders/returned">
-                <i class="bi bi-file-x"></i>
+            <a class="nav-link {{ Route::current()->getName() != 'orders.returned' ? 'collapsed' : '' }}" href="{{ route('orders.returned') }}">
+                <i class="bi bi-arrow-return-left"></i>
                 <span>Return List</span>
+            </a>
+        </li><!-- End return List Nav -->
+
+        <li class="nav-item">
+            <a class="nav-link {{ Route::current()->getName() != 'orders.rejected' ? 'collapsed' : '' }}" href="{{ route('orders.rejected') }}">
+                <i class="bi bi-file-x"></i>
+                <span>Reject List</span>
             </a>
         </li><!-- End return List Nav -->
 
         <!-- Scan Parcel link -->
         <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }}" href="/orders/scan">
+            <a class="nav-link {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }}" href="{{ route('orders.scan') }}">
                 <i class="bx bx-barcode-reader"></i>
                 <span>Scan Parcel</span>
             </a>

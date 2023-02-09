@@ -36,6 +36,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('returned', [OrderController::class, 'returned'])->name('orders.returned');
         Route::get('scan', [OrderController::class, 'scan'])->name('orders.scan');
         Route::post('scan', [OrderController::class, 'scan_barcode'])->name('orders.scanned');
+        Route::get('rejected', [OrderController::class, 'rejected'])->name('orders.rejected');
     });
 
     // group routes for buckets

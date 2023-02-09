@@ -30,8 +30,8 @@
             <span class="badge bg-danger text-light">Returned</span>
         @break
 
-        @case(ORDER_STATUS_COMPLETED)
-            <span class="badge bg-success text-light">Completed</span>
+        @case(ORDER_STATUS_REJECTED)
+            <span class="badge bg-danger text-light">Rejected</span>
         @break
 
         @default

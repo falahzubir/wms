@@ -87,11 +87,13 @@ if(!defined('DHL_ID')) define('DHL_ID',15);
 // DHL EH
 if(!defined('DHL_SOLD_PICKUP_ACCT')) define('DHL_SOLD_PICKUP_ACCT',[
     1=>'5264574522',//5265434590', // EH
-    2=>'5264574522'//5265241234', // ED
+    2=>'5264574522',//5265241234', // ED
+    2=>'5264574522',//5264574522', // QA
 ]);
 if(!defined('DHL_PREFIX')) define('DHL_PREFIX',[
     1=>'MYAAH', // EH
     2=>'MYAAH', // ED
+    2=>'MYAAHQ', // QA
 ]);
 if(!defined('DHL_CLIENT_ID')) define('DHL_CLIENT_ID','LTE2MDAwOTg0NTI=');
 if(!defined('DHL_CLIENT_PASS')) define('DHL_CLIENT_PASS','MjAzMDI5MTU');
