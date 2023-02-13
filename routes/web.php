@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ShippingController;
 use Illuminate\Support\Facades\Route;
@@ -23,7 +24,7 @@ Route::get('404', fn () => view('404'));
 Route::get('php', fn () => phpinfo());
 
 Route::middleware(['auth'])->group(function() {
-    Route::get('dashboard', fn () => view('dashboard', [ 'title' => 'Dashboard (In Progress)' ]))->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::group(['prefix' => 'orders'], function () {
         Route::get('overall', [OrderController::class, 'overall'])->name('orders.overall');
@@ -75,4 +76,12 @@ Route::middleware(['auth', 'role:user'])->group(function() {
 
 Route::middleware(['auth', 'role:admin'])->group(function() {
     // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+});
+
+//migration for dev purpose only
+Route::get('run-migration', function () {
+    if(config('app.env')=="local"){
+        Artisan::call('migrate');
+        return 'Migrations ran successfully!';
+    }
 });

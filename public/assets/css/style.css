@@ -1246,9 +1246,9 @@ h6 {
     transition: all 0.3s;
     border-top: 1px solid #cddfff;
     position: relative;
-    margin-top: 150px;
+    /* margin-top: 150px; */
     /* negative value of footer height */
-    height: 150px;
+    /* height: 150px; */
     clear: both;
     padding-top: 20px;
 }
@@ -1355,3 +1355,67 @@ h6 {
 .ts-control::-webkit-scrollbar {
     display: none;  /* Safari and Chrome */
 }
+
+:root {
+    --loading-spinner-size: 1rem;
+    --loading-spinner-gap: .5; /* [1] */
+    --loading-spinner-wrapper: calc(var(--loading-spinner-size) * 3 + var(--loading-spinner-gap) * var(--loading-spinner-size) * 2); /* [2] */
+    --loading-spinner-color: #ccc;
+
+    --animation-timing: cubic-bezier(0, 1, 1, 0);
+    --animation-duration: 400ms;
+    --animation-count: infinite;
+  }
+
+  .loading {
+    --spacer: calc(var(--loading-spinner-size) * var(--loading-spinner-gap) + var(--loading-spinner-size)); /* [3] */
+    position: relative;
+    width: var(--loading-spinner-wrapper);
+    height: var(--loading-spinner-size);
+    /* border: 1px solid red; */ /* [4] */
+  }
+
+  .loading span {
+    position: absolute;
+    top: 0;
+    width: var(--loading-spinner-size);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background: var(--loading-spinner-color);
+    animation-timing-function: var(--animation-timing);
+  }
+
+  .loading span:nth-child(1) {
+    left: 0;
+    animation: scale-up var(--animation-duration) var(--animation-count);
+  }
+
+  .loading span:nth-child(2) {
+    left: 0;
+    animation: move-right var(--animation-duration) var(--animation-count);
+  }
+
+  .loading span:nth-child(3) {
+    left: calc(var(--spacer) * 1);
+    animation: move-right var(--animation-duration) var(--animation-count);
+  }
+
+  .loading span:nth-child(4) {
+    left: calc(var(--spacer) * 2);
+    animation: scale-down var(--animation-duration) var(--animation-count);
+  }
+
+  @keyframes scale-up {
+    from { transform: scale(0) }
+    to   { transform: scale(1) }
+  }
+
+  @keyframes scale-down {
+    from { transform: scale(1) }
+    to   { transform: scale(0) }
+  }
+
+  @keyframes move-right {
+    from { transform: translate(0, 0)    }
+    to   { transform: translate(var(--spacer), 0) } /* [3] */
+  }

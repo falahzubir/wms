@@ -310,6 +310,8 @@ class OrderController extends Controller
             OrderItem::updateOrCreate($p_ids, $product_data);
         }
 
+        set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
+
         return response()->json(['message' => 'Order created successfully'], 201);
     }
 
@@ -413,7 +415,7 @@ class OrderController extends Controller
 
         $order = $order->first();
 
-        if ($order == null) {
+        if ($order->count() == 0) {
             return back()->with('error', 'Parcel Not Found')->with('order', $order);
         }
 

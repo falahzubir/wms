@@ -14,7 +14,7 @@
                     <form action="/orders/scan" method="POST">
                         @csrf
                         <div class="input-group">
-                            <input value="7122015153441663" type="text" name="code" class="form-control" placeholder="Scan Barcode" aria-label="Scan Barcode" aria-describedby="button-addon2" >
+                            <input value="" type="text" name="code" class="form-control" placeholder="Scan Barcode or Enter Tracking Number" aria-label="Scan Barcode" aria-describedby="button-addon2" >
                             <button class="btn btn-primary" type="submit" id="button-addon2">Scan</button>
                     </form>
                 </div>

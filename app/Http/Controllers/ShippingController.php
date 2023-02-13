@@ -342,7 +342,7 @@ return $request;
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
 
-        if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING)) {
+        if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "First Milestone from Phantom")) {
             return response()->json(['success' => 'ok']);
         } else {
             return response()->json(['error' => 'error']);
@@ -370,11 +370,31 @@ return $request;
     }
 
     /**
+     * Update order to shipping on ongoing return milestone.
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function return_ongoing_milestone(Request $request)
+    {
+        $request->validate([
+            'tracking_id' => 'required|exists:table,column',
+        ]);
+
+        $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
+
+        if (set_order_status($shipping->order, ORDER_STATUS_RETURN_SHIPPING)) {
+            return response()->json(['success' => 'ok']);
+        } else {
+            return response()->json(['error' => 'error']);
+        }
+    }
+
+    /**
      * Update order to shipping on returned milestone.
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function returned_milestone(Request $request)
+    public function return_delivered_milestone(Request $request)
     {
         $request->validate([
             'tracking_id' => 'required|exists:table,column',

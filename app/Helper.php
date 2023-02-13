@@ -65,7 +65,7 @@ if (! function_exists('set_order_status')) {
      * @param  object $order, int $status
      * @return void
      */
-    function set_order_status($order, $status)
+    function set_order_status($order, $status, $remarks = null)
     {
         $order->status = $status;
         $order->save();
@@ -73,7 +73,7 @@ if (! function_exists('set_order_status')) {
         OrderLog::create([
             'order_id' => $order->id,
             'order_status_id' => $status,
-            'remarks' => 'Order status updated to ' . $status,
+            'remarks' => $remarks ?? 'Order status updated to ' . $status,
             'created_by' => auth()->user()->id ?? 1,
         ]);
 
@@ -120,5 +120,19 @@ if(! function_exists('get_picking_batch')){
         }
         $batch = \App\Models\BucketBatch::find($order_or_batch);
         return date("ymd", strtotime($batch->created_at)) .$delimiter. sprintf("%03d", $batch->batch_id);
+    }
+}
+
+if(! function_exists('number_formatter')){
+    /**
+     * Format number
+     *
+     * @param  int $number
+     * @return string
+     */
+    function number_formatter($number)
+    {
+        $numberFormatter = new NumberFormatter('en_US', NumberFormatter::ORDINAL);
+        return  $numberFormatter->format($number);
     }
 }

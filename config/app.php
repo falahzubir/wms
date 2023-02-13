@@ -215,6 +215,7 @@ return [
         // 'ExampleClass' => App\Example\ExampleClass::class,
         'PDFMerger' => Webklex\PDFMerger\Facades\PDFMergerFacade::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
+        'Carbon' => \Carbon\Carbon::class,
     ])->toArray(),
 
     /*
