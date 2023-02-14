@@ -11,7 +11,7 @@
                     </div>
                 @endisset
                 <div class="ps-3">
-                    <h4 class="pending-count" id="{{ $id }}">
+                    <h4 class="pending-count text-center" id="{{ $id }}">
                         <div class="loading" {{ $type == 'child' ? 'style=--loading-spinner-size:0.6rem' : '' }}>
                             <span></span>
                             <span></span>

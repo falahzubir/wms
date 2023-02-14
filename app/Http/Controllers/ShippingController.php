@@ -263,11 +263,12 @@ class ShippingController extends Controller
     public function upload_bulk_tracking(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:csv,txt'
+            'file' => 'required|mimes:csv,txt',
+            'company' => 'required|exists:companies,id|integer',
         ]);
 
 
-        Excel::import(new ShippingsImport, $request->file);
+        Excel::import(new ShippingsImport($request->company), $request->file);
 
         return back()->with('success', 'Shipping Numbers Imported Successfully');
     }

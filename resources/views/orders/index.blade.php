@@ -298,10 +298,12 @@
                     @csrf
                     <div class="row justify-content-center align-items-center g-2">
                         <div class="col">
-                            <input type="date" class="form-control" name="shipping_date" id="shipping-date"
-                                aria-describedby="dateShipping" placeholder="date" value="{{ date('Y-m-d') }}"
-                                required>
-                            <small id="dateShipping" class="form-text text-muted">Shipping Date</small>
+                            <select name="company" id="company" class="form-control">
+                                @foreach ($filter_data->companies as $company)
+                                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                            <small id="dateShipping" class="form-text text-muted">Choose company</small>
                         </div>
                         <div class="col">
                             <input class="form-control" type="file" id="csv-file" name="file"

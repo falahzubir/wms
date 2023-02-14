@@ -36,103 +36,45 @@
                                     <li class="dropdown-header text-start">
                                         <h6>Filter</h6>
                                     </li>
-                                    <li><a class="dropdown-item stats-time" id="stats-yesterday" data-start="{{ Carbon::yesterday()->startOfDay() }}" data-end="{{ Carbon::yesterday()->endOfDay() }}" data-type="Yesterday">Yesterday</a></li>
-                                    <li><a class="dropdown-item stats-time" id="stats-today" data-start="{{ Carbon::now()->startOfDay() }}" data-end="{{ Carbon::now()->endOfDay() }}" data-type="Today">Today</a></li>
-                                    <li><a class="dropdown-item stats-time" id="stats-this-month" data-start="{{ Carbon::now()->startOfMonth() }}" data-end="{{ Carbon::now()->endOfMonth() }}" data-type="This Month">This Month</a></li>
-                                    <li><a class="dropdown-item stats-time" id="stats-last-month" data-start="{{ Carbon::now()->subMonth()->startOfMonth() }}" data-end="{{ Carbon::now()->subMonth()->endOfMonth() }}" data-type="Last Month">Last Month</a></li>
+                                    <li><a class="dropdown-item stats-time" id="stats-yesterday"
+                                            data-start="{{ Carbon::yesterday()->startOfDay() }}"
+                                            data-end="{{ Carbon::yesterday()->endOfDay() }}"
+                                            data-type="Yesterday">Yesterday</a></li>
+                                    <li><a class="dropdown-item stats-time" id="stats-today"
+                                            data-start="{{ Carbon::now()->startOfDay() }}"
+                                            data-end="{{ Carbon::now()->endOfDay() }}" data-type="Today">Today</a></li>
+                                    <li><a class="dropdown-item stats-time" id="stats-this-month"
+                                            data-start="{{ Carbon::now()->startOfMonth() }}"
+                                            data-end="{{ Carbon::now()->endOfMonth() }}" data-type="This Month">This
+                                            Month</a></li>
+                                    <li><a class="dropdown-item stats-time" id="stats-last-month"
+                                            data-start="{{ Carbon::now()->subMonth()->startOfMonth() }}"
+                                            data-end="{{ Carbon::now()->subMonth()->endOfMonth() }}"
+                                            data-type="Last Month">Last Month</a></li>
                                 </ul>
                             </div>
 
                             <div class="card-body">
                                 <h5 class="card-title">Order Statistics <span id="stats-time">| Today</span></h5>
-                        <div class="row">
-                            <x-dashboard_infocard label="Received" type="child" id="stats-pending" class="" />
-                            <x-dashboard_infocard label="Processed" type="child" id="stats-processing" class="" />
-                            <x-dashboard_infocard label="CN Generated" type="child" id="stats-cn-generated" class="" />
-                            <x-dashboard_infocard label="Scanned" type="child" id="stats-parcel-scan" class="" />
-                            <x-dashboard_infocard label="Shipping" type="child" id="stats-shipping" class="" />
-                        </div>
+                                <div class="row">
+                                    <x-dashboard_infocard label="Received" type="child" id="stats-pending"
+                                        class="" />
+                                    <x-dashboard_infocard label="Processed" type="child" id="stats-processing"
+                                        class="" />
+                                    <x-dashboard_infocard label="CN Generated" type="child" id="stats-cn-generated"
+                                        class="" />
+                                    <x-dashboard_infocard label="Scanned" type="child" id="stats-parcel-scan"
+                                        class="" />
+                                    <x-dashboard_infocard label="Shipping" type="child" id="stats-shipping"
+                                        class="" />
+                                </div>
                             </div>
                         </div>
 
                     </div><!-- End Recent Sales -->
-                    <div class="card recent-sales overflow-auto">
-
-                        <div class="filter">
-                            <a class="icon" href="#" data-bs-toggle="dropdown"><i
-                                    class="bi bi-three-dots"></i></a>
-                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                                <li class="dropdown-header text-start">
-                                    <h6>Filter</h6>
-                                </li>
-
-                                <li><a class="dropdown-item" href="#">Today</a></li>
-                                <li><a class="dropdown-item" href="#">This Month</a></li>
-                                <li><a class="dropdown-item" href="#">This Year</a></li>
-                            </ul>
-                        </div>
-
-                        <div class="card-body">
-                            <h5 class="card-title">Recent Sales <span>| Today</span></h5>
-
-                            <table class="table table-borderless datatable">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">Customer</th>
-                                        <th scope="col">Product</th>
-                                        <th scope="col">Price</th>
-                                        <th scope="col">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <th scope="row"><a href="#">#2457</a></th>
-                                        <td>Brandon Jacob</td>
-                                        <td><a href="#" class="text-primary">At praesentium minu</a></td>
-                                        <td>$64</td>
-                                        <td><span class="badge bg-success">Approved</span></td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row"><a href="#">#2147</a></th>
-                                        <td>Bridie Kessler</td>
-                                        <td><a href="#" class="text-primary">Blanditiis dolor omnis
-                                                similique</a></td>
-                                        <td>$47</td>
-                                        <td><span class="badge bg-warning">Pending</span></td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row"><a href="#">#2049</a></th>
-                                        <td>Ashleigh Langosh</td>
-                                        <td><a href="#" class="text-primary">At recusandae consectetur</a>
-                                        </td>
-                                        <td>$147</td>
-                                        <td><span class="badge bg-success">Approved</span></td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row"><a href="#">#2644</a></th>
-                                        <td>Angus Grady</td>
-                                        <td><a href="#" class="text-primar">Ut voluptatem id earum et</a></td>
-                                        <td>$67</td>
-                                        <td><span class="badge bg-danger">Rejected</span></td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row"><a href="#">#2644</a></th>
-                                        <td>Raheem Lehner</td>
-                                        <td><a href="#" class="text-primary">Sunt similique distinctio</a>
-                                        </td>
-                                        <td>$165</td>
-                                        <td><span class="badge bg-success">Approved</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                        </div>
-
-                    </div>
 
                     <!-- Reports -->
-                    <div class="col-12">
+                    {{-- <div class="col-12">
                         <div class="card">
 
                             <div class="filter">
@@ -302,13 +244,37 @@
                             </div>
 
                         </div>
-                    </div><!-- End Top Selling -->
+                    </div><!-- End Top Selling --> --}}
 
                 </div>
             </div><!-- End Left side columns -->
 
             <!-- Right side columns -->
             <div class="col-lg-4">
+
+                <!-- Website Traffic -->
+                <div class="card">
+                    <div class="filter">
+                        <a class="icon" href="#" data-bs-toggle="dropdown"><i
+                                class="bi bi-three-dots"></i></a>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                            <li class="dropdown-header text-start">
+                                <h6>Filter</h6>
+                            </li>
+
+                            <li><a class="dropdown-item" href="#">Today</a></li>
+                            <li><a class="dropdown-item" href="#">This Month</a></li>
+                            <li><a class="dropdown-item" href="#">This Year</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="card-body pb-0">
+                        <h5 class="card-title">Website Traffic <span>| Today</span></h5>
+
+                        <div id="trafficChart" style="min-height: 400px;" class="echart"></div>
+
+                    </div>
+                </div><!-- End Website Traffic -->
 
                 <!-- Recent Activity -->
                 <div class="card">
@@ -328,7 +294,7 @@
                     </div>
                 </div><!-- End Recent Activity -->
 
-                <!-- Budget Report -->
+                {{-- <!-- Budget Report -->
                 <div class="card">
                     <div class="filter">
                         <a class="icon" href="#" data-bs-toggle="dropdown"><i
@@ -401,142 +367,10 @@
                         </script>
 
                     </div>
-                </div><!-- End Budget Report -->
+                </div><!-- End Budget Report --> --}}
 
-                <!-- Website Traffic -->
-                <div class="card">
-                    <div class="filter">
-                        <a class="icon" href="#" data-bs-toggle="dropdown"><i
-                                class="bi bi-three-dots"></i></a>
-                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                            <li class="dropdown-header text-start">
-                                <h6>Filter</h6>
-                            </li>
 
-                            <li><a class="dropdown-item" href="#">Today</a></li>
-                            <li><a class="dropdown-item" href="#">This Month</a></li>
-                            <li><a class="dropdown-item" href="#">This Year</a></li>
-                        </ul>
-                    </div>
 
-                    <div class="card-body pb-0">
-                        <h5 class="card-title">Website Traffic <span>| Today</span></h5>
-
-                        <div id="trafficChart" style="min-height: 400px;" class="echart"></div>
-
-                        <script>
-                            document.addEventListener("DOMContentLoaded", () => {
-                                echarts.init(document.querySelector("#trafficChart")).setOption({
-                                    tooltip: {
-                                        trigger: 'item'
-                                    },
-                                    legend: {
-                                        top: '5%',
-                                        left: 'center'
-                                    },
-                                    series: [{
-                                        name: 'Access From',
-                                        type: 'pie',
-                                        radius: ['40%', '70%'],
-                                        avoidLabelOverlap: false,
-                                        label: {
-                                            show: false,
-                                            position: 'center'
-                                        },
-                                        emphasis: {
-                                            label: {
-                                                show: true,
-                                                fontSize: '18',
-                                                fontWeight: 'bold'
-                                            }
-                                        },
-                                        labelLine: {
-                                            show: false
-                                        },
-                                        data: [{
-                                                value: 1048,
-                                                name: 'Search Engine'
-                                            },
-                                            {
-                                                value: 735,
-                                                name: 'Direct'
-                                            },
-                                            {
-                                                value: 580,
-                                                name: 'Email'
-                                            },
-                                            {
-                                                value: 484,
-                                                name: 'Union Ads'
-                                            },
-                                            {
-                                                value: 300,
-                                                name: 'Video Ads'
-                                            }
-                                        ]
-                                    }]
-                                });
-                            });
-                        </script>
-
-                    </div>
-                </div><!-- End Website Traffic -->
-
-                <!-- News & Updates Traffic -->
-                <div class="card">
-                    <div class="filter">
-                        <a class="icon" href="#" data-bs-toggle="dropdown"><i
-                                class="bi bi-three-dots"></i></a>
-                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                            <li class="dropdown-header text-start">
-                                <h6>Filter</h6>
-                            </li>
-
-                            <li><a class="dropdown-item" href="#">Today</a></li>
-                            <li><a class="dropdown-item" href="#">This Month</a></li>
-                            <li><a class="dropdown-item" href="#">This Year</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="card-body pb-0">
-                        <h5 class="card-title">News &amp; Updates <span>| Today</span></h5>
-
-                        <div class="news">
-                            <div class="post-item clearfix">
-                                <img src="assets/img/news-1.jpg" alt="">
-                                <h4><a href="#">Nihil blanditiis at in nihil autem</a></h4>
-                                <p>Sit recusandae non aspernatur laboriosam. Quia enim eligendi sed ut harum...</p>
-                            </div>
-
-                            <div class="post-item clearfix">
-                                <img src="assets/img/news-2.jpg" alt="">
-                                <h4><a href="#">Quidem autem et impedit</a></h4>
-                                <p>Illo nemo neque maiores vitae officiis cum eum turos elan dries werona nande...</p>
-                            </div>
-
-                            <div class="post-item clearfix">
-                                <img src="assets/img/news-3.jpg" alt="">
-                                <h4><a href="#">Id quia et et ut maxime similique occaecati ut</a></h4>
-                                <p>Fugiat voluptas vero eaque accusantium eos. Consequuntur sed ipsam et totam...</p>
-                            </div>
-
-                            <div class="post-item clearfix">
-                                <img src="assets/img/news-4.jpg" alt="">
-                                <h4><a href="#">Laborum corporis quo dara net para</a></h4>
-                                <p>Qui enim quia optio. Eligendi aut asperiores enim repellendusvel rerum cuder...</p>
-                            </div>
-
-                            <div class="post-item clearfix">
-                                <img src="assets/img/news-5.jpg" alt="">
-                                <h4><a href="#">Et dolores corrupti quae illo quod dolor</a></h4>
-                                <p>Odit ut eveniet modi reiciendis. Atque cupiditate libero beatae dignissimos eius...
-                                </p>
-                            </div>
-
-                        </div><!-- End sidebar recent posts-->
-
-                    </div>
-                </div><!-- End News & Updates -->
 
             </div><!-- End Right side columns -->
 
@@ -559,6 +393,81 @@
                             {{ ORDER_STATUS_READY_TO_SHIP }}];
                         document.querySelector('#current-shipping').innerHTML = response.data.count[
                             {{ ORDER_STATUS_SHIPPING }}];
+
+                        echarts.init(document.querySelector("#trafficChart")).setOption({
+                            tooltip: {
+                                trigger: 'item'
+                            },
+                            legend: {
+                                top: '5%',
+                                left: 'center'
+                            },
+                            series: [{
+                                name: 'Access From',
+                                type: 'pie',
+                                radius: ['40%', '70%'],
+                                avoidLabelOverlap: false,
+                                label: {
+                                    show: false,
+                                    position: 'center'
+                                },
+                                emphasis: {
+                                    label: {
+                                        show: true,
+                                        fontSize: '18',
+                                        fontWeight: 'bold'
+                                    }
+                                },
+                                labelLine: {
+                                    show: false
+                                },
+                                data: [{
+                                        value: response.data.count[
+                                            {{ ORDER_STATUS_PENDING }}] ?? 0,
+                                        name: 'Pending'
+                                    },
+                                    {
+                                        value: response.data.count[
+                                            {{ ORDER_STATUS_PROCESSING }}] ?? 0,
+                                        name: 'Processing'
+                                    },
+                                    {
+                                        value: response.data.count[
+                                            {{ ORDER_STATUS_PACKING }}] ?? 0,
+                                        name: 'Packing'
+                                    },
+                                    {
+                                        value: response.data.count[
+                                            {{ ORDER_STATUS_READY_TO_SHIP }}] ?? 0,
+                                        name: 'Pending Shipment'
+                                    },
+                                    {
+                                        value: response.data.count[
+                                            {{ ORDER_STATUS_SHIPPING }}] ?? 0,
+                                        name: 'Shipping'
+                                    }
+                                ]
+                            }]
+                        });
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+                axios.post(`api/dashboard/statistics`, {
+                        start: '{{ Carbon::now()->startOfDay()->startOfDay() }}',
+                        end: '{{ Carbon::now()->endOfDay()->endOfDay() }}'
+                    })
+                    .then(function(response) {
+                        document.querySelector('#stats-pending').innerHTML = response.data[
+                            {{ ORDER_STATUS_PENDING }}] ?? 0;
+                        document.querySelector('#stats-processing').innerHTML = response.data[
+                            {{ ORDER_STATUS_PROCESSING }}] ?? 0;
+                        document.querySelector('#stats-cn-generated').innerHTML = response.data[
+                            {{ ORDER_STATUS_PACKING }}] ?? 0;
+                        document.querySelector('#stats-parcel-scan').innerHTML = response.data[
+                            {{ ORDER_STATUS_READY_TO_SHIP }}] ?? 0;
+                        document.querySelector('#stats-shipping').innerHTML = response.data[
+                            {{ ORDER_STATUS_SHIPPING }}] ?? 0;
                     })
                     .catch(function(error) {
                         console.log(error);
@@ -570,19 +479,27 @@
                 time.addEventListener('click', (e) => {
                     stats_time.innerHTML = `| ${time.getAttribute('data-type')}`;
                     axios.post(`/api/dashboard/statistics`, {
-                        start: time.getAttribute('data-start'),
-                        end: time.getAttribute('data-end')
-                    })
-                        .then(function(response) {
-                            document.querySelector('#stats-pending').innerHTML = response.data[{{ ORDER_STATUS_PENDING }}] ?? 0;
-                            document.querySelector('#stats-processing').innerHTML = response.data[{{ ORDER_STATUS_PROCESSING }}] ?? 0;
-                            document.querySelector('#stats-cn-generated').innerHTML = response.data[{{ ORDER_STATUS_PACKING }}] ?? 0;
-                            document.querySelector('#stats-parcel-scan').innerHTML = response.data[{{ ORDER_STATUS_READY_TO_SHIP }}] ?? 0;
-                            document.querySelector('#stats-shipping').innerHTML = response.data[{{ ORDER_STATUS_SHIPPING }}] ?? 0;
+                            start: time.getAttribute('data-start'),
+                            end: time.getAttribute('data-end')
                         })
-                        // .catch(function(error) {
-                        //     console.log(error);
-                        // });
+                        .then(function(response) {
+                            document.querySelector('#stats-pending').innerHTML = response.data[
+                                {{ ORDER_STATUS_PENDING }}] ?? 0;
+                            document.querySelector('#stats-processing').innerHTML = response
+                                .data[
+                                    {{ ORDER_STATUS_PROCESSING }}] ?? 0;
+                            document.querySelector('#stats-cn-generated').innerHTML = response
+                                .data[
+                                    {{ ORDER_STATUS_PACKING }}] ?? 0;
+                            document.querySelector('#stats-parcel-scan').innerHTML = response
+                                .data[
+                                    {{ ORDER_STATUS_READY_TO_SHIP }}] ?? 0;
+                            document.querySelector('#stats-shipping').innerHTML = response.data[
+                                {{ ORDER_STATUS_SHIPPING }}] ?? 0;
+                        })
+                    // .catch(function(error) {
+                    //     console.log(error);
+                    // });
 
                 });
             });

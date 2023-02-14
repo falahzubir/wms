@@ -136,3 +136,19 @@ if(! function_exists('number_formatter')){
         return  $numberFormatter->format($number);
     }
 }
+
+if(! function_exists('split_order_num')){
+    /**
+     * Split order number to get sales id
+     *
+     * @param  string $order_num
+     * @return int
+     */
+    function split_order_num($order_num)
+    {
+        $order['company'] = substr($order_num, 2, 2);
+        preg_match('/\d+/', $order_num, $matches);
+        $order['sales_id'] = $matches[0];
+
+    }
+}
