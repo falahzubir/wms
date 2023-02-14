@@ -39,6 +39,11 @@ if(!defined('MY_STATES')) define('MY_STATES', [
     16 => 'Putrajaya',
 ]);
 
+// countries
+if(!defined('COUNTRIES')) define('COUNTRIES', [
+    'MY' => 'Malaysia',
+]);
+
 // actions
 if(!defined('ACTION_ADD_TO_BUCKET')) define('ACTION_ADD_TO_BUCKET', 'add-to-bucket');
 if(!defined('ACTION_GENERATE_CN')) define('ACTION_GENERATE_CN', 'generate-cn');

@@ -80,6 +80,14 @@
                 <i class="bx bx-barcode-reader"></i>
                 <span>Scan Parcel</span>
             </a>
+        </li><!-- End Scan Parcel Nav -->
+
+        <li class="nav-item">
+            <a class="nav-link {{ Route::current()->getName() != 'companies.index' ? 'collapsed' : '' }}" href="{{ route('companies.index') }}">
+                <i class="bi bi-building"></i>
+                <span>Companies</span>
+            </a>
+        </li>
 
 
         {{-- <li class="nav-item">

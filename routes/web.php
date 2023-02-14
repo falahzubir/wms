@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ShippingController;
@@ -63,6 +64,12 @@ Route::middleware(['auth'])->group(function() {
         // Route::get('download-consignment-note', [ShippingController::class, 'download_cn'])->name('shipping.download_cn');
         Route::post('update-tracking', [ShippingController::class, 'update_tracking'])->name('shipping.update_tracking');
         Route::post('upload-bulk-tracking', [ShippingController::class, 'upload_bulk_tracking'])->name('shipping.upload_bulk_tracking');
+    });
+
+    Route::group(['prefix' => 'companies'], function(){
+        Route::get('/', [CompanyController::class, 'index'])->name('companies.index');
+        Route::get('edit/{company}', [CompanyController::class, 'edit'])->name('companies.edit');
+        Route::post('update/{company}', [CompanyController::class, 'update'])->name('companies.update');
     });
 });
 
