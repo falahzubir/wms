@@ -55,9 +55,9 @@ class Order extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function shipping()
+    public function shippings()
     {
-        return $this->hasOne(Shipping::class);
+        return $this->hasMany(Shipping::class);
     }
 
     public function batch()

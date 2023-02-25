@@ -39,8 +39,8 @@ class OrderApiController extends Controller
             'barcode' => 'required'
         ]);
 
-        $order = Order::with(['shipping', 'items', 'items.product'])->where('is_active', IS_ACTIVE)
-            ->whereHas('shipping', function ($query) use ($request) {
+        $order = Order::with(['shippings', 'items', 'items.product'])->where('is_active', IS_ACTIVE)
+            ->whereHas('shippings', function ($query) use ($request) {
             $query->where('tracking_number', $request->barcode);
         })->first();
 
@@ -68,5 +68,31 @@ class OrderApiController extends Controller
             ], 200);
         }
 
+    }
+
+    /*
+    * Get Order for split parcels
+    * @param Request $request
+    * @return json
+    */
+    public function get_order_split_parcels(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required'
+        ]);
+
+        $order = Order::with(['items', 'items.product'])->where('is_active', IS_ACTIVE)
+            ->where('id', $request->order_id)->first();
+
+        if ($order->count() == 0) {
+            return response()->json(['error' => 'Order not found']);
+        }
+
+        return response()->json([
+            'success' => 'ok',
+            'count' => ceil($order->items->sum('quantity')/MAXIMUM_QUANTITY_PER_BOX),
+            'weight' => get_order_weight($order),
+            'order' => $order,
+        ], 200);
     }
 }

@@ -22,7 +22,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        return Order::with(['customer', 'items', 'items.product', 'shipping', 'bucket', 'batch', 'company', 'courier'])
+        return Order::with(['customer', 'items', 'items.product', 'shippings', 'bucket', 'batch', 'company', 'courier'])
             ->where('is_active', IS_ACTIVE);
     }
 
@@ -140,7 +140,7 @@ class OrderController extends Controller
             'title' => 'Processing Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
         ]);
     }
 
@@ -178,7 +178,7 @@ class OrderController extends Controller
             'title' => 'Packing Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_DOWNLOAD_ORDER, ACTION_DOWNLOAD_CN],
         ]);
     }
 
@@ -327,6 +327,9 @@ class OrderController extends Controller
         $orders->when($request->filled('bucket_id'), function ($query) use ($request) {
             $query->where('bucket_id', $request->bucket_id);
         });
+        $orders->when($request->filled('order_id'), function ($query) use ($request) {
+            $query->where('id', $request->order_id);
+        });
         $orders->when($request->has('search'), function ($query) use ($request) {
             $query->where(function ($query) use ($request) {
                 $query->where('sales_id', 'LIKE', "%$request->search%")
@@ -334,7 +337,7 @@ class OrderController extends Controller
                         $q->where('name', 'LIKE', "%$request->search%")
                             ->orWhere('phone', 'LIKE', "%$request->search%");
                     })
-                    ->orwhereHas('shipping', function ($q) use ($request) {
+                    ->orwhereHas('shippings', function ($q) use ($request) {
                         $q->where('tracking_number', 'LIKE', "%$request->search%");
                     });
             });
@@ -407,10 +410,10 @@ class OrderController extends Controller
             'code' => 'required',
         ]);
 
-        $order = Order::with(['shipping', 'items', 'items.product'])->where('is_active', IS_ACTIVE);
+        $order = Order::with(['shippings', 'items', 'items.product'])->where('is_active', IS_ACTIVE);
 
         //filter tracking number on shipping table
-        $order->whereHas('shipping', function ($query) use ($request) {
+        $order->whereHas('shippings', function ($query) use ($request) {
             $query->where('tracking_number', $request->code);
         });
 
@@ -421,11 +424,13 @@ class OrderController extends Controller
         }
 
         //if not scanned, store scan time
-        if ($order->shipping->scanned_at == null) {
-            $order->shipping->scanned_at = Carbon::now();
-            $order->shipping->scanned_by = auth()->user()->id ?? 1;
-            $order->shipping->save();
+        if ($order->shippings->scanned_at == null) {
+            $order->shippings->scanned_at = Carbon::now();
+            $order->shippings->scanned_by = auth()->user()->id ?? 1;
+            $order->shippings->save();
 
+            //check if all items are scanned
+            $order_items = $order->shipping;
             //update order status
             set_order_status($order, ORDER_STATUS_READY_TO_SHIP);
 

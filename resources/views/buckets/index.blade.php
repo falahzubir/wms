@@ -53,21 +53,20 @@
                                 </div>
                                 <div class="text-center">
                                     {{-- modal button --}}
-
-                                    <button class="btn btn-primary rounded-pill" title="Generate Picking List"
-                                        id="generate-pl"
-                                        onclick="generate_pl({{ $bucket->id }},{{ $bucket->orders->pluck('id') }})">
-                                        <i class="bi bi-card-text"></i>
-                                    </button>
-                                    <button class="btn btn-warning rounded-pill generate-cn" title="Generate CN"
-                                        onclick="generate_cn({{ $bucket->id }}, {{ $bucket->orders->pluck('id') }})"
-                                        data-bucketId="{{ $bucket->id }}">
-                                        <i class="bi bi-truck"></i>
-                                    </button>
-                                    {{-- <button class="btn btn-primary rounded-pill" id="download-consignment"
-                                        data-bs-toggle="modal" data-bs-target="#download-modal"
-                                        onclick="download_consignment({{ $bucket->id }})"><i
-                                            class="bi bi-download"></i></button> --}}
+                                    @can('picking_list.generate')
+                                        <button class="btn btn-primary rounded-pill" title="Generate Picking List"
+                                            id="generate-pl"
+                                            onclick="generate_pl({{ $bucket->id }},{{ $bucket->orders->pluck('id') }})">
+                                            <i class="bi bi-card-text"></i>
+                                        </button>
+                                    @endcan
+                                    @can('consignment_note.generate')
+                                        <button class="btn btn-warning rounded-pill generate-cn" title="Generate CN"
+                                            onclick="generate_cn({{ $bucket->id }}, {{ $bucket->orders->pluck('id') }})"
+                                            data-bucketId="{{ $bucket->id }}">
+                                            <i class="bi bi-truck"></i>
+                                        </button>
+                                    @endcan
                                     <a href="/orders/processing?bucket_id={{ $bucket->id }}&status={{ ORDER_STATUS_PROCESSING }}"
                                         class="btn btn-info rounded-pill" title="Order List">
                                         <i class="bi bi-list"></i>
@@ -157,10 +156,11 @@
 
                     <div class="modal-footer">
                         <!-- Delete Bucket Button -->
-
-                        <a href="#" class="text-danger" data-bucketId="" id="delete-bucket"><i
-                                class="bi bi-trash"></i>
-                            Delete</a>
+                        @can('bucket.delete')
+                            <a href="#" class="text-danger" data-bucketId="" id="delete-bucket"><i
+                                    class="bi bi-trash"></i>
+                                Delete</a>
+                        @endcan
                         <button type="submit" class="btn btn-primary">Submit</button>
                     </div>
                 </div>
@@ -275,6 +275,37 @@
                     })
                     return false;
                 }
+
+                axios.post('/api/shippings/check-multiple-parcels', {
+                        order_ids: order_ids,
+                    })
+                    .then(function(response) {
+                        if (response.data.multiple_parcels == true) {
+                            Swal.fire({
+                                    icon: 'error',
+                                    title: 'Oops...',
+                                    text: 'Some orders in this bucket have multiple parcels, please split them or remove from bucket first.',
+                                    confirmButtonText: `Split Parcel`,
+                                    showCancelButton: true,
+                                    cancelButtonText: `Cancel`,
+                                })
+                                .then((result) => {
+                                    if (result.isConfirmed) {
+                                        // print data
+                                        window.location.href = '/orders/processing?bucket_id=' + bucket_id +
+                                            '&order_id=' + response.data.order_id + '&multiple_parcels=true';
+                                    } else if (result.isDenied) {
+                                        return;
+                                    }
+                                })
+                            return false;
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+
+
                 Swal.fire({
                     title: 'Are you sure you want to generate CN?',
                     text: 'All orders in this bucket will be included in one batch on CN.',
@@ -319,10 +350,12 @@
                             })
                             .then(function(response) {
                                 //download cn
+                                console.log(response);
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Success',
                                     text: 'CN generated successfully.',
+                                    footer: `<small class="text-danger">Order with item count more than {{ MAXIMUM_QUANTITY_PER_BOX }} are ignored.</small>`,
                                     confirmButtonText: 'Download CN',
                                 }).then((result) => {
                                     axios({
@@ -383,7 +416,11 @@
 
                             })
                             .catch(function(error) {
-                                console.log(error);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Oops...',
+                                    text: error.response.data.error + ' Please contact admin.',
+                                });
                             });
                     }
                 })

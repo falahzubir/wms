@@ -47,9 +47,11 @@ Route::prefix('orders')->group(function () {
     Route::patch('update-tracking', [ShippingController::class, 'update_tracking']);
     Route::post('reject', [OrderApiController::class, 'reject']);
     Route::post('scan-parcel', [OrderApiController::class, 'barcode_scan']);
+    Route::post('split-parcels', [OrderApiController::class, 'get_order_split_parcels']);
 });
 
 Route::prefix('shippings')->group(function () {
+    Route::post('check-multiple-parcels', [ShippingController::class, 'check_multiple_parcels']);
     Route::post('update-tracking', [ShippingController::class, 'update_bulk_tracking']);
     Route::post('first-milestone', [ShippingController::class, 'first_milestone']);
     Route::post('delivered-milestone', [ShippingController::class, 'delivered_milestone']);

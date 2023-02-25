@@ -11,7 +11,7 @@
                 <div class="text-center barcode-big mb-2"><i class="bx bx-barcode-reader pulse"></i></div>
 
                 <div class="mb-2">
-                    <form action="/orders/scan" method="POST">
+                    <form action="{{ route('orders.scan') }}" method="POST">
                         @csrf
                         <div class="input-group">
                             <input value="" type="text" name="code" class="form-control" placeholder="Scan Barcode or Enter Tracking Number" aria-label="Scan Barcode" aria-describedby="button-addon2" >

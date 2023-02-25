@@ -96,8 +96,8 @@ if(!defined('DHL_SOLD_PICKUP_ACCT')) define('DHL_SOLD_PICKUP_ACCT',[
     3=>'5264574522',//5264574522', // QA
 ]);
 if(!defined('DHL_PREFIX')) define('DHL_PREFIX',[
-    1=>'MYAAH', // EH
-    2=>'MYAAH', // ED
+    1=>'MYAAH', // EH // MYCKZ
+    2=>'MYAAH', // ED // MYGPK
     3=>'MYAAHQ', // QA
 ]);
 if(!defined('DHL_CLIENT_ID')) define('DHL_CLIENT_ID','LTE2MDAwOTg0NTI=');
@@ -106,3 +106,7 @@ if(!defined('DHL_CLIENT_PASS')) define('DHL_CLIENT_PASS','MjAzMDI5MTU');
 #32 DHL ED
 if(!defined('DHL_AA_CLIENT_ID')) define('DHL_AA_CLIENT_ID','LTEyNDQ5ODgzODg=');
 if(!defined('DHL_AA_CLIENT_PASS')) define('DHL_AA_CLIENT_PASS','MTQwMDA0N1904211618820882');
+
+// MAXIMUM QUANTITY PER BOX
+if(!defined('MAXIMUM_QUANTITY_PER_BOX')) define('MAXIMUM_QUANTITY_PER_BOX', 5);
+if(!defined('MAX_DHL_COD_PER_PARCEL')) define('MAX_DHL_COD_PER_PARCEL', 200000); // RM2000

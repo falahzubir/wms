@@ -2,6 +2,7 @@
 /public/build
 /public/hot
 /public/storage
+/public/generated_labels
 /storage/*.key
 /vendor
 .env

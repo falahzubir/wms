@@ -5,7 +5,10 @@ use App\Http\Controllers\BucketController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShippingController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,6 +26,7 @@ Route::get('/', fn() => redirect()->route('dashboard'));
 Route::get('login', fn () => view('login', ['title' => 'Login']));
 Route::get('404', fn () => view('404'));
 Route::get('php', fn () => phpinfo());
+
 
 Route::middleware(['auth'])->group(function() {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -64,12 +68,42 @@ Route::middleware(['auth'])->group(function() {
         // Route::get('download-consignment-note', [ShippingController::class, 'download_cn'])->name('shipping.download_cn');
         Route::post('update-tracking', [ShippingController::class, 'update_tracking'])->name('shipping.update_tracking');
         Route::post('upload-bulk-tracking', [ShippingController::class, 'upload_bulk_tracking'])->name('shipping.upload_bulk_tracking');
+        Route::post('dhl-label-single', [ShippingController::class, 'dhl_label_single'])->name('shipping.dhl_label_single');
     });
 
     Route::group(['prefix' => 'companies'], function(){
         Route::get('/', [CompanyController::class, 'index'])->name('companies.index');
         Route::get('edit/{company}', [CompanyController::class, 'edit'])->name('companies.edit');
         Route::post('update/{company}', [CompanyController::class, 'update'])->name('companies.update');
+    });
+
+    Route::group(['prefix'=>'permissions', 'middleware' => ['role:IT_Admin']], function(){
+        Route::get('/', [PermissionController::class, 'index'])->name('permissions.index');
+        Route::get('create', [PermissionController::class, 'create'])->name('permissions.create');
+        Route::post('store', [PermissionController::class, 'store'])->name('permissions.store');
+        Route::get('edit/{role}', [PermissionController::class, 'edit'])->name('permissions.edit');
+        Route::post('update/{role}', [PermissionController::class, 'update'])->name('permissions.update');
+        // Route::get('delete/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+    });
+
+    // role group
+    Route::group(['prefix'=>'roles', 'middleware' => ['role:IT_Admin']], function() {
+        Route::get('/', [RoleController::class, 'index'])->name('roles.index');
+        Route::get('create', [RoleController::class, 'create'])->name('roles.create');
+        Route::post('store', [RoleController::class, 'store'])->name('roles.store');
+    });
+
+    Route::group(['prefix'=>'users'], function() {
+        Route::get('/', [UserController::class, 'index'])->name('users.index');
+        Route::get('create', [UserController::class, 'create'])->name('users.create');
+        Route::post('store', [UserController::class, 'store'])->name('users.store');
+        Route::get('edit/{user}', [UserController::class, 'edit'])->name('users.edit');
+        Route::post('update/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::get('delete/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [UserController::class, 'profile'])->name('profile.index');
+        Route::post('update', [UserController::class, 'profile_update'])->name('profile.update');
     });
 });
 
@@ -90,5 +124,12 @@ Route::get('run-migration', function () {
     if(config('app.env')=="local"){
         Artisan::call('migrate');
         return 'Migrations ran successfully!';
+    }
+});
+
+Route::get('seed/permission', function (String $class) {
+    if(config('app.env')=="local"){
+        Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
+        return 'Seeds ran successfully!';
     }
 });

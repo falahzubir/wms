@@ -84,32 +84,41 @@
                 <div class="card-body">
                     <div class="card-title text-end">
                         @if (in_array(ACTION_GENERATE_PICKING, $actions))
-                            <button class="btn btn-primary" id="generate-picking-btn"><i
-                                    class="bi bi-file-earmark-ruled"></i> Generate Picking</button>
+                            @can('picking_list.generate')
+                                <button class="btn btn-primary" id="generate-picking-btn"><i
+                                        class="bi bi-file-earmark-ruled"></i> Generate Picking</button>
+                            @endcan
                         @endif
                         @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
                             <button class="btn btn-info" id="add-to-bucket-btn"><i class="bi bi-basket"></i> Add to
                                 Bucket</button>
                         @endif
                         @if (in_array(ACTION_GENERATE_CN, $actions))
-                            <button class="btn btn-warning" id="generate-cn-btn"><i
-                                    class="bi bi-file-earmark-ruled"></i> Generate CN</button>
+                            @can('consignment_note.generate')
+                                <button class="btn btn-warning" id="generate-cn-btn"><i
+                                        class="bi bi-file-earmark-ruled"></i> Generate CN</button>
+                            @endcan
                         @endif
                         @if (in_array(ACTION_UPLOAD_TRACKING_BULK, $actions))
-                            <!-- Button trigger modal upload csv -->
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                data-bs-target="#upload-csv-modal">
-                                <i class="bi bi-truck"></i> Bulk Upload Tracking
-                            </button>
+                            @can('tracking.upload')
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#upload-csv-modal">
+                                    <i class="bi bi-truck"></i> Bulk Upload Tracking
+                                </button>
+                            @endcan
                         @endif
                         @if (in_array(ACTION_DOWNLOAD_CN, $actions))
-                            <button class="btn btn-success" id="download-cn-btn"><i class="bi bi-cloud-download"></i>
-                                Download CN</button>
+                            @can('consignment_note.download')
+                                <button class="btn btn-success" id="download-cn-btn"><i class="bi bi-cloud-download"></i>
+                                    Download CN</button>
+                            @endcan
                         @endif
                         @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
-                            <button class="btn btn-secondary" id="download-order-btn"><i
-                                    class="bi bi-cloud-download"></i>
-                                Download CSV</button>
+                            @can('order.download')
+                                <button class="btn btn-secondary" id="download-order-btn"><i
+                                        class="bi bi-cloud-download"></i>
+                                    Download CSV</button>
+                            @endcan
                         @endif
 
 
@@ -138,21 +147,33 @@
                                                 id="" value="{{ $order->id }}">
                                         </td>
                                         <td>
-                                            @if (Route::is('orders.pending'))
-                                                <button class="btn btn-danger p-0 px-1"><i class="bx bx-trash"
-                                                        onclick="reject_order({{ $order->id }})"></i></button>
+                                            @if (Route::is('orders.pending') || Route::is('orders.processing'))
+                                                @can('order.reject')
+                                                    <button class="btn btn-danger p-0 px-1"><i class="bx bx-trash"
+                                                            onclick="reject_order({{ $order->id }})"></i></button>
+                                                @endcan
                                             @endif
                                             {{-- add shipping number modal --}}
                                             @if (Route::is('orders.processing'))
-                                            @empty($order->shipping)
-                                                <button type="button"
-                                                    class="btn btn-primary p-0 px-1 add-shipping-number"
-                                                    data-bs-toggle="modal" data-bs-target="#add-shipping-number-modal"
-                                                    data-orderid="{{ $order->id }}"
-                                                    data-couriercode={{ $order->courier->code }}>
-                                                    <i class="bi bi-truck"></i>
-                                                </button>
+                                            @empty($order->shippings)
+                                                @can('tracking.update')
+                                                    <button type="button"
+                                                        class="btn btn-primary p-0 px-1 add-shipping-number"
+                                                        data-bs-toggle="modal" data-bs-target="#add-shipping-number-modal"
+                                                        data-orderid="{{ $order->id }}"
+                                                        data-couriercode={{ $order->courier->code }}>
+                                                        <i class="bi bi-truck"></i>
+                                                    </button>
+                                                @endcan
                                             @endempty
+                                        @endif
+                                        @if (request('multiple_parcels') == true)
+                                            <button class="btn btn-warning p-0 px-1 split-parcels"
+                                                title="Split Parcel" data-bs-toggle="modal"
+                                                data-bs-target="#split-parcel-modal"
+                                                data-orderid="{{ $order->id }}">
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </button>
                                         @endif
                                     </td>
                                     <td class="text-center">
@@ -233,13 +254,15 @@
                                             {{ $order->courier->name }}
                                         </span>
 
-                                        @isset($order->shipping)
-                                            <div>
-                                                <span class="phantom"
-                                                    data-tracking="{{ $order->shipping->tracking_number }}">
-                                                    {{ $order->shipping->tracking_number }}
-                                                </span>
-                                            </div>
+                                        @isset($order->shippings)
+                                            @foreach ($order->shippings as $shipping)
+                                                <div>
+                                                    <span class="phantom"
+                                                        data-tracking="{{ $shipping->tracking_number }}">
+                                                        {{ $shipping->tracking_number }}
+                                                    </span>
+                                                </div>
+                                            @endforeach
                                         @endisset
                                     </td>
                                     <td>
@@ -395,528 +418,599 @@
         </div>
     </div>
 
+</div> <!-- end other website embeded modal -->
+
+<!-- modal for split parcels -->
+<div class="modal fade" id="split-parcel-modal" tabindex="-1" aria-labelledby="split-parcel-modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="add-shipping-number-modalLabel">Split Parcels</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="add-shipping-number-modal-body">
+
+                <form action="{{ route('shipping.dhl_label_single') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="order_id" id="split-order-id">
+                    <div class="justify-content-center align-items-center g-2">
+                        <div class="input-group mb-3">
+                            <label class="input-group-text" for="split-parcel-count">Parcel Count</label>
+                            <input type="number" class="form-control" id="split-parcel-count"
+                                name="parcel_count" required>
+                        </div>
+                        <div class="input-group mb-3">
+                            <label class="input-group-text" for="split-parcel-weight">Weight Per Parcel</label>
+                            <input type="text" class="form-control" name="parcel_weight"
+                                id="split-parcel-weight" placeholder="Parcel Weight" required readonly>
+                            <label class="input-group-text" for="split-parcel-weight">kg</label>
+                        </div>
+                        <input type="hidden" id="split-parcel-weight-total">
+
+                    </div>
+                    <div class="mb-3">
+
+                        <button type="submit" class="btn btn-primary mt-3" id="add-shipping-number-btn">
+                            <span class="spinner-border spinner-border-sm d-none" role="status"
+                                aria-hidden="true"></span>
+                            <span class="d-none">Loading...</span>
+                            <span class="d-inline">Confirm</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div> <!-- end modal for split parcels -->
 
 
-    <x-slot name="script">
-        <script>
-            let start = document.querySelector('#start-date');
-            let end = document.querySelector('#end-date');
-            document.querySelector('#btn-check-today').onclick = function() {
-                start.value = moment().format('YYYY-MM-DD');
-                end.value = moment().format('YYYY-MM-DD');
-            }
-            document.querySelector('#btn-check-yesterday').onclick = function() {
-                start.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
-                end.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
-            }
-            document.querySelector('#btn-check-this-month').onclick = function() {
-                start.value = moment().startOf('month').format('YYYY-MM-DD');
-                end.value = moment().endOf('month').format('YYYY-MM-DD');
-            }
-            document.querySelector('#btn-check-last-month').onclick = function() {
-                start.value = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
-                end.value = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
-            }
-            document.querySelector('#btn-check-overall').onclick = function() {
-                start.value = '';
-                end.value = '';
-            }
+<x-slot name="script">
+    <script>
+        let start = document.querySelector('#start-date');
+        let end = document.querySelector('#end-date');
+        document.querySelector('#btn-check-today').onclick = function() {
+            start.value = moment().format('YYYY-MM-DD');
+            end.value = moment().format('YYYY-MM-DD');
+        }
+        document.querySelector('#btn-check-yesterday').onclick = function() {
+            start.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
+            end.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
+        }
+        document.querySelector('#btn-check-this-month').onclick = function() {
+            start.value = moment().startOf('month').format('YYYY-MM-DD');
+            end.value = moment().endOf('month').format('YYYY-MM-DD');
+        }
+        document.querySelector('#btn-check-last-month').onclick = function() {
+            start.value = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
+            end.value = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+        }
+        document.querySelector('#btn-check-overall').onclick = function() {
+            start.value = '';
+            end.value = '';
+        }
 
 
-            document.querySelector('#filter-order').onclick = function() {
-                document.querySelector('#order-table').style.display = 'block';
-            }
+        document.querySelector('#filter-order').onclick = function() {
+            document.querySelector('#order-table').style.display = 'block';
+        }
 
-            @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
-                document.querySelector('#add-to-bucket-btn').onclick = function() {
-                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                    let checkedValue = inputElements.filter(chk => chk.checked).length;
+        @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
+            document.querySelector('#add-to-bucket-btn').onclick = function() {
+                const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                let checkedValue = inputElements.filter(chk => chk.checked).length;
 
-                    // sweet alert
-                    if (checkedValue == 0) {
-                        Swal.fire({
-                            title: 'No order selected!',
-                            text: "Please select at least one order to add to bucket.",
-                            icon: 'warning',
-                            confirmButtonText: 'OK'
-                        })
-                        return;
-                    }
-                    //get bucket lists
-                    axios.get('/api/buckets')
-                        .then(function(response) {
-                            // handle success
-                            let buckets = response.data;
-                            let bucketOptions = {};
-                            buckets.forEach(bucket => {
-                                bucketOptions[bucket.id] = bucket.name;
-                            });
-                            Swal.fire({
-                                title: 'Please select bucket!',
-                                input: 'select',
-                                inputOptions: bucketOptions,
-                                inputPlaceholder: 'Select a bucket',
-                                showCancelButton: true,
-                                inputValidator: (value) => {
-                                    return new Promise((resolve) => {
-                                        if (value !== '') {
-                                            resolve()
-                                        } else {
-                                            resolve('You need to select a bucket!')
-                                        }
-                                    })
-                                }
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    //get checked order
-                                    let checkedOrder = [];
-                                    inputElements.forEach(input => {
-                                        if (input.checked) {
-                                            checkedOrder.push(input.value);
-                                        }
-                                    });
-                                    //add to bucket
-                                    axios.post('/api/add-to-bucket', {
-                                            bucket_id: result.value,
-                                            order_ids: checkedOrder,
-                                        })
-                                        .then(function(response) {
-                                            // handle success
-                                            Swal.fire({
-                                                title: 'Success!',
-                                                text: "Order added to bucket.",
-                                                icon: 'success',
-                                                confirmButtonText: 'OK'
-                                            }).then((result) => {
-                                                if (result.isConfirmed) {
-                                                    location.reload();
-                                                }
-                                            });
-                                        })
-                                        .catch(function(error) {
-                                            // handle error
-                                            console.log(error);
-                                        })
-                                        .then(function() {
-                                            // always executed
-                                        });
-                                }
-                            })
-                        })
-                        .catch(function(error) {
-                            // handle error
-                            console.log(error);
-                        })
-
-                }
-            @endif
-
-            // generate shipping label
-            @if (in_array(ACTION_GENERATE_CN, $actions))
-                document.querySelector('#generate-cn-btn').onclick = function() {
-                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                    let checkedValue = inputElements.filter(chk => chk.checked).length;
-                    // sweet alert
-                    if (checkedValue == 0) {
-                        Swal.fire({
-                            title: 'No order selected!',
-                            text: "Please select at least one order to generate shipping label.",
-                            icon: 'warning',
-                            confirmButtonText: 'OK'
-                        })
-                        return;
-                    }
-                    //confirmation to generate cn
+                // sweet alert
+                if (checkedValue == 0) {
                     Swal.fire({
-                        title: 'Are you sure to generate shipping label?',
-                        html: `You are about to generate shipping label for ${checkedValue} order(s).`,
+                        title: 'No order selected!',
+                        text: "Please select at least one order to add to bucket.",
                         icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Yes, generate it!',
-                        footer: '<small>Note: Order with existing Consignment Note will be ignored.</small>',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            generateCN();
-                        }
+                        confirmButtonText: 'OK'
                     })
+                    return;
                 }
-            @endif
-
-            // download cn
-            @if (in_array(ACTION_DOWNLOAD_CN, $actions))
-                document.querySelector('#download-cn-btn').onclick = function() {
-                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                    let checkedValue = inputElements.filter(chk => chk.checked).length;
-                    // sweet alert
-                    if (checkedValue == 0) {
-                        Swal.fire({
-                            title: 'No order selected!',
-                            text: "Please select at least one order to download shipping label.",
-                            icon: 'warning',
-                            confirmButtonText: 'OK'
-                        })
-                        return;
-                    }
-                    let checkedOrder = [];
-                    inputElements.forEach(input => {
-                        if (input.checked) {
-                            checkedOrder.push(input.value);
-                        }
-                    });
-                    //confirmation to generate cn
-                    Swal.fire({
-                        title: 'Are you sure to download shipping label?',
-                        html: `You are about to download shipping label for ${checkedValue} order(s).`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Yes, download it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            download_cn(checkedOrder);
-                        }
-                    })
-                }
-            @endif
-
-            // download csv
-            @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
-                document.querySelector('#download-order-btn').onclick = function() {
-                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                    let checkedValue = inputElements.filter(chk => chk.checked).length;
-
-                    if (checkedValue == 0) {
-                        Swal.fire({
-                            title: 'No order selected!',
-                            html: `<div>Are you sure to download {{ isset($order) ? $order->count() : 0 }} order(s).</div>
-                            <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
-                            icon: 'warning',
-                            confirmButtonText: 'Download',
-                            showCancelButton: true,
-                            cancelButtonText: 'Cancel',
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                let checkedOrder = [];
-                                inputElements.forEach(input => {
-                                    if (input.checked) {
-                                        checkedOrder.push(input.value);
-                                    }
-                                });
-                                download_csv(checkedOrder);
-                            }
-                        })
-                    } else {
-                        let checkedOrder = [];
-                        inputElements.forEach(input => {
-                            if (input.checked) {
-                                checkedOrder.push(input.value);
-                            }
+                //get bucket lists
+                axios.get('/api/buckets')
+                    .then(function(response) {
+                        // handle success
+                        let buckets = response.data;
+                        let bucketOptions = {};
+                        buckets.forEach(bucket => {
+                            bucketOptions[bucket.id] = bucket.name;
                         });
-                        download_csv(checkedOrder);
-                    }
-                }
-            @endif
-
-            document.querySelectorAll('.add-shipping-number').forEach(btn => {
-                btn.onclick = function() {
-
-                    let order_id = btn.dataset.orderid;
-                    let couriercode = btn.dataset.couriercode;
-                    console.log(order_id)
-                    document.querySelector('#order-id').value = order_id;
-                    document.querySelector(`#input-select-courier option[value="${couriercode}"]`).setAttribute(
-                        'selected', 'selected');
-                }
-            });
-
-            @if (in_array(ACTION_GENERATE_PICKING, $actions))
-                document.querySelector('#generate-picking-btn').onclick = function() {
-                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                    let checkedValue = inputElements.filter(chk => chk.checked).length;
-                    let bucket_id = {{ $_GET['bucket_id'] }};
-                    // sweet alert
-                    if (checkedValue == 0) {
                         Swal.fire({
-                            title: 'No order selected!',
-                            text: "Please select at least one order to generate picking list.",
-                            icon: 'warning',
-                            confirmButtonText: 'OK'
-                        })
-                    } else {
-                        //cnfirmation to generate picking list
-                        Swal.fire({
-                            title: 'Are you sure to generate picking list separately?',
-                            html: `You are about to generate picking list for ${checkedValue} order(s).`,
-                            footer: '<small>Note: Shipment Note will be generated separately.</small>',
-                            icon: 'warning',
+                            title: 'Please select bucket!',
+                            input: 'select',
+                            inputOptions: bucketOptions,
+                            inputPlaceholder: 'Select a bucket',
                             showCancelButton: true,
-                            confirmButtonColor: '#3085d6',
-                            cancelButtonColor: '#d33',
-                            confirmButtonText: 'Yes, generate it!',
+                            inputValidator: (value) => {
+                                return new Promise((resolve) => {
+                                    if (value !== '') {
+                                        resolve()
+                                    } else {
+                                        resolve('You need to select a bucket!')
+                                    }
+                                })
+                            }
                         }).then((result) => {
                             if (result.isConfirmed) {
+                                //get checked order
                                 let checkedOrder = [];
                                 inputElements.forEach(input => {
                                     if (input.checked) {
                                         checkedOrder.push(input.value);
                                     }
                                 });
-                                axios.post(`{{ route('buckets.generate_pl') }}`, {
+                                //add to bucket
+                                axios.post('/api/add-to-bucket', {
+                                        bucket_id: result.value,
                                         order_ids: checkedOrder,
-                                        bucket_id: bucket_id
                                     })
                                     .then(function(response) {
-                                        window.location.href = '/bucket-batches/download_pl/' + response.data
-                                            .batch_id;
-                                        // reload when click ok
+                                        // handle success
                                         Swal.fire({
-                                            title: 'Success',
-                                            text: 'Picking list generated successfully.',
+                                            title: 'Success!',
+                                            text: "Order added to bucket.",
                                             icon: 'success',
                                             confirmButtonText: 'OK'
                                         }).then((result) => {
                                             if (result.isConfirmed) {
-                                                document.querySelectorAll('.check-order').forEach(
-                                                    input => {
-                                                        input.checked = false;
-                                                    })
                                                 location.reload();
                                             }
-                                        })
+                                        });
                                     })
                                     .catch(function(error) {
-                                        if (error.response) {
-                                            Swal.fire('Error', error.response.data.message, 'error')
-                                        }
+                                        // handle error
+                                        console.log(error);
                                     })
+                                    .then(function() {
+                                        // always executed
+                                    });
                             }
                         })
-                    }
-                }
-            @endif
+                    })
+                    .catch(function(error) {
+                        // handle error
+                        console.log(error);
+                    })
 
+            }
+        @endif
 
-            async function generateCN() {
-                //show loading modal
-                Swal.fire({
-                    title: 'Generating shipping label...',
-                    html: 'Please wait while we are generating shipping label for your order(s).',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading()
-                    },
-                });
+        // generate shipping label
+        @if (in_array(ACTION_GENERATE_CN, $actions))
+            document.querySelector('#generate-cn-btn').onclick = function() {
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
-                //get checked order
+                // sweet alert
+                if (checkedValue == 0) {
+                    Swal.fire({
+                        title: 'No order selected!',
+                        text: "Please select at least one order to generate shipping label.",
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    })
+                    return;
+                }
+                //confirmation to generate cn
+                Swal.fire({
+                    title: 'Are you sure to generate shipping label?',
+                    html: `You are about to generate shipping label for ${checkedValue} order(s).`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, generate it!',
+                    footer: '<small>Note: Order with existing Consignment Note will be ignored.</small>',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        generateCN();
+                    }
+                })
+            }
+        @endif
+
+        // download cn
+        @if (in_array(ACTION_DOWNLOAD_CN, $actions))
+            document.querySelector('#download-cn-btn').onclick = function() {
+                const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                let checkedValue = inputElements.filter(chk => chk.checked).length;
+                // sweet alert
+                if (checkedValue == 0) {
+                    Swal.fire({
+                        title: 'No order selected!',
+                        text: "Please select at least one order to download shipping label.",
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    })
+                    return;
+                }
                 let checkedOrder = [];
                 inputElements.forEach(input => {
                     if (input.checked) {
                         checkedOrder.push(input.value);
                     }
                 });
-
-                let sameCompany = await check_same_company(checkedOrder);
-                if (sameCompany != 1) {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: "You have selected orders from different company.",
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    })
-                    return;
-                }
-
-                axios.post('/api/request-cn', {
-                        order_ids: checkedOrder,
-                    })
-                    .then(function(response) {
-                        if (response.data == 0) {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: "Selected order already has CN.",
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            })
-                            return;
-                        }
-                        // handle success, close or download
-                        Swal.fire({
-                            title: 'Success!',
-                            text: "Shipping label generated.",
-                            icon: 'success',
-                            confirmButtonText: 'Download',
-                            showCancelButton: true,
-                            cancelButtonText: 'Ok',
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                download_cn(order_ids)
-                            } else {
-                                location.reload();
-                            }
-                        });
-                    })
-                    .catch(function(error) {
-                        // handle error
-                        console.log(error);
-                    })
-                    .then(function() {
-                        // always executed
-                    });
-
-            } //end of generateCN
-
-
-            function download_cn(checkedOrder) {
-                axios({
-                        url: '/api/download-consignment-note',
-                        method: 'POST',
-                        responseType: 'json', // important
-                        data: {
-                            order_ids: checkedOrder,
-                        }
-                    })
-                    .then(function(res) {
-                        let a = document.createElement('a');
-                        a.target = '_blank';
-                        a.href = res.data.download_url;
-                        a.click();
-                        // handle success, close or download
-                        Swal.fire({
-                            title: 'Success!',
-                            html: `<div>Download Request CN Successful.</div>
-                                                    <div>Click <a href="${res.data.download_url}" target="_blank">here</a> if CN not downloaded.</div>`,
-                            footer: '<small class="text-danger">Please enable popup if required</small>',
-                            allowOutsideClick: false,
-                            icon: 'success',
-                        });
-                    })
-                    .catch(function(error) {
-                        // handle error
-                        console.log(error);
-                    })
-                    .then(function() {
-                        // always executed
-                    });
-            }
-
-            function reject_order(orderId) {
+                //confirmation to generate cn
                 Swal.fire({
-                    title: 'Are you sure to reject this order?',
-                    html: `You are about to reject order ${orderId}.`,
+                    title: 'Are you sure to download shipping label?',
+                    html: `You are about to download shipping label for ${checkedValue} order(s).`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, reject it!',
+                    confirmButtonText: 'Yes, download it!'
                 }).then((result) => {
-                    // function not ready
-
                     if (result.isConfirmed) {
-                        axios.post('/api/orders/reject', {
-                                order_id: orderId,
-                            })
-                            .then(function(response) {
-                                // handle success, close or download
-                                if (response.status == 200) {
-                                    Swal.fire({
-                                            title: 'Success!',
-                                            text: "Order rejected.",
-                                            icon: 'success',
-                                            confirmButtonText: 'OK'
-                                        })
-                                        .then((result) => {
-                                            if (result.isConfirmed) {
-                                                location.reload();
-                                            }
-                                        })
-                                } else {
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: "Something went wrong.",
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    })
-                                    return;
-                                }
-                            })
-                            .catch(function(error) {
-                                // handle error
-                                console.log(error);
-                            })
+                        download_cn(checkedOrder);
                     }
                 })
             }
+        @endif
 
-            async function check_same_company(checkedOrder) {
-                let result = await axios.post('/api/check-cn-company', {
+        // download csv
+        @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
+            document.querySelector('#download-order-btn').onclick = function() {
+                const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                let checkedValue = inputElements.filter(chk => chk.checked).length;
+
+                if (checkedValue == 0) {
+                    Swal.fire({
+                        title: 'No order selected!',
+                        html: `<div>Are you sure to download {{ isset($order) ? $order->count() : 0 }} order(s).</div>
+                            <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
+                        icon: 'warning',
+                        confirmButtonText: 'Download',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            let checkedOrder = [];
+                            inputElements.forEach(input => {
+                                if (input.checked) {
+                                    checkedOrder.push(input.value);
+                                }
+                            });
+                            download_csv(checkedOrder);
+                        }
+                    })
+                } else {
+                    let checkedOrder = [];
+                    inputElements.forEach(input => {
+                        if (input.checked) {
+                            checkedOrder.push(input.value);
+                        }
+                    });
+                    download_csv(checkedOrder);
+                }
+            }
+        @endif
+
+        document.querySelectorAll('.add-shipping-number').forEach(btn => {
+            btn.onclick = function() {
+
+                let order_id = btn.dataset.orderid;
+                let couriercode = btn.dataset.couriercode;
+                console.log(order_id)
+                document.querySelector('#order-id').value = order_id;
+                document.querySelector(`#input-select-courier option[value="${couriercode}"]`).setAttribute(
+                    'selected', 'selected');
+            }
+        });
+
+        @if (in_array(ACTION_GENERATE_PICKING, $actions))
+            document.querySelector('#generate-picking-btn').onclick = function() {
+                const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                let checkedValue = inputElements.filter(chk => chk.checked).length;
+                let bucket_id = {{ $_GET['bucket_id'] }};
+                // sweet alert
+                if (checkedValue == 0) {
+                    Swal.fire({
+                        title: 'No order selected!',
+                        text: "Please select at least one order to generate picking list.",
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    })
+                } else {
+                    //cnfirmation to generate picking list
+                    Swal.fire({
+                        title: 'Are you sure to generate picking list separately?',
+                        html: `You are about to generate picking list for ${checkedValue} order(s).`,
+                        footer: '<small>Note: Shipment Note will be generated separately.</small>',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, generate it!',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            let checkedOrder = [];
+                            inputElements.forEach(input => {
+                                if (input.checked) {
+                                    checkedOrder.push(input.value);
+                                }
+                            });
+                            axios.post(`{{ route('buckets.generate_pl') }}`, {
+                                    order_ids: checkedOrder,
+                                    bucket_id: bucket_id
+                                })
+                                .then(function(response) {
+                                    window.location.href = '/bucket-batches/download_pl/' + response.data
+                                        .batch_id;
+                                    // reload when click ok
+                                    Swal.fire({
+                                        title: 'Success',
+                                        text: 'Picking list generated successfully.',
+                                        icon: 'success',
+                                        confirmButtonText: 'OK'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            document.querySelectorAll('.check-order').forEach(
+                                                input => {
+                                                    input.checked = false;
+                                                })
+                                            location.reload();
+                                        }
+                                    })
+                                })
+                                .catch(function(error) {
+                                    if (error.response) {
+                                        Swal.fire('Error', error.response.data.message, 'error')
+                                    }
+                                })
+                        }
+                    })
+                }
+            }
+        @endif
+
+
+        async function generateCN() {
+            //show loading modal
+            Swal.fire({
+                title: 'Generating shipping label...',
+                html: 'Please wait while we are generating shipping label for your order(s).',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+            });
+            const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+            let checkedValue = inputElements.filter(chk => chk.checked).length;
+            //get checked order
+            let checkedOrder = [];
+            inputElements.forEach(input => {
+                if (input.checked) {
+                    checkedOrder.push(input.value);
+                }
+            });
+
+            let sameCompany = await check_same_company(checkedOrder);
+            if (sameCompany != 1) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: "You have selected orders from different company.",
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                })
+                return;
+            }
+
+            axios.post('/api/request-cn', {
                     order_ids: checkedOrder,
+                })
+                .then(function(response) {
+                    if (response.data == 0) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: "Selected order already has CN.",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                        return;
+                    }
+                    // handle success, close or download
+                    Swal.fire({
+                        title: 'Success!',
+                        text: "Shipping label generated.",
+                        icon: 'success',
+                        confirmButtonText: 'Download',
+                        showCancelButton: true,
+                        cancelButtonText: 'Ok',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            download_cn(order_ids)
+                        } else {
+                            location.reload();
+                        }
+                    });
+                })
+                .catch(function(error) {
+                    // handle error
+                    console.log(error);
+                })
+                .then(function() {
+                    // always executed
                 });
-                return result.data;
-            }
 
-            function get_current_date_time() {
-                var today = new Date();
-                var currentMonth = ('0' + (today.getMonth() + 1)).substr(-2);
-                var currentDate = ('0' + today.getDate()).substr(-2);
-                var date = today.getFullYear() + currentMonth + currentDate;
-                var currentHours = ('0' + today.getHours()).substr(-2);
-                var currentMins = ('0' + today.getMinutes()).substr(-2);
-                var currentSecs = ('0' + today.getSeconds()).substr(-2);
-                var time = currentHours + currentMins + currentSecs;
-                var dateTime = date + '_' + time;
-                return dateTime;
-            }
+        } //end of generateCN
 
-            function download_csv(checkedOrder) {
-                const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
-                // const param_obj = queryStringToJSON(params);
-                axios.post('/api/download-order-csv?' + params, {
+
+        function download_cn(checkedOrder) {
+            axios({
+                    url: '/api/download-consignment-note',
+                    method: 'POST',
+                    responseType: 'json', // important
+                    data: {
                         order_ids: checkedOrder,
+                    }
+                })
+                .then(function(res) {
+                    let a = document.createElement('a');
+                    a.target = '_blank';
+                    a.href = res.data.download_url;
+                    a.click();
+                    // handle success, close or download
+                    Swal.fire({
+                        title: 'Success!',
+                        html: `<div>Download Request CN Successful.</div>
+                                                    <div>Click <a href="${res.data.download_url}" target="_blank">here</a> if CN not downloaded.</div>`,
+                        footer: '<small class="text-danger">Please enable popup if required</small>',
+                        allowOutsideClick: false,
+                        icon: 'success',
+                    });
+                })
+                .catch(function(error) {
+                    // handle error
+                    console.log(error);
+                })
+                .then(function() {
+                    // always executed
+                });
+        }
+
+        function reject_order(orderId) {
+            Swal.fire({
+                title: 'Are you sure to reject this order?',
+                html: `You are about to reject order ${orderId}.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, reject it!',
+            }).then((result) => {
+                // function not ready
+
+                if (result.isConfirmed) {
+                    axios.post('/api/orders/reject', {
+                            order_id: orderId,
+                        })
+                        .then(function(response) {
+                            // handle success, close or download
+                            if (response.status == 200) {
+                                Swal.fire({
+                                        title: 'Success!',
+                                        text: "Order rejected.",
+                                        icon: 'success',
+                                        confirmButtonText: 'OK'
+                                    })
+                                    .then((result) => {
+                                        if (result.isConfirmed) {
+                                            location.reload();
+                                        }
+                                    })
+                            } else {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Something went wrong.",
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                })
+                                return;
+                            }
+                        })
+                        .catch(function(error) {
+                            // handle error
+                            console.log(error);
+                        })
+                }
+            })
+        }
+
+        async function check_same_company(checkedOrder) {
+            let result = await axios.post('/api/check-cn-company', {
+                order_ids: checkedOrder,
+            });
+            return result.data;
+        }
+
+        function get_current_date_time() {
+            var today = new Date();
+            var currentMonth = ('0' + (today.getMonth() + 1)).substr(-2);
+            var currentDate = ('0' + today.getDate()).substr(-2);
+            var date = today.getFullYear() + currentMonth + currentDate;
+            var currentHours = ('0' + today.getHours()).substr(-2);
+            var currentMins = ('0' + today.getMinutes()).substr(-2);
+            var currentSecs = ('0' + today.getSeconds()).substr(-2);
+            var time = currentHours + currentMins + currentSecs;
+            var dateTime = date + '_' + time;
+            return dateTime;
+        }
+
+        function download_csv(checkedOrder) {
+            const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
+            // const param_obj = queryStringToJSON(params);
+            axios.post('/api/download-order-csv?' + params, {
+                    order_ids: checkedOrder,
+                })
+                .then(function(response) {
+                    // handle success, close or download
+                    Swal.fire({
+                        title: 'Success!',
+                        text: "Order CSV Downloaded.",
+                        icon: 'success',
+                    });
+                })
+                .catch(function(error) {
+                    // handle error
+                    console.log(error);
+                })
+        }
+
+        document.querySelectorAll('.tomsel').forEach((el) => {
+            let settings = {
+                plugins: {
+                    remove_button: {
+                        title: 'Remove this item',
+                    }
+                },
+                hidePlaceholder: true,
+            };
+            new TomSelect(el, settings);
+        });
+
+        document.querySelectorAll(".phantom").forEach(function(el) {
+            el.addEventListener("click", function() {
+                let tracking = el.getAttribute('data-tracking');
+                // fetch(`https://phantom.emzi.com.my/showItemTracking?tracking_id=${tracking}`)
+                fetch(`http://127.0.0.1:8001/showItemTracking?tracking_id=7022066391821682`)
+                    .then(response => response.text())
+                    .then(content => {
+                        // Update the content of the target element
+                        document.querySelector("#phantomLoad").innerHTML = content;
+                    });
+
+            });
+        });
+
+        document.querySelectorAll('.split-parcels').forEach(function(q) {
+            q.addEventListener("click", function() {
+                let order_id = q.getAttribute('data-orderId');
+                axios.post('/api/orders/split-parcels', {
+                        order_id: order_id,
                     })
                     .then(function(response) {
                         // handle success, close or download
-                        Swal.fire({
-                            title: 'Success!',
-                            text: "Order CSV Downloaded.",
-                            icon: 'success',
-                        });
-                    })
-                    .catch(function(error) {
-                        // handle error
-                        console.log(error);
-                    })
-            }
-
-            document.querySelectorAll('.tomsel').forEach((el) => {
-                let settings = {
-                    plugins: {
-                        remove_button: {
-                            title: 'Remove this item',
+                        if (response.data.success == 'ok') {
+                            let count = response.data.count;
+                            document.querySelector('#split-order-id').value = order_id;
+                            document.querySelector('#split-parcel-count').value = count;
+                            document.querySelector('#split-parcel-weight').value = (response.data
+                                .weight / 1000 / count).toFixed(3);
+                            document.querySelector('#split-parcel-weight-total').value = (response.data
+                                .weight / 1000).toFixed(3);
                         }
-                    },
-                    hidePlaceholder: true,
-                };
-                new TomSelect(el, settings);
-            });
-
-            document.querySelectorAll(".phantom").forEach(function(el) {
-                el.addEventListener("click", function() {
-                    let tracking = el.getAttribute('data-tracking');
-                    // fetch(`https://phantom.emzi.com.my/showItemTracking?tracking_id=${tracking}`)
-                    fetch(`http://127.0.0.1:8001/showItemTracking?tracking_id=7022066391821682`)
-                        .then(response => response.text())
-                        .then(content => {
-                            // Update the content of the target element
-                            document.querySelector("#phantomLoad").innerHTML = content;
-                        });
-
-                });
-            });
-        </script>
-    </x-slot>
+                    })
+            })
+        })
+        document.querySelector('#split-parcel-count').addEventListener('change', function() {
+            let weight = document.querySelector('#split-parcel-weight-total').value;
+            let count = document.querySelector('#split-parcel-count').value;
+            document.querySelector('#split-parcel-weight').value = (weight / count).toFixed(3);
+        })
+    </script>
+</x-slot>
 
 </x-layout>
