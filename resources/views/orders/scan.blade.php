@@ -14,52 +14,59 @@
                     <form action="{{ route('orders.scan') }}" method="POST">
                         @csrf
                         <div class="input-group">
-                            <input value="" type="text" name="code" class="form-control" placeholder="Scan Barcode or Enter Tracking Number" aria-label="Scan Barcode" aria-describedby="button-addon2" >
+                            <input value="" type="text" name="code" class="form-control"
+                                placeholder="Scan Barcode or Enter Tracking Number" aria-label="Scan Barcode"
+                                aria-describedby="button-addon2">
                             <button class="btn btn-primary" type="submit" id="button-addon2">Scan</button>
                     </form>
                 </div>
             </div>
-                @if (session('shipping'))
-                    <div class="row">
-                        <div class="col-3">Order ID</div>
-                        <div class="col-1">:</div>
-                        <div class="col-8"><strong>{{ order_num_format(session('shipping')->order_id) }}</strong></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-3">Tracking No</div>
-                        <div class="col-1">:</div>
-                        <div class="col-8"><strong>{{ session('shipping')->tracking_number }}</strong></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-3">Product(s)</div>
-                        <div class="col-1">:</div>
-                        <div class="col-8"><strong>
+            @if (session('shipping'))
+                <div class="row">
+                    <div class="col-3">Order ID</div>
+                    <div class="col-1">:</div>
+                    <div class="col-8"><strong>{{ order_num_format(session('shipping')->order_id) }}</strong></div>
+                </div>
+                <div class="row">
+                    <div class="col-3">Tracking No</div>
+                    <div class="col-1">:</div>
+                    <div class="col-8"><strong>{{ session('shipping')->tracking_number }}</strong></div>
+                </div>
+                <div class="row">
+                    <div class="col-3">Product(s)</div>
+                    <div class="col-1">:</div>
+                    <div class="col-8"><strong>
                             @foreach (session('shipping')->order->items as $items)
                                 {{ $items->product->name }} [{{ $items->quantity }}]{{ $loop->last ? '' : ', ' }}
                             @endforeach
                         </strong></div>
+                </div>
+                <div class="row">
+                    <div class="col-3">Price</div>
+                    <div class="col-1">:</div>
+                    <div class="col-8"><strong>{{ currency(session('shipping')->order->total_price, true) }}</strong>
                     </div>
-                    <div class="row">
-                        <div class="col-3">Price</div>
-                        <div class="col-1">:</div>
-                        <div class="col-8"><strong>{{ currency(session('shipping')->order->total_price, true) }}</strong></div>
-                    </div>
-                    <div class="row text-danger">
-                        <div class="col-3">Refund</div>
-                        <div class="col-1">:</div>
-                        <div class="col-8"><strong>{{ currency(session('shipping')->order->payment_refund, true) }}</strong></div>
-                    </div>
+                </div>
+                <div class="row text-danger">
+                    <div class="col-3">Refund</div>
+                    <div class="col-1">:</div>
+                    <div class="col-8">
+                        <strong>{{ currency(session('shipping')->order->payment_refund, true) }}</strong></div>
+                </div>
+                @isset (session('shipping')->scannedBy->name)
                     <div class="row">
                         <div class="col-3">Scanned By</div>
                         <div class="col-1">:</div>
-                        <div class="col-8"><strong>{{ session('shipping')->scannedBy->name?? '' }}</strong></div>
+                        <div class="col-8"><strong>{{ session('shipping')->scannedBy->name ?? '' }}</strong></div>
                     </div>
-                    <div class="row">
-                        <div class="col-3">Scanned At</div>
-                        <div class="col-1">:</div>
-                        <div class="col-8"><strong>{{ date("D d/m/Y H:i A", strtotime(session('shipping')->scanned_at)) }}</strong></div>
-                    </div>
-                @endif
+                @endisset
+                <div class="row">
+                    <div class="col-3">Scanned At</div>
+                    <div class="col-1">:</div>
+                    <div class="col-8">
+                        <strong>{{ date('D d/m/Y H:i A', strtotime(session('shipping')->scanned_at)) }}</strong></div>
+                </div>
+            @endif
             <div>
 
             </div>
@@ -77,4 +84,3 @@
     </x-slot>
 
 </x-layout>
-

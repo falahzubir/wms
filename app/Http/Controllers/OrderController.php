@@ -422,13 +422,13 @@ class OrderController extends Controller
 
         //if not scanned, store scan time
         if ($shipping->scanned_at == null) {
-            $data['scanned_at'] = Carbon::now();
-            $data['scanned_by'] = auth()->user()->id ?? 1;
+            $shipping->scanned_at = $data['scanned_at'] = Carbon::now();
+            $shipping->scanned_by = $data['scanned_by'] = auth()->user()->id ?? 1;
 
             Shipping::where('order_id', $shipping->order_id)->update($data);
 
             //check if all items are scanned
-            set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP);
+            set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
 
             return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
         } else {
