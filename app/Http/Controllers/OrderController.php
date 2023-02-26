@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Shipping;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -410,41 +411,29 @@ class OrderController extends Controller
             'code' => 'required',
         ]);
 
-        $order = Order::with(['shippings', 'items', 'items.product'])->where('is_active', IS_ACTIVE);
+        //get shipping details
+        $shipping = Shipping::with(['order', 'order.items', 'order.items.product', 'scannedBy'])
+            ->where('tracking_number', $request->code)
+            ->first();
 
-        //filter tracking number on shipping table
-        $order->whereHas('shippings', function ($query) use ($request) {
-            $query->where('tracking_number', $request->code);
-        });
-
-        $order = $order->first();
-
-        if ($order->count() == 0) {
-            return back()->with('error', 'Parcel Not Found')->with('order', $order);
+        if (!$shipping) {
+            return back()->with('error', 'Parcel Not Found')->with('order', $shipping);
         }
 
         //if not scanned, store scan time
-        if ($order->shippings->scanned_at == null) {
-            $order->shippings->scanned_at = Carbon::now();
-            $order->shippings->scanned_by = auth()->user()->id ?? 1;
-            $order->shippings->save();
+        if ($shipping->scanned_at == null) {
+            $data['scanned_at'] = Carbon::now();
+            $data['scanned_by'] = auth()->user()->id ?? 1;
+
+            Shipping::where('order_id', $shipping->order_id)->update($data);
 
             //check if all items are scanned
-            $order_items = $order->shipping;
-            //update order status
-            set_order_status($order, ORDER_STATUS_READY_TO_SHIP);
+            set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP);
 
-            return back()->with('success', 'Parcel Scanned Successfully')->with('order', $order);
+            return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
         } else {
-            return back()->with('error', 'Parcel Already Scanned')->with('order', $order);
+            return back()->with('error', 'Parcel Already Scanned')->with('shipping', $shipping);
         }
-
-        // if ($order) {
-        //     return back()->with('error', 'This Parcel was Already Scanned')->with('order', $order);
-        // } else {
-        //     return back()->with('success', 'Parcel Scan Successful');
-        // }
-
     }
 
     /**
@@ -468,6 +457,5 @@ class OrderController extends Controller
         ob_end_clean();
 
         return $response;
-
     }
 }
