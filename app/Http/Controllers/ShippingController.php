@@ -19,8 +19,11 @@ use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 class ShippingController extends Controller
 {
 
-    protected $dhl_access = "https://apitest.dhlecommerce.asia/rest/v1/OAuth/AccessToken";
-    protected $dhl_label_url = "https://apitest.dhlecommerce.asia/rest/v2/Label";
+    protected $dhl_access = 'https://api.dhlecommerce.dhl.com/rest/v1/OAuth/AccessToken';
+    protected $dhl_label_url = 'https://api.dhlecommerce.dhl.com/rest/v2/Label';
+
+    protected $dhl_access_test = "https://apitest.dhlecommerce.asia/rest/v1/OAuth/AccessToken";
+    protected $dhl_label_url_test = "https://apitest.dhlecommerce.asia/rest/v2/Label";
 
 
     /**
