@@ -17,7 +17,16 @@ class OrderApiController extends Controller
     public function reject(Request $request)
     {
 
-        $order = Order::find($request->order_id);
+        if(isset($request->sales_id)){ //from BOS
+            $order = Order::with('company')->where('sales_id', $request->sales_id)
+            ->whereHas('company', function ($query) use ($request) {
+                $query->where('code', $request->company);
+            })
+            ->first();
+        }
+        else{
+            $order = Order::find($request->order_id);
+        }
         $order->status = ORDER_STATUS_REJECTED;
         $order->save();
 

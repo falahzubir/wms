@@ -313,6 +313,9 @@ class OrderController extends Controller
         if ($order->wasRecentlyCreated) {
             set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
         }
+        else{
+            set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook');
+        }
 
         return response()->json(['message' => 'Order created successfully'], 201);
     }

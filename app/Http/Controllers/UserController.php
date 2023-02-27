@@ -80,7 +80,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name' => 'required|min:3|max:10',
+            'name' => 'required|min:3|max:50',
             'staff_id' => 'nullable|unique:users,staff_id,' . $user->id,
         ]);
 
