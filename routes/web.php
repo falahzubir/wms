@@ -43,6 +43,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('scan', [OrderController::class, 'scan'])->name('orders.scan');
         Route::post('scan', [OrderController::class, 'scan_barcode'])->name('orders.scanned');
         Route::get('rejected', [OrderController::class, 'rejected'])->name('orders.rejected');
+        Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
     });
 
     // group routes for buckets
@@ -104,6 +105,7 @@ Route::middleware(['auth'])->group(function() {
     Route::prefix('profile')->group(function () {
         Route::get('/', [UserController::class, 'profile'])->name('profile.index');
         Route::post('update', [UserController::class, 'profile_update'])->name('profile.update');
+        Route::post('update-password', [UserController::class, 'profile_update_password'])->name('profile.update_password');
     });
 });
 

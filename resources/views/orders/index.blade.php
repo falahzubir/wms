@@ -659,7 +659,7 @@
                 if (checkedValue == 0) {
                     Swal.fire({
                         title: 'No order selected!',
-                        html: `<div>Are you sure to download {{ isset($order) ? $order->count() : 0 }} order(s).</div>
+                        html: `<div>Are you sure to download {{ isset($orders) ? $orders->total() : 0 }} order(s).</div>
                             <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
                         icon: 'warning',
                         confirmButtonText: 'Download',
@@ -940,9 +940,12 @@
         }
 
         function download_csv(checkedOrder) {
-            const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
+            // const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
             // const param_obj = queryStringToJSON(params);
-            axios.post('/api/download-order-csv?' + params, {
+            if(checkedOrder.length == 0){
+                checkedOrder = {{ $orders->pluck('id') }};
+            }
+            axios.post('/api/download-order-csv', {
                     order_ids: checkedOrder,
                 })
                 .then(function(response) {

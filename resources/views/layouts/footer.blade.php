@@ -1,8 +1,5 @@
 @props(['script'])
 <footer id="footer" class="footer">
-    <div class="copyright">
-        &copy; Copyright <strong><span>{{ config('app.name') }} {{ date('Y') }}</span></strong>
-    </div>
     <x-credits />
 </footer><!-- End Footer -->
 

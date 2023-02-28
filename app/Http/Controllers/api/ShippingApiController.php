@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\ShippingController;
 use App\Models\AccessToken;
+use App\Models\Company;
+use App\Models\Order;
+use App\Models\Shipping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -26,6 +29,51 @@ class ShippingApiController extends ShippingController
                 $data['token'] = $response['accessTokenResponse']['token'];
                 $data['expires_at'] = date('Y-m-d H:i:s', strtotime('+' . $response['accessTokenResponse']['expires_in_seconds'] . ' seconds'));
                 $token->update($data);
+            }
+        }
+    }
+
+    /**
+     * Send shipping information back to BOS
+     * @return void
+     */
+    public function send_shipping_info()
+    {
+        $orders = Order::with(['shippings', 'company'])
+            ->whereHas('shippings', function ($query) {
+                $query->where('status', 1)->whereNotNull('tracking_number')->where('is_send', 0);
+            });
+
+        if (config('app.env') == 'local') {
+            $orders = $orders->where('company_id', 3);
+        }
+        $orders = $orders->get();
+
+        $array_of_companies = $orders->pluck('company_id')->unique()->toArray();
+
+        $companies = Company::whereIn('id', $array_of_companies)->get();
+
+        foreach ($companies as $company) {
+            $count[$company->id] = 0;
+        }
+
+        foreach ($orders as $order) {
+            $data[$order->company_id][$count[$order->company_id]]['sales_id'] = $order->sales_id;
+            $data[$order->company_id][$count[$order->company_id]]['tracking_number'] = $order->shippings->first()->tracking_number;
+            $data[$order->company_id][$count[$order->company_id]]['courier_id'] = $order->courier_id;
+            $data[$order->company_id][$count[$order->company_id]]['shipping_date'] = $order->shippings->first()->created_at->format('Y-m-d');
+
+            $count[$order->company_id]++;
+        }
+
+        foreach ($companies as $company) {
+            $res = Http::post($company->url . '/api/update_tracking', json_encode($data[$company->id]));
+
+            if (json_decode($res)->status == "success") {
+
+                $order_ids = $orders->where('company_id', $company->id)->pluck('id')->toArray();
+
+                Shipping::whereIn('order_id', $order_ids)->update(['is_send' => 1]);
             }
         }
     }

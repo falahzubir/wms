@@ -30,6 +30,7 @@
                             </thead>
                             <tbody>
                                 @foreach ($users as $user)
+                                    @continue($user->id == 1)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $user->staff_id }}</td>

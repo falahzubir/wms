@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -102,5 +104,23 @@ class UserController extends Controller
             'title' => 'Profile',
             'user' => auth()->user()
         ]);
+    }
+
+    /**
+     * Update user password.
+     * @param Request $request
+     * @return redirect to profile
+     */
+    public function profile_update_password(Request $request)
+    {
+        $request->validate([
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        $user = auth()->user();
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return back()->with('success', 'Password updated successfully');
     }
 }
