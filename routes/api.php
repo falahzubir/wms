@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\OrderApiController;
+use App\Http\Controllers\api\OrderApiController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\CourierController;
