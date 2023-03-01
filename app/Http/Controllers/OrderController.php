@@ -290,11 +290,12 @@ class OrderController extends Controller
         $data['total_price'] = $webhook['total_price'] * 100;
         $data['sold_by'] = $webhook['sold_by'];
         $data['event_id'] = $webhook['event_id'];
-        $data['courier_id'] = $webhook['courier_id'];
+        $data['courier_id'] = $webhook['courier_id'] == 0 ? COURIER_OTHERS : $webhook['courier_id'];
         $data['customer_type'] = $webhook['customer_type'];
         $data['operational_model_id'] = $webhook['operation_model_id'];
         $data['team_id'] = $webhook['team_id'];
         $data['payment_refund'] = isset($webhook['payment_refund']) ? $webhook['payment_refund'] * 100 : 0;
+        $data['sales_remark'] = $webhook['sales_remark'] ?? '';
 
         $customer = Customer::updateorCreate($webhook['customer']);
         $data['customer_id'] = $customer->id;
