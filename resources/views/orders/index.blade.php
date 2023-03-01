@@ -264,6 +264,11 @@
                                                 </div>
                                             @endforeach
                                         @endisset
+                                        @isset($order->sales_remark)
+                                            <div class="small-text font-weight-bold">
+                                                [{{ $order->sales_remark }}]
+                                            </div>
+                                        @endisset
                                     </td>
                                     <td>
                                         <x-order_status :order="$order" />
