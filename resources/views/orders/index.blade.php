@@ -264,9 +264,9 @@
                                                 </div>
                                             @endforeach
                                         @endisset
-                                        @isset($order->sales_remark)
+                                        @isset($order->sales_remarks)
                                             <div class="small-text font-weight-bold">
-                                                [{{ $order->sales_remark }}]
+                                                [{{ $order->sales_remarks }}]
                                             </div>
                                         @endisset
                                     </td>

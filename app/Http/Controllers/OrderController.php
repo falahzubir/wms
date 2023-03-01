@@ -295,7 +295,7 @@ class OrderController extends Controller
         $data['operational_model_id'] = $webhook['operation_model_id'];
         $data['team_id'] = $webhook['team_id'];
         $data['payment_refund'] = isset($webhook['payment_refund']) ? $webhook['payment_refund'] * 100 : 0;
-        $data['sales_remark'] = $webhook['sales_remark'] ?? '';
+        $data['sales_remarks'] = $webhook['sales_remark'] ?? '';
 
         $customer = Customer::updateorCreate($webhook['customer']);
         $data['customer_id'] = $customer->id;
