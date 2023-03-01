@@ -106,7 +106,12 @@ class ShippingController extends Controller
     public function dhl_label($order_ids)
     {
 
-        $url = $this->dhl_label_url;
+        if(config('app.env') == 'production'){
+            $url = $this->dhl_label_url;
+        }
+        else{
+            $url = $this->dhl_label_url_test;
+        }
 
         // filter only selected order shipping not exists
         $orders_dhl = Order::doesntHave('shippings')->with([
@@ -249,7 +254,12 @@ class ShippingController extends Controller
             ], 400);
         }
 
-        $url = $this->dhl_label_url;
+        if(config('app.env') == 'production'){
+            $url = $this->dhl_label_url;
+        }
+        else{
+            $url = $this->dhl_label_url_test;
+        }
 
         $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
 

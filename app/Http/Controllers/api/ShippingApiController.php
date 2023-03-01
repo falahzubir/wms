@@ -18,7 +18,11 @@ class ShippingApiController extends ShippingController
      */
     public function dhl_generate_access_token()
     {
-        $url = $this->dhl_access;
+        if (config('app.env') == 'production') {
+            $url = $this->dhl_access;
+        } else {
+            $url = $this->dhl_access_test;
+        }
         $dhl_tokens = AccessToken::where('type', 'dhl')->get();
 
         foreach ($dhl_tokens as $token) {
