@@ -62,10 +62,10 @@ class ShippingApiController extends ShippingController
         }
 
         foreach ($orders as $order) {
-            $data[$order->company_id][$count[$order->company_id]]['sales_id'] = $order->sales_id;
-            $data[$order->company_id][$count[$order->company_id]]['tracking_number'] = $order->shippings->first()->tracking_number;
-            $data[$order->company_id][$count[$order->company_id]]['courier_id'] = $order->courier_id;
-            $data[$order->company_id][$count[$order->company_id]]['shipping_date'] = $order->shippings->first()->created_at->format('Y-m-d');
+            $data[$order->company_id]['trackings'][$count[$order->company_id]]['sales_id'] = $order->sales_id;
+            $data[$order->company_id]['trackings'][$count[$order->company_id]]['tracking_number'] = $order->shippings->first()->tracking_number;
+            $data[$order->company_id]['trackings'][$count[$order->company_id]]['courier_id'] = $order->courier_id;
+            $data[$order->company_id]['trackings'][$count[$order->company_id]]['shipping_date'] = $order->shippings->first()->created_at->format('Y-m-d');
 
             $count[$order->company_id]++;
         }
