@@ -23,15 +23,15 @@ class ProductSeeder extends Seeder
                 Product::create([
                     'id' => $data['0'],
                     'name' => $data['1'],
-                    'price' => $data['2'],
-                    'description' => $data['3'],
-                    'code' => $data['4'],
-                    'is_foc' => $data['5'],
-                    'weight' => $data['6'],
+                    'description' => $data['2'],
+                    'code' => $data['3'],
+                    'price' => $data['4'],
+                    'weight' => $data['5'],
+                    'is_foc' => $data['6'],
                     'main_product_id' => $data['7'],
                     'is_active' => $data['8'],
                     'sensitive' => $data['9'],
-                    'updated_at' => $data['10'],
+                    'updated_at' => $data['11'],
                 ]);
             }
             $transRow = false;

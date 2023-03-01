@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Http\Controllers\Api\ShippingApiController;
+use App\Http\Controllers\api\ShippingApiController;
 use Illuminate\Console\Command;
 
 class SendOrderShipping extends Command
