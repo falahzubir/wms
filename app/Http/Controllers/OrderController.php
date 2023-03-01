@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\Shipping;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class OrderController extends Controller
 {
@@ -312,8 +313,7 @@ class OrderController extends Controller
         }
         if ($order->wasRecentlyCreated) {
             set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
-        }
-        else{
+        } else {
             set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook');
         }
 
@@ -446,7 +446,7 @@ class OrderController extends Controller
      */
     public function download_order_csv(Request $request)
     {
-        return $request;
+        // return $request;
         $orders = $this->index();
 
         $orders->whereIn('id', $request->order_ids);
@@ -455,7 +455,9 @@ class OrderController extends Controller
 
         $orders = $orders->get();
 
-        $response =  Excel::download(new OrderExport($orders), 'orders_' . date('Ymdhis') . '.csv');
+        $response = Excel::download(new OrderExport($orders), 'shipping_' . date('Ymdhis') . '.csv', \Maatwebsite\Excel\Excel::CSV, [
+            'Content-Type' => 'text/csv',
+        ]);
 
         ob_end_clean();
 
