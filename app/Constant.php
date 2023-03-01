@@ -4,7 +4,7 @@ if(!defined('IS_ACTIVE')) define('IS_ACTIVE', 1);
 if(!defined('IS_INACTIVE')) define('IS_INACTIVE', 0);
 
 // paginate limit
-if(!defined('PAGINATE_LIMIT')) define('PAGINATE_LIMIT', 10);
+if(!defined('PAGINATE_LIMIT')) define('PAGINATE_LIMIT', 100);
 if(!defined('ORDER_NUMBER_LENGTH')) define('ORDER_NUMBER_LENGTH', '09'); // must have leading zero
 
 // order status
