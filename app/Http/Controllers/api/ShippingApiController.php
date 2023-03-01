@@ -72,7 +72,6 @@ class ShippingApiController extends ShippingController
 
         foreach ($companies as $company) {
 
-            dd(json_encode($data[$company->id]));
             $res = Http::post($company->url . '/api/update_tracking', $data[$company->id]);
 
             if (json_decode($res)->status == "success") {
