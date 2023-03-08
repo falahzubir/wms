@@ -119,6 +119,10 @@ class OrderController extends Controller
 
         $orders = $this->filter_order($request, $orders);
 
+        if (!$request->filled('date_from') || !$request->filled('date_to')) {
+            $orders = $orders->whereDate("created_at", Carbon::now());
+        }
+
         return view('orders.index', [
             'title' => 'Pending Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
