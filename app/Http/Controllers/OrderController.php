@@ -448,6 +448,7 @@ class OrderController extends Controller
     public function download_order_csv(Request $request)
     {
         // return $request;
+        $fileName = 'shipping_' . date('Ymdhis') . '.csv';
         $orders = $this->index();
 
         $orders->whereIn('id', $request->order_ids);
@@ -456,12 +457,11 @@ class OrderController extends Controller
 
         $orders = $orders->get();
 
-        $response = Excel::download(new OrderExport($orders), 'shipping_' . date('Ymdhis') . '.csv', \Maatwebsite\Excel\Excel::CSV, [
-            'Content-Type' => 'text/csv',
+        Excel::store(new OrderExport($orders),"public/".$fileName);
+        // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
+
+        return response([
+            "file_name"=> $fileName
         ]);
-
-        ob_end_clean();
-
-        return $response;
     }
 }
