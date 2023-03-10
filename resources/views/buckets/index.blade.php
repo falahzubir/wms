@@ -17,10 +17,10 @@
         @endif --}}
         <div class="row">
             @php
-                $title = ['Northen Region 1 (NR1)', 'Southen Region 2 (SR2)', 'Easten Region 3 (ER3)', 'Westen Region 4 (WR4)', 'Northen Region 5 (NR5)', 'Southen Region 6 (SR6)', 'Easten Region 7 (ER7)', 'Westen Region 8 (WR8)', 'Northen Region 9 (NR9)'];
+            $title = ['Northen Region 1 (NR1)', 'Southen Region 2 (SR2)', 'Easten Region 3 (ER3)', 'Westen Region 4 (WR4)', 'Northen Region 5 (NR5)', 'Southen Region 6 (SR6)', 'Easten Region 7 (ER7)', 'Westen Region 8 (WR8)', 'Northen Region 9 (NR9)'];
             @endphp
             <div class="col-md-4">
-                <div class="card" style="height: 85%" role="button" data-bs-toggle="modal" data-bs-target="#bucket-modal"
+            <div class="card" style="height: 85%" role="button" data-bs-toggle="modal" data-bs-target="#bucket-modal"
                     onclick="add_bucket()">
                     <div class="card-body p-3 btn-ready-to-ship">
                         <div style="font-weight:bold">
@@ -38,36 +38,36 @@
             </div>
 
             @foreach ($buckets as $bucket)
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body p-3">
-                            <div style="font-size:0.9rem;">
-                                <div class="text-center">
-                                    <strong><i class="bi bi-basket"></i>&nbsp; {{ $bucket->name }} </strong>
-                                </div>
-                                <hr>
-                                <div class="mb-3 text-center">
-                                    <div>Processing: <strong><span
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body p-3">
+                        <div style="font-size:0.9rem;">
+                            <div class="text-center">
+                                <strong><i class="bi bi-basket"></i>&nbsp; {{ $bucket->name }} </strong>
+                            </div>
+                            <hr>
+                            <div class="mb-3 text-center">
+                            <div>Processing: <strong><span
                                                 id="pending-count">{{ $bucket->orders->count() }}</span></strong></div>
 
-                                </div>
-                                <div class="text-center">
-                                    {{-- modal button --}}
-                                    @can('picking_list.generate')
-                                        <button class="btn btn-primary rounded-pill" title="Generate Picking List"
+                            </div>
+                            <div class="text-center">
+                                {{-- modal button --}}
+                                @can('picking_list.generate')
+                                <button class="btn btn-primary rounded-pill" title="Generate Picking List"
                                             id="generate-pl"
                                             onclick="generate_pl({{ $bucket->id }},{{ $bucket->orders->pluck('id') }})">
                                             <i class="bi bi-card-text"></i>
                                         </button>
-                                    @endcan
-                                    @can('consignment_note.generate')
-                                        <button class="btn btn-warning rounded-pill generate-cn" title="Generate CN"
+                                @endcan
+                                @can('consignment_note.generate')
+                                <button class="btn btn-warning rounded-pill generate-cn" title="Generate CN"
                                             onclick="generate_cn({{ $bucket->id }}, {{ $bucket->orders->pluck('id') }})"
                                             data-bucketId="{{ $bucket->id }}">
                                             <i class="bi bi-truck"></i>
                                         </button>
-                                    @endcan
-                                    <a href="/orders/processing?bucket_id={{ $bucket->id }}&status={{ ORDER_STATUS_PROCESSING }}"
+                                @endcan
+                                <a href="/orders/processing?bucket_id={{ $bucket->id }}&status={{ ORDER_STATUS_PROCESSING }}"
                                         class="btn btn-info rounded-pill" title="Order List">
                                         <i class="bi bi-list"></i>
                                     </a>
@@ -75,11 +75,11 @@
                                         title="Edit/Delete Bucket" onclick="edit_bucket(this)" data-bs-toggle="modal"
                                         data-bs-target="#bucket-modal" data-bucket-id="{{ $bucket->id }}"><i
                                             class="bi bi-pencil"></i></button>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
             @endforeach
 
         </div>
@@ -157,7 +157,7 @@
                     <div class="modal-footer">
                         <!-- Delete Bucket Button -->
                         @can('bucket.delete')
-                            <a href="#" class="text-danger" data-bucketId="" id="delete-bucket"><i
+                        <a href="#" class="text-danger" data-bucketId="" id="delete-bucket"><i
                                     class="bi bi-trash"></i>
                                 Delete</a>
                         @endcan
@@ -266,7 +266,7 @@
             });
 
             // generate cn
-            function generate_cn(bucket_id, order_ids) {
+            async function generate_cn(bucket_id, order_ids) {
                 if (order_ids.length == 0) {
                     Swal.fire({
                         icon: 'error',
@@ -276,35 +276,33 @@
                     return false;
                 }
 
-                axios.post('/api/shippings/check-multiple-parcels', {
-                        order_ids: order_ids,
-                    })
-                    .then(function(response) {
-                        if (response.data.multiple_parcels == true) {
-                            Swal.fire({
-                                    icon: 'error',
-                                    title: 'Oops...',
-                                    text: 'Some orders in this bucket have multiple parcels, please split them or remove from bucket first.',
-                                    confirmButtonText: `Split Parcel`,
-                                    showCancelButton: true,
-                                    cancelButtonText: `Cancel`,
-                                })
-                                .then((result) => {
-                                    if (result.isConfirmed) {
-                                        // print data
-                                        window.location.href = '/orders/processing?bucket_id=' + bucket_id +
-                                            '&order_id=' + response.data.order_id + '&multiple_parcels=true';
-                                    } else if (result.isDenied) {
-                                        return;
-                                    }
-                                })
-                            return false;
-                        }
-                    })
-                    .catch(function(error) {
-                        console.log(error);
-                    });
+                const response = await axios.post('/api/shippings/check-multiple-parcels', {
+                    order_ids: order_ids,
+                }).catch(function(error) {
+                    console.log(error);
+                });
 
+                if (response.data.multiple_parcels == true) {
+                    Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Some orders in this bucket have multiple parcels, please split them or remove from bucket first.',
+                            confirmButtonText: `Split Parcel`,
+                            showCancelButton: true,
+                            cancelButtonText: `Cancel`,
+                        })
+                        .then((result) => {
+                            if (result.isConfirmed) {
+                                // print data
+                                window.location.href = '/orders/processing?bucket_id=' + bucket_id +
+                                    '&order_id=' + response.data.order_id + '&multiple_parcels=true';
+                            } else if (result.isDenied) {
+                                return;
+                            }
+                        })
+
+                    return false;
+                }
 
                 Swal.fire({
                     title: 'Are you sure you want to generate CN?',
@@ -351,67 +349,88 @@
                             .then(function(response) {
                                 //download cn
                                 console.log(response);
+                                let text = 'CN generated successfully.';
+
+                                if (response.data != null) {
+                                    if (response.data.error != null) {
+                                        text = "CN generated successfully.However has " + response.data.error;
+                                    }
+                                }
+
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Success',
-                                    text: 'CN generated successfully.',
+                                    text: text,
                                     footer: `<small class="text-danger">Order with item count more than {{ MAXIMUM_QUANTITY_PER_BOX }} are ignored.</small>`,
                                     confirmButtonText: 'Download CN',
                                 }).then((result) => {
-                                    axios({
-                                            url: '/api/download-consignment-note',
-                                            method: 'POST',
-                                            responseType: 'json', // important
-                                            data: {
-                                                order_ids: order_ids,
-                                            }
-                                        })
-                                        .then(function(res) {
-                                            // redirect
-                                            let a = document.createElement('a');
-                                            a.target = '_blank';
-                                            a.href = res.data.download_url;
-                                            a.click();
-                                            // window.location.href = res.data.download_url;
-                                            Swal.fire({
-                                                icon: 'success',
-                                                title: 'Success',
-                                                html: `<div>Download Request CN Successful.</div>
-                                                    <div>Click <a href="${res.data.download_url}" target="_blank">here</a> if CN not downloaded.</div>`,
-                                                footer: '<small class="text-danger">Please enable popup if required</small>',
-                                                allowOutsideClick: false
-                                            }).then((result) => {
-                                                location.reload();
-                                            })
 
-                                            //         const url = window.URL.createObjectURL(new Blob([response
-                                            //             .data.download_url
-                                            //         ]));
-                                            //         const link = document.createElement('a');
-                                            //         link.href = url;
-                                            //         //link setattribute download and rename tu ccurent time
-                                            //         let d = new Date();
-                                            //         let cnname = d.getFullYear() + "-" + (d.getMonth() + 1) +
-                                            //             "-" + d.getDate() + "-" + d.getHours() + d
-                                            //             .getMinutes() + d.getSeconds();
-                                            //         // link.setAttribute('download', `CN_${get_current_date_time()}.pdf`);
-                                            //         document.body.appendChild(link);
-                                            //         link.click();
-                                            //         // handle success, close or download
-                                            //         Swal.fire({
-                                            //             title: 'Success!',
-                                            //             text: "Shipment Note Downloaded.",
-                                            //             icon: 'success',
-                                            //         });
-                                            //     })
-                                            //     .catch(function(error) {
-                                            //         // handle error
-                                            //         console.log(error);
-                                            //     })
-                                            //     .then(function() {
-                                            //         // always executed
-                                        });
-                                    // window.location.reload();
+                                    if (result.isConfirmed) {
+                                        axios({
+                                                url: '/api/download-consignment-note',
+                                                method: 'POST',
+                                                responseType: 'json', // important
+                                                data: {
+                                                    order_ids: order_ids,
+                                                }
+                                            })
+                                            .then(function(res) {
+                                                // redirect
+                                                const fileName = String(res.data.download_url).split("/").pop();
+                                                let a = document.createElement('a');
+                                                a.target = '_blank';
+                                                a.download = fileName;
+                                                a.href = res.data.download_url;
+                                                a.click();
+                                                // window.location.href = res.data.download_url;
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Success',
+                                                    html: `<div>Download Request CN Successful.</div>
+                                                    <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
+                                                    footer: '<small class="text-danger">Please enable popup if required</small>',
+                                                    allowOutsideClick: false
+                                                }).then((result) => {
+                                                    location.reload();
+                                                })
+
+                                                //         const url = window.URL.createObjectURL(new Blob([response
+                                                //             .data.download_url
+                                                //         ]));
+                                                //         const link = document.createElement('a');
+                                                //         link.href = url;
+                                                //         //link setattribute download and rename tu ccurent time
+                                                //         let d = new Date();
+                                                //         let cnname = d.getFullYear() + "-" + (d.getMonth() + 1) +
+                                                //             "-" + d.getDate() + "-" + d.getHours() + d
+                                                //             .getMinutes() + d.getSeconds();
+                                                //         // link.setAttribute('download', `CN_${get_current_date_time()}.pdf`);
+                                                //         document.body.appendChild(link);
+                                                //         link.click();
+                                                //         // handle success, close or download
+                                                //         Swal.fire({
+                                                //             title: 'Success!',
+                                                //             text: "Shipment Note Downloaded.",
+                                                //             icon: 'success',
+                                                //         });
+                                                //     })
+                                                //     .catch(function(error) {
+                                                //         // handle error
+                                                //         console.log(error);
+                                                //     })
+                                                //     .then(function() {
+                                                //         // always executed
+                                            }).catch(() => {
+                                                Swal.fire({
+                                                    title: 'Success!',
+                                                    html: `Failed to generate pdf`,
+                                                    allowOutsideClick: false,
+                                                    icon: 'error',
+                                                });
+
+                                            })
+                                        // window.location.reload();
+                                    }
                                 })
 
                             })

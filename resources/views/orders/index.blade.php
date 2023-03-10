@@ -586,7 +586,7 @@
 
         // generate shipping label
         @if (in_array(ACTION_GENERATE_CN, $actions))
-            document.querySelector('#generate-cn-btn').onclick = function() {
+            document.querySelector('#generate-cn-btn').onclick = async function() {
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
                 // sweet alert
@@ -599,6 +599,29 @@
                     })
                     return;
                 }
+            
+            //get checked order
+            let checkedOrder = [];
+            inputElements.forEach(input => {
+                if (input.checked) {
+                    checkedOrder.push(input.value);
+                }
+            });
+
+            
+            const res = await axios.post('/api/shippings/check-multiple-parcels', {
+                        order_ids: checkedOrder,
+            })
+
+            if(res.data != null && res.data.multiple_parcels){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Some orders in this bucket have multiple parcels, please generate cn manually.',
+                    confirmButtonText: `OK`,
+                })  
+                return;
+            }
                 //confirmation to generate cn
                 Swal.fire({
                     title: 'Are you sure to generate shipping label?',
@@ -807,6 +830,7 @@
                     order_ids: checkedOrder,
                 })
                 .then(function(response) {
+                    let text = "Shipping label generated."
                     if (response.data == 0) {
                         Swal.fire({
                             title: 'Error!',
@@ -817,16 +841,42 @@
                         return;
                     }
                     // handle success, close or download
+                    if(response.data != null ){
+                        if(response.data.error != null){
+                            text = "Shipping label generated.However has "+response.data.error;
+                        }
+
+                        if(response.data.all_fail){
+                            if(typeof response.data.all_fail == "boolean"){
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Fail to generate CN",
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                })
+                            }else{
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Fail to generate CN "+response.data.all_fail,
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                })
+                            }
+                            
+                            return;
+                        }
+                    }
+
                     Swal.fire({
                         title: 'Success!',
-                        text: "Shipping label generated.",
+                        text: text,
                         icon: 'success',
                         confirmButtonText: 'Download',
                         showCancelButton: true,
                         cancelButtonText: 'Ok',
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            download_cn(order_ids)
+                            download_cn(checkedOrder)
                         } else {
                             location.reload();
                         }
@@ -853,15 +903,17 @@
                     }
                 })
                 .then(function(res) {
+                    const fileName = String(res.data.download_url).split("/").pop();
                     let a = document.createElement('a');
                     a.target = '_blank';
+                    a.download = fileName;
                     a.href = res.data.download_url;
                     a.click();
                     // handle success, close or download
                     Swal.fire({
                         title: 'Success!',
                         html: `<div>Download Request CN Successful.</div>
-                                                    <div>Click <a href="${res.data.download_url}" target="_blank">here</a> if CN not downloaded.</div>`,
+                                                    <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
                         footer: '<small class="text-danger">Please enable popup if required</small>',
                         allowOutsideClick: false,
                         icon: 'success',
