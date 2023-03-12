@@ -246,9 +246,20 @@
                                                     <span class="badge bg-success text-light">Paid</span>
                                                 @break
 
+                                                @case(3)
+                                                    <span class="badge bg-primary text-light">Installment</span>
+                                                @break
+
                                                 @default
                                                     <span class="badge bg-danger text-light">Error</span>
                                             @endswitch
+                                        </div>
+                                        <div>
+                                        @if($order->payment_type != null)
+                                            <span class="badge bg-primary-light text-dark">
+                                                {{ $order->paymentType->payment_type_name }}
+                                            </span>
+                                        @endif
                                         </div>
                                         <span class="badge bg-warning text-dark">
                                             {{ $order->courier->name }}
@@ -264,10 +275,12 @@
                                                 </div>
                                             @endforeach
                                         @endisset
-                                        @isset($order->sales_remarks)
-                                            <div class="small-text font-weight-bold">
-                                                [{{ $order->sales_remarks }}]
-                                            </div>
+                                        @isset($order->sales_remarks) 
+                                            @if($order->sales_remarks != null)
+                                                <div class="small-text font-weight-bold">
+                                                    [{{ str_replace('<br>', '', urldecode($order->sales_remarks)) }}]
+                                                </div>
+                                                @endif
                                         @endisset
                                     </td>
                                     <td>
