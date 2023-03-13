@@ -278,7 +278,7 @@
                                         @isset($order->sales_remarks) 
                                             @if($order->sales_remarks != null)
                                                 <div class="small-text font-weight-bold">
-                                                    [{{ str_replace('<br>', '', urldecode($order->sales_remarks)) }}]
+                                                    {{ str_replace('<br>', '', urldecode($order->sales_remarks)) }}
                                                 </div>
                                                 @endif
                                         @endisset
