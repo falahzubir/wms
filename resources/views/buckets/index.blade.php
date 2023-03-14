@@ -286,7 +286,7 @@
                     Swal.fire({
                             icon: 'error',
                             title: 'Oops...',
-                            text: 'Some orders in this bucket have multiple parcels, please split them or remove from bucket first.',
+                            text: 'Some orders in this bucket have multiple parcels. Please generate CN manually.',
                             confirmButtonText: `Split Parcel`,
                             showCancelButton: true,
                             cancelButtonText: `Cancel`,

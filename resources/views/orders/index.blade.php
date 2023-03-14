@@ -212,7 +212,7 @@
                                             {{ date('H:i', strtotime($order->created_at)) }}
                                         </div> --}}
                                     </td>
-                                    <td>
+                                    <td class="text-start">
                                         <div><strong>{{ $order->customer->name }}</strong></div>
                                         <div>
                                             {{ $order->customer->phone }}
@@ -617,7 +617,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Oops...',
-                    text: 'Some orders in this bucket have multiple parcels, please generate cn manually.',
+                    text: 'This order have multiple parcels. Please generate CN manually.',
                     confirmButtonText: `OK`,
                 })  
                 return;
