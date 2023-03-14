@@ -864,7 +864,7 @@
                         title: 'Success!',
                         html: `<div>Download Request CN Successful.</div>
                                                     <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
-                        footer: '<small class="text-danger">Please enable popup if required</small>',
+                        // footer: '<small class="text-danger">Please enable popup if required</small>',
                         allowOutsideClick: false,
                         icon: 'success',
                     });
@@ -964,7 +964,11 @@
                 .then(function(response) {
                     // handle success, close or download
                     if(response != null && response.data != null){
-                        window.open(window.location.origin + "/storage/"+response.data.file_name)
+                        let a = document.createElement('a');
+                        a.download = response.data.file_name;
+                        a.target = '_blank';
+                        a.href = window.location.origin + "/storage/"+response.data.file_name;
+                        a.click();
                     }
                 })
                 .catch(function(error) {
