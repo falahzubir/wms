@@ -478,10 +478,24 @@ class ShippingController extends Controller
         $attachments = $attachments->pluck('attachment')->toArray();
 
         $pdf = PDFMerger::init();
+        
         foreach ($attachments as $attachment) {
-            $pdf->addPDF(storage_path('app/public/' . $attachment), 'all');
-        }
 
+            if (!file_exists(storage_path('app/public/' . $attachment))) {
+                continue;
+            }
+
+            if (!is_file(storage_path('app/public/' . $attachment))) {
+                continue;
+            }
+
+            if(file_get_contents(storage_path('app/public/' . $attachment)) == ""){
+                continue;
+            }
+
+            $pdf->addPDF(storage_path('app/public/' . $attachment));
+        }
+   
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
         $pdf->merge();
         $pdf->save(public_path('generated_labels/' . $filename), 'file');

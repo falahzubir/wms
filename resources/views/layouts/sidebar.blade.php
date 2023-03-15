@@ -47,7 +47,7 @@
             <a class="nav-link {{ Route::current()->getName() != 'orders.readyToShip' ? 'collapsed' : '' }}"
                 href="{{ route('orders.readyToShip') }}">
                 <i class="bi bi-truck-flatbed"></i>
-                <span>Pending Shipping List</span>
+                <span>RTS List</span>
             </a>
         </li><!-- End Packing List Nav -->
 
