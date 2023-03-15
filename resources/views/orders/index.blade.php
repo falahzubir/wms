@@ -944,42 +944,55 @@
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Yes, reject it!',
-            }).then((result) => {
-                // function not ready
-
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    axios.post('/api/orders/reject', {
+                    const { value: reason } = await Swal.fire({
+                        input: 'textarea',
+                        inputLabel: 'Reject Reason',
+                        showCancelButton: true,
+                        inputValidator: (value) => {
+                            if (!value) {
+                                return 'You need to write something!'
+                            }
+                        }
+                    })
+
+                    if (reason) {
+                        axios.post('/api/orders/reject', {
                             order_id: orderId,
+                            reason,
                         })
-                        .then(function(response) {
-                            // handle success, close or download
-                            if (response.status == 200) {
-                                Swal.fire({
+                            .then(function (response) {
+                                // handle success, close or download
+                                if (response.status == 200) {
+                                    Swal.fire({
                                         title: 'Success!',
                                         text: "Order rejected.",
                                         icon: 'success',
                                         confirmButtonText: 'OK'
                                     })
-                                    .then((result) => {
-                                        if (result.isConfirmed) {
-                                            location.reload();
-                                        }
+                                        .then((result) => {
+                                            if (result.isConfirmed) {
+                                                location.reload();
+                                            }
+                                        })
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: "Something went wrong.",
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
                                     })
-                            } else {
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: "Something went wrong.",
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                })
-                                return;
-                            }
-                        })
-                        .catch(function(error) {
-                            // handle error
-                            console.log(error);
-                        })
+                                    return;
+                                }
+                            })
+                            .catch(function (error) {
+                                // handle error
+                                console.log(error);
+                            })
+                    }
                 }
+               
             })
         }
 
