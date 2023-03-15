@@ -355,6 +355,26 @@
                                     if (response.data.error != null) {
                                         text = "CN generated successfully.However has " + response.data.error;
                                     }
+
+                                    if(response.data.all_fail){
+                            if(typeof response.data.all_fail == "boolean"){
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Fail to generate CN",
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                })
+                            }else{
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Fail to generate CN "+response.data.all_fail,
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                })
+                            }
+                            
+                            return;
+                        }
                                 }
 
                                 Swal.fire({
