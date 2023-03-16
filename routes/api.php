@@ -6,6 +6,7 @@ use App\Http\Controllers\BucketController;
 use App\Http\Controllers\CourierController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\api\ShippingApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
@@ -57,6 +58,7 @@ Route::prefix('shippings')->group(function () {
     Route::post('delivered-milestone', [ShippingController::class, 'delivered_milestone']);
     Route::post('return-ongoing-milestone', [ShippingController::class, 'return_ongoing_milestone']);
     Route::post('return-delivered-milestone', [ShippingController::class, 'return_delivered_milestone']);
+    Route::post('update_shopee_tracking', [ShippingApiController::class, 'update_shopee_tracking']);
 });
 
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
