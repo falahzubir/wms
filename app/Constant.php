@@ -4,7 +4,7 @@ if(!defined('IS_ACTIVE')) define('IS_ACTIVE', 1);
 if(!defined('IS_INACTIVE')) define('IS_INACTIVE', 0);
 
 // paginate limit
-if(!defined('PAGINATE_LIMIT')) define('PAGINATE_LIMIT', 100);
+if(!defined('PAGINATE_LIMIT')) define('PAGINATE_LIMIT', 10);
 if(!defined('ORDER_NUMBER_LENGTH')) define('ORDER_NUMBER_LENGTH', '09'); // must have leading zero
 
 // order status
@@ -92,7 +92,7 @@ if(!defined('DHL_ID')) define('DHL_ID',15);
 // DHL EH
 if(!defined('DHL_SOLD_PICKUP_ACCT')) define('DHL_SOLD_PICKUP_ACCT',[
     1=>'5265434590',//5265434590', // EH
-    2=>'5265241234',//5265241234', // ED
+    2=>'5286430910',//5265241234', // ED
     3=>'5264574522',//5264574522', // QA
 ]);
 if(!defined('DHL_PREFIX')) define('DHL_PREFIX',[
