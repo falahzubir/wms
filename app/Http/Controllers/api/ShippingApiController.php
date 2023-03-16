@@ -82,4 +82,36 @@ class ShippingApiController extends ShippingController
             }
         }
     }
+
+        /*
+    * Update Shopee Tracking
+    * @param Request $request
+    * @return json
+    */
+    public function update_shopee_tracking(Request $request)
+    {
+        $sales_id = $request->sales_id;
+        $tracking_no = $request->tracking_number;
+        $shipping_date = $request->shipping_date;
+
+        $order = Order::select('orders.id', 'couriers.code')
+                ->where('sales_id', $sales_id)
+                ->where('company_id', 3)
+                ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
+                ->first();
+
+        Shipping::create([
+            'order_id' => $order->id,
+            'tracking_number' => $request->tracking_number,
+            'courier' => $order->code,
+            'created_by' => auth()->user()->id ?? 1,
+            // 'ship_date' => $request->shipping_date,
+        ]);
+
+        set_order_status($order, ORDER_STATUS_PACKING);
+
+        return response()->json([
+            'message' => 'Tracking number updated'
+        ], 200);
+    }
 }
