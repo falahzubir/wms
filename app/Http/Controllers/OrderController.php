@@ -24,7 +24,13 @@ class OrderController extends Controller
      */
     public function index()
     {
-        return Order::with(['customer', 'items', 'items.product', 'shippings', 'bucket', 'batch', 'company', 'courier'])
+        return Order::with([
+            'customer', 'items', 'items.product', 'shippings',
+            'bucket', 'batch', 'company', 'courier',
+            'logs' => function ($query) {
+                $query->orderBy('id', 'desc');
+            }
+        ])
             ->where('is_active', IS_ACTIVE);
     }
 

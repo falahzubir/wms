@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Courier;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,12 +20,14 @@ class NotificationController extends Controller
             ->whereNotIn('courier_id', AUTO_SHIPPING_COURIER)
             ->get();
 
+            $manual_shipping_couriers = Courier::whereNotIn('id', AUTO_SHIPPING_COURIER)->where('status', true)->get('id')->pluck('id')->toArray();
+            logger($manual_shipping_couriers);
             //append notification
             if($orders->count() > 0){
                 array_push($notifications, [
                     'message' => "There are {$orders->count()} orders need to approve for shipping",
                     'count' => $orders->count(),
-                    'url' => route('orders.readyToShip'),
+                    'url' => route('orders.readyToShip', ['couriers' => $manual_shipping_couriers]),
                 ]);
             }
         }
