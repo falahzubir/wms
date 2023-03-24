@@ -115,7 +115,7 @@ class OrderController extends Controller
      */
     public function pending(Request $request)
     {
-        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING]);
+        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING])->whereDate('dt_request_shipping', '<=', date('Y-m-d'));
 
         $orders = $this->filter_order($request, $orders);
 
@@ -296,6 +296,8 @@ class OrderController extends Controller
         $data['team_id'] = $webhook['team_id'];
         $data['payment_refund'] = isset($webhook['payment_refund']) ? $webhook['payment_refund'] * 100 : 0;
         $data['sales_remarks'] = $webhook['sales_remark'] ?? '';
+        $data['dt_request_shipping'] = $webhook['dt_request_shipping'] ?? '';
+        $data['payment_type'] = isset($webhook['payment_type']) ? $webhook['payment_type'] : null;
 
         $customer = Customer::updateorCreate($webhook['customer']);
         $data['customer_id'] = $customer->id;
@@ -448,6 +450,7 @@ class OrderController extends Controller
     public function download_order_csv(Request $request)
     {
         // return $request;
+        $fileName = 'shipping_' . date('Ymdhis') . '.csv';
         $orders = $this->index();
 
         $orders->whereIn('id', $request->order_ids);
@@ -456,12 +459,11 @@ class OrderController extends Controller
 
         $orders = $orders->get();
 
-        $response = Excel::download(new OrderExport($orders), 'shipping_' . date('Ymdhis') . '.csv', \Maatwebsite\Excel\Excel::CSV, [
-            'Content-Type' => 'text/csv',
+        Excel::store(new OrderExport($orders),"public/".$fileName);
+        // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
+
+        return response([
+            "file_name"=> $fileName
         ]);
-
-        ob_end_clean();
-
-        return $response;
     }
 }

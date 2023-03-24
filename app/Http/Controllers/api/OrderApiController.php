@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
 
 class OrderApiController extends Controller
 {
@@ -30,8 +31,24 @@ class OrderApiController extends Controller
         $order->status = ORDER_STATUS_REJECTED;
         $order->save();
 
-        set_order_status($order, ORDER_STATUS_REJECTED);
+        set_order_status($order, ORDER_STATUS_REJECTED,$request->input("reason"));
 
+        // Update BOS
+        $order = Order::where("id",$request->order_id)->first();
+        
+        if(!empty($order)){
+            $url = "http://localhost/boss/api/reject_order";
+
+            if(env("APP_ENV") == "production"){
+                $url = $order->company->url."/api/reject_order";
+            }
+
+            Http::post($url,[
+                "sale_id"=> $order->sales_id,
+                "reject_reason"=> $request->input("reason")
+            ]);
+        }
+        
         return response()->json([
             'message' => 'Order rejected'
         ], 200);

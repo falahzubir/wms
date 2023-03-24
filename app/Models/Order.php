@@ -70,4 +70,9 @@ class Order extends Model
         return $this->belongsTo(Courier::class);
     }
 
+    public function paymentType()
+    {
+        return $this->belongsTo(PaymentType::class, 'payment_type');
+    }
+
 }

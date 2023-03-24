@@ -230,7 +230,27 @@ class ShippingController extends Controller
             $json = json_encode($data);
             logger($json);
             $response = Http::withBody($json, 'application/json')->post($url);
-            $this->dhl_store($orders_dhl, $response);
+            $dhl_store = $this->dhl_store($orders_dhl, $response);
+
+            if($dhl_store != null){
+                return response([
+                    "all_fail" => implode(" . ",collect($dhl_store)->pluck("messageDetail")->toArray())
+                ]);
+            }
+        }
+
+        if (($failer = Order::doesntHave('shippings')->with([
+            'customer', 'items', 'items.product', 'company',
+            'company.access_tokens' => function ($query) {
+                $query->where('type', 'dhl');
+            }
+        ])->whereIn('id', $order_ids)
+            ->where('courier_id', DHL_ID)
+            ->count()) > 0) {
+            return response([
+                "error" => $failer . " order fail to generate cn.",
+                "all_fail"=> $orders_dhl->count() == $failer
+            ]);
         }
 
         return true;
@@ -374,8 +394,21 @@ class ShippingController extends Controller
 
     public function dhl_store($orders, $json)
     {
+        $data = [];
+        $tracking_no[] = [];
         $json = json_decode($json);
-        foreach ($json->labelResponse->bd->labels as $label) {
+
+        foreach ($json->labelResponse->bd->labels ?? [] as $label) {
+            if(isset($label->responseStatus)){
+                if(isset($label->responseStatus->message)){
+                    if($label->responseStatus->message != "SUCCESS"){
+                        if(isset($label->responseStatus->messageDetails)){
+                            return $label->responseStatus->messageDetails;
+                        }
+                    }
+                }
+            }  
+
             $shipment_id = $label->shipmentID;
             // logger($shipment_id);
             $tracking_no[$shipment_id] = $label->deliveryConfirmationNo;
@@ -384,6 +417,14 @@ class ShippingController extends Controller
         // logger($tracking_no);
 
         foreach ($orders as $order) {
+            if (!isset($tracking_no[shipment_num_format($order)])) {
+                continue;
+            }
+
+            if ($content[shipment_num_format($order)] == null) {
+                continue;
+            }
+            
             $data[$order->id]['tracking_number'] = $tracking_no[shipment_num_format($order)];
             //if empty tracking number, remove from array and skip
             if (empty($data[$order->id]['tracking_number'])) {
@@ -437,10 +478,24 @@ class ShippingController extends Controller
         $attachments = $attachments->pluck('attachment')->toArray();
 
         $pdf = PDFMerger::init();
+        
         foreach ($attachments as $attachment) {
-            $pdf->addPDF(storage_path('app/public/' . $attachment), 'all');
-        }
 
+            if (!file_exists(storage_path('app/public/' . $attachment))) {
+                continue;
+            }
+
+            if (!is_file(storage_path('app/public/' . $attachment))) {
+                continue;
+            }
+
+            if(file_get_contents(storage_path('app/public/' . $attachment)) == ""){
+                continue;
+            }
+
+            $pdf->addPDF(storage_path('app/public/' . $attachment));
+        }
+   
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
         $pdf->merge();
         $pdf->save(public_path('generated_labels/' . $filename), 'file');
