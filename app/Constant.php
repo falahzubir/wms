@@ -53,7 +53,7 @@ if(!defined('ACTION_GENERATE_PICKING')) define('ACTION_GENERATE_PICKING', 'gener
 if(!defined('ACTION_UPLOAD_TRACKING_BULK')) define('ACTION_UPLOAD_TRACKING_BULK', 'upload-tracking-bulk');
 
 // box minimum quantity
-if(!defined('BOX_MINIMUM_QUANTITY')) define('BOX_MINIMUM_QUANTITY', 4);
+if(!defined('BOX_MINIMUM_QUANTITY')) define('BOX_MINIMUM_QUANTITY', 5);
 
 // purchase type
 if(!defined('PURCHASE_TYPE_COD')) define('PURCHASE_TYPE_COD', 1);
