@@ -51,6 +51,7 @@ if(!defined('ACTION_DOWNLOAD_CN')) define('ACTION_DOWNLOAD_CN', 'download-cn');
 if(!defined('ACTION_DOWNLOAD_ORDER')) define('ACTION_DOWNLOAD_ORDER', 'download-order');
 if(!defined('ACTION_GENERATE_PICKING')) define('ACTION_GENERATE_PICKING', 'generate-pl');
 if(!defined('ACTION_UPLOAD_TRACKING_BULK')) define('ACTION_UPLOAD_TRACKING_BULK', 'upload-tracking-bulk');
+if(!defined('ACTION_APPROVE_AS_SHIPPED')) define('ACTION_APPROVE_AS_SHIPPED', 'approve-as-shipped');
 
 // box minimum quantity
 if(!defined('BOX_MINIMUM_QUANTITY')) define('BOX_MINIMUM_QUANTITY', 5);
@@ -89,6 +90,9 @@ if(!defined('ORDER_DATE_TYPES')) define('ORDER_DATE_TYPES', [
 //DHL
 if(!defined('DHL_ID')) define('DHL_ID',15);
 
+// courier id which will be auto shipping, other will have to set menually
+if(!defined('AUTO_SHIPPING_COURIER')) define('AUTO_SHIPPING_COURIER', [15]);
+
 // DHL EH
 if(!defined('DHL_SOLD_PICKUP_ACCT')) define('DHL_SOLD_PICKUP_ACCT',[
     1=>'5265434590',//5265434590', // EH
@@ -104,8 +108,8 @@ if(!defined('DHL_CLIENT_ID')) define('DHL_CLIENT_ID','LTE2MDAwOTg0NTI=');
 if(!defined('DHL_CLIENT_PASS')) define('DHL_CLIENT_PASS','MjAzMDI5MTU');
 
 #32 DHL ED
-if(!defined('DHL_AA_CLIENT_ID')) define('DHL_AA_CLIENT_ID','LTEyNDQ5ODgzODg=');
-if(!defined('DHL_AA_CLIENT_PASS')) define('DHL_AA_CLIENT_PASS','MTQwMDA0N1904211618820882');
+if(!defined('DHL_ED_CLIENT_ID')) define('DHL_ED_CLIENT_ID','LTQ3NTc1NTQ1Mw==');
+if(!defined('DHL_ED_CLIENT_PASS')) define('DHL_ED_CLIENT_PASS','MTM0MjQzM0208211627885710');
 
 // MAXIMUM QUANTITY PER BOX
 if(!defined('MAXIMUM_QUANTITY_PER_BOX')) define('MAXIMUM_QUANTITY_PER_BOX', 40);

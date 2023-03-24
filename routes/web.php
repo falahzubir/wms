@@ -4,6 +4,7 @@ use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
@@ -109,6 +110,9 @@ Route::middleware(['auth'])->group(function() {
     });
 });
 
+
+Route::get('notifications', [NotificationController::class, 'list']);
+
 Route::get('dhl-access-token', [ShippingController::class, 'dhl_generate_access_token']);
 
 Auth::routes();
@@ -129,7 +133,7 @@ Route::get('run-migration', function () {
     }
 });
 
-Route::get('seed/permission', function (String $class) {
+Route::get('seed/permission', function () {
     if(config('app.env')=="local"){
         Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
         return 'Seeds ran successfully!';

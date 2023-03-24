@@ -25,7 +25,13 @@ class OrderController extends Controller
      */
     public function index()
     {
-        return Order::with(['customer', 'items', 'items.product', 'shippings', 'bucket', 'batch', 'company', 'courier'])
+        return Order::with([
+            'customer', 'items', 'items.product', 'shippings',
+            'bucket', 'batch', 'company', 'courier',
+            'logs' => function ($query) {
+                $query->orderBy('id', 'desc');
+            }
+        ])
             ->where('is_active', IS_ACTIVE);
     }
 
@@ -164,7 +170,7 @@ class OrderController extends Controller
             'title' => 'Ready To Ship Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_APPROVE_AS_SHIPPED, ACTION_DOWNLOAD_ORDER],
         ]);
     }
 
