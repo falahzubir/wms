@@ -866,7 +866,9 @@
                     }
                 })
                 .then(function(res) {
+                    const fileName = String(res.data.download_url).split("/").pop();
                     let a = document.createElement('a');
+                    a.download = fileName;
                     a.target = '_blank';
                     a.href = res.data.download_url;
                     a.click();
@@ -874,8 +876,8 @@
                     Swal.fire({
                         title: 'Success!',
                         html: `<div>Download Request CN Successful.</div>
-                                                    <div>Click <a href="${res.data.download_url}" target="_blank">here</a> if CN not downloaded.</div>`,
-                        footer: '<small class="text-danger">Please enable popup if required</small>',
+                                                    <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
+                        // footer: '<small class="text-danger">Please enable popup if required</small>',
                         allowOutsideClick: false,
                         icon: 'success',
                     });
@@ -883,6 +885,12 @@
                 .catch(function(error) {
                     // handle error
                     console.log(error);
+                    Swal.fire({
+                        title: 'Success!',
+                        html: `Failed to generate pdf`,
+                        allowOutsideClick: false,
+                        icon: 'error',
+                    });
                 })
                 .then(function() {
                     // always executed
@@ -968,11 +976,13 @@
                 })
                 .then(function(response) {
                     // handle success, close or download
-                    Swal.fire({
-                        title: 'Success!',
-                        text: "Order CSV Downloaded.",
-                        icon: 'success',
-                    });
+                    if(response != null && response.data != null){
+                        let a = document.createElement('a');
+                        a.download = response.data.file_name;
+                        a.target = '_blank';
+                        a.href = window.location.origin + "/storage/"+response.data.file_name;
+                        a.click();
+                    }
                 })
                 .catch(function(error) {
                     // handle error
