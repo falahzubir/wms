@@ -218,7 +218,7 @@
                                             {{ date('H:i', strtotime($order->created_at)) }}
                                         </div> --}}
                                     </td>
-                                    <td>
+                                    <td class="text-start">
                                         <div><strong>{{ $order->customer->name }}</strong></div>
                                         <div>
                                             {{ $order->customer->phone }}
@@ -252,9 +252,20 @@
                                                     <span class="badge bg-success text-light">Paid</span>
                                                 @break
 
+                                                @case(3)
+                                                    <span class="badge bg-primary text-light">Installment</span>
+                                                @break
+
                                                 @default
                                                     <span class="badge bg-danger text-light">Error</span>
                                             @endswitch
+                                        </div>
+                                        <div>
+                                        @if($order->payment_type != null)
+                                            <span class="badge bg-primary-light text-dark">
+                                                {{ $order->paymentType->payment_type_name }}
+                                            </span>
+                                        @endif
                                         </div>
                                         <span class="badge bg-warning text-dark">
                                             {{ $order->courier->name }}
@@ -270,10 +281,12 @@
                                                 </div>
                                             @endforeach
                                         @endisset
-                                        @isset($order->sales_remarks)
-                                            <div class="small-text font-weight-bold">
-                                                [{{ $order->sales_remarks }}]
-                                            </div>
+                                        @isset($order->sales_remarks) 
+                                            @if($order->sales_remarks != null)
+                                                <div class="small-text font-weight-bold">
+                                                    {{ str_replace('<br>', '', urldecode($order->sales_remarks)) }}
+                                                </div>
+                                                @endif
                                         @endisset
                                     </td>
                                     <td>
@@ -592,7 +605,7 @@
 
         // generate shipping label
         @if (in_array(ACTION_GENERATE_CN, $actions))
-            document.querySelector('#generate-cn-btn').onclick = function() {
+            document.querySelector('#generate-cn-btn').onclick = async function() {
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
                 // sweet alert
@@ -605,6 +618,29 @@
                     })
                     return;
                 }
+            
+            //get checked order
+            let checkedOrder = [];
+            inputElements.forEach(input => {
+                if (input.checked) {
+                    checkedOrder.push(input.value);
+                }
+            });
+
+            
+            const res = await axios.post('/api/shippings/check-multiple-parcels', {
+                        order_ids: checkedOrder,
+            })
+
+            if(res.data != null && res.data.multiple_parcels){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'This order have multiple parcels. Please generate CN manually.',
+                    confirmButtonText: `OK`,
+                })  
+                return;
+            }
                 //confirmation to generate cn
                 Swal.fire({
                     title: 'Are you sure to generate shipping label?',
@@ -855,6 +891,7 @@
                     order_ids: checkedOrder,
                 })
                 .then(function(response) {
+                    let text = "Shipping label generated."
                     if (response.data == 0) {
                         Swal.fire({
                             title: 'Error!',
@@ -865,16 +902,42 @@
                         return;
                     }
                     // handle success, close or download
+                    if(response.data != null ){
+                        if(response.data.error != null){
+                            text = "Shipping label generated.However has "+response.data.error;
+                        }
+
+                        if(response.data.all_fail){
+                            if(typeof response.data.all_fail == "boolean"){
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Fail to generate CN",
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                })
+                            }else{
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Fail to generate CN "+response.data.all_fail,
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                })
+                            }
+                            
+                            return;
+                        }
+                    }
+
                     Swal.fire({
                         title: 'Success!',
-                        text: "Shipping label generated.",
+                        text: text,
                         icon: 'success',
                         confirmButtonText: 'Download',
                         showCancelButton: true,
                         cancelButtonText: 'Ok',
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            download_cn(order_ids)
+                            download_cn(checkedOrder)
                         } else {
                             location.reload();
                         }
@@ -942,15 +1005,18 @@
                     }
                 })
                 .then(function(res) {
+                    const fileName = String(res.data.download_url).split("/").pop();
                     let a = document.createElement('a');
+                    a.download = fileName;
                     a.target = '_blank';
+                    a.download = fileName;
                     a.href = res.data.download_url;
                     a.click();
                     // handle success, close or download
                     Swal.fire({
                         title: 'Success!',
                         html: `<div>Download Request CN Successful.</div>
-                                                    <div>Click <a href="${res.data.download_url}" target="_blank">here</a> if CN not downloaded.</div>`,
+                        <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
                         footer: '<small class="text-danger">Please enable popup if required</small>',
                         allowOutsideClick: false,
                         icon: 'success',
@@ -959,6 +1025,12 @@
                 .catch(function(error) {
                     // handle error
                     console.log(error);
+                    Swal.fire({
+                        title: 'Success!',
+                        html: `Failed to generate pdf`,
+                        allowOutsideClick: false,
+                        icon: 'error',
+                    });
                 })
                 .then(function() {
                     // always executed
@@ -974,42 +1046,55 @@
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Yes, reject it!',
-            }).then((result) => {
-                // function not ready
-
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    axios.post('/api/orders/reject', {
+                    const { value: reason } = await Swal.fire({
+                        input: 'textarea',
+                        inputLabel: 'Reject Reason',
+                        showCancelButton: true,
+                        inputValidator: (value) => {
+                            if (!value) {
+                                return 'You need to write something!'
+                            }
+                        }
+                    })
+
+                    if (reason) {
+                        axios.post('/api/orders/reject', {
                             order_id: orderId,
+                            reason,
                         })
-                        .then(function(response) {
-                            // handle success, close or download
-                            if (response.status == 200) {
-                                Swal.fire({
+                            .then(function (response) {
+                                // handle success, close or download
+                                if (response.status == 200) {
+                                    Swal.fire({
                                         title: 'Success!',
                                         text: "Order rejected.",
                                         icon: 'success',
                                         confirmButtonText: 'OK'
                                     })
-                                    .then((result) => {
-                                        if (result.isConfirmed) {
-                                            location.reload();
-                                        }
+                                        .then((result) => {
+                                            if (result.isConfirmed) {
+                                                location.reload();
+                                            }
+                                        })
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: "Something went wrong.",
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
                                     })
-                            } else {
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: "Something went wrong.",
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                })
-                                return;
-                            }
-                        })
-                        .catch(function(error) {
-                            // handle error
-                            console.log(error);
-                        })
+                                    return;
+                                }
+                            })
+                            .catch(function (error) {
+                                // handle error
+                                console.log(error);
+                            })
+                    }
                 }
+               
             })
         }
 
@@ -1044,11 +1129,13 @@
                 })
                 .then(function(response) {
                     // handle success, close or download
-                    Swal.fire({
-                        title: 'Success!',
-                        text: "Order CSV Downloaded.",
-                        icon: 'success',
-                    });
+                    if(response != null && response.data != null){
+                        let a = document.createElement('a');
+                        a.download = response.data.file_name;
+                        a.target = '_blank';
+                        a.href = window.location.origin + "/storage/"+response.data.file_name;
+                        a.click();
+                    }
                 })
                 .catch(function(error) {
                     // handle error

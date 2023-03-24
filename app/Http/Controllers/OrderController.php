@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Shipping;
+use App\Models\OrderLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -121,7 +122,9 @@ class OrderController extends Controller
      */
     public function pending(Request $request)
     {
-        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING]);
+        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING])
+                ->whereDate('dt_request_shipping', '<=', date('Y-m-d'))
+                ->whereRaw('(payment_type IS NULL OR payment_type <> 22)'); //shopee order excluded
 
         $orders = $this->filter_order($request, $orders);
 
@@ -302,6 +305,8 @@ class OrderController extends Controller
         $data['team_id'] = $webhook['team_id'];
         $data['payment_refund'] = isset($webhook['payment_refund']) ? $webhook['payment_refund'] * 100 : 0;
         $data['sales_remarks'] = $webhook['sales_remark'] ?? '';
+        $data['dt_request_shipping'] = $webhook['dt_request_shipping'] ?? '';
+        $data['payment_type'] = isset($webhook['payment_type']) ? $webhook['payment_type'] : null;
 
         $customer = Customer::updateorCreate($webhook['customer']);
         $data['customer_id'] = $customer->id;
@@ -318,11 +323,29 @@ class OrderController extends Controller
 
             OrderItem::updateOrCreate($p_ids, $product_data);
         }
-        if ($order->wasRecentlyCreated) {
-            set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
-        } else {
-            set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook');
+        if($data['payment_type'] == 22){ //shopee order skip to Bucket List
+            set_order_status($order, ORDER_STATUS_PROCESSING, 'Order shopee created from webhook');
+
+            Order::where('id', $order->id)->update([
+                'bucket_id' => 3, //for shopee
+                'status' => ORDER_STATUS_PROCESSING,
+            ]);
+
+            OrderLog::create([
+                'order_id' => $order->id,
+                'order_status_id' => ORDER_STATUS_PROCESSING,
+                'remarks' => 'Order added to bucket',
+                'created_by' => 1,
+            ]);
         }
+        else{
+            if ($order->wasRecentlyCreated) {
+                set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
+            } else {
+                set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook');
+            }
+        }
+        
 
         return response()->json(['message' => 'Order created successfully'], 201);
     }
@@ -454,6 +477,7 @@ class OrderController extends Controller
     public function download_order_csv(Request $request)
     {
         // return $request;
+        $fileName = 'shipping_' . date('Ymdhis') . '.csv';
         $orders = $this->index();
 
         $orders->whereIn('id', $request->order_ids);
@@ -462,12 +486,11 @@ class OrderController extends Controller
 
         $orders = $orders->get();
 
-        $response = Excel::download(new OrderExport($orders), 'shipping_' . date('Ymdhis') . '.csv', \Maatwebsite\Excel\Excel::CSV, [
-            'Content-Type' => 'text/csv',
+        Excel::store(new OrderExport($orders),"public/".$fileName);
+        // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
+
+        return response([
+            "file_name"=> $fileName
         ]);
-
-        ob_end_clean();
-
-        return $response;
     }
 }

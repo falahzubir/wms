@@ -4,7 +4,7 @@ if(!defined('IS_ACTIVE')) define('IS_ACTIVE', 1);
 if(!defined('IS_INACTIVE')) define('IS_INACTIVE', 0);
 
 // paginate limit
-if(!defined('PAGINATE_LIMIT')) define('PAGINATE_LIMIT', 100);
+if(!defined('PAGINATE_LIMIT')) define('PAGINATE_LIMIT', 10);
 if(!defined('ORDER_NUMBER_LENGTH')) define('ORDER_NUMBER_LENGTH', '09'); // must have leading zero
 
 // order status
@@ -54,7 +54,7 @@ if(!defined('ACTION_UPLOAD_TRACKING_BULK')) define('ACTION_UPLOAD_TRACKING_BULK'
 if(!defined('ACTION_APPROVE_AS_SHIPPED')) define('ACTION_APPROVE_AS_SHIPPED', 'approve-as-shipped');
 
 // box minimum quantity
-if(!defined('BOX_MINIMUM_QUANTITY')) define('BOX_MINIMUM_QUANTITY', 4);
+if(!defined('BOX_MINIMUM_QUANTITY')) define('BOX_MINIMUM_QUANTITY', 5);
 
 // purchase type
 if(!defined('PURCHASE_TYPE_COD')) define('PURCHASE_TYPE_COD', 1);
@@ -117,3 +117,10 @@ if(!defined('MAX_DHL_COD_PER_PARCEL')) define('MAX_DHL_COD_PER_PARCEL', 200000);
 
 // Courier Others
 if(!defined('COURIER_OTHERS')) define('COURIER_OTHERS', 99);
+
+// Shopee
+if(!defined('SHOPEE_LIVE_PARTNER_ID')) define('SHOPEE_LIVE_PARTNER_ID', '2004184');
+if(!defined('SHOPEE_LIVE_PARTNER_KEY')) define('SHOPEE_LIVE_PARTNER_KEY','e9b00cc3924edee9d1675f60116adc56bbc5e9f3bfd241d463e84bc695b86e03');
+if(!defined('SHOPEE_TEST_PARTNER_ID')) define('SHOPEE_TEST_PARTNER_ID', '1004235');
+if(!defined('SHOPEE_TEST_PARTNER_KEY')) define('SHOPEE_TEST_PARTNER_KEY', 'caeb4b0ad9e17a5ba9c70eb51d21ecfe1ae187af8cbe537b9cc7ae4a3a7ae145');
+if(!defined('SHOPEE_SHOP_ID')) define('SHOPEE_SHOP_ID', '753309133');
