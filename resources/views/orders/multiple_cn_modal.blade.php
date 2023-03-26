@@ -31,9 +31,11 @@
                                     <th class="text-center">CN</th>
                                 </tr>
                             </thead>
+                            <!-- <form action="" method="post"> -->
                             <tbody id="multiple-cn-modal-table-footer-body">
 
                             </tbody>
+                            <!-- </form> -->
                         </table>
 
 
@@ -124,7 +126,7 @@
 
     function cn(allowDelete = false) {
         const id = Math.random().toString(36).replace(/[^a-z]+/g, '');
-        let html = `<div class="card mb-3 multiple-cn-card" id="row-${id}">
+        let html = `<div class="card mb-3 multiple-cn-card" id="row-${id}" data-order-id="${_order.id}">
             <div class="card-header">
                 <div class="row">
                     <div class="col-6">
@@ -232,32 +234,128 @@
     function generateMultipleCN(){
         // validate
         const errors = [];
+        var arr_data = []; //for all CN
+        var order_id = 0;
+        
+        for (const [i,card] of document.querySelectorAll(".multiple-cn-card").entries()) {
+            let total = 0;
+            var arr_item = []; //for each CN
+            order_id = card.getAttribute('data-order-id');
 
-      for (const [i,card] of document.querySelectorAll(".multiple-cn-card").entries()) {
-        let total = 0;
+            for (const input of card.querySelectorAll(".multiple-cn-input")) {
+                const val = parseInt(input.value);
+                const order_item_id = input.getAttribute('data-id');
+                var item = [];
 
-        for (const input of card.querySelectorAll(".multiple-cn-input")) {
-            const val = parseInt(input.value);
+                //store in array first
+                quantity = Number.isNaN(val) ? 0 : val; //if quantity NaN change to 0
+                arr_item.push({order_item_id : order_item_id, quantity : quantity});
 
-            if(Number.isNaN(val)){
-                continue;
+                if(Number.isNaN(val)){
+                    continue;
+                }
+
+                if(val <1){
+                    continue;
+                }
+
+                total += val;
             }
 
-            if(val <1){
-                continue;
+            if(total == 0){
+                errors.push(`CN ${(i+1)} all quantity can't be empty`);
             }
-
-            total += val;
+            else{
+                arr_data.push(arr_item);
+            }
         }
 
-        if(total == 0){
-            errors.push(`CN ${(i+1)} all qty can't be empty`)
+        if(errors.length >0){
+            // has Error;
+            Swal.fire({
+                title: 'Empty quantity!',
+                html: errors.join('<br>'),
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            })
         }
-      }
+        else{
+            Swal.fire({
+                title: 'Generating shipping label...',
+                html: 'Please wait while we are generating shipping labels for this order.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+            });
+            axios.post(`{{ route('shipping.generate_cn_multiple') }}`, { order_id : order_id,
+                cn_data : arr_data
+            })
+            .then(response => {
+                if (response.data.status == 'error') {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
+                    return;
+                }
+                else if (response.data.status == 'success'){
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.data.message,
+                        icon: 'success',
+                        confirmButtonText: 'Download CN',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            axios({
+                                    url: '/api/download-consignment-note',
+                                    method: 'POST',
+                                    responseType: 'json', // important
+                                    data: {
+                                        order_ids: [order_id],
+                                    }
+                                })
+                                .then(function(res) {
+                                    // redirect
+                                    const fileName = String(res.data.download_url).split("/").pop();
+                                    let a = document.createElement('a');
+                                    a.target = '_blank';
+                                    a.download = fileName;
+                                    a.href = res.data.download_url;
+                                    a.click();
+                                    // window.location.href = res.data.download_url;
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        html: `<div>Download Request CN Successful.</div>
+                                        <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
+                                        footer: '<small class="text-danger">Please enable popup if required</small>',
+                                        allowOutsideClick: false
+                                    }).then((result) => {
+                                        location.reload();
+                                    })
 
-      if(errors.length >0){
-        // has Error;
-      }
+                                }).catch(() => {
+                                    Swal.fire({
+                                        title: 'Success!',
+                                        html: `Failed to generate pdf`,
+                                        allowOutsideClick: false,
+                                        icon: 'error',
+                                    });
+
+                                })
+                        }
+                    })
+                }
+            })
+            .catch(error => {
+                // console.log(error);
+            });
+            
+        }
+        
     }
 </script>
 @endpush

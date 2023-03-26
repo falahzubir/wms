@@ -273,14 +273,25 @@
                                         </span>
 
                                         @isset($order->shippings)
-                                            @foreach ($order->shippings as $shipping)
-                                                <div>
-                                                    <span class="phantom"
-                                                        data-tracking="{{ $shipping->tracking_number }}">
-                                                        {{ $shipping->tracking_number }}
-                                                    </span>
-                                                </div>
-                                            @endforeach
+                                            @if($order->items->sum("quantity") > MAXIMUM_QUANTITY_PER_BOX) <!-- check if order has more than 40 quantity-->
+                                                @isset($order->shippings->first()->tracking_number) <!-- check if order has at least 1 CN -->
+                                                    <div>
+                                                        <span class="phantom"
+                                                            data-tracking="{{ $order->shippings->first()->tracking_number }}">
+                                                            {{ $order->shippings->first()->tracking_number }}
+                                                        </span>
+                                                    </div>
+                                                @endisset
+                                            @else
+                                                @foreach ($order->shippings as $shipping)
+                                                    <div>
+                                                        <span class="phantom"
+                                                            data-tracking="{{ $shipping->tracking_number }}">
+                                                            {{ $shipping->tracking_number }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            @endif
                                         @endisset
                                         @isset($order->sales_remarks) 
                                             @if($order->sales_remarks != null)
