@@ -718,7 +718,7 @@ class ShippingController extends Controller
     }
 
     /**
-     * DHL Multiple CN Single Order
+     * DHL Multiple CN for Single Order
      * @request $order
      * @return $response
      */
