@@ -117,10 +117,3 @@ if(!defined('MAX_DHL_COD_PER_PARCEL')) define('MAX_DHL_COD_PER_PARCEL', 200000);
 
 // Courier Others
 if(!defined('COURIER_OTHERS')) define('COURIER_OTHERS', 99);
-
-// Shopee
-if(!defined('SHOPEE_LIVE_PARTNER_ID')) define('SHOPEE_LIVE_PARTNER_ID', '2004184');
-if(!defined('SHOPEE_LIVE_PARTNER_KEY')) define('SHOPEE_LIVE_PARTNER_KEY','e9b00cc3924edee9d1675f60116adc56bbc5e9f3bfd241d463e84bc695b86e03');
-if(!defined('SHOPEE_TEST_PARTNER_ID')) define('SHOPEE_TEST_PARTNER_ID', '1004235');
-if(!defined('SHOPEE_TEST_PARTNER_KEY')) define('SHOPEE_TEST_PARTNER_KEY', 'caeb4b0ad9e17a5ba9c70eb51d21ecfe1ae187af8cbe537b9cc7ae4a3a7ae145');
-if(!defined('SHOPEE_SHOP_ID')) define('SHOPEE_SHOP_ID', '753309133');

@@ -58,6 +58,24 @@ if (!function_exists('shipment_num_format')) {
     }
 }
 
+if (!function_exists('shipment_num_format_mult')) {
+    /**
+     * Get shipment number format
+     *
+     * @param object  $shipment
+     * @return string
+     */
+    function shipment_num_format_mult($order, $no)
+    {
+        return DHL_PREFIX[$order->company_id] . $order->company->code
+            . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->sales_id) . "\\"
+            . sprintf('%03d', ($no+1)) . "\\" //no. of consignment
+            . date("ymd", strtotime($order->batch->created_at)) . "\\"
+            . sprintf('%03d', $order->batch->batch_id);
+        
+    }
+}
+
 if (!function_exists('set_order_status')) {
     /**
      * Update order status
@@ -176,15 +194,28 @@ if (!function_exists('get_shipping_remarks')) {
      * @param  obj $order_id
      * @return string
      */
-    function get_shipping_remarks($order)
+    function get_shipping_remarks($order, $mult_cn = [])
     {
         // return null;
         $remark = '';
         foreach ($order->items as $item) :
-            $remark .= $item->product->code;
-            $remark .= '[';
-            $remark .= $item->quantity;
-            $remark .= ']';
+            if(empty($mult_cn)){
+                $quantity = $item->quantity;
+            }
+            else{
+                $quantity = collect($mult_cn)
+                        ->whereIn('order_item_id', $item['id'])
+                        ->pluck('quantity')
+                        ->values()
+                        ->implode(',');
+            }
+
+            if($quantity > 0){
+                $remark .= $item->product->code;
+                $remark .= '[';
+                $remark .= $quantity;
+                $remark .= ']';
+            }
         endforeach;
 
         return $remark;
@@ -198,11 +229,21 @@ if (!function_exists('get_order_weight')) {
      * @param  obj $order_id
      * @return string
      */
-    function get_order_weight($order)
+    function get_order_weight($order, $mult_cn = [])
     {
         $weight = 0;
         foreach ($order->items as $item) :
-            $weight += ($item->product->weight ?? 200) * $item->quantity;
+            if(empty($mult_cn)){
+                $quantity = $item->quantity;
+            }
+            else{
+                $quantity = collect($mult_cn)
+                        ->whereIn('order_item_id', $item['id'])
+                        ->pluck('quantity')
+                        ->values()
+                        ->implode(',');
+            }
+            $weight += ($item->product->weight ?? 200) * $quantity;
         endforeach;
 
         return $weight;
