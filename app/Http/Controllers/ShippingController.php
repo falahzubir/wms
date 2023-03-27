@@ -407,14 +407,14 @@ class ShippingController extends Controller
                         }
                     }
                 }
-            }  
+            }
 
             $shipment_id = $label->shipmentID;
             // logger($shipment_id);
             $tracking_no[$shipment_id] = $label->deliveryConfirmationNo;
             $content[$shipment_id] = $label->content;
         }
-        
+
         // logger($tracking_no);
 
         foreach ($orders as $order) {
@@ -425,7 +425,7 @@ class ShippingController extends Controller
             if ($content[shipment_num_format($order)] == null) {
                 continue;
             }
-            
+
             $data[$order->id]['tracking_number'] = $tracking_no[shipment_num_format($order)];
             //if empty tracking number, remove from array and skip
             if (empty($data[$order->id]['tracking_number'])) {
@@ -478,7 +478,7 @@ class ShippingController extends Controller
         $attachments = $attachments->pluck('attachment')->toArray();
 
         $pdf = PDFMerger::init();
-        
+
         foreach ($attachments as $attachment) {
             if (!file_exists(storage_path('app/public/' . $attachment))) {
                 continue;
@@ -494,7 +494,7 @@ class ShippingController extends Controller
 
             $pdf->addPDF(storage_path('app/public/' . $attachment));
         }
-        
+
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
         $pdf->merge();
         $pdf->save(public_path('generated_labels/' . $filename), 'file');
@@ -742,12 +742,12 @@ class ShippingController extends Controller
             $url = $this->dhl_label_url_test;
         }
 
-        // $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
-        $access_token = AccessToken::with(['company'])->where('company_id', 3)->where('type', 'dhl')->first(); //testing
+        $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
+        // $access_token = AccessToken::with(['company'])->where('company_id', 3)->where('type', 'dhl')->first(); //testing
         $remainCodAmmount = $order->purchase_type == 1 ? $order->total_price : null;
         $data = [];
         $dhl_store = [];
-        
+
 
         foreach ($array_data as $key => $cn) {
             //calculate COD amount
@@ -873,13 +873,13 @@ class ShippingController extends Controller
                         }
                     }
                 }
-            }  
+            }
 
             $shipment_id = $label->shipmentID;
             $tracking_no[$shipment_id] = $label->deliveryConfirmationNo;
             $content[$shipment_id] = $label->content;
         }
-            
+
         $data[$order->id]['tracking_number'] = $tracking_no[shipment_num_format_mult($order, $num_cn)];
 
         //if empty tracking number, remove from array and skip
@@ -891,7 +891,7 @@ class ShippingController extends Controller
         $data[$order->id]['shipment_number'] = shipment_num_format_mult($order, $num_cn);
         $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
         $data[$order->id]['attachment'] = 'labels/' . str_replace("\\", "_", shipment_num_format_mult($order, $num_cn) . '.pdf');
-        
+
         // store label to storage
         Storage::put('public/labels/' . str_replace("\\", "_", shipment_num_format_mult($order, $num_cn)) . '.pdf', base64_decode($content[shipment_num_format_mult($order, $num_cn)]));
 
