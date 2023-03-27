@@ -99,6 +99,23 @@ if (!function_exists('set_order_status')) {
     }
 }
 
+if(!function_exists('set_order_status_bulk')){
+    /**
+     * Update order status bulk
+     *
+     * @param  object $orders, int $status
+     * @return void
+     */
+    function set_order_status_bulk($orders, $status, $remarks = null)
+    {
+        foreach($orders as $order){
+            set_order_status($order, $status, $remarks . ". Bulk update status");
+        }
+
+        return true;
+    }
+}
+
 if (!function_exists('order_num_id')) {
     /**
      * Get order id from order number
