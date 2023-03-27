@@ -186,7 +186,7 @@
                                         <div>
                                             <a href="#"><strong>{{ order_num_format($order) }}</strong></a>
                                         </div>
-                                        <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
+                                        <div style="font-size: 0.75rem; white-space: nowrap;" data-bs-toggle="tooltip"
                                             data-bs-placement="right" data-bs-original-title="Date Inserted">
                                             {{-- <i class="bi bi-calendar"></i>&nbsp; --}}
                                             {{ date('d/m/Y H:i', strtotime($order->created_at)) }}
