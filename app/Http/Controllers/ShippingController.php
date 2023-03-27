@@ -414,6 +414,7 @@ class ShippingController extends Controller
             $tracking_no[$shipment_id] = $label->deliveryConfirmationNo;
             $content[$shipment_id] = $label->content;
         }
+        
         // logger($tracking_no);
 
         foreach ($orders as $order) {
@@ -473,14 +474,12 @@ class ShippingController extends Controller
 
     public function download_cn(Request $request)
     {
-        // return $request;
         $attachments = Shipping::select('attachment')->whereIn('order_id', $request->order_ids)->get();
         $attachments = $attachments->pluck('attachment')->toArray();
 
         $pdf = PDFMerger::init();
         
         foreach ($attachments as $attachment) {
-
             if (!file_exists(storage_path('app/public/' . $attachment))) {
                 continue;
             }
@@ -495,7 +494,7 @@ class ShippingController extends Controller
 
             $pdf->addPDF(storage_path('app/public/' . $attachment));
         }
-   
+        
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
         $pdf->merge();
         $pdf->save(public_path('generated_labels/' . $filename), 'file');
@@ -673,13 +672,232 @@ class ShippingController extends Controller
      * @param collection $order
      * @return \Illuminate\Http\Response
      */
-    public function package_description($order)
+    public function package_description($order, $mult_cn = [])
     {
         $package_description = "";
         foreach ($order->items as $items) {
-            $package_description .= $items->product->name . ", ";
+            if(empty($mult_cn)){ //if product only have one CN include all product desc
+                $package_description .= $items->product->name . ", ";
+            }else{
+                $quantity = collect($mult_cn)
+                    ->whereIn('order_item_id', $items['id'])
+                    ->pluck('quantity')
+                    ->values()
+                    ->implode(',');
+                if($quantity > 0){ //check if product in the parcel more than 0 only then included in desc else excluded
+                    $package_description .= $items->product->name . ", ";
+                }
+            }
         }
         $package_description = rtrim($package_description, ", ");
+
         return $package_description;
     }
+
+    /**
+     * Multiple order generate CN
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function generate_cn_multiple(Request $request)
+    {
+        $order_id = $request->validate([
+            'order_id' => 'required',
+        ]);
+
+        $array_data = ($request->input('cn_data'));
+
+        $orders_dhl = Order::doesntHave('shippings')->with([
+            'customer', 'items', 'items.product', 'company',
+            'company.access_tokens' => function ($query) {
+                $query->where('type', 'dhl');
+            }
+        ])->whereIn('id', $order_id)->where('courier_id', DHL_ID)->get();
+
+        return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+    }
+
+    /**
+     * DHL Multiple CN for Single Order
+     * @request $order
+     * @return $response
+     */
+    public function dhl_label_mult_cn($order_id, $array_data)
+    {
+        $order = Order::with([
+            'customer', 'items', 'items.product', 'company', 'company.access_tokens'
+        ])->where('id', $order_id)->where('courier_id', DHL_ID)->first();
+
+        if (!$order) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Order not found or courier is not DHL Ecommerce, please check with admin',
+            ], 400);
+        }
+
+        if(config('app.env') == 'production'){
+            $url = $this->dhl_label_url;
+        }
+        else{
+            $url = $this->dhl_label_url_test;
+        }
+
+        // $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
+        $access_token = AccessToken::with(['company'])->where('company_id', 3)->where('type', 'dhl')->first(); //testing
+        $remainCodAmmount = $order->purchase_type == 1 ? $order->total_price : null;
+        $data = [];
+        $dhl_store = [];
+        
+
+        foreach ($array_data as $key => $cn) {
+            //calculate COD amount
+            $codAmmount = ($remainCodAmmount > MAX_DHL_COD_PER_PARCEL) ? MAX_DHL_COD_PER_PARCEL : $remainCodAmmount;
+            $remainCodAmmount -= $codAmmount;
+
+            $data = [
+                'labelRequest' => [
+                    'hdr' => [
+                        "messageType" => "LABEL",
+                        "messageDateTime" => date('Y-m-d\TH:i:s') . '+08:00',
+                        "accessToken" => $access_token->token,
+                        "messageVersion" => "1.4",
+                        "messageLanguage" => "en"
+                    ],
+                    'bd' => [
+                        'shipmentItems' =>  [
+                            0 => [
+                                'consigneeAddress' => [
+                                    'companyName' => get_shipping_remarks($order, $cn), //will return desc based on modal value inserted e.g NLC[40]SH FOC[1]
+                                    'name' => $order->customer->name,
+                                    'address1' => $order->customer->address,
+                                    'address2' => $order->customer->address2 ?? null,
+                                    'address3' => $order->customer->address3 ?? null,
+                                    'city' => $order->customer->city,
+                                    'state' => MY_STATES[$order->customer->state],
+                                    'country' => "MY",
+                                    'district' => $order->customer->district ?? null,
+                                    'postCode' => $order->customer->postcode,
+                                    'phone' => $order->customer->phone,
+                                    'email' => $order->customer->email,
+                                    'idNumber' => null,
+                                    'idType' => null,
+                                ],
+                                'shipmentID' => shipment_num_format_mult($order, $key, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
+                                'returnMode' => "02", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
+                                'deliveryConfirmationNo' => null, //not used
+                                'packageDesc' => substr($this->package_description($order, $cn), 0, 50), // required
+                                'totalWeight' => get_order_weight($order, $cn), // mandatory, optional if product code is PDR
+                                'totalWeightUOM' => "G",
+                                'dimensionUOM' => "cm", //mandatory if height, length, width is not null
+                                'height' => null, //mandatory if dimensionUOM is not null
+                                'length' => null, //mandatory if dimensionUOM is not null
+                                'width' => null, //mandatory if dimensionUOM is not null
+                                'customerReference1' => null, //optional
+                                'customerReference2' => null, //optional
+                                'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
+                                'contentIndicator' => null, //mandatory if product include lithium battery
+                                'codValue' =>$codAmmount == 0 ? null : $codAmmount/100, //optional
+                                'insuranceValue' => null, //optional
+                                'freightCharge' => null, //optional
+                                'totalValue' => null, //optional for domestic
+                                'currency' => "MYR", //3-char currency code
+                                'remarks' => get_shipping_remarks($order, $cn), //optional
+                                'deliveryOption' => "C", //only C is supported
+                                'isMult' => "false", //true: multiple pieces, false: single piece
+                            ],
+                        ],
+                        'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
+                        'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
+                        'inlineLabelReturn' => "Y", //mandatory
+                        'handoverMethod' => 2, //optional - 01 for drop off, 02 for pickup
+                        'pickupAddress' => [
+                            'name' => $access_token->company->contact_person, //mandatory contact person name
+                            'address1' => $access_token->company->address, //mandatory company name
+                            'address2' => $access_token->company->address2 ?? null, //optional
+                            'address3' => $access_token->company->address3 ?? null, //optional
+                            'city' => $access_token->company->city ?? null, //mandatory for cross border, optional for domestic
+                            'state' => $access_token->company->state ?? null, //optional, dont incude "|" character
+                            'postCode' => $access_token->company->postcode ?? null, //optional
+                            'country' => $access_token->company->country, //mandatory ISO 2-char country code
+                            'phone' => $access_token->company->phone ?? null, //optional
+                            'email' => $access_token->company->email ?? null, //optional
+                            'district' => $access_token->company->district ?? null, //optional
+                        ],
+                        'label' => [
+                            'pageSize' => "400x600",
+                            'format' => "PDF",
+                            'layout' => "1x1",
+                        ],
+                    ],
+                ],
+            ];
+
+            $data = json_encode($data);
+            logger($data);
+            $response = Http::withBody($data, 'application/json')->post($url);
+            // $dhl_store = ['test'];
+            $dhl_store = $this->dhl_store_for_mult($order, $response, $key);
+        }
+        if(!empty($dhl_store)){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Some CN cannot be generated.'
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'CN generated successfully.'
+        ]);;
+    }
+
+    /**
+     * Store the response from DHL
+     *
+     * @param  object $orders, $json
+     * @return \Illuminate\Http\Response
+     */
+
+    public function dhl_store_for_mult($order, $json, $num_cn)
+    {
+        $data = [];
+        $tracking_no[] = [];
+        $json = json_decode($json);
+
+        foreach ($json->labelResponse->bd->labels ?? [] as $label) {
+            if(isset($label->responseStatus)){
+                if(isset($label->responseStatus->message)){
+                    if($label->responseStatus->message != "SUCCESS"){
+                        if(isset($label->responseStatus->messageDetails)){
+                            return $label->responseStatus->messageDetails;
+                        }
+                    }
+                }
+            }  
+
+            $shipment_id = $label->shipmentID;
+            $tracking_no[$shipment_id] = $label->deliveryConfirmationNo;
+            $content[$shipment_id] = $label->content;
+        }
+            
+        $data[$order->id]['tracking_number'] = $tracking_no[shipment_num_format_mult($order, $num_cn)];
+
+        //if empty tracking number, remove from array and skip
+        if (empty($data[$order->id]['tracking_number'])) {
+            unset($data[$order->id]);
+        }
+        $data[$order->id]['order_id'] = $order->id;
+        $data[$order->id]['courier'] = "dhl-ecommerce";
+        $data[$order->id]['shipment_number'] = shipment_num_format_mult($order, $num_cn);
+        $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
+        $data[$order->id]['attachment'] = 'labels/' . str_replace("\\", "_", shipment_num_format_mult($order, $num_cn) . '.pdf');
+        
+        // store label to storage
+        Storage::put('public/labels/' . str_replace("\\", "_", shipment_num_format_mult($order, $num_cn)) . '.pdf', base64_decode($content[shipment_num_format_mult($order, $num_cn)]));
+
+        set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL");
+
+        Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+    }
+
 }

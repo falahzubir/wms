@@ -173,8 +173,8 @@
             const item = _order.items[i];
             html += `<tr id="row-${item.id}">
                 <td>${item.product.name}</td>
-                <td class="text-center">${item.quantity}</td>
-                <td class="text-center">${item.cn_qty ?? 0}</td>`
+                <td class="text-center" id="quantity">${item.quantity}</td>
+                <td class="text-center" id="balance">${item.cn_qty ?? 0}</td>`
             if (i == 0) {
                 html += `<td class="text-center align-middle" rowspan="${_order.items.length}">${document.querySelectorAll('.multiple-cn-card').length}</td>`
             }
@@ -280,80 +280,103 @@
             })
         }
         else{
-            Swal.fire({
-                title: 'Generating shipping label...',
-                html: 'Please wait while we are generating shipping labels for this order.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                },
+            //check balance
+            const tableBody = document.querySelector("#multiple-cn-modal-table-footer-body");
+            const rows = tableBody.querySelectorAll('tr');
+            quantity = 0;
+            balance = 0;
+            overall_balance = 0;
+
+            rows.forEach(row => {
+                quantity += Number(row.querySelector('#quantity').textContent);
+                balance += Number(row.querySelector('#balance').textContent);
             });
-            axios.post(`{{ route('shipping.generate_cn_multiple') }}`, { order_id : order_id,
-                cn_data : arr_data
-            })
-            .then(response => {
-                if (response.data.status == 'error') {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: response.data.message,
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    })
-                    return;
-                }
-                else if (response.data.status == 'success'){
-                    Swal.fire({
-                        title: 'Success!',
-                        text: response.data.message,
-                        icon: 'success',
-                        confirmButtonText: 'Download CN',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            axios({
-                                    url: '/api/download-consignment-note',
-                                    method: 'POST',
-                                    responseType: 'json', // important
-                                    data: {
-                                        order_ids: [order_id],
-                                    }
-                                })
-                                .then(function(res) {
-                                    // redirect
-                                    const fileName = String(res.data.download_url).split("/").pop();
-                                    let a = document.createElement('a');
-                                    a.target = '_blank';
-                                    a.download = fileName;
-                                    a.href = res.data.download_url;
-                                    a.click();
-                                    // window.location.href = res.data.download_url;
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success',
-                                        html: `<div>Download Request CN Successful.</div>
-                                        <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
-                                        footer: '<small class="text-danger">Please enable popup if required</small>',
-                                        allowOutsideClick: false
-                                    }).then((result) => {
-                                        location.reload();
+            overall_balance = quantity - balance;
+
+            if(overall_balance != quantity){
+                console.log(overall_balance);
+                Swal.fire({
+                    title: 'Balance Available',
+                    html: 'There are available balance for this order',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+            }
+            else{
+                Swal.fire({
+                    title: 'Generating shipping label...',
+                    html: 'Please wait while we are generating shipping labels for this order.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    },
+                });
+                axios.post(`{{ route('shipping.generate_cn_multiple') }}`, { order_id : order_id,
+                    cn_data : arr_data
+                })
+                .then(response => {
+                    if (response.data.status == 'error') {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: response.data.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                        return;
+                    }
+                    else if (response.data.status == 'success'){
+                        Swal.fire({
+                            title: 'Success!',
+                            text: response.data.message,
+                            icon: 'success',
+                            confirmButtonText: 'Download CN',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                axios({
+                                        url: '/api/download-consignment-note',
+                                        method: 'POST',
+                                        responseType: 'json', // important
+                                        data: {
+                                            order_ids: [order_id],
+                                        }
                                     })
+                                    .then(function(res) {
+                                        // redirect
+                                        const fileName = String(res.data.download_url).split("/").pop();
+                                        let a = document.createElement('a');
+                                        a.target = '_blank';
+                                        a.download = fileName;
+                                        a.href = res.data.download_url;
+                                        a.click();
+                                        // window.location.href = res.data.download_url;
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Success',
+                                            html: `<div>Download Request CN Successful.</div>
+                                            <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
+                                            footer: '<small class="text-danger">Please enable popup if required</small>',
+                                            allowOutsideClick: false
+                                        }).then((result) => {
+                                            location.reload();
+                                        })
 
-                                }).catch(() => {
-                                    Swal.fire({
-                                        title: 'Success!',
-                                        html: `Failed to generate pdf`,
-                                        allowOutsideClick: false,
-                                        icon: 'error',
-                                    });
+                                    }).catch(() => {
+                                        Swal.fire({
+                                            title: 'Success!',
+                                            html: `Failed to generate pdf`,
+                                            allowOutsideClick: false,
+                                            icon: 'error',
+                                        });
 
-                                })
-                        }
-                    })
-                }
-            })
-            .catch(error => {
-                // console.log(error);
-            });
-            
+                                    })
+                            }
+                        })
+                    }
+                })
+                .catch(error => {
+                    // console.log(error);
+                });
+            }
         }
         
     }
