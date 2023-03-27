@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Shipping;
+use App\Models\OrderLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -24,7 +25,13 @@ class OrderController extends Controller
      */
     public function index()
     {
-        return Order::with(['customer', 'items', 'items.product', 'shippings', 'bucket', 'batch', 'company', 'courier'])
+        return Order::with([
+            'customer', 'items', 'items.product', 'shippings',
+            'bucket', 'batch', 'company', 'courier',
+            'logs' => function ($query) {
+                $query->orderBy('id', 'desc');
+            }
+        ])
             ->where('is_active', IS_ACTIVE);
     }
 
@@ -115,7 +122,9 @@ class OrderController extends Controller
      */
     public function pending(Request $request)
     {
-        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING])->whereDate('dt_request_shipping', '<=', date('Y-m-d'));
+        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING])
+                ->whereDate('dt_request_shipping', '<=', date('Y-m-d'))
+                ->whereRaw('(payment_type IS NULL OR payment_type <> 22)'); //shopee order excluded
 
         $orders = $this->filter_order($request, $orders);
 
@@ -161,7 +170,7 @@ class OrderController extends Controller
             'title' => 'Ready To Ship Orders',
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_APPROVE_AS_SHIPPED, ACTION_DOWNLOAD_ORDER],
         ]);
     }
 
@@ -314,11 +323,29 @@ class OrderController extends Controller
 
             OrderItem::updateOrCreate($p_ids, $product_data);
         }
-        if ($order->wasRecentlyCreated) {
-            set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
-        } else {
-            set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook');
+        if($data['payment_type'] == 22){ //shopee order skip to Bucket List
+            set_order_status($order, ORDER_STATUS_PROCESSING, 'Order shopee created from webhook');
+
+            Order::where('id', $order->id)->update([
+                'bucket_id' => 3, //for shopee
+                'status' => ORDER_STATUS_PROCESSING,
+            ]);
+
+            OrderLog::create([
+                'order_id' => $order->id,
+                'order_status_id' => ORDER_STATUS_PROCESSING,
+                'remarks' => 'Order added to bucket',
+                'created_by' => 1,
+            ]);
         }
+        else{
+            if ($order->wasRecentlyCreated) {
+                set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
+            } else {
+                set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook');
+            }
+        }
+        
 
         return response()->json(['message' => 'Order created successfully'], 201);
     }

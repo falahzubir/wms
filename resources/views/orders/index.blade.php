@@ -83,6 +83,12 @@
             <div class="card" style="font-size:0.8rem" id="order-table">
                 <div class="card-body">
                     <div class="card-title text-end">
+                        @if (in_array(ACTION_APPROVE_AS_SHIPPED, $actions))
+                            @can('order.approve_for_shipping')
+                                <button class="btn btn-success" id="mark-as-shipped-btn"><i class="bi bi-truck"></i> Mark as
+                                    Shipped</button>
+                            @endcan
+                        @endif
                         @if (in_array(ACTION_GENERATE_PICKING, $actions))
                             @can('picking_list.generate')
                                 <button class="btn btn-primary" id="generate-picking-btn"><i
@@ -187,28 +193,28 @@
                                         <div>
                                             <a href="#"><strong>{{ order_num_format($order) }}</strong></a>
                                         </div>
-                                        <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                        <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                             data-bs-placement="right" data-bs-original-title="Date Inserted">
                                             {{-- <i class="bi bi-calendar"></i>&nbsp; --}}
                                             {{ date('d/m/Y H:i', strtotime($order->created_at)) }}
                                         </div>
 
                                         @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->count() > 0)
-                                            <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                            <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Scanned">
                                                 {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
                                                 {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->first()->created_at->format('d/m/Y H:i') }}
                                             </div>
                                         @endif
                                         @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->count() > 0)
-                                            <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                            <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Shipping">
                                                 {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
                                                 {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->first()->created_at->format('d/m/Y H:i') }}
                                             </div>
                                         @endif
                                         @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->count() > 0)
-                                            <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                            <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Delivered">
                                                 {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
                                                 {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->first()->created_at->format('d/m/Y H:i') }}
@@ -671,6 +677,48 @@
             }
         @endif
 
+        @if (in_array(ACTION_APPROVE_AS_SHIPPED, $actions))
+            @can('order.approve_for_shipping')
+                document.querySelector('#mark-as-shipped-btn').onclick = function() {
+                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                    let checkedValue = inputElements.filter(chk => chk.checked).length;
+                    // sweet alert
+                    if (checkedValue == 0) {
+                        Swal.fire({
+                            title: 'No order selected!',
+                            text: "Please select at least one order to approve as shipped.",
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        })
+                        return;
+                    }
+
+                    let checkedOrder = [];
+                    inputElements.forEach(input => {
+                        if (input.checked) {
+                            checkedOrder.push(input.value);
+                        }
+                    });
+
+                    //confirmation to generate cn
+                    Swal.fire({
+                        title: 'Are you sure to approve as shipped?',
+                        html: `You are about to approve ${checkedValue} order(s) as shipped.`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, approve it!',
+                        footer: '<small>Please check orders from Shopee only.</small>',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            approveAsShipped(checkedOrder);
+                        }
+                    })
+                }
+            @endcan
+        @endif
+
         // download cn
         @if (in_array(ACTION_DOWNLOAD_CN, $actions))
             document.querySelector('#download-cn-btn').onclick = function() {
@@ -923,6 +971,47 @@
 
         } //end of generateCN
 
+        function approveAsShipped(checkedOrders) {
+            axios({
+                    url: '/api/orders/approve-for-shipping',
+                    method: 'POST',
+                    responseType: 'json', // important
+                    data: {
+                        order_ids: checkedOrders,
+                        user_id: {{ Auth::user()->id }}
+                    }
+                })
+                .then(function(res) {
+                    // handle success, close or download
+                    if (res.data.success == 'ok') {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: "Order(s) approved as shipped.",
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                document.querySelectorAll('.check-order').forEach(
+                                    input => {
+                                        input.checked = false;
+                                    })
+                                location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: "Error occured while approving order(s) as shipped.",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                    }
+                })
+                .catch(function(error) {
+                    // handle error
+                    console.log(error);
+                })
+        }
 
         function download_cn(checkedOrder) {
             axios({
@@ -1050,7 +1139,7 @@
         function download_csv(checkedOrder) {
             // const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
             // const param_obj = queryStringToJSON(params);
-            if(checkedOrder.length == 0){
+            if (checkedOrder.length == 0) {
                 checkedOrder = {{ $orders->pluck('id') }};
             }
             axios.post('/api/download-order-csv', {

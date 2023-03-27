@@ -49,6 +49,8 @@ Route::prefix('orders')->group(function () {
     Route::post('reject', [OrderApiController::class, 'reject']);
     Route::post('scan-parcel', [OrderApiController::class, 'barcode_scan']);
     Route::post('split-parcels', [OrderApiController::class, 'get_order_split_parcels']);
+    Route::post('approve-for-shipping', [OrderApiController::class, 'approve_for_shipping']);
+    Route::post('set-order-completed', [OrderApiController::class, 'set_order_completed']);
 });
 
 Route::prefix('shippings')->group(function () {

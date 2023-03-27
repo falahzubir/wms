@@ -52,3 +52,28 @@ function not_ready() {
         confirmButtonText: 'OK'
     })
 }
+
+let notification_list = document.querySelector('#notification-list');
+fetch('/notifications')
+    .then(response => response.json())
+    .then(data => {
+        document.querySelectorAll('.notification-count').forEach(function (length) {
+            length.innerHTML = data.length;
+        });
+        data.forEach(function (item) {
+            notification_list.innerHTML += `<li class="message-item">
+            <a href="${item.url}">
+                <div>
+                    <p>${item.message}</p>
+                </div>
+            </a>
+            </li>
+            <li>
+            <hr class="dropdown-divider">
+            </li>`;
+        });
+    })
+    // .catch(error => {
+    //     console.error(error);
+    // }
+// );
