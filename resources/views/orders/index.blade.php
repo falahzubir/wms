@@ -153,34 +153,41 @@
                                                 id="" value="{{ $order->id }}">
                                         </td>
                                         <td>
-                                            @if (Route::is('orders.pending') || Route::is('orders.processing'))
-                                                @can('order.reject')
-                                                    <button class="btn btn-danger p-0 px-1"><i class="bx bx-trash"
-                                                            onclick="reject_order({{ $order->id }})"></i></button>
-                                                @endcan
-                                            @endif
-                                            {{-- add shipping number modal --}}
-                                            @if (Route::is('orders.processing'))
-                                            @empty($order->shippings)
-                                                @can('tracking.update')
-                                                    <button type="button"
-                                                        class="btn btn-primary p-0 px-1 add-shipping-number"
-                                                        data-bs-toggle="modal" data-bs-target="#add-shipping-number-modal"
-                                                        data-orderid="{{ $order->id }}"
-                                                        data-couriercode={{ $order->courier->code }}>
-                                                        <i class="bi bi-truck"></i>
+                                            <div class="d-flex">
+                                                @if (Route::is('orders.pending') || Route::is('orders.processing'))
+                                                    @can('order.reject')
+                                                            <button class="btn btn-danger p-0 px-1 m-1"><i class="bx bx-trash"
+                                                                    onclick="reject_order({{ $order->id }})"></i></button>
+                                                    @endcan
+                                                @endif
+                                                {{-- add shipping number modal --}}
+                                                @if (Route::is('orders.processing'))
+                                                   @if($order->items->sum("quantity") > MAXIMUM_QUANTITY_PER_BOX)
+                                                        <button class="btn btn-warning p-0 px-1 m-1" onclick="multiple_cn({order:'{{ $order }}',ref_no:'{{ order_num_format($order) }}'})"></>
+                                                            <i class="bi bi-file-earmark-ruled"></i>
+                                                        </button>
+                                                    @endif
+                                                    @empty($order->shippings)
+                                                        @can('tracking.update')
+                                                            <button type="button"
+                                                                class="btn btn-primary p-0 px-1 add-shipping-number"
+                                                                data-bs-toggle="modal" data-bs-target="#add-shipping-number-modal"
+                                                                data-orderid="{{ $order->id }}"
+                                                                data-couriercode={{ $order->courier->code }}>
+                                                                <i class="bi bi-truck"></i>
+                                                            </button>
+                                                        @endcan
+                                                    @endempty
+                                                @endif
+                                                @if (request('multiple_parcels') == true)
+                                                    <button class="btn btn-warning p-0 px-1 split-parcels"
+                                                        title="Split Parcel" data-bs-toggle="modal"
+                                                        data-bs-target="#split-parcel-modal"
+                                                        data-orderid="{{ $order->id }}">
+                                                        <i class="bi bi-arrow-left-right"></i>
                                                     </button>
-                                                @endcan
-                                            @endempty
-                                        @endif
-                                        @if (request('multiple_parcels') == true)
-                                            <button class="btn btn-warning p-0 px-1 split-parcels"
-                                                title="Split Parcel" data-bs-toggle="modal"
-                                                data-bs-target="#split-parcel-modal"
-                                                data-orderid="{{ $order->id }}">
-                                                <i class="bi bi-arrow-left-right"></i>
-                                            </button>
-                                        @endif
+                                                @endif
+                                            </div>
                                     </td>
                                     <td class="text-center">
                                         <div>
@@ -272,14 +279,25 @@
                                         </span>
 
                                         @isset($order->shippings)
-                                            @foreach ($order->shippings as $shipping)
-                                                <div>
-                                                    <span class="phantom"
-                                                        data-tracking="{{ $shipping->tracking_number }}">
-                                                        {{ $shipping->tracking_number }}
-                                                    </span>
-                                                </div>
-                                            @endforeach
+                                            @if($order->items->sum("quantity") > MAXIMUM_QUANTITY_PER_BOX) <!-- check if order has more than 40 quantity-->
+                                                @isset($order->shippings->first()->tracking_number) <!-- check if order has at least 1 CN -->
+                                                    <div>
+                                                        <span class="phantom"
+                                                            data-tracking="{{ $order->shippings->first()->tracking_number }}">
+                                                            {{ $order->shippings->first()->tracking_number }}
+                                                        </span>
+                                                    </div>
+                                                @endisset
+                                            @else
+                                                @foreach ($order->shippings as $shipping)
+                                                    <div>
+                                                        <span class="phantom"
+                                                            data-tracking="{{ $shipping->tracking_number }}">
+                                                            {{ $shipping->tracking_number }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            @endif
                                         @endisset
                                         @isset($order->sales_remarks) 
                                             @if($order->sales_remarks != null)
@@ -488,7 +506,7 @@
     </div>
 </div> <!-- end modal for split parcels -->
 
-
+@include("orders.multiple_cn_modal")
 <x-slot name="script">
     <script>
         let start = document.querySelector('#start-date');
@@ -1195,6 +1213,7 @@
             document.querySelector('#split-parcel-weight').value = (weight / count).toFixed(3);
         })
     </script>
-</x-slot>
 
+</x-slot>
+@stack("orders.multiple_cn_modal")
 </x-layout>

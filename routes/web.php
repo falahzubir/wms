@@ -71,6 +71,8 @@ Route::middleware(['auth'])->group(function() {
         Route::post('update-tracking', [ShippingController::class, 'update_tracking'])->name('shipping.update_tracking');
         Route::post('upload-bulk-tracking', [ShippingController::class, 'upload_bulk_tracking'])->name('shipping.upload_bulk_tracking');
         Route::post('dhl-label-single', [ShippingController::class, 'dhl_label_single'])->name('shipping.dhl_label_single');
+        Route::post('generate_cn_multiple', [ShippingController::class, 'generate_cn_multiple'])->name('shipping.generate_cn_multiple');
+
     });
 
     Route::group(['prefix' => 'companies'], function(){
