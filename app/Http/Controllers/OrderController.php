@@ -323,7 +323,7 @@ class OrderController extends Controller
 
             OrderItem::updateOrCreate($p_ids, $product_data);
         }
-        if($data['payment_type'] == 22){ //shopee order skip to Bucket List
+        if($data['payment_type'] == PAYMENT_TYPE_SHOPEE){ //shopee order skip to Bucket List
             set_order_status($order, ORDER_STATUS_PROCESSING, 'Order shopee created from webhook');
 
             Order::where('id', $order->id)->update([
@@ -345,7 +345,7 @@ class OrderController extends Controller
                 set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook');
             }
         }
-        
+
 
         return response()->json(['message' => 'Order created successfully'], 201);
     }

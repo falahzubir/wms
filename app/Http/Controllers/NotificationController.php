@@ -18,6 +18,7 @@ class NotificationController extends Controller
         if(Auth::user()->can('order.approve_for_shipping')){
             $orders = Order::where('status', ORDER_STATUS_READY_TO_SHIP)
             ->whereNotIn('courier_id', AUTO_SHIPPING_COURIER)
+            ->orWhere('payment_type', PAYMENT_TYPE_SHOPEE)
             ->get();
 
             $manual_shipping_couriers = Courier::whereNotIn('id', AUTO_SHIPPING_COURIER)->where('status', true)->get('id')->pluck('id')->toArray();

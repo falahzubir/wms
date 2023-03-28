@@ -117,3 +117,6 @@ if(!defined('MAX_DHL_COD_PER_PARCEL')) define('MAX_DHL_COD_PER_PARCEL', 200000);
 
 // Courier Others
 if(!defined('COURIER_OTHERS')) define('COURIER_OTHERS', 99);
+
+// Payment Type
+if(!defined('PAYMENT_TYPE_SHOPEE')) define('PAYMENT_TYPE_SHOPEE', 22);

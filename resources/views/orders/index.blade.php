@@ -281,12 +281,15 @@
                                         @isset($order->shippings)
                                             @if($order->items->sum("quantity") > MAXIMUM_QUANTITY_PER_BOX) <!-- check if order has more than 40 quantity-->
                                                 @isset($order->shippings->first()->tracking_number) <!-- check if order has at least 1 CN -->
-                                                    <div>
-                                                        <span class="phantom"
-                                                            data-tracking="{{ $order->shippings->first()->tracking_number }}">
-                                                            {{ $order->shippings->first()->tracking_number }}
-                                                        </span>
-                                                    </div>
+                                                @foreach ($order->shippings as $shipping)
+
+                                                <div>
+                                                    <span class="phantom"
+                                                    data-tracking="{{ $shipping->tracking_number }}">
+                                                    {{ $shipping->tracking_number }}
+                                                </span>
+                                            </div>
+                                            @endforeach
                                                 @endisset
                                             @else
                                                 @foreach ($order->shippings as $shipping)
@@ -299,7 +302,7 @@
                                                 @endforeach
                                             @endif
                                         @endisset
-                                        @isset($order->sales_remarks) 
+                                        @isset($order->sales_remarks)
                                             @if($order->sales_remarks != null)
                                                 <div class="small-text font-weight-bold">
                                                     {{ str_replace('<br>', '', urldecode($order->sales_remarks)) }}
@@ -386,6 +389,10 @@
                         </button>
                     </div>
                 </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-start">
+                <span class="text-danger">Accept only CSV file</span>
+                <span>Download sample CSV file <a href="https://bosemzi.com/document/template/template_add_tracking_new.csv">here</a></span>
             </div>
         </div>
     </div>
@@ -636,7 +643,7 @@
                     })
                     return;
                 }
-            
+
             //get checked order
             let checkedOrder = [];
             inputElements.forEach(input => {
@@ -645,7 +652,7 @@
                 }
             });
 
-            
+
             const res = await axios.post('/api/shippings/check-multiple-parcels', {
                         order_ids: checkedOrder,
             })
@@ -656,7 +663,7 @@
                     title: 'Oops...',
                     text: 'This order have multiple parcels. Please generate CN manually.',
                     confirmButtonText: `OK`,
-                })  
+                })
                 return;
             }
                 //confirmation to generate cn
@@ -941,7 +948,7 @@
                                     confirmButtonText: 'OK'
                                 })
                             }
-                            
+
                             return;
                         }
                     }
@@ -1112,7 +1119,7 @@
                             })
                     }
                 }
-               
+
             })
         }
 

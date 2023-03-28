@@ -25,7 +25,7 @@
 
 
                     <!-- Recent Sales -->
-                    <div class="col-12">
+                    {{-- <div class="col-12">
 
                         <div class="card recent-sales overflow-auto ">
 
@@ -71,7 +71,7 @@
                             </div>
                         </div>
 
-                    </div><!-- End Recent Sales -->
+                    </div><!-- End Recent Sales --> --}}
 
                     <!-- Reports -->
                     {{-- <div class="col-12">
@@ -253,7 +253,7 @@
             <div class="col-lg-4">
 
                 <!-- Website Traffic -->
-                <div class="card">
+                {{-- <div class="card">
                     <div class="filter">
                         <a class="icon" href="#" data-bs-toggle="dropdown"><i
                                 class="bi bi-three-dots"></i></a>
@@ -274,10 +274,10 @@
                         <div id="trafficChart" style="min-height: 400px;" class="echart"></div>
 
                     </div>
-                </div><!-- End Website Traffic -->
+                </div><!-- End Website Traffic --> --}}
 
                 <!-- Recent Activity -->
-                <div class="card">
+                {{-- <div class="card">
 
                     <div class="card-body">
                         <h5 class="card-title">Bucket Activity </h5>
@@ -292,7 +292,7 @@
                         </div>
 
                     </div>
-                </div><!-- End Recent Activity -->
+                </div><!-- End Recent Activity --> --}}
 
                 {{-- <!-- Budget Report -->
                 <div class="card">

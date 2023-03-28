@@ -38,6 +38,20 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'user.create']);
         Permission::firstOrCreate(['name' => 'order.approve_for_shipping']);
 
+        //view permission
+        Permission::firstOrCreate(['name' => 'view.overall_list']);
+        Permission::firstOrCreate(['name' => 'view.pending_list']);
+        Permission::firstOrCreate(['name' => 'view.bucket_list']);
+        Permission::firstOrCreate(['name' => 'view.packing_list']);
+        Permission::firstOrCreate(['name' => 'view.rts_list']);
+        Permission::firstOrCreate(['name' => 'view.shipping_list']);
+        Permission::firstOrCreate(['name' => 'view.delivered_list']);
+        Permission::firstOrCreate(['name' => 'view.return_list']);
+        Permission::firstOrCreate(['name' => 'view.reject_list']);
+        Permission::firstOrCreate(['name' => 'view.scan_parcel']);
+        Permission::firstOrCreate(['name' => 'view.settings']);
+
+
         // create roles and assign created permissions
         $role = Role::firstOrCreate(['name' => 'IT_Admin']);
         $role->givePermissionTo(Permission::all());
