@@ -17,7 +17,11 @@ body {
     background: #f6f9ff;
     color: #444444;
 }
-
+#wms {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 a {
     color: #008080;
     text-decoration: none;
@@ -44,6 +48,7 @@ h6 {
     margin-top: 60px;
     padding: 20px 30px;
     transition: all 0.3s;
+    flex: 1;
 }
 
 @media (max-width: 1199px) {
@@ -1515,3 +1520,4 @@ h6 {
     left: 35%;
     transform: rotateZ(-50deg);
 }
+

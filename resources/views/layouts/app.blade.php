@@ -1,4 +1,6 @@
 @props(['title' => 'Untitled'])
+<div id="wms">
+
     <!-- ======= HTML Header ======= -->
     <x-header :title="$title" />
 
@@ -19,3 +21,5 @@
 
     <!-- ======= Footer ======= -->
     <x-footer :script="$script" />
+
+</div>
