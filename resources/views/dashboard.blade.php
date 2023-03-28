@@ -384,134 +384,134 @@
                 axios.get('/api/dashboard/current-process')
                     .then(function(response) {
                         document.querySelector('#current-pending').innerHTML = response.data.count[
-                            {{ ORDER_STATUS_PENDING }}];
+                            {{ ORDER_STATUS_PENDING }}].toLocaleString('en-US');
                         document.querySelector('#current-processing').innerHTML = response.data.count[
-                            {{ ORDER_STATUS_PROCESSING }}];
+                            {{ ORDER_STATUS_PROCESSING }}].toLocaleString('en-US');
                         document.querySelector('#current-packing').innerHTML = response.data.count[
-                            {{ ORDER_STATUS_PACKING }}];
+                            {{ ORDER_STATUS_PACKING }}].toLocaleString('en-US');
                         document.querySelector('#current-pending-shipping').innerHTML = response.data.count[
-                            {{ ORDER_STATUS_READY_TO_SHIP }}];
+                            {{ ORDER_STATUS_READY_TO_SHIP }}].toLocaleString('en-US');
                         document.querySelector('#current-shipping').innerHTML = response.data.count[
-                            {{ ORDER_STATUS_SHIPPING }}];
+                            {{ ORDER_STATUS_SHIPPING }}].toLocaleString('en-US');
 
-                        echarts.init(document.querySelector("#trafficChart")).setOption({
-                            tooltip: {
-                                trigger: 'item'
-                            },
-                            legend: {
-                                top: '5%',
-                                left: 'center'
-                            },
-                            series: [{
-                                name: 'Access From',
-                                type: 'pie',
-                                radius: ['40%', '70%'],
-                                avoidLabelOverlap: false,
-                                label: {
-                                    show: false,
-                                    position: 'center'
-                                },
-                                emphasis: {
-                                    label: {
-                                        show: true,
-                                        fontSize: '18',
-                                        fontWeight: 'bold'
-                                    }
-                                },
-                                labelLine: {
-                                    show: false
-                                },
-                                data: [{
-                                        value: response.data.count[
-                                            {{ ORDER_STATUS_PENDING }}] ?? 0,
-                                        name: 'Pending'
-                                    },
-                                    {
-                                        value: response.data.count[
-                                            {{ ORDER_STATUS_PROCESSING }}] ?? 0,
-                                        name: 'Processing'
-                                    },
-                                    {
-                                        value: response.data.count[
-                                            {{ ORDER_STATUS_PACKING }}] ?? 0,
-                                        name: 'Packing'
-                                    },
-                                    {
-                                        value: response.data.count[
-                                            {{ ORDER_STATUS_READY_TO_SHIP }}] ?? 0,
-                                        name: 'Pending Shipment'
-                                    },
-                                    {
-                                        value: response.data.count[
-                                            {{ ORDER_STATUS_SHIPPING }}] ?? 0,
-                                        name: 'Shipping'
-                                    }
-                                ]
-                            }]
-                        });
+                        // echarts.init(document.querySelector("#trafficChart")).setOption({
+                        //     tooltip: {
+                        //         trigger: 'item'
+                        //     },
+                        //     legend: {
+                        //         top: '5%',
+                        //         left: 'center'
+                        //     },
+                        //     series: [{
+                        //         name: 'Access From',
+                        //         type: 'pie',
+                        //         radius: ['40%', '70%'],
+                        //         avoidLabelOverlap: false,
+                        //         label: {
+                        //             show: false,
+                        //             position: 'center'
+                        //         },
+                        //         emphasis: {
+                        //             label: {
+                        //                 show: true,
+                        //                 fontSize: '18',
+                        //                 fontWeight: 'bold'
+                        //             }
+                        //         },
+                        //         labelLine: {
+                        //             show: false
+                        //         },
+                        //         data: [{
+                        //                 value: response.data.count[
+                        //                     {{ ORDER_STATUS_PENDING }}].toLocaleString('en-US') ?? 0,
+                        //                 name: 'Pending'
+                        //             },
+                        //             {
+                        //                 value: response.data.count[
+                        //                     {{ ORDER_STATUS_PROCESSING }}].toLocaleString('en-US') ?? 0,
+                        //                 name: 'Processing'
+                        //             },
+                        //             {
+                        //                 value: response.data.count[
+                        //                     {{ ORDER_STATUS_PACKING }}].toLocaleString('en-US') ?? 0,
+                        //                 name: 'Packing'
+                        //             },
+                        //             {
+                        //                 value: response.data.count[
+                        //                     {{ ORDER_STATUS_READY_TO_SHIP }}].toLocaleString('en-US') ?? 0,
+                        //                 name: 'Pending Shipment'
+                        //             },
+                        //             {
+                        //                 value: response.data.count[
+                        //                     {{ ORDER_STATUS_SHIPPING }}].toLocaleString('en-US') ?? 0,
+                        //                 name: 'Shipping'
+                        //             }
+                        //         ]
+                        //     }]
+                        // });
                     })
                     .catch(function(error) {
                         console.log(error);
                     });
-                axios.post(`api/dashboard/statistics`, {
-                        start: '{{ Carbon::now()->startOfDay()->startOfDay() }}',
-                        end: '{{ Carbon::now()->endOfDay()->endOfDay() }}'
-                    })
-                    .then(function(response) {
-                        document.querySelector('#stats-pending').innerHTML = response.data[
-                            {{ ORDER_STATUS_PENDING }}] ?? 0;
-                        document.querySelector('#stats-processing').innerHTML = response.data[
-                            {{ ORDER_STATUS_PROCESSING }}] ?? 0;
-                        document.querySelector('#stats-cn-generated').innerHTML = response.data[
-                            {{ ORDER_STATUS_PACKING }}] ?? 0;
-                        document.querySelector('#stats-parcel-scan').innerHTML = response.data[
-                            {{ ORDER_STATUS_READY_TO_SHIP }}] ?? 0;
-                        document.querySelector('#stats-shipping').innerHTML = response.data[
-                            {{ ORDER_STATUS_SHIPPING }}] ?? 0;
-                    })
-                    .catch(function(error) {
-                        console.log(error);
-                    });
+                // axios.post(`api/dashboard/statistics`, {
+                //         start: '{{ Carbon::now()->startOfDay()->startOfDay() }}',
+                //         end: '{{ Carbon::now()->endOfDay()->endOfDay() }}'
+                //     })
+                //     .then(function(response) {
+                //         document.querySelector('#stats-pending').innerHTML = response.data[
+                //             {{ ORDER_STATUS_PENDING }}] ?? 0;
+                //         document.querySelector('#stats-processing').innerHTML = response.data[
+                //             {{ ORDER_STATUS_PROCESSING }}] ?? 0;
+                //         document.querySelector('#stats-cn-generated').innerHTML = response.data[
+                //             {{ ORDER_STATUS_PACKING }}] ?? 0;
+                //         document.querySelector('#stats-parcel-scan').innerHTML = response.data[
+                //             {{ ORDER_STATUS_READY_TO_SHIP }}] ?? 0;
+                //         document.querySelector('#stats-shipping').innerHTML = response.data[
+                //             {{ ORDER_STATUS_SHIPPING }}] ?? 0;
+                //     })
+                //     .catch(function(error) {
+                //         console.log(error);
+                //     });
             });
 
-            let stats_time = document.querySelector('#stats-time');
-            document.querySelectorAll('.stats-time').forEach((time) => {
-                time.addEventListener('click', (e) => {
-                    stats_time.innerHTML = `| ${time.getAttribute('data-type')}`;
-                    axios.post(`/api/dashboard/statistics`, {
-                            start: time.getAttribute('data-start'),
-                            end: time.getAttribute('data-end')
-                        })
-                        .then(function(response) {
-                            document.querySelector('#stats-pending').innerHTML = response.data[
-                                {{ ORDER_STATUS_PENDING }}] ?? 0;
-                            document.querySelector('#stats-processing').innerHTML = response
-                                .data[
-                                    {{ ORDER_STATUS_PROCESSING }}] ?? 0;
-                            document.querySelector('#stats-cn-generated').innerHTML = response
-                                .data[
-                                    {{ ORDER_STATUS_PACKING }}] ?? 0;
-                            document.querySelector('#stats-parcel-scan').innerHTML = response
-                                .data[
-                                    {{ ORDER_STATUS_READY_TO_SHIP }}] ?? 0;
-                            document.querySelector('#stats-shipping').innerHTML = response.data[
-                                {{ ORDER_STATUS_SHIPPING }}] ?? 0;
-                        })
-                    // .catch(function(error) {
-                    //     console.log(error);
-                    // });
+            // let stats_time = document.querySelector('#stats-time');
+            // document.querySelectorAll('.stats-time').forEach((time) => {
+            //     time.addEventListener('click', (e) => {
+            //         stats_time.innerHTML = `| ${time.getAttribute('data-type')}`;
+            //         axios.post(`/api/dashboard/statistics`, {
+            //                 start: time.getAttribute('data-start'),
+            //                 end: time.getAttribute('data-end')
+            //             })
+            //             .then(function(response) {
+            //                 document.querySelector('#stats-pending').innerHTML = response.data[
+            //                     {{ ORDER_STATUS_PENDING }}] ?? 0;
+            //                 document.querySelector('#stats-processing').innerHTML = response
+            //                     .data[
+            //                         {{ ORDER_STATUS_PROCESSING }}] ?? 0;
+            //                 document.querySelector('#stats-cn-generated').innerHTML = response
+            //                     .data[
+            //                         {{ ORDER_STATUS_PACKING }}] ?? 0;
+            //                 document.querySelector('#stats-parcel-scan').innerHTML = response
+            //                     .data[
+            //                         {{ ORDER_STATUS_READY_TO_SHIP }}] ?? 0;
+            //                 document.querySelector('#stats-shipping').innerHTML = response.data[
+            //                     {{ ORDER_STATUS_SHIPPING }}] ?? 0;
+            //             })
+            //         // .catch(function(error) {
+            //         //     console.log(error);
+            //         // });
 
-                });
-            });
+            //     });
+            // });
 
-            // if one of info-card clicked
-            document.querySelectorAll('.info-card').forEach((card) => {
-                card.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    let status = card.getAttribute('data-url');
-                    window.location.href = status;
-                });
-            });
+            // // if one of info-card clicked
+            // document.querySelectorAll('.info-card').forEach((card) => {
+            //     card.addEventListener('click', (e) => {
+            //         e.preventDefault();
+            //         let status = card.getAttribute('data-url');
+            //         window.location.href = status;
+            //     });
+            // });
         </script>
     </x-slot>
 

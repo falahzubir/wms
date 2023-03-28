@@ -16,12 +16,17 @@
                         <div class="input-group">
                             <input value="" type="text" name="code" class="form-control"
                                 placeholder="Scan Barcode or Enter Tracking Number" aria-label="Scan Barcode"
-                                aria-describedby="button-addon2">
+                                aria-describedby="button-addon2" autofocus>
                             <button class="btn btn-primary" type="submit" id="button-addon2">Scan</button>
                     </form>
                 </div>
             </div>
             @if (session('shipping'))
+                @if (session('error'))
+                    <div class="text-danger text-center mb-3">
+                        <strong>{{ session('error') }}</strong>
+                    </div>
+                @endif
                 <div class="row">
                     <div class="col-3">Order ID</div>
                     <div class="col-1">:</div>
@@ -51,9 +56,10 @@
                     <div class="col-3">Refund</div>
                     <div class="col-1">:</div>
                     <div class="col-8">
-                        <strong>{{ currency(session('shipping')->order->payment_refund, true) }}</strong></div>
+                        <strong>{{ currency(session('shipping')->order->payment_refund, true) }}</strong>
+                    </div>
                 </div>
-                @isset (session('shipping')->scannedBy->name)
+                @isset(session('shipping')->scannedBy->name)
                     <div class="row">
                         <div class="col-3">Scanned By</div>
                         <div class="col-1">:</div>
@@ -64,7 +70,8 @@
                     <div class="col-3">Scanned At</div>
                     <div class="col-1">:</div>
                     <div class="col-8">
-                        <strong>{{ date('D d/m/Y H:i A', strtotime(session('shipping')->scanned_at)) }}</strong></div>
+                        <strong>{{ date('D d/m/Y H:i A', strtotime(session('shipping')->scanned_at)) }}</strong>
+                    </div>
                 </div>
             @endif
             <div>

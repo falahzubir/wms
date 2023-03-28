@@ -26,7 +26,7 @@
                             <thead>
                                 <tr>
                                     <th>Product</th>
-                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Unit</th>
                                     <th class="text-center">Bal</th>
                                     <th class="text-center">CN</th>
                                 </tr>
@@ -236,7 +236,7 @@
         const errors = [];
         var arr_data = []; //for all CN
         var order_id = 0;
-        
+
         for (const [i,card] of document.querySelectorAll(".multiple-cn-card").entries()) {
             let total = 0;
             var arr_item = []; //for each CN
@@ -378,7 +378,7 @@
                 });
             }
         }
-        
+
     }
 </script>
 @endpush
