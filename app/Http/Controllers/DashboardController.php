@@ -19,10 +19,13 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        if(in_array('packer', auth()->user()->getRoleNames()->toArray())){
+            return redirect()->route('orders.scan');
+        }
         $batches = BucketBatch::with(['user','order'])->orderBy('created_at', 'desc')->limit(6)->get();
 
         return view('dashboard', [
-            'title' => 'Dashboard (In Progress)',
+            'title' => 'Dashboard',
             'batches' => $batches,
         ]);
     }

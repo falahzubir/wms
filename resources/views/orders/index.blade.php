@@ -83,6 +83,12 @@
             <div class="card" style="font-size:0.8rem" id="order-table">
                 <div class="card-body">
                     <div class="card-title text-end">
+                        @if (in_array(ACTION_APPROVE_AS_SHIPPED, $actions))
+                            @can('order.approve_for_shipping')
+                                <button class="btn btn-success" id="mark-as-shipped-btn"><i class="bi bi-truck"></i> Mark as
+                                    Shipped</button>
+                            @endcan
+                        @endif
                         @if (in_array(ACTION_GENERATE_PICKING, $actions))
                             @can('picking_list.generate')
                                 <button class="btn btn-primary" id="generate-picking-btn"><i
@@ -147,61 +153,68 @@
                                                 id="" value="{{ $order->id }}">
                                         </td>
                                         <td>
-                                            @if (Route::is('orders.pending') || Route::is('orders.processing'))
-                                                @can('order.reject')
-                                                    <button class="btn btn-danger p-0 px-1"><i class="bx bx-trash"
-                                                            onclick="reject_order({{ $order->id }})"></i></button>
-                                                @endcan
-                                            @endif
-                                            {{-- add shipping number modal --}}
-                                            @if (Route::is('orders.processing'))
-                                            @empty($order->shippings)
-                                                @can('tracking.update')
-                                                    <button type="button"
-                                                        class="btn btn-primary p-0 px-1 add-shipping-number"
-                                                        data-bs-toggle="modal" data-bs-target="#add-shipping-number-modal"
-                                                        data-orderid="{{ $order->id }}"
-                                                        data-couriercode={{ $order->courier->code }}>
-                                                        <i class="bi bi-truck"></i>
+                                            <div class="d-flex">
+                                                @if (Route::is('orders.pending') || Route::is('orders.processing'))
+                                                    @can('order.reject')
+                                                            <button class="btn btn-danger p-0 px-1 m-1"><i class="bx bx-trash"
+                                                                    onclick="reject_order({{ $order->id }})"></i></button>
+                                                    @endcan
+                                                @endif
+                                                {{-- add shipping number modal --}}
+                                                @if (Route::is('orders.processing'))
+                                                   @if($order->items->sum("quantity") > MAXIMUM_QUANTITY_PER_BOX)
+                                                        <button class="btn btn-warning p-0 px-1 m-1" onclick="multiple_cn({order:'{{ $order }}',ref_no:'{{ order_num_format($order) }}'})"></>
+                                                            <i class="bi bi-file-earmark-ruled"></i>
+                                                        </button>
+                                                    @endif
+                                                    @empty($order->shippings)
+                                                        @can('tracking.update')
+                                                            <button type="button"
+                                                                class="btn btn-primary p-0 px-1 add-shipping-number"
+                                                                data-bs-toggle="modal" data-bs-target="#add-shipping-number-modal"
+                                                                data-orderid="{{ $order->id }}"
+                                                                data-couriercode={{ $order->courier->code }}>
+                                                                <i class="bi bi-truck"></i>
+                                                            </button>
+                                                        @endcan
+                                                    @endempty
+                                                @endif
+                                                @if (request('multiple_parcels') == true)
+                                                    <button class="btn btn-warning p-0 px-1 split-parcels"
+                                                        title="Split Parcel" data-bs-toggle="modal"
+                                                        data-bs-target="#split-parcel-modal"
+                                                        data-orderid="{{ $order->id }}">
+                                                        <i class="bi bi-arrow-left-right"></i>
                                                     </button>
-                                                @endcan
-                                            @endempty
-                                        @endif
-                                        @if (request('multiple_parcels') == true)
-                                            <button class="btn btn-warning p-0 px-1 split-parcels"
-                                                title="Split Parcel" data-bs-toggle="modal"
-                                                data-bs-target="#split-parcel-modal"
-                                                data-orderid="{{ $order->id }}">
-                                                <i class="bi bi-arrow-left-right"></i>
-                                            </button>
-                                        @endif
+                                                @endif
+                                            </div>
                                     </td>
                                     <td class="text-center">
                                         <div>
                                             <a href="#"><strong>{{ order_num_format($order) }}</strong></a>
                                         </div>
-                                        <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                        <div style="font-size: 0.75rem; white-space: nowrap;" data-bs-toggle="tooltip"
                                             data-bs-placement="right" data-bs-original-title="Date Inserted">
                                             {{-- <i class="bi bi-calendar"></i>&nbsp; --}}
                                             {{ date('d/m/Y H:i', strtotime($order->created_at)) }}
                                         </div>
 
                                         @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->count() > 0)
-                                            <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                            <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Scanned">
                                                 {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
                                                 {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->first()->created_at->format('d/m/Y H:i') }}
                                             </div>
                                         @endif
                                         @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->count() > 0)
-                                            <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                            <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Shipping">
                                                 {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
                                                 {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->first()->created_at->format('d/m/Y H:i') }}
                                             </div>
                                         @endif
                                         @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->count() > 0)
-                                            <div style="font-size: 0.8rem;" data-bs-toggle="tooltip"
+                                            <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Delivered">
                                                 {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
                                                 {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->first()->created_at->format('d/m/Y H:i') }}
@@ -212,7 +225,7 @@
                                             {{ date('H:i', strtotime($order->created_at)) }}
                                         </div> --}}
                                     </td>
-                                    <td>
+                                    <td class="text-start">
                                         <div><strong>{{ $order->customer->name }}</strong></div>
                                         <div>
                                             {{ $order->customer->phone }}
@@ -246,28 +259,55 @@
                                                     <span class="badge bg-success text-light">Paid</span>
                                                 @break
 
+                                                @case(3)
+                                                    <span class="badge bg-primary text-light">Installment</span>
+                                                @break
+
                                                 @default
                                                     <span class="badge bg-danger text-light">Error</span>
                                             @endswitch
+                                        </div>
+                                        <div>
+                                        @if($order->payment_type != null)
+                                            <span class="badge bg-primary-light text-dark">
+                                                {{ $order->paymentType->payment_type_name }}
+                                            </span>
+                                        @endif
                                         </div>
                                         <span class="badge bg-warning text-dark">
                                             {{ $order->courier->name }}
                                         </span>
 
                                         @isset($order->shippings)
-                                            @foreach ($order->shippings as $shipping)
+                                            @if($order->items->sum("quantity") > MAXIMUM_QUANTITY_PER_BOX) <!-- check if order has more than 40 quantity-->
+                                                @isset($order->shippings->first()->tracking_number) <!-- check if order has at least 1 CN -->
+                                                @foreach ($order->shippings as $shipping)
+
                                                 <div>
                                                     <span class="phantom"
-                                                        data-tracking="{{ $shipping->tracking_number }}">
-                                                        {{ $shipping->tracking_number }}
-                                                    </span>
-                                                </div>
+                                                    data-tracking="{{ $shipping->tracking_number }}">
+                                                    {{ $shipping->tracking_number }}
+                                                </span>
+                                            </div>
                                             @endforeach
+                                                @endisset
+                                            @else
+                                                @foreach ($order->shippings as $shipping)
+                                                    <div>
+                                                        <span class="phantom"
+                                                            data-tracking="{{ $shipping->tracking_number }}">
+                                                            {{ $shipping->tracking_number }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            @endif
                                         @endisset
                                         @isset($order->sales_remarks)
-                                            <div class="small-text font-weight-bold">
-                                                [{{ $order->sales_remarks }}]
-                                            </div>
+                                            @if($order->sales_remarks != null)
+                                                <div class="small-text font-weight-bold">
+                                                    {{ str_replace('<br>', '', urldecode($order->sales_remarks)) }}
+                                                </div>
+                                                @endif
                                         @endisset
                                     </td>
                                     <td>
@@ -349,6 +389,10 @@
                         </button>
                     </div>
                 </form>
+            </div>
+            <div class="modal-footer d-flex justify-content-start">
+                <span class="text-danger">Accept only CSV file</span>
+                <span>Download sample CSV file <a href="https://bosemzi.com/document/template/template_add_tracking_new.csv">here</a></span>
             </div>
         </div>
     </div>
@@ -469,7 +513,7 @@
     </div>
 </div> <!-- end modal for split parcels -->
 
-
+@include("orders.multiple_cn_modal")
 <x-slot name="script">
     <script>
         let start = document.querySelector('#start-date');
@@ -586,7 +630,7 @@
 
         // generate shipping label
         @if (in_array(ACTION_GENERATE_CN, $actions))
-            document.querySelector('#generate-cn-btn').onclick = function() {
+            document.querySelector('#generate-cn-btn').onclick = async function() {
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
                 // sweet alert
@@ -599,6 +643,29 @@
                     })
                     return;
                 }
+
+            //get checked order
+            let checkedOrder = [];
+            inputElements.forEach(input => {
+                if (input.checked) {
+                    checkedOrder.push(input.value);
+                }
+            });
+
+
+            const res = await axios.post('/api/shippings/check-multiple-parcels', {
+                        order_ids: checkedOrder,
+            })
+
+            if(res.data != null && res.data.multiple_parcels){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'This order have multiple parcels. Please generate CN manually.',
+                    confirmButtonText: `OK`,
+                })
+                return;
+            }
                 //confirmation to generate cn
                 Swal.fire({
                     title: 'Are you sure to generate shipping label?',
@@ -615,6 +682,48 @@
                     }
                 })
             }
+        @endif
+
+        @if (in_array(ACTION_APPROVE_AS_SHIPPED, $actions))
+            @can('order.approve_for_shipping')
+                document.querySelector('#mark-as-shipped-btn').onclick = function() {
+                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                    let checkedValue = inputElements.filter(chk => chk.checked).length;
+                    // sweet alert
+                    if (checkedValue == 0) {
+                        Swal.fire({
+                            title: 'No order selected!',
+                            text: "Please select at least one order to approve as shipped.",
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        })
+                        return;
+                    }
+
+                    let checkedOrder = [];
+                    inputElements.forEach(input => {
+                        if (input.checked) {
+                            checkedOrder.push(input.value);
+                        }
+                    });
+
+                    //confirmation to generate cn
+                    Swal.fire({
+                        title: 'Are you sure to approve as shipped?',
+                        html: `You are about to approve ${checkedValue} order(s) as shipped.`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, approve it!',
+                        footer: '<small>Please check orders from Shopee only.</small>',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            approveAsShipped(checkedOrder);
+                        }
+                    })
+                }
+            @endcan
         @endif
 
         // download cn
@@ -807,6 +916,7 @@
                     order_ids: checkedOrder,
                 })
                 .then(function(response) {
+                    let text = "Shipping label generated."
                     if (response.data == 0) {
                         Swal.fire({
                             title: 'Error!',
@@ -817,16 +927,42 @@
                         return;
                     }
                     // handle success, close or download
+                    if(response.data != null ){
+                        if(response.data.error != null){
+                            text = "Shipping label generated.However has "+response.data.error;
+                        }
+
+                        if(response.data.all_fail){
+                            if(typeof response.data.all_fail == "boolean"){
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Fail to generate CN",
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                })
+                            }else{
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Fail to generate CN "+response.data.all_fail,
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                })
+                            }
+
+                            return;
+                        }
+                    }
+
                     Swal.fire({
                         title: 'Success!',
-                        text: "Shipping label generated.",
+                        text: text,
                         icon: 'success',
                         confirmButtonText: 'Download',
                         showCancelButton: true,
                         cancelButtonText: 'Ok',
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            download_cn(order_ids)
+                            download_cn(checkedOrder)
                         } else {
                             location.reload();
                         }
@@ -842,6 +978,47 @@
 
         } //end of generateCN
 
+        function approveAsShipped(checkedOrders) {
+            axios({
+                    url: '/api/orders/approve-for-shipping',
+                    method: 'POST',
+                    responseType: 'json', // important
+                    data: {
+                        order_ids: checkedOrders,
+                        user_id: {{ Auth::user()->id }}
+                    }
+                })
+                .then(function(res) {
+                    // handle success, close or download
+                    if (res.data.success == 'ok') {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: "Order(s) approved as shipped.",
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                document.querySelectorAll('.check-order').forEach(
+                                    input => {
+                                        input.checked = false;
+                                    })
+                                location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: "Error occured while approving order(s) as shipped.",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                    }
+                })
+                .catch(function(error) {
+                    // handle error
+                    console.log(error);
+                })
+        }
 
         function download_cn(checkedOrder) {
             axios({
@@ -853,15 +1030,18 @@
                     }
                 })
                 .then(function(res) {
+                    const fileName = String(res.data.download_url).split("/").pop();
                     let a = document.createElement('a');
+                    a.download = fileName;
                     a.target = '_blank';
+                    a.download = fileName;
                     a.href = res.data.download_url;
                     a.click();
                     // handle success, close or download
                     Swal.fire({
                         title: 'Success!',
                         html: `<div>Download Request CN Successful.</div>
-                                                    <div>Click <a href="${res.data.download_url}" target="_blank">here</a> if CN not downloaded.</div>`,
+                        <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
                         footer: '<small class="text-danger">Please enable popup if required</small>',
                         allowOutsideClick: false,
                         icon: 'success',
@@ -870,6 +1050,12 @@
                 .catch(function(error) {
                     // handle error
                     console.log(error);
+                    Swal.fire({
+                        title: 'Success!',
+                        html: `Failed to generate pdf`,
+                        allowOutsideClick: false,
+                        icon: 'error',
+                    });
                 })
                 .then(function() {
                     // always executed
@@ -885,42 +1071,55 @@
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Yes, reject it!',
-            }).then((result) => {
-                // function not ready
-
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    axios.post('/api/orders/reject', {
+                    const { value: reason } = await Swal.fire({
+                        input: 'textarea',
+                        inputLabel: 'Reject Reason',
+                        showCancelButton: true,
+                        inputValidator: (value) => {
+                            if (!value) {
+                                return 'You need to write something!'
+                            }
+                        }
+                    })
+
+                    if (reason) {
+                        axios.post('/api/orders/reject', {
                             order_id: orderId,
+                            reason,
                         })
-                        .then(function(response) {
-                            // handle success, close or download
-                            if (response.status == 200) {
-                                Swal.fire({
+                            .then(function (response) {
+                                // handle success, close or download
+                                if (response.status == 200) {
+                                    Swal.fire({
                                         title: 'Success!',
                                         text: "Order rejected.",
                                         icon: 'success',
                                         confirmButtonText: 'OK'
                                     })
-                                    .then((result) => {
-                                        if (result.isConfirmed) {
-                                            location.reload();
-                                        }
+                                        .then((result) => {
+                                            if (result.isConfirmed) {
+                                                location.reload();
+                                            }
+                                        })
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: "Something went wrong.",
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
                                     })
-                            } else {
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: "Something went wrong.",
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                })
-                                return;
-                            }
-                        })
-                        .catch(function(error) {
-                            // handle error
-                            console.log(error);
-                        })
+                                    return;
+                                }
+                            })
+                            .catch(function (error) {
+                                // handle error
+                                console.log(error);
+                            })
+                    }
                 }
+
             })
         }
 
@@ -947,7 +1146,7 @@
         function download_csv(checkedOrder) {
             // const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
             // const param_obj = queryStringToJSON(params);
-            if(checkedOrder.length == 0){
+            if (checkedOrder.length == 0) {
                 checkedOrder = {{ $orders->pluck('id') }};
             }
             axios.post('/api/download-order-csv', {
@@ -955,11 +1154,13 @@
                 })
                 .then(function(response) {
                     // handle success, close or download
-                    Swal.fire({
-                        title: 'Success!',
-                        text: "Order CSV Downloaded.",
-                        icon: 'success',
-                    });
+                    if(response != null && response.data != null){
+                        let a = document.createElement('a');
+                        a.download = response.data.file_name;
+                        a.target = '_blank';
+                        a.href = window.location.origin + "/storage/"+response.data.file_name;
+                        a.click();
+                    }
                 })
                 .catch(function(error) {
                     // handle error
@@ -1019,6 +1220,7 @@
             document.querySelector('#split-parcel-weight').value = (weight / count).toFixed(3);
         })
     </script>
-</x-slot>
 
+</x-slot>
+@stack("orders.multiple_cn_modal")
 </x-layout>

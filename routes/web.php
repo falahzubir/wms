@@ -4,6 +4,7 @@ use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
@@ -70,6 +71,8 @@ Route::middleware(['auth'])->group(function() {
         Route::post('update-tracking', [ShippingController::class, 'update_tracking'])->name('shipping.update_tracking');
         Route::post('upload-bulk-tracking', [ShippingController::class, 'upload_bulk_tracking'])->name('shipping.upload_bulk_tracking');
         Route::post('dhl-label-single', [ShippingController::class, 'dhl_label_single'])->name('shipping.dhl_label_single');
+        Route::post('generate_cn_multiple', [ShippingController::class, 'generate_cn_multiple'])->name('shipping.generate_cn_multiple');
+
     });
 
     Route::group(['prefix' => 'companies'], function(){
@@ -109,6 +112,9 @@ Route::middleware(['auth'])->group(function() {
     });
 });
 
+
+Route::get('notifications', [NotificationController::class, 'list']);
+
 Route::get('dhl-access-token', [ShippingController::class, 'dhl_generate_access_token']);
 
 Auth::routes();
@@ -129,7 +135,7 @@ Route::get('run-migration', function () {
     }
 });
 
-Route::get('seed/permission', function (String $class) {
+Route::get('seed/permission', function () {
     if(config('app.env')=="local"){
         Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
         return 'Seeds ran successfully!';

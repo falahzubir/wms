@@ -2,126 +2,150 @@
 
     <ul class="sidebar-nav" id="sidebar-nav">
 
-        <li class="nav-item">
-            <a class="nav-link {{ Request::segment(1) != 'dashboard' ? 'collapsed' : '' }}" href="/dashboard">
-                <i class="bi bi-grid"></i>
-                <span>Dashboard</span>
-            </a>
-        </li><!-- End Dashboard Nav -->
+        @can('view.dashboard')
+            <li class="nav-item">
+                <a class="nav-link {{ Request::segment(1) != 'dashboard' ? 'collapsed' : '' }}" href="/dashboard">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li><!-- End Dashboard Nav -->
+        @endcan
 
         <li class="nav-heading">Orders</li>
 
-        <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.overall' ? 'collapsed' : '' }}"
-                href="{{ route('orders.overall') }}">
-                <i class="bi bi-inboxes"></i>
-                <span>Overall List</span>
-            </a>
-        </li><!-- End Overall Order Nav -->
+        @can('view.overall_list')
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'orders.overall' ? 'collapsed' : '' }}"
+                    href="{{ route('orders.overall') }}">
+                    <i class="bi bi-inboxes"></i>
+                    <span>Overall List</span>
+                </a>
+            </li><!-- End Overall Order Nav -->
+        @endcan
 
-        <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.pending' ? 'collapsed' : '' }}"
-                href="{{ route('orders.pending') }}">
-                <i class="bi bi-clock-history"></i>
-                <span>Pending List</span>
-            </a>
-        </li><!-- End Pending List Nav -->
+        @can('view.pending_list')
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'orders.pending' ? 'collapsed' : '' }}"
+                    href="{{ route('orders.pending') }}">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Pending List</span>
+                </a>
+            </li><!-- End Pending List Nav -->
+        @endcan
 
-        <li class="nav-item">
-            <a class="nav-link  {{ Route::current()->getName() != 'buckets.index' ? 'collapsed' : '' }}"
-                href="{{ route('buckets.index') }}">
-                <i class="bi bi-basket"></i>
-                <span>Bucket List</span>
-            </a>
-        </li><!-- End Bucket List Nav -->
+        @can('view.bucket_list')
+            <li class="nav-item">
+                <a class="nav-link  {{ Route::current()->getName() != 'buckets.index' ? 'collapsed' : '' }}"
+                    href="{{ route('buckets.index') }}">
+                    <i class="bi bi-basket"></i>
+                    <span>Bucket List</span>
+                </a>
+            </li><!-- End Bucket List Nav -->
+        @endcan
 
-        <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.packing' ? 'collapsed' : '' }}"
-                href="{{ route('orders.packing') }}">
-                <i class="bi bi-box-seam"></i>
-                <span>Packing List</span>
-            </a>
-        </li><!-- End Packing List Nav -->
+        @can('view.packing_list')
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'orders.packing' ? 'collapsed' : '' }}"
+                    href="{{ route('orders.packing') }}">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Packing List</span>
+                </a>
+            </li><!-- End Packing List Nav -->
+        @endcan
 
-        <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.readyToShip' ? 'collapsed' : '' }}"
-                href="{{ route('orders.readyToShip') }}">
-                <i class="bi bi-truck-flatbed"></i>
-                <span>Pending Shipping List</span>
-            </a>
-        </li><!-- End Packing List Nav -->
+        @can('view.rts_list')
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'orders.readyToShip' ? 'collapsed' : '' }}"
+                    href="{{ route('orders.readyToShip') }}">
+                    <i class="bi bi-truck-flatbed"></i>
+                    <span>RTS List</span>
+                </a>
+            </li><!-- End Packing List Nav -->
+        @endcan
 
-        <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.shipping' ? 'collapsed' : '' }}"
-                href="{{ route('orders.shipping') }}">
-                <i class="bi bi-truck"></i>
-                <span>Shipping List</span>
-            </a>
-        </li><!-- End Shipping List Nav -->
+        @can('view.shipping_list')
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'orders.shipping' ? 'collapsed' : '' }}"
+                    href="{{ route('orders.shipping') }}">
+                    <i class="bi bi-truck"></i>
+                    <span>Shipping List</span>
+                </a>
+            </li><!-- End Shipping List Nav -->
+        @endcan
 
-        <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.delivered' ? 'collapsed' : '' }}"
-                href="{{ route('orders.delivered') }}">
-                <i class="bi bi-check-circle"></i>
-                <span>Delivered List</span>
-            </a>
-        </li><!-- End delivered List Nav -->
+        @can('view.delivered_list')
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'orders.delivered' ? 'collapsed' : '' }}"
+                    href="{{ route('orders.delivered') }}">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Delivered List</span>
+                </a>
+            </li><!-- End delivered List Nav -->
+        @endcan
 
-        <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.returned' ? 'collapsed' : '' }}"
-                href="{{ route('orders.returned') }}">
-                <i class="bi bi-arrow-return-left"></i>
-                <span>Return List</span>
-            </a>
-        </li><!-- End return List Nav -->
+        @can('view.return_list')
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'orders.returned' ? 'collapsed' : '' }}"
+                    href="{{ route('orders.returned') }}">
+                    <i class="bi bi-arrow-return-left"></i>
+                    <span>Return List</span>
+                </a>
+            </li><!-- End return List Nav -->
+        @endcan
 
-        <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.rejected' ? 'collapsed' : '' }}"
-                href="{{ route('orders.rejected') }}">
-                <i class="bi bi-file-x"></i>
-                <span>Reject List</span>
-            </a>
-        </li><!-- End return List Nav -->
+        @can('view.reject_list')
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'orders.rejected' ? 'collapsed' : '' }}"
+                    href="{{ route('orders.rejected') }}">
+                    <i class="bi bi-file-x"></i>
+                    <span>Reject List</span>
+                </a>
+            </li><!-- End return List Nav -->
+        @endcan
 
-        <!-- Scan Parcel link -->
-        <li class="nav-item">
-            <a class="nav-link {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }}"
-                href="{{ route('orders.scan') }}">
-                <i class="bx bx-barcode-reader"></i>
-                <span>Scan Parcel</span>
-            </a>
-        </li><!-- End Scan Parcel Nav -->
+        @can('view.scan_parcel')
+            <!-- Scan Parcel link -->
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }}"
+                    href="{{ route('orders.scan') }}">
+                    <i class="bx bx-barcode-reader"></i>
+                    <span>Scan Parcel</span>
+                </a>
+            </li><!-- End Scan Parcel Nav -->
+        @endcan
 
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-menu-button-wide"></i><span>Settings</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="components-nav"
-                class="nav-content {{ Route::current()->getName() != 'companies.index' ? 'collapsed' : '' }} "
-                data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="{{ route('companies.index') }}"
-                        {{ Route::current()->getName() == 'companies.index' ? 'class=active' : '' }}>
-                        <i class="bi bi-circle"></i>
-                        <span>Companies</span>
-                    </a>
-                </li>
-                @can('permission.update')
+        @can('view.settings')
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-menu-button-wide"></i><span>Settings</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="components-nav"
+                    class="nav-content {{ Route::current()->getName() != 'companies.index' ? 'collapsed' : '' }} "
+                    data-bs-parent="#sidebar-nav">
                     <li>
-                        <a href="{{ route('roles.index') }}"
-                            {{ Route::current()->getName() == 'roles.index' ? 'class=active' : '' }}>
-                            <i class="bi bi-circle"></i><span>Roles</span>
+                        <a href="{{ route('companies.index') }}"
+                            {{ Route::current()->getName() == 'companies.index' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Companies</span>
                         </a>
                     </li>
-                @endcan
-                <li>
-                    <a href="{{ route('users.index') }}"
-                        {{ Route::current()->getName() == 'users.index' ? 'class=active' : '' }}>
-                        <i class="bi bi-circle"></i><span>Users</span>
-                    </a>
-                </li>
-            </ul>
-        </li><!-- End Components Nav -->
+                    @can('permission.update')
+                        <li>
+                            <a href="{{ route('roles.index') }}"
+                                {{ Route::current()->getName() == 'roles.index' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i><span>Roles</span>
+                            </a>
+                        </li>
+                    @endcan
+                    <li>
+                        <a href="{{ route('users.index') }}"
+                            {{ Route::current()->getName() == 'users.index' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Users</span>
+                        </a>
+                    </li>
+                </ul>
+            </li><!-- End Components Nav -->
+        @endcan
 
         {{-- <li class="nav-item">
             <a class="nav-link collapsed" href="users-profile.html">

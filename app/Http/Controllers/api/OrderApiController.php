@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
 
 class OrderApiController extends Controller
 {
@@ -17,21 +18,36 @@ class OrderApiController extends Controller
     public function reject(Request $request)
     {
 
-        if(isset($request->sales_id)){ //from BOS
+        if (isset($request->sales_id)) { //from BOS
             $order = Order::with('company')->where('sales_id', $request->sales_id)
-            ->whereHas('company', function ($query) use ($request) {
-                $query->where('code', $request->company);
-            })
-            ->first();
-        }
-        else{
+                ->whereHas('company', function ($query) use ($request) {
+                    $query->where('code', $request->company);
+                })
+                ->first();
+        } else {
             $order = Order::find($request->order_id);
         }
         $order->status = ORDER_STATUS_REJECTED;
         $order->save();
 
-        set_order_status($order, ORDER_STATUS_REJECTED);
+        set_order_status($order, ORDER_STATUS_REJECTED,$request->input("reason"));
 
+        // Update BOS
+        $order = Order::where("id",$request->order_id)->first();
+        
+        if(!empty($order)){
+            $url = "http://localhost/boss/api/reject_order";
+
+            if(env("APP_ENV") == "production"){
+                $url = $order->company->url."/api/reject_order";
+            }
+
+            Http::post($url,[
+                "sale_id"=> $order->sales_id,
+                "reject_reason"=> $request->input("reason")
+            ]);
+        }
+        
         return response()->json([
             'message' => 'Order rejected'
         ], 200);
@@ -50,8 +66,8 @@ class OrderApiController extends Controller
 
         $order = Order::with(['shippings', 'items', 'items.product'])->where('is_active', IS_ACTIVE)
             ->whereHas('shippings', function ($query) use ($request) {
-            $query->where('tracking_number', $request->barcode);
-        })->first();
+                $query->where('tracking_number', $request->barcode);
+            })->first();
 
         if ($order->count() == 0) {
             return response()->json(['error' => 'Parcel not found']);
@@ -69,14 +85,12 @@ class OrderApiController extends Controller
                 'success' => 'ok',
                 'message' => 'Parcel Scanned Successfully',
             ], 200);
-
         } else {
             return response()->json([
                 'success' => 'ok',
-                'message' => 'Parcel already scanned by '. $order->shipping->scanned_by,
+                'message' => 'Parcel already scanned by ' . $order->shipping->scanned_by,
             ], 200);
         }
-
     }
 
     /*
@@ -99,9 +113,54 @@ class OrderApiController extends Controller
 
         return response()->json([
             'success' => 'ok',
-            'count' => ceil($order->items->sum('quantity')/MAXIMUM_QUANTITY_PER_BOX),
+            'count' => ceil($order->items->sum('quantity') / MAXIMUM_QUANTITY_PER_BOX),
             'weight' => get_order_weight($order),
             'order' => $order,
         ], 200);
+    }
+
+    /*
+    * Approve Order for Shipping
+    * @param Request $request
+    * @return json
+    */
+    public function approve_for_shipping(Request $request)
+    {
+        $request->validate([
+            'order_ids' => 'required',
+            'user_id' => 'required',
+        ]);
+
+        $orders = Order::whereIn('id', $request->order_ids)->get();
+
+        if (set_order_status_bulk($orders, ORDER_STATUS_SHIPPING, "Approved manually by {$request->user_id}")) {
+            return response()->json(['success' => 'ok']);
+        } else {
+            return response()->json(['error' => 'error']);
+        }
+    }
+
+    /*
+    * Set order as completed
+    * @param Request $request
+    * @return json
+    */
+    public function set_order_completed(Request $request)
+    {
+        $request->validate([
+            'tracking_numbers' => 'required', //sales id from BOS
+        ]);
+
+        $orders = Order::with('shippings')
+            ->whereHas('shippings', function ($query) use ($request) {
+                $query->whereIn('tracking_number', $request->tracking_numbers);
+            })
+            ->get();
+
+        if (set_order_status_bulk($orders, ORDER_STATUS_DELIVERED, "Completed manually through API")) {
+            return response()->json(['success' => 'ok']);
+        } else {
+            return response()->json(['error' => 'error']);
+        }
     }
 }
