@@ -22,7 +22,7 @@ class DashboardController extends Controller
         $batches = BucketBatch::with(['user','order'])->orderBy('created_at', 'desc')->limit(6)->get();
 
         return view('dashboard', [
-            'title' => 'Dashboard (In Progress)',
+            'title' => 'Dashboard',
             'batches' => $batches,
         ]);
     }

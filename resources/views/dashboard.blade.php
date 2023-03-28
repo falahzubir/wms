@@ -1,5 +1,5 @@
 <x-layout :title="$title">
-
+    @can('view.dashboard')
     <section class="section dashboard">
         <div class="row">
 
@@ -16,7 +16,7 @@
                     <x-dashboard_infocard label="Packing" id="current-packing" icon="bi bi-box-seam"
                         class="customers-card" :url="route('orders.packing')" />
 
-                    <x-dashboard_infocard label="Pending Shipping" id="current-pending-shipping"
+                    <x-dashboard_infocard label="RTS" id="current-pending-shipping"
                         icon="bi bi-truck-flatbed" class="orders-card" :url="route('orders.readyToShip')" />
 
                     <x-dashboard_infocard label="Shipping" id="current-shipping" icon="bi bi-truck" class="orders-card"
@@ -376,7 +376,7 @@
 
         </div>
     </section>
-
+    @endcan
     <x-slot name="script">
         <script>
             // DOM on load
