@@ -20,8 +20,8 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
 <!-- Template Main JS File -->
-<script src="{{ asset('assets/js/main.js') }}"></script>
-<script src="{{ asset('assets/js/custom.js') }}"></script>
+<script src="{{ asset('assets/js/main.js?=v0.01') }}"></script>
+<script src="{{ asset('assets/js/custom.js?=v0.01') }}"></script>
 
 {{-- <script src="//www.tracking.my/track-button.js"></script> --}}
 

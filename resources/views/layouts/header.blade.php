@@ -37,7 +37,7 @@
     <link href="{{ asset("assets/vendor/remixicon/remixicon.css") }}" rel="stylesheet">
     <link href="{{ asset("assets/vendor/simple-datatables/style.css") }}" rel="stylesheet">
     <!-- Template Main CSS File -->
-    <link href="{{ asset("assets/css/style.css") }}" rel="stylesheet">
+    <link href="{{ asset("assets/css/style.css?v=0.01") }}" rel="stylesheet">
 
     <!-- =======================================================
   * Template Name: NiceAdmin - v2.5.0
