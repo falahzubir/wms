@@ -96,6 +96,7 @@ class OrderController extends Controller
 
         return view('orders.index', [
             'title' => 'List Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
@@ -130,6 +131,7 @@ class OrderController extends Controller
 
         return view('orders.index', [
             'title' => 'Pending Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER],
@@ -149,6 +151,7 @@ class OrderController extends Controller
 
         return view('orders.index', [
             'title' => 'Processing Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
@@ -168,6 +171,7 @@ class OrderController extends Controller
 
         return view('orders.index', [
             'title' => 'Ready To Ship Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_APPROVE_AS_SHIPPED, ACTION_DOWNLOAD_ORDER],
@@ -187,6 +191,7 @@ class OrderController extends Controller
 
         return view('orders.index', [
             'title' => 'Packing Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_ORDER, ACTION_DOWNLOAD_CN],
@@ -206,6 +211,7 @@ class OrderController extends Controller
 
         return view('orders.index', [
             'title' => 'Shipping Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
@@ -225,6 +231,7 @@ class OrderController extends Controller
 
         return view('orders.index', [
             'title' => 'Delivered Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
@@ -245,6 +252,7 @@ class OrderController extends Controller
 
         return view('orders.index', [
             'title' => 'Rejected Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
@@ -264,6 +272,7 @@ class OrderController extends Controller
 
         return view('orders.index', [
             'title' => 'Rejected Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
@@ -461,6 +470,7 @@ class OrderController extends Controller
             Shipping::where('order_id', $shipping->order_id)->update($data);
 
             //check if all items are scanned
+            if($shipping->order->status == ORDER_STATUS_RETURN_SHIPPING)
             set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
 
             return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
@@ -477,7 +487,7 @@ class OrderController extends Controller
     public function download_order_csv(Request $request)
     {
         // return $request;
-        $fileName = 'shipping_' . date('Ymdhis') . '.csv';
+        $fileName = 'orders_' . date('Ymdhis') . '.csv';
         $orders = $this->index();
 
         $orders->whereIn('id', $request->order_ids);

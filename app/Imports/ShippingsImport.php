@@ -36,7 +36,8 @@ class ShippingsImport implements ToModel, WithStartRow
     public function model(array $row)
     {
         $order = Order::where('sales_id', $row[0])->where('company_id', $this->company_id)->first();
-        logger($row[0]);
+        // logger($row[0]);
+        set_order_status($order, ORDER_STATUS_PACKING);
         return new Shipping([
             'order_id' => Order::where('sales_id', $row[0])->where('company_id', $this->company_id)->first()->id,
             'tracking_number' => $row[1],

@@ -1147,7 +1147,7 @@
             // const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
             // const param_obj = queryStringToJSON(params);
             if (checkedOrder.length == 0) {
-                checkedOrder = {{ $orders->pluck('id') }};
+                checkedOrder = @json($order_ids);
             }
             axios.post('/api/download-order-csv', {
                     order_ids: checkedOrder,

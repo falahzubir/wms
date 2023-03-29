@@ -1,22 +1,51 @@
 <table>
     <thead>
-    <tr>
-        <th>Sales_ID</th>
-        <th>Tracking_Number</th>
-        <th>Company_Code</th>
-    </tr>
+        <tr>
+            <td></td>
+        </tr>
     </thead>
     <tbody>
-    @foreach($orders as $order)
-        <tr>
-            <td>{{ $order->sales_id }}</td>
-            @if($order->shippings->count() > 0)
-            <td>{{ $order->shippings[0]->tracking_number }}</td>
-            @else
-            <td>-</td>
-            @endif
-            <td>{{ $order->company->code }}</td>
-        </tr>
-    @endforeach
+        @foreach ($orders as $order)
+            <tr>
+                <td>{{ $order->customer->name }}</td>
+                <td>{{ $order->customer->address }}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>{{ $order->customer->postcode }}</td>
+                <td>{{ $order->customer->name }}</td>
+                <td>{{ $order->customer->phone }}</td>
+                <td></td>
+                <td></td>
+                <td>{{ get_shipping_remarks($order) }}</td>
+                <td></td>
+                <td>{{ $order->total_price / 100 }}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>{{ MY_STATES[$order->customer->state] }}</td>
+                <td>0.00</td>
+                <td>{{ $order->sales_id }}</td>
+                <td></td>
+                <td>{{ $order->customer->name }}</td>
+                <td>{{ $order->shipping_remarks }}</td>
+                <td>
+                    @switch($order->purchase_type)
+                        @case(1)
+                            COD
+                        @break
+
+                        @case(2)
+                            Paid
+                        @break
+
+                        @default
+                            Installment
+                    @endswitch
+                </td>
+                <td>{{ $order->customer->city }}</td>
+                <td></td>
+            </tr>
+        @endforeach
     </tbody>
 </table>
