@@ -770,8 +770,8 @@ class ShippingController extends Controller
                                     'companyName' => get_shipping_remarks($order, $cn), //will return desc based on modal value inserted e.g NLC[40]SH FOC[1]
                                     'name' => $order->customer->name,
                                     'address1' => $order->customer->address,
-                                    'address2' => $order->customer->address2 ?? null,
-                                    'address3' => $order->customer->address3 ?? null,
+                                    'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
+                                    'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
                                     'city' => $order->customer->city,
                                     'state' => MY_STATES[$order->customer->state],
                                     'country' => "MY",
