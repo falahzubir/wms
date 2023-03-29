@@ -96,7 +96,7 @@ class ShippingApiController extends ShippingController
 
         $order = Order::select('orders.id', 'couriers.code')
                 ->where('sales_id', $sales_id)
-                ->where('company_id', 3)
+                ->where('company_id', 2)
                 ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
                 ->first();
 
