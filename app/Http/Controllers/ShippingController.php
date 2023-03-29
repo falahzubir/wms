@@ -106,10 +106,9 @@ class ShippingController extends Controller
     public function dhl_label($order_ids)
     {
 
-        if(config('app.env') == 'production'){
+        if (config('app.env') == 'production') {
             $url = $this->dhl_label_url;
-        }
-        else{
+        } else {
             $url = $this->dhl_label_url_test;
         }
 
@@ -188,8 +187,8 @@ class ShippingController extends Controller
                             'companyName' => get_shipping_remarks($order),
                             'name' => $order->customer->name,
                             'address1' => $order->customer->address,
-                            'address2' => $order->customer->address2 ?? null,
-                            'address3' => $order->customer->address3 ?? null,
+                            'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
+                            'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
                             'city' => $order->customer->city,
                             'state' => MY_STATES[$order->customer->state],
                             'country' => "MY",
@@ -232,9 +231,9 @@ class ShippingController extends Controller
             $response = Http::withBody($json, 'application/json')->post($url);
             $dhl_store = $this->dhl_store($orders_dhl, $response);
 
-            if($dhl_store != null){
+            if ($dhl_store != null) {
                 return response([
-                    "all_fail" => implode(" . ",collect($dhl_store)->pluck("messageDetail")->toArray())
+                    "all_fail" => implode(" . ", collect($dhl_store)->pluck("messageDetail")->toArray())
                 ]);
             }
         }
@@ -249,7 +248,7 @@ class ShippingController extends Controller
             ->count()) > 0) {
             return response([
                 "error" => $failer . " order fail to generate cn.",
-                "all_fail"=> $orders_dhl->count() == $failer
+                "all_fail" => $orders_dhl->count() == $failer
             ]);
         }
 
@@ -274,10 +273,9 @@ class ShippingController extends Controller
             ], 400);
         }
 
-        if(config('app.env') == 'production'){
+        if (config('app.env') == 'production') {
             $url = $this->dhl_label_url;
-        }
-        else{
+        } else {
             $url = $this->dhl_label_url_test;
         }
 
@@ -399,10 +397,10 @@ class ShippingController extends Controller
         $json = json_decode($json);
 
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
-            if(isset($label->responseStatus)){
-                if(isset($label->responseStatus->message)){
-                    if($label->responseStatus->message != "SUCCESS"){
-                        if(isset($label->responseStatus->messageDetails)){
+            if (isset($label->responseStatus)) {
+                if (isset($label->responseStatus->message)) {
+                    if ($label->responseStatus->message != "SUCCESS") {
+                        if (isset($label->responseStatus->messageDetails)) {
                             return $label->responseStatus->messageDetails;
                         }
                     }
@@ -488,7 +486,7 @@ class ShippingController extends Controller
                 continue;
             }
 
-            if(file_get_contents(storage_path('app/public/' . $attachment)) == ""){
+            if (file_get_contents(storage_path('app/public/' . $attachment)) == "") {
                 continue;
             }
 
@@ -676,15 +674,15 @@ class ShippingController extends Controller
     {
         $package_description = "";
         foreach ($order->items as $items) {
-            if(empty($mult_cn)){ //if product only have one CN include all product desc
+            if (empty($mult_cn)) { //if product only have one CN include all product desc
                 $package_description .= $items->product->name . ", ";
-            }else{
+            } else {
                 $quantity = collect($mult_cn)
                     ->whereIn('order_item_id', $items['id'])
                     ->pluck('quantity')
                     ->values()
                     ->implode(',');
-                if($quantity > 0){ //check if product in the parcel more than 0 only then included in desc else excluded
+                if ($quantity > 0) { //check if product in the parcel more than 0 only then included in desc else excluded
                     $package_description .= $items->product->name . ", ";
                 }
             }
@@ -735,10 +733,9 @@ class ShippingController extends Controller
             ], 400);
         }
 
-        if(config('app.env') == 'production'){
+        if (config('app.env') == 'production') {
             $url = $this->dhl_label_url;
-        }
-        else{
+        } else {
             $url = $this->dhl_label_url_test;
         }
 
@@ -796,7 +793,7 @@ class ShippingController extends Controller
                                 'customerReference2' => null, //optional
                                 'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
                                 'contentIndicator' => null, //mandatory if product include lithium battery
-                                'codValue' =>$codAmmount == 0 ? null : $codAmmount/100, //optional
+                                'codValue' => $codAmmount == 0 ? null : $codAmmount / 100, //optional
                                 'insuranceValue' => null, //optional
                                 'freightCharge' => null, //optional
                                 'totalValue' => null, //optional for domestic
@@ -838,7 +835,7 @@ class ShippingController extends Controller
             // $dhl_store = ['test'];
             $dhl_store = $this->dhl_store_for_mult($order, $response, $key);
         }
-        if(!empty($dhl_store)){
+        if (!empty($dhl_store)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Some CN cannot be generated.'
@@ -865,10 +862,10 @@ class ShippingController extends Controller
         $json = json_decode($json);
 
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
-            if(isset($label->responseStatus)){
-                if(isset($label->responseStatus->message)){
-                    if($label->responseStatus->message != "SUCCESS"){
-                        if(isset($label->responseStatus->messageDetails)){
+            if (isset($label->responseStatus)) {
+                if (isset($label->responseStatus->message)) {
+                    if ($label->responseStatus->message != "SUCCESS") {
+                        if (isset($label->responseStatus->messageDetails)) {
                             return $label->responseStatus->messageDetails;
                         }
                     }
@@ -899,5 +896,4 @@ class ShippingController extends Controller
 
         Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
     }
-
 }
