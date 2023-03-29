@@ -12,7 +12,7 @@
         <th><strong>Product</strong></th>
         <th><strong>L</strong></th>
         <th><strong>B</strong></th>
-        <th><strong>Grand Total</strong></th>
+        <th><strong>{{ date('d/m/Y') }}</strong></th>
     </tr>
     </thead>
     <tbody>

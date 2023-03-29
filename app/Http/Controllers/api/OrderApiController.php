@@ -34,20 +34,21 @@ class OrderApiController extends Controller
 
         // Update BOS
         $order = Order::where("id",$request->order_id)->first();
-        
-        if(!empty($order)){
-            $url = "http://localhost/boss/api/reject_order";
 
-            if(env("APP_ENV") == "production"){
-                $url = $order->company->url."/api/reject_order";
-            }
+        // for now manually reject order until system is stable
+        // if(!empty($order)){
+        //     $url = "http://localhost/boss/api/reject_order";
 
-            Http::post($url,[
-                "sale_id"=> $order->sales_id,
-                "reject_reason"=> $request->input("reason")
-            ]);
-        }
-        
+        //     if(env("APP_ENV") == "production"){
+        //         $url = $order->company->url."/api/reject_order";
+        //     }
+
+        //     Http::post($url,[
+        //         "sale_id"=> $order->sales_id,
+        //         "reject_reason"=> $request->input("reason")
+        //     ]);
+        // }
+
         return response()->json([
             'message' => 'Order rejected'
         ], 200);
@@ -71,6 +72,10 @@ class OrderApiController extends Controller
 
         if ($order->count() == 0) {
             return response()->json(['error' => 'Parcel not found']);
+        }
+
+        if($order->status == ORDER_STATUS_REJECTED){
+            return response()->json(['error' => 'Order rejected']);
         }
 
         if ($order->shipping->scanned_at == null) {

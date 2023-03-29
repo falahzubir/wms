@@ -154,7 +154,7 @@
                                         </td>
                                         <td>
                                             <div class="d-flex">
-                                                @if (Route::is('orders.pending') || Route::is('orders.processing'))
+                                                @if (Route::is('orders.pending') || Route::is('orders.processing') || Route::is('orders.packing'))
                                                     @can('order.reject')
                                                             <button class="btn btn-danger p-0 px-1 m-1"><i class="bx bx-trash"
                                                                     onclick="reject_order({{ $order->id }})"></i></button>
