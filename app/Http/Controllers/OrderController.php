@@ -468,13 +468,16 @@ class OrderController extends Controller
             $shipping->scanned_by = $data['scanned_by'] = auth()->user()->id ?? 1;
 
             Shipping::where('order_id', $shipping->order_id)->update($data);
+            set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "Item Scanned by " . auth()->user()->name);
 
-            //check if all items are scanned
-            if($shipping->order->status == ORDER_STATUS_RETURN_SHIPPING)
-            set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
 
             return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
         } else {
+            //check if order return
+            if($shipping->order->status == ORDER_STATUS_RETURN_SHIPPING){
+                set_order_status($shipping->order, ORDER_STATUS_RETURNED, "Item Returned Scanned by " . auth()->user()->name);
+                return back()->with('success', 'Return Parcel Scanned Successfully')->with('shipping', $shipping);
+            }
             return back()->with('error', 'Parcel Already Scanned')->with('shipping', $shipping);
         }
     }

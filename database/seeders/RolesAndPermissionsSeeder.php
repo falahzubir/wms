@@ -37,6 +37,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'user.edit']);
         Permission::firstOrCreate(['name' => 'user.create']);
         Permission::firstOrCreate(['name' => 'order.approve_for_shipping']);
+        Permission::firstOrCreate(['name' => 'shipping.cancel']);
 
         //view permission
         Permission::firstOrCreate(['name' => 'view.overall_list']);
