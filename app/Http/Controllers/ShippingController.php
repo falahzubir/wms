@@ -600,7 +600,7 @@ class ShippingController extends Controller
     public function first_milestone(Request $request)
     {
         $request->validate([
-            'tracking_id' => 'required|exists:table,column',
+            'tracking_id' => 'required|exists:shippings,tracking_number',
         ]);
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
@@ -620,7 +620,7 @@ class ShippingController extends Controller
     public function delivered_milestone(Request $request)
     {
         $request->validate([
-            'tracking_id' => 'required|exists:table,column',
+            'tracking_id' => 'required|exists:shippings,tracking_number',
         ]);
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
@@ -640,7 +640,7 @@ class ShippingController extends Controller
     public function return_ongoing_milestone(Request $request)
     {
         $request->validate([
-            'tracking_id' => 'required|exists:table,column',
+            'tracking_id' => 'required|exists:shippings,tracking_number',
         ]);
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
@@ -660,7 +660,7 @@ class ShippingController extends Controller
     public function return_delivered_milestone(Request $request)
     {
         $request->validate([
-            'tracking_id' => 'required|exists:table,column',
+            'tracking_id' => 'required|exists:shippings,tracking_number',
         ]);
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
@@ -906,27 +906,33 @@ class ShippingController extends Controller
      * @return json
      */
     public function cancel_shipment(Request $request){
-        $order = Order::with(['shippings'])->find($request->order_id);
-        if($order->shippings[0]->shipment_number != null){
-            $data = [
-                'deleteShipmentReq' => [
-                    'hrd' => [
-                        'messageType' => 'DELETESHIPMENT',
-                        'messageDateTime' => date('Y-m-d\TH:i:s') . '+08:00',
-                        'accessToken' => $this->get_access_token(),
-                        'messageVersion' => '1.0',
-                        'messageLanguage' => 'en',
-                    ],
-                    'bd' => [
-                        'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$order->company_id],
-                        'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$order->company_id],
+        $order = Order::with(['shippings', 'company.access_tokens'])->find($request->order_id);
+
+        if(AUTO_REJECT_DHL == true){
+            if($order->shippings[0]->shipment_number != null){
+                $data = [
+                    'deleteShipmentReq' => [
+                        'hdr' => [
+                            'messageType' => 'DELETESHIPMENT',
+                            'messageDateTime' => date('Y-m-d\TH:i:s') . '+08:00',
+                            'accessToken' => $order->company->access_tokens->where('type', 'dhl')->first()->token,
+                            'messageVersion' => '1.0',
+                            'messageLanguage' => 'en',
+                        ],
+                        'bd' => [
+                            'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$order->company_id],
+                            'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$order->company_id],
+                        ]
                     ]
-                ]
-            ];
-            foreach ($order->shippings as $shipping) {
-                $data['deleteShipmentReq']['bd']['shipmentItems'][] = [
-                    'shipmentNumber' => $shipping->shipment_number,
                 ];
+                foreach ($order->shippings as $shipping) {
+                    $data['deleteShipmentReq']['bd']['shipmentItems'][] = [
+                        'shipmentID' => $shipping->shipment_number,
+                    ];
+                }
+                logger($data);
+                $res = Http::post($this->dhl_cancel_url, $data);
+                logger($res);
             }
 
         }
