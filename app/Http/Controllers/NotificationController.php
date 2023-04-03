@@ -24,7 +24,6 @@ class NotificationController extends Controller
             })->get();
 
             $manual_shipping_couriers = Courier::whereNotIn('id', AUTO_SHIPPING_COURIER)->where('status', true)->get('id')->pluck('id')->toArray();
-            logger($manual_shipping_couriers);
             //append notification
             if($orders->count() > 0){
                 array_push($notifications, [

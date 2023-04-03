@@ -18,11 +18,8 @@ class ShippingApiController extends ShippingController
      */
     public function dhl_generate_access_token()
     {
-        if (config('app.env') == 'production') {
-            $url = $this->dhl_access;
-        } else {
-            $url = $this->dhl_access_test;
-        }
+        $url = $this->dhl_access;
+
         $dhl_tokens = AccessToken::where('type', 'dhl')->get();
 
         foreach ($dhl_tokens as $token) {
@@ -83,7 +80,7 @@ class ShippingApiController extends ShippingController
         }
     }
 
-        /*
+    /*
     * Update Shopee Tracking
     * @param Request $request
     * @return json
@@ -95,12 +92,12 @@ class ShippingApiController extends ShippingController
         $shipping_date = $request->shipping_date;
 
         $order = Order::select('orders.id', 'couriers.code')
-                ->where('sales_id', $sales_id)
-                ->where('company_id', 2)
-                ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
-                ->first();
+            ->where('sales_id', $sales_id)
+            ->where('company_id', 2)
+            ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
+            ->first();
 
-        Shipping::create([
+        Shipping::updateOrCreate([
             'order_id' => $order->id,
             'tracking_number' => $request->tracking_number,
             'courier' => $order->code,
