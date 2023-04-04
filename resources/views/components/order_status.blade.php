@@ -19,7 +19,7 @@
         @break
 
         @case(ORDER_STATUS_SHIPPING)
-            <span class="badge bg-info text-light">Shipping</span>
+            <span class="badge bg-info text-light">In Transit</span>
         @break
 
         @case(ORDER_STATUS_DELIVERED)

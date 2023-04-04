@@ -68,7 +68,7 @@
                 <a class="nav-link {{ Route::current()->getName() != 'orders.shipping' ? 'collapsed' : '' }}"
                     href="{{ route('orders.shipping') }}">
                     <i class="bi bi-truck"></i>
-                    <span>Shipping List</span>
+                    <span>In Transit List</span>
                 </a>
             </li><!-- End Shipping List Nav -->
         @endcan
