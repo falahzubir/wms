@@ -23,11 +23,19 @@
         @break
 
         @case(ORDER_STATUS_DELIVERED)
-            <span class="badge bg-warning text-light">Delivered</span>
+            <span class="badge bg-success text-light">Delivered</span>
+        @break
+
+        @case(ORDER_STATUS_RETURN_SHIPPING)
+            <span class="badge bg-warning text-light">Return: In Transit</span>
+        @break
+
+        @case(ORDER_STATUS_RETURN_PENDING)
+            <span class="badge bg-danger text-light">Return: Pending</span>
         @break
 
         @case(ORDER_STATUS_RETURNED)
-            <span class="badge bg-danger text-light">Returned</span>
+            <span class="badge bg-success text-light">Returned</span>
         @break
 
         @case(ORDER_STATUS_REJECTED)

@@ -8,6 +8,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +46,7 @@ Route::middleware(['auth'])->group(function() {
         Route::post('scan', [OrderController::class, 'scan_barcode'])->name('orders.scanned');
         Route::get('rejected', [OrderController::class, 'rejected'])->name('orders.rejected');
         Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
+        Route::get('{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
     });
 
     // group routes for buckets
@@ -68,10 +70,12 @@ Route::middleware(['auth'])->group(function() {
         // Route::get('request-cn', [ShippingController::class, 'request_cn'])->name('shipping.request_cn');
         // Route::get('check-cn-company', [ShippingController::class, 'check_cn_company'])->name('shipping.check_cn_company');
         // Route::get('download-consignment-note', [ShippingController::class, 'download_cn'])->name('shipping.download_cn');
+        Route::post('update-courier', [ShippingController::class, 'update_courier'])->name('shipping.update_courier');
         Route::post('update-tracking', [ShippingController::class, 'update_tracking'])->name('shipping.update_tracking');
         Route::post('upload-bulk-tracking', [ShippingController::class, 'upload_bulk_tracking'])->name('shipping.upload_bulk_tracking');
         Route::post('dhl-label-single', [ShippingController::class, 'dhl_label_single'])->name('shipping.dhl_label_single');
         Route::post('generate_cn_multiple', [ShippingController::class, 'generate_cn_multiple'])->name('shipping.generate_cn_multiple');
+        Route::post('cancel_shipment', [ShippingController::class, 'cancel_shipment'])->name('shipping.cancel_shipment');
 
     });
 

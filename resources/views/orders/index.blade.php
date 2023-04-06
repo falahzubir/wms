@@ -167,7 +167,7 @@
                                                             <i class="bi bi-file-earmark-ruled"></i>
                                                         </button>
                                                     @endif
-                                                    @empty($order->shippings)
+                                                    {{-- @empty($order->shippings) --}}
                                                         @can('tracking.update')
                                                             <button type="button"
                                                                 class="btn btn-primary p-0 px-1 add-shipping-number"
@@ -177,8 +177,16 @@
                                                                 <i class="bi bi-truck"></i>
                                                             </button>
                                                         @endcan
-                                                    @endempty
+                                                    {{-- @endempty --}}
                                                 @endif
+                                                @can('shipping.cancel')
+                                                    @if ($order->shippings->count())
+                                                        <button class="btn btn-danger p-0 px-1 m-1 cancel-shipping" data-id="{{ $order->id }}"
+                                                            data-shipping-auto-generated="{{ $order->shippings->first()->shipment_number ? 1:0 }}">
+                                                            <i class="bi bi-truck"></i>
+                                                        </button>
+                                                    @endif
+                                                @endcan
                                                 @if (request('multiple_parcels') == true)
                                                     <button class="btn btn-warning p-0 px-1 split-parcels"
                                                         title="Split Parcel" data-bs-toggle="modal"
@@ -191,32 +199,31 @@
                                     </td>
                                     <td class="text-center">
                                         <div>
-                                            <a href="#"><strong>{{ order_num_format($order) }}</strong></a>
+                                            <span role="button" class="order-num text-primary" data-sales-id="{{ $order->sales_id }}" data-order-num="{{ order_num_format($order) }}"
+                                                title="Double Click to Copy">
+                                                <strong>{{ order_num_format($order) }}</strong>
+                                            </span>
                                         </div>
                                         <div style="font-size: 0.75rem; white-space: nowrap;" data-bs-toggle="tooltip"
                                             data-bs-placement="right" data-bs-original-title="Date Inserted">
-                                            {{-- <i class="bi bi-calendar"></i>&nbsp; --}}
                                             {{ date('d/m/Y H:i', strtotime($order->created_at)) }}
                                         </div>
 
                                         @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->count() > 0)
                                             <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Scanned">
-                                                {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
                                                 {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->first()->created_at->format('d/m/Y H:i') }}
                                             </div>
                                         @endif
                                         @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->count() > 0)
                                             <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Shipping">
-                                                {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
                                                 {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->first()->created_at->format('d/m/Y H:i') }}
                                             </div>
                                         @endif
                                         @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->count() > 0)
                                             <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                 data-bs-placement="right" data-bs-original-title="Date Delivered">
-                                                {{-- <i class="bi bi-calendar"></i> &nbsp; --}}
                                                 {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->first()->created_at->format('d/m/Y H:i') }}
                                             </div>
                                         @endif
@@ -334,7 +341,13 @@
                             </tr> --}}
                     </tbody>
                 </table>
-                {{ $orders->withQueryString()->links() }}
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        Showing {{ $orders->firstItem() }} to {{ $orders->lastItem() }} of
+                        {{ $orders->total() }} orders
+                    </div>
+                    {{ $orders->withQueryString()->links() }}
+                </div>
                 <!-- End Default Table Example -->
             </div>
         </div>
@@ -1218,6 +1231,81 @@
             let weight = document.querySelector('#split-parcel-weight-total').value;
             let count = document.querySelector('#split-parcel-count').value;
             document.querySelector('#split-parcel-weight').value = (weight / count).toFixed(3);
+        })
+
+        // click to copy order id, double click to copy order number
+        document.querySelectorAll('.order-num').forEach(function(el) {
+
+            el.addEventListener("dblclick", function() {
+                let sales_id = el.getAttribute('data-sales-id');
+                let order_num = el.getAttribute('data-order-num');
+                let inside_elem = el.innerHTML;
+                navigator.clipboard.writeText(sales_id);
+                //change the text of the element
+                el.innerHTML = "Copied!";
+                //change the text back after a certain time
+                setTimeout(function() {
+                    el.innerHTML = inside_elem;
+                }, 1000);
+
+            });
+        });
+
+        // cancel shipping
+        document.querySelectorAll('.cancel-shipping').forEach(function(el) {
+            el.addEventListener("click", function() {
+                let order_id = el.getAttribute('data-id');
+                let shipping_auto_generated = el.getAttribute('data-shipping-auto-generated');
+
+                    // confirm cancel shipping alert
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You want to cancel shipping for this order? Tracking number will be removed and order will go to pending.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, cancel it!',
+                        footer: 'Auto generated shipping will be cancelled automatically.'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            axios.post(`{{ route('shipping.cancel_shipment') }}`, {
+                                    order_id: order_id,
+                                })
+                                .then(function(response) {
+                                    // handle success, close or download
+                                    if (response.data.success == 'ok') {
+                                        Swal.fire({
+                                            title: 'Success!',
+                                            text: "Shipping cancelled.",
+                                            icon: 'success',
+                                            confirmButtonText: 'OK'
+                                        })
+                                            .then((result) => {
+                                                if (result.isConfirmed) {
+                                                    location.reload();
+                                                }
+                                            })
+                                    } else {
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: "Something went wrong.",
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        })
+                                        return;
+                                    }
+                                })
+                                .catch(function(error) {
+                                    // handle error
+                                    console.log(error);
+                                })
+
+                        }
+                    })
+
+
+            })
         })
     </script>
 
