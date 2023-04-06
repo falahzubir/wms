@@ -179,14 +179,16 @@
                                                         @endcan
                                                     {{-- @endempty --}}
                                                 @endif
-                                                @can('shipping.cancel')
-                                                    @if ($order->shippings->count())
-                                                        <button class="btn btn-danger p-0 px-1 m-1 cancel-shipping" data-id="{{ $order->id }}"
-                                                            data-shipping-auto-generated="{{ $order->shippings->first()->shipment_number ? 1:0 }}">
-                                                            <i class="bi bi-truck"></i>
-                                                        </button>
-                                                    @endif
-                                                @endcan
+                                                @if (Route::is('orders.packing') || Route::is('orders.readyToShip'))
+                                                    @can('shipping.cancel')
+                                                        @if ($order->shippings->count())
+                                                            <button class="btn btn-danger p-0 px-1 m-1 cancel-shipping" data-id="{{ $order->id }}"
+                                                                data-shipping-auto-generated="{{ $order->shippings->first()->shipment_number ? 1:0 }}">
+                                                                <i class="bi bi-truck"></i>
+                                                            </button>
+                                                        @endif
+                                                    @endcan
+                                                @endif
                                                 @if (request('multiple_parcels') == true)
                                                     <button class="btn btn-warning p-0 px-1 split-parcels"
                                                         title="Split Parcel" data-bs-toggle="modal"
