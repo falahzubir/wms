@@ -1328,7 +1328,11 @@ h6 {
 }
 
 .barcode-big {
-    font-size: 9em;
+    font-size: 6em;
+}
+
+#shipping-info {
+    font-size: 1.2rem;
 }
 
 .alert-fixed {

@@ -53,6 +53,8 @@ class BucketBatchController extends Controller
 
         $products = [];
         $total_products = ['loose' => 0, 'box' => 0];
+        $total_parcels = ['loose' => 0, 'box' => 0];
+
         foreach($orders as $order){
             if($order->items->sum('quantity') < BOX_MINIMUM_QUANTITY){
                 foreach ($order->items as $item) {
@@ -62,6 +64,7 @@ class BucketBatchController extends Controller
                     ];
                     $total_products['loose'] += $item->quantity;
                 }
+                $total_parcels['loose'] += 1;
             }else{
                 foreach ($order->items as $item) {
                     $products[$item->product->code] = [
@@ -70,10 +73,11 @@ class BucketBatchController extends Controller
                     ];
                     $total_products['box'] += $item->quantity;
                 }
+                $total_parcels['box'] += 1;
             }
         }
 
-        $response = Excel::download(new PickingListExport($products, $total_products), 'picking_list_' . get_picking_batch($batch->id, '_') .'.csv', \Maatwebsite\Excel\Excel::CSV, [
+        $response = Excel::download(new PickingListExport($products, $total_products, $total_parcels), 'picking_list_' . get_picking_batch($batch->id, '_') .'.csv', \Maatwebsite\Excel\Excel::CSV, [
             'Content-Type' => 'text/csv',
         ]);
         ob_end_clean();
