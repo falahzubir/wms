@@ -32,5 +32,11 @@
             <td>{{ $total_products['box'] }}</td>
             <td>{{ $total_products['loose'] + $total_products['box'] }}</td>
         </tr>
+        <tr>
+            <td style="background: #DCDCDC"><strong>Total Parcel</strong></td>
+            <td>{{ $total_parcels['loose'] }}</td>
+            <td>{{ $total_parcels['box'] }}</td>
+            <td>{{ $total_parcels['loose'] + $total_parcels['box'] }}</td>
+        </tr>
     </tfoot>
 </table>
