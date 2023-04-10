@@ -205,7 +205,9 @@ class OrderController extends Controller
      */
     public function shipping(Request $request)
     {
-        $orders = $this->index()->where('status', ORDER_STATUS_SHIPPING);
+        $orders = $this->index()->whereIn('status', [
+            ORDER_STATUS_SHIPPING, ORDER_STATUS_RETURN_PENDING, ORDER_STATUS_RETURN_SHIPPING
+        ]);
 
         $orders = $this->filter_order($request, $orders);
 

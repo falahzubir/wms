@@ -91,6 +91,7 @@ class OrderApiController extends Controller
                 'message' => 'Parcel Scanned Successfully',
             ], 200);
         } else {
+            set_order_status($order, ORDER_STATUS_READY_TO_SHIP);
             return response()->json([
                 'success' => 'ok',
                 'message' => 'Parcel already scanned by ' . $order->shipping->scanned_by,
