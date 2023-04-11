@@ -239,6 +239,7 @@ class ShippingController extends Controller
 
             $json = json_encode($data);
 
+            logger($json);
             $response = Http::withBody($json, 'application/json')->post($url);
             $dhl_store = $this->dhl_store($orders_dhl, $response);
 
@@ -383,8 +384,8 @@ class ShippingController extends Controller
 
         $data = json_encode($data);
 
+        logger($data);
         $response = Http::withBody($data, 'application/json')->post($url);
-
         $this->dhl_store_single($order, $response);
 
         return true;
@@ -811,7 +812,7 @@ class ShippingController extends Controller
                         'inlineLabelReturn' => "Y", //mandatory
                         'handoverMethod' => 2, //optional - 01 for drop off, 02 for pickup
                         'pickupAddress' => [
-                            'name' => $access_token->company->contact_person, //mandatory contact person name
+                            'name' => "EMZI BLAST", // contact person, appears when DHL Scan, only on DHL site
                             'address1' => $access_token->company->address, //mandatory company name
                             'address2' => $access_token->company->address2 ?? null, //optional
                             'address3' => $access_token->company->address3 ?? null, //optional
