@@ -239,7 +239,6 @@ class ShippingController extends Controller
 
             $json = json_encode($data);
 
-            logger($json);
             $response = Http::withBody($json, 'application/json')->post($url);
             $dhl_store = $this->dhl_store($orders_dhl, $response);
 
@@ -384,7 +383,6 @@ class ShippingController extends Controller
 
         $data = json_encode($data);
 
-        logger($data);
         $response = Http::withBody($data, 'application/json')->post($url);
         $this->dhl_store_single($order, $response);
 
@@ -834,7 +832,7 @@ class ShippingController extends Controller
             ];
 
             $data = json_encode($data);
-            logger($data);
+            // logger($data);
             $response = Http::withBody($data, 'application/json')->post($url);
             // $dhl_store = ['test'];
             $dhl_store = $this->dhl_store_for_mult($order, $response, $key);
@@ -931,9 +929,8 @@ class ShippingController extends Controller
                         'shipmentID' => $shipping->shipment_number,
                     ];
                 }
-                logger($data);
+
                 $res = Http::post($this->dhl_cancel_url, $data);
-                logger($res);
             }
 
         }
