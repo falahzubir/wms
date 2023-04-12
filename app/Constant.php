@@ -123,3 +123,6 @@ if(!defined('PAYMENT_TYPE_SHOPEE')) define('PAYMENT_TYPE_SHOPEE', 22);
 
 // auto reject dhl option
 if(!defined('AUTO_REJECT_DHL')) define('AUTO_REJECT_DHL', true);
+
+//blast id
+if(!defined('OP_BLAST_ID')) define('OP_BLAST_ID', 16);
