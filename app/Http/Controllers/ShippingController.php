@@ -753,6 +753,10 @@ class ShippingController extends Controller
                 $blast = true;
             }
         }
+        // any order with more than 40 orders will be named as blast
+        if($order->items->count() > 1 && $order->items->sum('quantity') > MAXIMUM_QUANTITY_PER_BOX){
+            $blast = true;
+        }
         $company_name = ($order->operational_model_id == OP_BLAST_ID && $blast) ? "EMZI BLAST" : $access_token->company->name;
 
         foreach ($array_data as $key => $cn) {
