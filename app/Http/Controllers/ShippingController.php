@@ -384,7 +384,6 @@ class ShippingController extends Controller
         $data = json_encode($data);
 
         $response = Http::withBody($data, 'application/json')->post($url);
-
         $this->dhl_store_single($order, $response);
 
         return true;
@@ -748,6 +747,17 @@ class ShippingController extends Controller
         $data = [];
         $dhl_store = [];
 
+        $blast = false;
+        foreach($order->items as $item) {
+            if($item->quantity > $item->product->max_box){
+                $blast = true;
+            }
+        }
+        // any order with more than 40 orders will be named as blast
+        if($order->items->count() > 1 && $order->items->sum('quantity') > MAXIMUM_QUANTITY_PER_BOX){
+            $blast = true;
+        }
+        $company_name = ($order->operational_model_id == OP_BLAST_ID && $blast) ? "EMZI BLAST" : $access_token->company->name;
 
         foreach ($array_data as $key => $cn) {
             //calculate COD amount
@@ -811,7 +821,7 @@ class ShippingController extends Controller
                         'inlineLabelReturn' => "Y", //mandatory
                         'handoverMethod' => 2, //optional - 01 for drop off, 02 for pickup
                         'pickupAddress' => [
-                            'name' => $access_token->company->contact_person, //mandatory contact person name
+                            'name' => $company_name, // contact person, appears when DHL Scan, only on DHL site
                             'address1' => $access_token->company->address, //mandatory company name
                             'address2' => $access_token->company->address2 ?? null, //optional
                             'address3' => $access_token->company->address3 ?? null, //optional
@@ -833,7 +843,7 @@ class ShippingController extends Controller
             ];
 
             $data = json_encode($data);
-            logger($data);
+            // logger($data);
             $response = Http::withBody($data, 'application/json')->post($url);
             // $dhl_store = ['test'];
             $dhl_store = $this->dhl_store_for_mult($order, $response, $key);
@@ -930,9 +940,8 @@ class ShippingController extends Controller
                         'shipmentID' => $shipping->shipment_number,
                     ];
                 }
-                logger($data);
+
                 $res = Http::post($this->dhl_cancel_url, $data);
-                logger($res);
             }
 
         }

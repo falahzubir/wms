@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShippingController;
@@ -99,6 +100,11 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/', [RoleController::class, 'index'])->name('roles.index');
         Route::get('create', [RoleController::class, 'create'])->name('roles.create');
         Route::post('store', [RoleController::class, 'store'])->name('roles.store');
+    });
+
+    Route::group(['prefix'=>'products'], function (){
+       Route::get('/', [ProductController::class, 'index'])->name('products.index');
+       Route::post('{product}', [ProductController::class, 'update'])->name('products.update');
     });
 
     Route::group(['prefix'=>'users'], function() {

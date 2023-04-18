@@ -97,7 +97,7 @@ if(!defined('AUTO_SHIPPING_COURIER')) define('AUTO_SHIPPING_COURIER', [15]);
 if(!defined('DHL_SOLD_PICKUP_ACCT')) define('DHL_SOLD_PICKUP_ACCT',[
     1=>'5265434590',//5265434590', // EH
     2=>'5286430910',//5265241234', // ED
-    3=>'5264574522',//5264574522', // QA
+    3=>'5999999885',//5264574522', // QA
 ]);
 if(!defined('DHL_PREFIX')) define('DHL_PREFIX',[
     1=>'MYCKZ', // EH // MYAAH
@@ -123,3 +123,6 @@ if(!defined('PAYMENT_TYPE_SHOPEE')) define('PAYMENT_TYPE_SHOPEE', 22);
 
 // auto reject dhl option
 if(!defined('AUTO_REJECT_DHL')) define('AUTO_REJECT_DHL', true);
+
+//blast id
+if(!defined('OP_BLAST_ID')) define('OP_BLAST_ID', 16);
