@@ -23,7 +23,7 @@ class OrderExport implements FromView
      */
     public function view(): View
     {
-        return view('exports.orders', [
+        return view('exports.poslaju', [
             'orders' => $this->orders,
         ]);
     }

@@ -194,7 +194,7 @@ if (!function_exists('get_shipping_remarks')) {
      * @param  obj $order_id
      * @return string
      */
-    function get_shipping_remarks($order, $mult_cn = [])
+    function get_shipping_remarks($order, $mult_cn = [], $full = false)
     {
         // return null;
         $remark = '';
@@ -211,7 +211,7 @@ if (!function_exists('get_shipping_remarks')) {
             }
 
             if($quantity > 0){
-                $remark .= $item->product->code;
+                $remark .= $full ? $item->product->name: $item->product->code;
                 $remark .= '[';
                 $remark .= $quantity;
                 $remark .= ']';
