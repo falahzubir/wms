@@ -12,12 +12,12 @@
                 <td></td>
                 <td></td>
                 <td></td>
-                <td>{{ $order->customer->postcode }}</td>
+                <td>{{ sprintf('%05d', $order->customer->postcode) }}</td>
                 <td>{{ $order->customer->name }}</td>
                 <td>{{ $order->customer->phone }}</td>
                 <td></td>
                 <td></td>
-                <td>{{ get_shipping_remarks($order) }}</td>
+                <td>{{ get_shipping_remarks($order,,true) }}</td>
                 <td></td>
                 <td>{{ $order->total_price / 100 }}</td>
                 <td></td>
