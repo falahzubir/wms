@@ -492,7 +492,7 @@ class OrderController extends Controller
     public function download_order_csv(Request $request)
     {
         // return $request;
-        $fileName = 'orders_' . date('Ymdhis') . '.csv';
+        $fileName = date('Ymdhis') . '_list_of_processing.csv';
         $orders = $this->index();
 
         $orders->whereIn('id', $request->order_ids);
