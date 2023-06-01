@@ -378,6 +378,7 @@ class OrderController extends Controller
         $orders->when($request->has('search'), function ($query) use ($request) {
             $query->where(function ($query) use ($request) {
                 $query->where('sales_id', 'LIKE', "%$request->search%")
+                    ->orWhere('sales_remarks', 'LIKE', "%$request->search%")
                     ->orWhereHas('customer', function ($q) use ($request) {
                         $q->where('name', 'LIKE', "%$request->search%")
                             ->orWhere('phone', 'LIKE', "%$request->search%");
