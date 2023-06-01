@@ -72,6 +72,13 @@
                                 {{ $product->name }}</option>
                         @endforeach
                     </x-filter_select>
+                    <x-filter_select name="not_products" label="Exclude Product(s)" id="exclude-product-filter" class="col-4 mt-2">
+                        @foreach ($filter_data->products as $product)
+                            <option value="{{ $product->id }}"
+                                {{ request('not_products') != null ? (in_array($product->id, request('not_products')) ? 'selected' : '') : '' }}>
+                                {{ $product->name }}</option>
+                        @endforeach
+                    </x-filter_select>
                 @endisset
                 @isset($filter_data->operational_models)
                     <x-filter_select name="op_models" label="Operational Model(s)" id="operational-model-filter"

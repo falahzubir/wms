@@ -413,6 +413,11 @@ class OrderController extends Controller
                 $q->whereIn('product_id', $request->products);
             });
         });
+        $orders->when($request->filled('not_products'), function ($query) use ($request) {
+            $query->whereDoesntHave('items', function ($q) use ($request) {
+                $q->whereIn('product_id', $request->not_products);
+            });
+        });
         $orders->when($request->filled('states'), function ($query) use ($request) {
             $query->whereHas('customer', function ($q) use ($request) {
                 $q->whereIn('state', $request->states);
