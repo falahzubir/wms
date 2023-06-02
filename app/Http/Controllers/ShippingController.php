@@ -11,6 +11,7 @@ use App\Models\Shipping;
 use Illuminate\Http\Request;
 use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
@@ -406,11 +407,11 @@ class ShippingController extends Controller
         $tracking_no[] = [];
         $json = json_decode($json);
 
+        Log::info('error', [json_encode($json)]);
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
             if (isset($label->responseStatus)) {
                 if (isset($label->responseStatus->message)) {
                     if ($label->responseStatus->message != "SUCCESS") {
-                        logger($json);
                         if (isset($label->responseStatus->messageDetails)) {
                             return $label->responseStatus->messageDetails;
                         }
