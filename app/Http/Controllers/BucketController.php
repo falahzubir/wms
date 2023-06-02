@@ -100,6 +100,7 @@ class BucketController extends Controller
         ]);
 
         Order::whereIn('id', $request->order_ids)->update([
+            'bucket_batch_id' => null, // Reset batch id
             'bucket_id' => $request->bucket_id,
             'status' => ORDER_STATUS_PROCESSING,
         ]);
