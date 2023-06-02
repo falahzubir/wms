@@ -407,13 +407,13 @@ class ShippingController extends Controller
         $tracking_no[] = [];
         $json = json_decode($json);
 
-        Log::info('error', [json_encode($json)]);
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
             if (isset($label->responseStatus)) {
                 if (isset($label->responseStatus->message)) {
                     if ($label->responseStatus->message != "SUCCESS") {
                         if (isset($label->responseStatus->messageDetails)) {
-                            return $label->responseStatus->messageDetails;
+                            Log::error('DHL Error: '.$label->shipmentID);
+                            return '['.$label->shipmentID.'] '. $label->responseStatus->messageDetails;
                         }
                     }
                 }
@@ -1053,7 +1053,7 @@ class ShippingController extends Controller
                 if(isset($label->responseStatus->message)) {
                     if($label->responseStatus->message != "SUCCESS") {
                         if(isset($label->responseStatus->messageDetails)) {
-                            return $label->responseStatus->messageDetails;
+                            return false;
                         }
                     }
                 }
@@ -1092,5 +1092,7 @@ class ShippingController extends Controller
         }
 
         Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+
+        return true;
     }
 }
