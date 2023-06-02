@@ -100,9 +100,11 @@
                                 Bucket</button>
                         @endif
                         @if (in_array(ACTION_GENERATE_CN, $actions))
-                            @can('consignment_note.generate')
-                                <button class="btn btn-warning" id="generate-cn-btn"><i
-                                        class="bi bi-file-earmark-ruled"></i> Generate CN</button>
+                        @can('consignment_note.generate')
+                        <button class="btn btn-warning" id="generate-cn-btn"><i
+                            class="bi bi-file-earmark-ruled"></i> Generate CN</button>
+                            <button class="btn btn-info" id="reprint-cn-btn"><i class="bi bi-file-earmark-ruled"></i>
+                                Reprint CN</button>
                             @endcan
                         @endif
                         @if (in_array(ACTION_UPLOAD_TRACKING_BULK, $actions))
@@ -580,6 +582,7 @@
                         // handle success
                         let buckets = response.data;
                         let bucketOptions = {};
+                        let changeBucket = false;
                         buckets.forEach(bucket => {
                             bucketOptions[bucket.id] = bucket.name;
                         });
@@ -589,6 +592,9 @@
                             inputOptions: bucketOptions,
                             inputPlaceholder: 'Select a bucket',
                             showCancelButton: true,
+                            showDenyButton: true,
+                            denyButtonText: 'Remove current bucket',
+                            denyButtonColor: '#3085d6',
                             inputValidator: (value) => {
                                 return new Promise((resolve) => {
                                     if (value !== '') {
@@ -599,6 +605,11 @@
                                 })
                             }
                         }).then((result) => {
+                            console.log(result);
+                            if(result.isDenied){
+                                changeBucket = true;
+
+                            }
                             if (result.isConfirmed) {
                                 //get checked order
                                 let checkedOrder = [];
@@ -611,6 +622,7 @@
                                 axios.post('/api/add-to-bucket', {
                                         bucket_id: result.value,
                                         order_ids: checkedOrder,
+                                        change_bucket: changeBucket
                                     })
                                     .then(function(response) {
                                         // handle success
@@ -992,6 +1004,95 @@
                 });
 
         } //end of generateCN
+
+        document.querySelector('#reprint-cn-btn').onclick = function() {
+            const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+            let checkedValue = inputElements.filter(chk => chk.checked).length;
+            // sweet alert
+            if (checkedValue == 0) {
+                Swal.fire({
+                    title: 'No order selected!',
+                    text: "Please select at least one order to reprint shipping label.",
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                })
+            } else {
+                //cnfirmation to generate picking list
+                Swal.fire({
+                    title: 'Are you sure to reprint shipping label?',
+                    html: `You are about to reprint shipping label for ${checkedValue} order(s).`,
+                    footer: '<small>Note: Shipping label will be generated separately.</small>',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, reprint it!',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        reprint_cn();
+                    }
+                })
+            }
+        }
+
+        function reprint_cn(){
+            //show loading modal
+            Swal.fire({
+                title: 'Reprinting shipping label...',
+                html: 'Please wait while we are reprinting shipping label for your order(s).',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+            });
+            const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+            let checkedValue = inputElements.filter(chk => chk.checked).length;
+            //get checked order
+            let checkedOrder = [];
+            inputElements.forEach(input => {
+                if (input.checked) {
+                    checkedOrder.push(input.value);
+                }
+            });
+
+            axios.post('/api/reprint-cn', {
+                    order_ids: checkedOrder,
+                })
+                .then(function(response) {
+                    // handle success, close or download
+                    if (response.data.success == 'ok') {
+                        download_cn(checkedOrder);
+                        Swal.fire({
+                            title: 'Success!',
+                            text: "Shipping label(s) reprinted.",
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                document.querySelectorAll('.check-order').forEach(
+                                    input => {
+                                        input.checked = false;
+                                    })
+                                location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: "Fail to reprint shipping label.",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                    }
+                })
+                .catch(function(error) {
+                    // handle error
+                    console.log(error);
+                })
+                .then(function() {
+                    // always executed
+                });
+        }
 
         function approveAsShipped(checkedOrders) {
             axios({
