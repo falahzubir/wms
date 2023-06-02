@@ -410,7 +410,7 @@ class ShippingController extends Controller
             if (isset($label->responseStatus)) {
                 if (isset($label->responseStatus->message)) {
                     if ($label->responseStatus->message != "SUCCESS") {
-                        logger($label);
+                        logger($json);
                         if (isset($label->responseStatus->messageDetails)) {
                             return $label->responseStatus->messageDetails;
                         }
