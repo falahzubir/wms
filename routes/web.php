@@ -48,6 +48,8 @@ Route::middleware(['auth'])->group(function() {
         Route::get('rejected', [OrderController::class, 'rejected'])->name('orders.rejected');
         Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
         Route::get('{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+        Route::get('change-postcode', [OrderController::class, 'change_postcode_view'])->name('orders.change_postcode_view');
+        Route::post('change-postcode', [OrderController::class, 'change_postcode'])->name('orders.change_postcode');
     });
 
     // group routes for buckets

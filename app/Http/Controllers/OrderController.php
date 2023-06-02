@@ -514,4 +514,47 @@ class OrderController extends Controller
             "file_name"=> $fileName
         ]);
     }
+
+    /** Change Postcode view
+     *
+     */
+    public function change_postcode_view(){
+        return view('orders.change_postcode', [
+            'title' => 'Change Postcode',
+            'companies' => Company::all(),
+        ]);
+    }
+    /**
+     * Change Postcode
+     */
+    public function change_postcode(Request $request)
+    {
+        $request->validate([
+            'postcode' => 'required|digits:5',
+            'sales_id' => 'required|exists:orders,sales_id',
+            'company_id' => 'required|exists:companies,id',
+        ]);
+
+        $order = Order::with('customer')
+            ->where('sales_id', $request->sales_id)
+            ->where('company_id', $request->company_id)
+            ->first();
+
+        if (!$order) {
+            return back()->with('error', 'Order Not Found');
+        }
+        $old_postcode = $order->customer->postcode;
+        $order->customer->postcode = $request->postcode;
+        $order->customer->save();
+
+        OrderLog::create([
+            'order_id' => $order->id,
+            'order_status_id' => $order->status,
+            'remarks' => 'Postcode Changed from '. $old_postcode .' to ' . $request->postcode,
+            'created_by' => auth()->user()->id ?? 1,
+        ]);
+
+        return back()->with('success', 'Postcode Changed Successfully');
+
+    }
 }

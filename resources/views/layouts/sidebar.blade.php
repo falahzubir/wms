@@ -136,6 +136,12 @@
                                 <i class="bi bi-circle"></i><span>Roles</span>
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('orders.change_postcode_view')}}"
+                                {{ Route::current()->getName() == 'orders.change_postcode_view' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i><span>Change Postcode</span>
+                            </a>
+                        </li>
                     @endcan
                     <li>
                         <a href="{{ route('users.index') }}"
