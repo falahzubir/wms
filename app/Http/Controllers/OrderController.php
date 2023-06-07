@@ -325,8 +325,19 @@ class OrderController extends Controller
         $order = Order::updateOrCreate($ids, $data);
         $p_ids['order_id'] = $order->id;
 
-        // create order items
-        foreach ($webhook['product'] as $product) {
+        // create order item
+        // group product by code
+        $product_list = array_reduce($webhook['product'], function ($result, $item) {
+            if (!isset($result[$item['code']])) {
+                $result[$item['code']] = $item;
+            } else {
+                $result[$item['code']]['quantity'] += $item['quantity'];
+                $result[$item['code']]['price'] += $item['price'];
+            }
+            return $result;
+        }, array());
+
+        foreach ($product_list as $product) {
             $p_ids['product_id'] = $products[$product['code']];
             $product_data['price'] = $product['price'] * 100;
             $product_data['quantity'] = $product['quantity'];
