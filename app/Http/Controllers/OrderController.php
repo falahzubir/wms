@@ -381,7 +381,8 @@ class OrderController extends Controller
                     ->orWhere('sales_remarks', 'LIKE', "%$request->search%")
                     ->orWhereHas('customer', function ($q) use ($request) {
                         $q->where('name', 'LIKE', "%$request->search%")
-                            ->orWhere('phone', 'LIKE', "%$request->search%");
+                            ->orWhere('phone', 'LIKE', "%$request->search%")
+                            ->orWhere('address', 'LIKE', "%$request->search%");
                     })
                     ->orwhereHas('shippings', function ($q) use ($request) {
                         $q->where('tracking_number', 'LIKE', "%$request->search%");
