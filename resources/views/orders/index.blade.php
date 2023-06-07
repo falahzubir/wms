@@ -253,7 +253,7 @@
                                             <span class="customer-address">{{ $order->customer->address }}</span>,
                                             {{ $order->customer->postcode }},
                                             {{ $order->customer->city }},
-                                            {{ MY_STATES[$order->customer->state] }}
+                                            {{ MY_STATES[$order->customer->state] ?? '' }}
                                         </div>
                                     </td>
                                     <td>
