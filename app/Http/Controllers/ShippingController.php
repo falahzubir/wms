@@ -413,7 +413,7 @@ class ShippingController extends Controller
                     if ($label->responseStatus->message != "SUCCESS") {
                         if (isset($label->responseStatus->messageDetails)) {
                             Log::error('DHL Error: '.$label->shipmentID);
-                            return '['.$label->shipmentID.'] '. $label->responseStatus->messageDetails;
+                            return $label->responseStatus->messageDetails;
                         }
                     }
                 }
