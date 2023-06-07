@@ -235,12 +235,22 @@
                                         </div> --}}
                                     </td>
                                     <td class="text-start">
+                                        @if ($order->courier_id = DHL_ID && !is_digit_count($order->customer->postcode, 5))
+                                            <div class="badge bg-danger text-wrap">
+                                                Postcode Error
+                                            </div>
+                                        @endif
+                                        @if (!last_two_digits_zero($order->customer->postcode))
+                                            <a href="{{ route('orders.change_postcode_view') }}?sales={{ $order->sales_id }}&company={{ $order->company_id}}&current_postcode={{ $order->customer->postcode }}&redirect_to={{ urlencode(url()->full()) }}" class="badge bg-warning text-wrap text-dark">
+                                                Potential DHL Postcode Error
+                                            </a>
+                                        @endif
                                         <div><strong>{{ $order->customer->name }}</strong></div>
                                         <div>
                                             {{ $order->customer->phone }}
                                         </div>
                                         <div>
-                                            {{ $order->customer->address }},
+                                            <span class="customer-address">{{ $order->customer->address }}</span>,
                                             {{ $order->customer->postcode }},
                                             {{ $order->customer->city }},
                                             {{ MY_STATES[$order->customer->state] }}
@@ -1309,6 +1319,15 @@
 
             })
         })
+        // check and trim if * more than 3
+        document.querySelectorAll(".customer-address").forEach(function(el) {
+            let address = el.innerHTML;
+            let address_arr = address.split("*");
+            if (address_arr.length >= 8) {
+                let new_address = address_arr.slice(0, 8).join("*");
+                el.innerHTML = new_address;
+            }
+        });
     </script>
 
 </x-slot>

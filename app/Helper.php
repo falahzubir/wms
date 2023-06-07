@@ -267,3 +267,29 @@ if (!function_exists('get_order_quantity')) {
         return $quantity;
     }
 }
+
+if(!function_exists('last_two_digits_zero')){
+    /**
+     * Check if last two digits are the zero
+     *
+     * @param string $postcode
+     * @return bool
+     */
+    function last_two_digits_zero($postcode)
+    {
+        return substr($postcode, -2) == '00';
+    }
+}
+
+if(!function_exists('is_digit_count')){
+    /**
+     * Check count of digits
+     *
+     * @param  int $number, int $divisor
+     * @return bool
+     */
+    function is_digit_count($number, $count)
+    {
+        return strlen((string)$number) == $count;
+    }
+}

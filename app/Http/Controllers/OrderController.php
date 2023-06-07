@@ -554,6 +554,9 @@ class OrderController extends Controller
             'created_by' => auth()->user()->id ?? 1,
         ]);
 
+        if($request->redirect){
+            return redirect($request->redirect)->with('success', 'Postcode Changed Successfully');
+        }
         return back()->with('success', 'Postcode Changed Successfully');
 
     }

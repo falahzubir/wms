@@ -19,7 +19,8 @@
                 @endif
                 <div class="d-flex flex-column gap-3">
                     <div>
-                        <input type="text" name="sales_id" placeholder="Sales ID" class="form-control" value="{{ old('sales_id') }}">
+                        <label for="sales_id">Sales ID</label>
+                        <input type="text" name="sales_id" placeholder="Sales ID" class="form-control" value="{{ $_GET['sales'] ?? old('sales_id') }}">
                         @error('sales_id')
                         <div class="alert alert-danger" style="color: red">
                             {{ $message }}
@@ -27,11 +28,12 @@
                         @enderror
                     </div>
                     <div>
+                        <label for="company_id">Company</label>
                         <select name="company_id" id="company_id" class="form-control" required>
                             <option value="">Select Company</option>
                             @foreach ($companies as $company)
                             <option value="{{ $company->id }}"
-                                @if (old('company_id') == $company->id)
+                                @if (old('company_id') == $company->id || (isset($_GET['company']) && $_GET['company'] == $company->id))
                                     selected
                                 @endif
                                 >{{ $company->name }}</option>
@@ -44,13 +46,15 @@
                         @enderror
                     </div>
                     <div>
-                        <input type="text" name="postcode" placeholder="Postcode" class="form-control" value="{{ old('postcode')}}">
+                        <label for="postcode">Postcode</label>
+                        <input type="text" name="postcode" placeholder="Postcode" class="form-control" value="{{ old('postcode') ?? $_GET['current_postcode'] ?? ''}}">
                         @error('postcode')
                             <div class="alert alert-danger" style="color: red">
                                 {{ $message }}
                             </div>
                         @enderror
                     </div>
+                    <input type="hidden" name="redirect" value="{{ $_GET['redirect_to'] ?? ''}}">
                     <input type="submit" class="btn btn-info" value="Change Postcode">
                 </div>
             </div>
