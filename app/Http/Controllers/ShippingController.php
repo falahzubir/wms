@@ -161,7 +161,7 @@ class ShippingController extends Controller
                 'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
                 'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
                 'inlineLabelReturn' => "Y", //mandatory
-                'handoverMethod' => 2, //optional - 01 for drop off, 02 for pickup
+                'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                 'pickupAddress' => [
                     'name' => $access_token->company->contact_person, //mandatory contact person name
                     'address1' => $access_token->company->address, //mandatory company name
@@ -348,7 +348,7 @@ class ShippingController extends Controller
                     'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
                     'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
                     'inlineLabelReturn' => "Y", //mandatory
-                    'handoverMethod' => 2, //optional - 01 for drop off, 02 for pickup
+                    'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                     'pickupAddress' => [
                         'name' => $access_token->company->contact_person, //mandatory contact person name
                         'address1' => $access_token->company->address, //mandatory company name
@@ -825,7 +825,7 @@ class ShippingController extends Controller
                         'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
                         'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
                         'inlineLabelReturn' => "Y", //mandatory
-                        'handoverMethod' => 2, //optional - 01 for drop off, 02 for pickup
+                        'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                         'pickupAddress' => [
                             'name' => $company_name, // contact person, appears when DHL Scan, only on DHL site
                             'address1' => $access_token->company->address, //mandatory company name
