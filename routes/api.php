@@ -7,6 +7,7 @@ use App\Http\Controllers\CourierController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\api\ShippingApiController;
+use App\Http\Controllers\api\WebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
@@ -69,5 +70,6 @@ Route::post('download-order-csv', [OrderController::class, 'download_order_csv']
 
 Route::get('get-couriers', [CourierController::class, 'list']);
 
+Route::get('get-failed-order/{date}', [WebhookController::class, 'fail_insert']);
 
 Route::webhooks('webhook/sales');
