@@ -336,12 +336,13 @@ class OrderController extends Controller
             }
             return $result;
         }, array());
-
+        OrderItem::where('order_id', $order->id)->update(['status' => 0]);
         foreach ($product_list as $product) {
             $p_ids['product_id'] = $products[$product['code']];
             $product_data['price'] = $product['price'] * 100;
             $product_data['quantity'] = $product['quantity'];
             $product_data['is_foc'] = $product['is_foc'];
+            $product_data['status'] = 1;
 
             OrderItem::updateOrCreate($p_ids, $product_data);
         }

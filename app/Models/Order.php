@@ -42,7 +42,7 @@ class Order extends Model
 
     public function items()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class)->where('status', IS_ACTIVE);
     }
 
     public function logs()
