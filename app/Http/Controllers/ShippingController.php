@@ -216,7 +216,7 @@ class ShippingController extends Controller
                             'idType' => null,
                         ],
                         'shipmentID' => shipment_num_format($order, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
-                        'returnMode' => "02", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
+                        'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
                         'deliveryConfirmationNo' => null, //not used
                         'packageDesc' => substr($this->package_description($order), 0, 50), // required
                         'totalWeight' => get_order_weight($order), // mandatory, optional if product code is PDR
@@ -322,7 +322,7 @@ class ShippingController extends Controller
                                 'idType' => null,
                             ],
                             'shipmentID' => shipment_num_format($order, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
-                            'returnMode' => "02", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
+                            'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
                             'deliveryConfirmationNo' => null, //not used
                             'packageDesc' => substr($this->package_description($order), 0, 50), // required
                             'totalWeight' => get_order_weight($order), // mandatory, optional if product code is PDR
@@ -799,7 +799,7 @@ class ShippingController extends Controller
                                     'idType' => null,
                                 ],
                                 'shipmentID' => shipment_num_format_mult($order, $key, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
-                                'returnMode' => "02", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
+                                'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
                                 'deliveryConfirmationNo' => null, //not used
                                 'packageDesc' => substr($this->package_description($order, $cn), 0, 50), // required
                                 'totalWeight' => get_order_weight($order, $cn), // mandatory, optional if product code is PDR
