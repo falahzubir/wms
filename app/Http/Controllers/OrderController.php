@@ -365,12 +365,11 @@ class OrderController extends Controller
             if ($order->wasRecentlyCreated) {
                 set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
             } else {
-                OrderLog::create([
-                    'order_id' => $order->id,
-                    'order_status_id' => $order->status,
-                    'remarks' => 'Order updated from webhook',
-                    'created_by' => 1,
-                ]);
+                if($order->status == ORDER_STATUS_REJECTED){
+                    set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook, previously rejected');
+                } else{
+                    set_order_status($order, $order->status, 'Order updated from webhook');
+                }
             }
         }
 
