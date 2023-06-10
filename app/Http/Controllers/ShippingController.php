@@ -6,10 +6,12 @@ use App\Imports\ShippingsImport;
 use App\Models\AccessToken;
 use App\Models\Company;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\OrderLog;
 use App\Models\Shipping;
 use Illuminate\Http\Request;
 use Illuminate\Log\Logger;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -484,7 +486,11 @@ class ShippingController extends Controller
 
     public function download_cn(Request $request)
     {
-        $attachments = Shipping::select('attachment')->whereIn('order_id', $request->order_ids)->get();
+        $sorted_order_id = $this->sort_order_to_download($request->order_ids);
+        $attachments = Shipping::select('attachment')->whereIn('order_id', $sorted_order_id)->get()
+        ->sortBy(function($model) use ($sorted_order_id) {
+                return array_search($model->order_id, $sorted_order_id);
+            });
         $attachments = $attachments->pluck('attachment')->toArray();
 
         $pdf = PDFMerger::init();
@@ -1095,4 +1101,36 @@ class ShippingController extends Controller
 
         return true;
     }
+
+    public function sort_order_to_download($order_ids)
+    {
+        $newOrders = [];
+        // $order_ids = [17849,17848,17842,17840,17839,17836,17835,17834,17833,17826];
+        $orders = OrderItem::with(['order', 'product'])
+            ->whereIn('order_id', $order_ids)->where('status', IS_ACTIVE)
+            ->where('is_foc', IS_INACTIVE)
+            ->whereHas('order', function ($query) {
+                $query->where('courier_id', DHL_ID);
+            })
+            ->get();
+
+        // single
+        foreach ($orders->where("marital_status", "single")->groupBy("product.name") as $product_name => $item) {
+            logger($item);
+            foreach($item->sortBy("quantity") as $order_id){
+                // logger($order_id->quantity);
+                $newOrders[] = $order_id;
+            }
+        }
+
+        // // married
+        // foreach ($orders->where("marital_status", "married")->groupBy("product.name") as $product_name => $item){
+        //     foreach($item->sortBy("quantity")->pluck("order_id") as $order_id){
+        //         $newOrders[] = $order_id;
+        //     }
+        // }
+        die;
+        return $newOrders;
+    }
+
 }
