@@ -23,6 +23,6 @@ class OrderItem extends Model
 
     public function getMaritalStatusAttribute($key)
     {
-        return self::where("order_id",$this->order_id)->where('status',1)->count() > 1 ? "married":"single";
+        return self::where("order_id", $this->order_id)->where('status', 1)->where("is_foc", 0)->count() > 1 ? "married" : "single";
     }
 }
