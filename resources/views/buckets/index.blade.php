@@ -48,8 +48,15 @@
                             <hr>
                             <div class="mb-3 text-center">
                             <div>Processing: <strong><span
-                                                id="pending-count">{{ $bucket->orders->count() }}</span></strong></div>
+                                    id="pending-count">{{ $bucket->orders->count() }}</span></strong>
+                                </div>
 
+                                <div>&nbsp;
+                                    @if($bucket->orders->sum('payment_refund'))
+                                        Refund: <strong><span class="text-danger"
+                                            id="refund-count">RM{{ currency($bucket->orders->sum('payment_refund')) }} ({{$bucket->orders->where('payment_refund', '>', 0)->count()}})</span></strong>
+                                    @endif
+                                </div>
                             </div>
                             <div class="text-center">
                                 {{-- modal button --}}
@@ -372,7 +379,7 @@
                                     confirmButtonText: 'OK'
                                 })
                             }
-                            
+
                             return;
                         }
                                 }

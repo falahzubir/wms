@@ -170,7 +170,7 @@
                                                     {{-- @empty($order->shippings) --}}
                                                         @can('tracking.update')
                                                             <button type="button"
-                                                                class="btn btn-primary p-0 px-1 add-shipping-number"
+                                                                class="btn btn-primary p-0 px-1 m-1 add-shipping-number"
                                                                 data-bs-toggle="modal" data-bs-target="#add-shipping-number-modal"
                                                                 data-orderid="{{ $order->id }}"
                                                                 data-couriercode={{ $order->courier->code }}>
@@ -178,6 +178,9 @@
                                                             </button>
                                                         @endcan
                                                     {{-- @endempty --}}
+                                                    <a href="{{ route('orders.change_postcode_view') }}?sales={{ $order->sales_id }}&company={{ $order->company_id}}&current_postcode={{ $order->customer->postcode }}&redirect_to={{ urlencode(url()->full()) }}" class="btn btn-warning p-0 px-1 m-1" title="Change Postcode">
+                                                        <i class="bx bxs-map" aria-hidden="true"></i>
+                                                    </a>
                                                 @endif
                                                 @if (Route::is('orders.packing') || Route::is('orders.readyToShip'))
                                                     @can('shipping.cancel')
@@ -266,8 +269,8 @@
                                     <td>
                                         <div class="small-text" title="Total Price">
                                             {{ currency($order->total_price, true) }}</div>
-                                        <div class="text-danger small-text" title="Total Refund">
-                                            {{ currency($order->payment_refund, true) }}</div>
+                                        <span class="badge small-text {{ $order->payment_refund > 0 ? "bg-danger" : "text-danger"}}" title="Total Refund">
+                                            {{ currency($order->payment_refund, true) }}</span>
                                         <div>
                                             @switch($order->purchase_type)
                                                 @case(1)
