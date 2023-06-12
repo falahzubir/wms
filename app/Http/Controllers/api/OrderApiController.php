@@ -36,18 +36,18 @@ class OrderApiController extends Controller
         $order = Order::where("id",$request->order_id)->first();
 
         // for now manually reject order until system is stable
-        // if(!empty($order)){
-        //     $url = "http://localhost/boss/api/reject_order";
+        if(!empty($order)){
+            $url = "http://localhost/boss/api/reject_order";
 
-        //     if(env("APP_ENV") == "production"){
-        //         $url = $order->company->url."/api/reject_order";
-        //     }
+            if(env("APP_ENV") == "production"){
+                $url = $order->company->url."/api/reject_order";
+            }
 
-        //     Http::post($url,[
-        //         "sale_id"=> $order->sales_id,
-        //         "reject_reason"=> $request->input("reason")
-        //     ]);
-        // }
+            Http::post($url,[
+                "sale_id"=> $order->sales_id,
+                "reject_reason"=> $request->input("reason")
+            ]);
+        }
 
         return response()->json([
             'message' => 'Order rejected'
