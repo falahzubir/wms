@@ -9,6 +9,7 @@ class OrderItem extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    protected $appends = ['marital_status'];
 
     public function order()
     {
@@ -18,5 +19,10 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function getMaritalStatusAttribute($key)
+    {
+        return self::where("order_id", $this->order_id)->where('status', 1)->where("is_foc", 0)->count() > 1 ? "married" : "single";
     }
 }

@@ -114,7 +114,7 @@
                             @endcan
                         @endif
                         @if (in_array(ACTION_DOWNLOAD_CN, $actions))
-                            @can('consignment_note.download')
+                        @can('consignment_note.download')
                                 <button class="btn btn-success" id="download-cn-btn"><i class="bi bi-cloud-download"></i>
                                     Download CN</button>
                             @endcan
