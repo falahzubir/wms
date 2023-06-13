@@ -82,8 +82,8 @@ if(!defined('ORDER_FILTER_STATE')) define('ORDER_FILTER_STATE', 9);
 // date types
 if(!defined('ORDER_DATE_TYPES')) define('ORDER_DATE_TYPES', [
     1 => ['Order Added', ''],
-    2 => ['Request Shipping', 'disabled'],
-    3 => ['Scan Parcel', 'disabled'],
+    2 => ['Request Shipping', ''],
+    3 => ['Scan Parcel', ''],
     4 => ['Shipping', 'disabled'],
 ]);
 

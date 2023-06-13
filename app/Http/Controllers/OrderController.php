@@ -442,12 +442,28 @@ class OrderController extends Controller
             });
         });
 
-        $orders->when($request->filled('date_from'), function ($query) use ($request) {
-            $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
+        $orders->when($request->filled('date_type'), function ($query) use ($request) {
+            switch($request->date_type){
+                case 1: //date order added
+                    $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
+                    $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
+                    break;
+                case 2: //date request shipping
+                    $query->where('dt_request_shipping', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
+                    $query->where('dt_request_shipping', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
+                    break;
+                case 3: //date scan parcel
+                    $query->whereHas("shippings", function($q) use ($request){
+                        $q->where('scanned_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
+                        $q->where('scanned_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
+                    });
+                    break;
+                default:
+                    break;
+
+            }
         });
-        $orders->when($request->filled('date_to'), function ($query) use ($request) {
-            $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
-        });
+
         $orders->when($request->filled('status'), function ($query) use ($request) {
             $query->where('status', $request->status);
         });
