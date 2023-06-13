@@ -198,6 +198,8 @@ class ShippingController extends Controller
                 }
                 $package_description = rtrim($package_description, ", ");
 
+                $total_price = $order->total_price > 0 ? $order->total_price/100 : null;
+
                 if ($order->company_id == $access_token->company_id) {
 
                     $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
@@ -231,7 +233,7 @@ class ShippingController extends Controller
                         'customerReference2' => null, //optional
                         'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
                         'contentIndicator' => null, //mandatory if product include lithium battery
-                        'codValue' => $order->purchase_type == 1 ? $order->total_price / 100 : null, //optional
+                        'codValue' => $order->purchase_type == 1 ? $total_price : null, //optional
                         'insuranceValue' => null, //optional
                         'freightCharge' => null, //optional
                         'totalValue' => null, //optional for domestic
@@ -295,6 +297,8 @@ class ShippingController extends Controller
 
         $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
 
+        $total_price = $order->total_price > 0 ? $order->total_price/100 : null;
+
         $data = [
             'labelRequest' => [
                 'hdr' => [
@@ -337,7 +341,7 @@ class ShippingController extends Controller
                             'customerReference2' => null, //optional
                             'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
                             'contentIndicator' => null, //mandatory if product include lithium battery
-                            'codValue' => $order->purchase_type == 1 ? $order->total_price / 100 : null, //optional
+                            'codValue' => $order->purchase_type == 1 ? $total_price : null, //optional
                             'insuranceValue' => null, //optional
                             'freightCharge' => null, //optional
                             'totalValue' => null, //optional for domestic
@@ -487,7 +491,7 @@ class ShippingController extends Controller
     public function download_cn(Request $request)
     {
         $sorted_order_id = $this->sort_order_to_download($request->order_ids);
-        
+
         $attachments = Shipping::select('attachment',"order_id")->whereIn('order_id', $sorted_order_id)->get()
         ->sortBy(function($model) use ($sorted_order_id) {
                 return array_search($model->order_id, $sorted_order_id);
@@ -1113,9 +1117,9 @@ class ShippingController extends Controller
             $query->where('courier_id', DHL_ID);
         })
         ->get();
-        
+
         // [x] GROUPING BY SINGLE OR MARRIED (IGNORE FOC)
-        
+
         // [x] Single
         // [x] GROUP BY PRODUCT (IGNORE FOC)
         foreach ($orders->where("marital_status", "single")->groupBy("product.name") as $product_name => $item) {
@@ -1125,7 +1129,7 @@ class ShippingController extends Controller
                 $newOrders[] = $order_id;
             }
         }
-        
+
         // [x] Married
         // [x] GROUP BY PRODUCT (IGNORE FOC)
         foreach ($orders->where("marital_status", "married")->groupBy("product.name") as $product_name => $item){
@@ -1134,7 +1138,7 @@ class ShippingController extends Controller
                 $newOrders[] = $order_id;
             }
         }
-   
+
         return $newOrders;
     }
 
