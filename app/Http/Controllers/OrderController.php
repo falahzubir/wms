@@ -445,17 +445,16 @@ class OrderController extends Controller
         $orders->when($request->filled('date_type'), function ($query) use ($request) {
             switch($request->date_type){
                 case 1: //date order added
-                    $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
-                    $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
-                    break;
+                    $request->date_from != null ? $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from))) : '';
+                    $request->date_to != null ? $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to))) : '';
                 case 2: //date request shipping
-                    $query->where('dt_request_shipping', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
-                    $query->where('dt_request_shipping', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
+                    $request->date_from != null ? $query->where('dt_request_shipping', '>=', date("Y-m-d H:i:s", strtotime($request->date_from))) : '';
+                    $request->date_to != null ? $query->where('dt_request_shipping', '<', date("Y-m-d 23:59:59", strtotime($request->date_to))) : '';
                     break;
                 case 3: //date scan parcel
                     $query->whereHas("shippings", function($q) use ($request){
-                        $q->where('scanned_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from)));
-                        $q->where('scanned_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to)));
+                        $request->date_from != null ? $q->where('scanned_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from))) : '';
+                        $request->date_to != null ? $q->where('scanned_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to))) : '';
                     });
                     break;
                 default:
