@@ -165,7 +165,7 @@ class ShippingController extends Controller
                 'inlineLabelReturn' => "Y", //mandatory
                 'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                 'pickupAddress' => [
-                    'name' => $access_token->company->contact_person, //mandatory contact person name
+                    'name' => substr($access_token->company->contact_person, 0, 50), //mandatory contact person name
                     'address1' => $access_token->company->address, //mandatory company name
                     'address2' => $access_token->company->address2 ?? null, //optional
                     'address3' => $access_token->company->address3 ?? null, //optional
@@ -356,7 +356,7 @@ class ShippingController extends Controller
                     'inlineLabelReturn' => "Y", //mandatory
                     'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                     'pickupAddress' => [
-                        'name' => $access_token->company->contact_person, //mandatory contact person name
+                        'name' => substr($access_token->company->contact_person, 0, 50), //mandatory contact person name
                         'address1' => $access_token->company->address, //mandatory company name
                         'address2' => $access_token->company->address2 ?? null, //optional
                         'address3' => $access_token->company->address3 ?? null, //optional
@@ -837,7 +837,7 @@ class ShippingController extends Controller
                         'inlineLabelReturn' => "Y", //mandatory
                         'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                         'pickupAddress' => [
-                            'name' => $company_name, // contact person, appears when DHL Scan, only on DHL site
+                            'name' => substr($company_name, 0, 50), // contact person, appears when DHL Scan, only on DHL site
                             'address1' => $access_token->company->address, //mandatory company name
                             'address2' => $access_token->company->address2 ?? null, //optional
                             'address3' => $access_token->company->address3 ?? null, //optional
