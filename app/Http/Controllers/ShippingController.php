@@ -1118,6 +1118,10 @@ class ShippingController extends Controller
         })
         ->get();
 
+        if($orders->count() == 0){
+            return $order_ids;
+        }
+
         // [x] GROUPING BY SINGLE OR MARRIED (IGNORE FOC)
 
         // [x] Single
