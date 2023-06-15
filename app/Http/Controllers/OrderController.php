@@ -253,7 +253,7 @@ class OrderController extends Controller
         $orders = $this->filter_order($request, $orders);
 
         return view('orders.index', [
-            'title' => 'Rejected Orders',
+            'title' => 'Returned Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
