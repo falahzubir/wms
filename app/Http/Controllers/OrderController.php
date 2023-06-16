@@ -281,6 +281,26 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Listsorder in Bucket Batch
+     * @param  Request $request
+     * @return view
+     */
+    public function bucket_batch(Request $request)
+    {
+        $orders = $this->index()->where('bucket_batch_id', $request->batch);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Orders in Bucket Batch ' . get_picking_batch($orders->first()->bucket_batch_id),
+            'order_ids' => $orders->pluck('id')->toArray(),
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'actions' => [ACTION_DOWNLOAD_ORDER, ACTION_DOWNLOAD_CN],
+        ]);
+    }
+
 
     /**
      * Create a new order from webhook data.

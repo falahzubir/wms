@@ -50,6 +50,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
         Route::get('change-postcode', [OrderController::class, 'change_postcode_view'])->name('orders.change_postcode_view');
         Route::post('change-postcode', [OrderController::class, 'change_postcode'])->name('orders.change_postcode');
+        Route::get('bucket-batch/{batch}', [OrderController::class, 'bucket_batch'])->name('orders.bucket_batch');
     });
 
     // group routes for buckets
