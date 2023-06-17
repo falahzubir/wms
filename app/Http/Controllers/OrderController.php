@@ -387,6 +387,7 @@ class OrderController extends Controller
             } else {
                 if($order->status == ORDER_STATUS_REJECTED){
                     set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook, previously rejected');
+                    Shipping::where('order_id', $order->id)->update(['status' => 0]);
                 } else{
                     set_order_status($order, $order->status, 'Order updated from webhook');
                 }
