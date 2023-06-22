@@ -1,5 +1,4 @@
 @props(['title' => 'Untitled'])
-<div id="wms">
 
     <!-- ======= HTML Header ======= -->
     <x-header :title="$title" />
@@ -7,7 +6,7 @@
     <!-- ======= Sidebar ======= -->
     <x-sidebar />
 
-    <main id="main" class="main">
+    <main id="main" class="main" style="min-height: 100vh">
 
         <x-breadcrumb :title="$title" />
 
@@ -22,4 +21,3 @@
     <!-- ======= Footer ======= -->
     <x-footer :script="$script" />
 
-</div>
