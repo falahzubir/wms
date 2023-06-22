@@ -36,17 +36,17 @@ class OrderApiController extends Controller
         $order->status = ORDER_STATUS_REJECTED;
         $order->save();
 
-        set_order_status($order, ORDER_STATUS_REJECTED,$request->input("reason"));
+        set_order_status($order, ORDER_STATUS_REJECTED, $request->input("reason"));
 
         // Update BOS
-        $order = Order::where("id",$request->order_id)->first();
+        $order = Order::where("id", $request->order_id)->first();
 
         // for now manually reject order until system is stable
-        if(!empty($order)){
+        if (!empty($order)) {
             $url = "https://qastg.groobok.com/api/reject_order";
 
-            if(env("APP_ENV") == "production"){
-                $url = $order->company->url."/api/reject_order";
+            if (env("APP_ENV") == "production") {
+                $url = $order->company->url . "/api/reject_order";
             }
 
             $json['from'] = "wms";
@@ -55,8 +55,8 @@ class OrderApiController extends Controller
             $json['approval_remark_textarea'] = $request->input("reason") . " - " . config("app.name");
 
             Http::withHeaders([
-                "Signature: ".hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
-                'Content-Type: application/json'
+                "Signature" => hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
+                'Content-Type' => 'application/json'
             ])->post($url, $json);
         }
 
@@ -85,7 +85,7 @@ class OrderApiController extends Controller
             return response()->json(['error' => 'Parcel not found']);
         }
 
-        if($order->status == ORDER_STATUS_REJECTED){
+        if ($order->status == ORDER_STATUS_REJECTED) {
             return response()->json(['error' => 'Order rejected']);
         }
 
