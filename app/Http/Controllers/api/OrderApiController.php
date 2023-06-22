@@ -51,7 +51,7 @@ class OrderApiController extends Controller
 
             $json['from'] = "wms";
             $json['sales_id'] = $order->sales_id;
-            $json['reason_reject'] = $request->input("reason_reject"); // 1-Phone, 2-Address, 3-Product(Qty), 4-Product(Other)
+            $json['reason_reject'] = $request->input("reject_reason"); // 1-Phone, 2-Address, 3-Product(Qty), 4-Product(Other)
             $json['approval_remark_textarea'] = $request->input("reason") . " - " . config("app.name");
 
             Http::withHeaders([
