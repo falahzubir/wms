@@ -1091,10 +1091,29 @@
         }
 
         function reject_order(orderId) {
+            console.log(213);
             Swal.fire({
                 title: 'Are you sure to reject this order?',
                 html: `You are about to reject order ${orderId}.`,
                 icon: 'warning',
+                input: 'select',
+                inputOptions: {
+                    1: 'Phone',
+                    2: 'Address',
+                    3: 'Product(Quantity)',
+                    4: 'Product(Others)'
+                },
+                inputPlaceholder: 'Select a reason',
+                inputValidator: (value) => {
+                    return new Promise((resolve) => {
+                    if (value != '') {
+                        reject_reason = value;
+                        resolve()
+                    } else {
+                        resolve('You need to select one of the option')
+                    }
+                    })
+                },
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
@@ -1116,6 +1135,7 @@
                         axios.post('/api/orders/reject', {
                             order_id: orderId,
                             reason,
+                            reject_reason
                         })
                             .then(function (response) {
                                 // handle success, close or download
