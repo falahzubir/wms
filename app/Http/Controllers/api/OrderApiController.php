@@ -18,47 +18,46 @@ class OrderApiController extends Controller
     public function reject(Request $request)
     {
 
-        $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'reason' => 'required',
-            'reject_reason' => 'required|in:1,2,3,4',
-        ]);
-
         if (isset($request->sales_id)) { //from BOS
+            $request->validate([
+                'sales_id' => 'required|exists:orders,sales_id',
+                'reason' => 'required'
+            ]);
             $order = Order::with('company')->where('sales_id', $request->sales_id)
                 ->whereHas('company', function ($query) use ($request) {
                     $query->where('code', $request->company);
                 })
                 ->first();
         } else {
+            $request->validate([
+                'order_id' => 'required|exists:orders,id',
+                'reason' => 'required',
+                'reject_reason' => 'required|in:1,2,3,4',
+            ]);
             $order = Order::find($request->order_id);
+
+            if (!empty($order)) {
+                $url = "https://qastg.groobok.com/api/reject_order";
+
+                if (env("APP_ENV") == "production") {
+                    $url = $order->company->url . "/api/reject_order";
+                }
+
+                $json['from'] = "wms";
+                $json['sales_id'] = $order->sales_id;
+                $json['reason_reject'] = $request->input("reject_reason"); // 1-Phone, 2-Address, 3-Product(Qty), 4-Product(Other)
+                $json['approval_remark_textarea'] = $request->input("reason") . " - " . config("app.name");
+
+                Http::withHeaders([
+                    "Signature" => hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
+                    'Content-Type' => 'application/json'
+                ])->post($url, $json);
+            }
         }
         $order->status = ORDER_STATUS_REJECTED;
         $order->save();
 
         set_order_status($order, ORDER_STATUS_REJECTED, $request->input("reason"));
-
-        // Update BOS
-        $order = Order::where("id", $request->order_id)->first();
-
-        // for now manually reject order until system is stable
-        if (!empty($order)) {
-            $url = "https://qastg.groobok.com/api/reject_order";
-
-            if (env("APP_ENV") == "production") {
-                $url = $order->company->url . "/api/reject_order";
-            }
-
-            $json['from'] = "wms";
-            $json['sales_id'] = $order->sales_id;
-            $json['reason_reject'] = $request->input("reject_reason"); // 1-Phone, 2-Address, 3-Product(Qty), 4-Product(Other)
-            $json['approval_remark_textarea'] = $request->input("reason") . " - " . config("app.name");
-
-            Http::withHeaders([
-                "Signature" => hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
-                'Content-Type' => 'application/json'
-            ])->post($url, $json);
-        }
 
         return response()->json([
             'message' => 'Order rejected'
