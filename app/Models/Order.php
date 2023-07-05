@@ -75,4 +75,8 @@ class Order extends Model
         return $this->belongsTo(PaymentType::class, 'payment_type');
     }
 
+    public function operationalModel()
+    {
+        return $this->belongsTo(OperationalModel::class);
+    }
 }

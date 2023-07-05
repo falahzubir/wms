@@ -27,7 +27,7 @@ class OrderController extends Controller
     {
         return Order::with([
             'customer', 'items', 'items.product', 'shippings',
-            'bucket', 'batch', 'company', 'courier',
+            'bucket', 'batch', 'company', 'courier', 'operationalModel',
             'logs' => function ($query) {
                 $query->orderBy('id', 'desc');
             }
@@ -148,7 +148,6 @@ class OrderController extends Controller
         $orders = $this->index()->whereIn('status', [ORDER_STATUS_PROCESSING]);
 
         $orders = $this->filter_order($request, $orders);
-
         return view('orders.index', [
             'title' => 'Processing Orders',
             'order_ids' => $orders->pluck('id')->toArray(),

@@ -160,8 +160,8 @@ class ShippingController extends Controller
             ];
 
             $data['labelRequest']['bd'] = [
-                'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
-                'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
+                'pickupAccountId' => $access_token->additional_data->dhl_pickup_account, //mandatory
+                'soldToAccountId' => $access_token->additional_data->dhl_sold_to_account, //mandatory
                 'inlineLabelReturn' => "Y", //mandatory
                 'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                 'pickupAddress' => [
@@ -351,8 +351,8 @@ class ShippingController extends Controller
                             'isMult' => "true", //true: multiple pieces, false: single piece
                         ],
                     ],
-                    'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
-                    'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
+                    'pickupAccountId' => $access_token->additional_data->dhl_pickup_account, //mandatory
+                    'soldToAccountId' => $access_token->additional_data->dhl_sold_to_account, //mandatory
                     'inlineLabelReturn' => "Y", //mandatory
                     'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                     'pickupAddress' => [
@@ -832,8 +832,8 @@ class ShippingController extends Controller
                                 'isMult' => "false", //true: multiple pieces, false: single piece
                             ],
                         ],
-                        'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
-                        'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
+                        'pickupAccountId' => $access_token->additional_data->dhl_pickup_account, //mandatory
+                        'soldToAccountId' => $access_token->additional_data->dhl_sold_to_account, //mandatory
                         'inlineLabelReturn' => "Y", //mandatory
                         'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                         'pickupAddress' => [

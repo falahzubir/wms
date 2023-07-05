@@ -51,7 +51,8 @@ if (!function_exists('shipment_num_format')) {
      */
     function shipment_num_format($order)
     {
-        return DHL_PREFIX[$order->company_id] . $order->company->code
+        return DHL_PREFIX[$order->company_id] . $order->company->code . "-"
+            . $order->operationalModel->short_name
             . sprintf('%' . ORDER_NUMBER_LENGTH . 'd', $order->sales_id) . "-"
             . date("ymd", strtotime($order->batch->created_at)) . "-"
             . sprintf('%03d', $order->batch->batch_id);
