@@ -36,7 +36,7 @@ return new class extends Migration
             ['id' => 9, 'name' => 'Ecommerce', 'short_name' => 'OCM'],
             ['id' => 10, 'name' => 'CSE', 'short_name' => 'CSE'],
             ['id' => 11, 'name' => 'Sales Center', 'short_name' => 'SCN'],
-            ['id' => 12, 'name' => 'Marketplace', 'short_name' => 'MKT', 'is_active' => 0],
+            ['id' => 12, 'name' => 'Marketplace', 'short_name' => 'MKT'],
             ['id' => 13, 'name' => 'Marketplace', 'short_name' => 'MKT'],
             ['id' => 14, 'name' => 'Whatomation', 'short_name' => 'WAT'],
             ['id' => 15, 'name' => 'NOSE', 'short_name' => 'OSE'],
