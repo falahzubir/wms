@@ -31,6 +31,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'tracking.upload']);
         Permission::firstOrCreate(['name' => 'tracking.update']);
         Permission::firstOrCreate(['name' => 'company.update']);
+        Permission::firstOrCreate(['name' => 'company.create']);
         Permission::firstOrCreate(['name' => 'order.download']);
         Permission::firstOrCreate(['name' => 'barcode.scan']);
         Permission::firstOrCreate(['name' => 'user.list']);
@@ -38,6 +39,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'user.create']);
         Permission::firstOrCreate(['name' => 'order.approve_for_shipping']);
         Permission::firstOrCreate(['name' => 'shipping.cancel']);
+        Permission::firstOrCreate(['name' => 'operational_model.update']);
 
         //view permission
         Permission::firstOrCreate(['name' => 'view.overall_list']);

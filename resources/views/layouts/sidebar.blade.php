@@ -143,6 +143,14 @@
                             </a>
                         </li>
                     @endcan
+                    @can('operational_model.update')
+                        <li>
+                            <a href="{{ route('operational_model.index') }}"
+                                {{ Route::current()->getName() == 'operational_model.index' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i><span>Operational Model</span>
+                            </a>
+                        </li>
+                    @endcan
                     <li>
                         <a href="{{ route('users.index') }}"
                             {{ Route::current()->getName() == 'users.index' ? 'class=active' : '' }}>

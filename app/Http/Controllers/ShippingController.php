@@ -763,17 +763,17 @@ class ShippingController extends Controller
         $data = [];
         $dhl_store = [];
 
-        $blast = false;
-        foreach ($order->items as $item) {
-            if ($item->quantity > $item->product->max_box) {
-                $blast = true;
-            }
-        }
+        // $blast = false;
+        // foreach ($order->items as $item) {
+        //     if ($item->quantity > $item->product->max_box) {
+        //         $blast = true;
+        //     }
+        // }
         // any order with more than 40 orders will be named as blast
-        if ($order->items->count() > 1 && $order->items->sum('quantity') > MAXIMUM_QUANTITY_PER_BOX) {
-            $blast = true;
-        }
-        $company_name = ($order->operational_model_id == OP_BLAST_ID && $blast) ? "EMZI BLAST" : $access_token->company->name;
+        // if ($order->items->count() > 1 && $order->items->sum('quantity') > MAXIMUM_QUANTITY_PER_BOX) {
+        //     $blast = true;
+        // }
+        // $company_name = ($order->operational_model_id == OP_BLAST_ID && $blast) ? "EMZI BLAST" : $access_token->company->name;
 
         foreach ($array_data as $key => $cn) {
             //calculate COD amount
@@ -837,7 +837,7 @@ class ShippingController extends Controller
                         'inlineLabelReturn' => "Y", //mandatory
                         'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                         'pickupAddress' => [
-                            'name' => substr($company_name, 0, 50), // contact person, appears when DHL Scan, only on DHL site
+                            'name' => substr($access_token->company->name, 0, 50), // contact person, appears when DHL Scan, only on DHL site
                             'address1' => $access_token->company->address, //mandatory company name
                             'address2' => $access_token->company->address2 ?? null, //optional
                             'address3' => $access_token->company->address3 ?? null, //optional
