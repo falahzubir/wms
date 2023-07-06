@@ -160,8 +160,8 @@ class ShippingController extends Controller
             ];
 
             $data['labelRequest']['bd'] = [
-                'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
-                'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
+                'pickupAccountId' => $access_token->additional_data->dhl_pickup_account, //mandatory
+                'soldToAccountId' => $access_token->additional_data->dhl_sold_to_account, //mandatory
                 'inlineLabelReturn' => "Y", //mandatory
                 'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                 'pickupAddress' => [
@@ -351,8 +351,8 @@ class ShippingController extends Controller
                             'isMult' => "true", //true: multiple pieces, false: single piece
                         ],
                     ],
-                    'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
-                    'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
+                    'pickupAccountId' => $access_token->additional_data->dhl_pickup_account, //mandatory
+                    'soldToAccountId' => $access_token->additional_data->dhl_sold_to_account, //mandatory
                     'inlineLabelReturn' => "Y", //mandatory
                     'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                     'pickupAddress' => [
@@ -763,17 +763,22 @@ class ShippingController extends Controller
         $data = [];
         $dhl_store = [];
 
-        $blast = false;
-        foreach ($order->items as $item) {
-            if ($item->quantity > $item->product->max_box) {
-                $blast = true;
-            }
-        }
+        // $blast = false;
+        // foreach ($order->items as $item) {
+        //     if ($item->quantity > $item->product->max_box) {
+        //         $blast = true;
+        //     }
+        // }
         // any order with more than 40 orders will be named as blast
-        if ($order->items->count() > 1 && $order->items->sum('quantity') > MAXIMUM_QUANTITY_PER_BOX) {
-            $blast = true;
-        }
-        $company_name = ($order->operational_model_id == OP_BLAST_ID && $blast) ? "EMZI BLAST" : $access_token->company->name;
+        // if ($order->items->count() > 1 && $order->items->sum('quantity') > MAXIMUM_QUANTITY_PER_BOX) {
+        //     $blast = true;
+        // }
+        // $company_name = ($order->operational_model_id == OP_BLAST_ID && $blast) ? "EMZI BLAST" : $access_token->company->name;
+
+        if(count($array_data) > 1) { $mult = true; } else  { $mult = false; }
+
+        $company_name = ($order->operational_model_id == OP_BLAST_ID && $mult) ? "EMZI BLAST" : $access_token->company->name;
+        $pickup_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_pickup_account_blast: $access_token->additional_data->dhl_pickup_account;
 
         foreach ($array_data as $key => $cn) {
             //calculate COD amount
@@ -832,8 +837,8 @@ class ShippingController extends Controller
                                 'isMult' => "false", //true: multiple pieces, false: single piece
                             ],
                         ],
-                        'pickupAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
-                        'soldToAccountId' => DHL_SOLD_PICKUP_ACCT[$access_token->company_id], //mandatory
+                        'pickupAccountId' => $pickup_account, //mandatory
+                        'soldToAccountId' => $access_token->additional_data->dhl_sold_to_account, //mandatory
                         'inlineLabelReturn' => "Y", //mandatory
                         'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                         'pickupAddress' => [
@@ -859,7 +864,7 @@ class ShippingController extends Controller
             ];
 
             $data = json_encode($data);
-            // logger($data);
+
             $response = Http::withBody($data, 'application/json')->post($url);
             // $dhl_store = ['test'];
             $dhl_store = $this->dhl_store_for_mult($order, $response, $key);

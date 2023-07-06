@@ -96,13 +96,13 @@ if(!defined('AUTO_SHIPPING_COURIER')) define('AUTO_SHIPPING_COURIER', [15]);
 // DHL EH
 if(!defined('DHL_SOLD_PICKUP_ACCT')) define('DHL_SOLD_PICKUP_ACCT',[
     1=>'5265434590',//5265434590', // EH
-    2=>'5286430910',//5265241234', // ED
+    2=>'5286430910',//5286430910', // ED
     3=>'5999999885',//5264574522', // QA
 ]);
 if(!defined('DHL_PREFIX')) define('DHL_PREFIX',[
-    1=>'MYCKZ', // EH // MYAAH
-    2=>'MYGPK', // ED // MYAAH
-    3=>'MYAAHQ', // QA
+    1=>'MY', // EH // MYCKZ
+    2=>'MY', // ED // MYGPK
+    3=>'MY', // QA
 ]);
 if(!defined('DHL_CLIENT_ID')) define('DHL_CLIENT_ID','LTE2MDAwOTg0NTI=');
 if(!defined('DHL_CLIENT_PASS')) define('DHL_CLIENT_PASS','MjAzMDI5MTU');

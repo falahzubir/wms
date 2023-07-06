@@ -16,12 +16,15 @@ class ShippingApiController extends ShippingController
      * DHL access token request, response and save to database, CRON job to run every 20 hours
      * @return void
      */
-    public function dhl_generate_access_token()
+    public function dhl_generate_access_token($company_id = null)
     {
         $url = $this->dhl_access;
 
-        $dhl_tokens = AccessToken::where('type', 'dhl')->get();
-
+        $dhl_tokens = AccessToken::where('type', 'dhl');
+        if($company_id){
+            $dhl_tokens = $dhl_tokens->where('company_id', $company_id);
+        }
+        $dhl_tokens = $dhl_tokens->get();
         foreach ($dhl_tokens as $token) {
 
             $response = Http::get($url . "?clientId=" . $token->client_id . "&password=" . $token->client_secret)->json();

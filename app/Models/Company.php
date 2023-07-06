@@ -20,4 +20,9 @@ class Company extends Model
     {
         return $this->hasMany(AccessToken::class);
     }
+
+    public function operational_model()
+    {
+    return $this->belongsTo(OperationalModel::class);
+    }
 }

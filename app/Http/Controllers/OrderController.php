@@ -6,6 +6,7 @@ use App\Exports\OrderExport;
 use App\Models\Company;
 use App\Models\Courier;
 use App\Models\Customer;
+use App\Models\OperationalModel;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -27,7 +28,7 @@ class OrderController extends Controller
     {
         return Order::with([
             'customer', 'items', 'items.product', 'shippings',
-            'bucket', 'batch', 'company', 'courier',
+            'bucket', 'batch', 'company', 'courier', 'operationalModel',
             'logs' => function ($query) {
                 $query->orderBy('id', 'desc');
             }
@@ -148,7 +149,6 @@ class OrderController extends Controller
         $orders = $this->index()->whereIn('status', [ORDER_STATUS_PROCESSING]);
 
         $orders = $this->filter_order($request, $orders);
-
         return view('orders.index', [
             'title' => 'Processing Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
@@ -321,6 +321,11 @@ class OrderController extends Controller
         }
 
         $company_id = Company::where('code', $webhook['company'])->first()->id;
+
+        // $operational_model = OperationalModel::where('id', $webhook['operation_model_id'])->first();
+        // if ($operational_model->default_company_id != null) {
+        //     $company_id = $operational_model->default_company_id;
+        // }
 
         // create order
         $ids['sales_id'] = $webhook['sales_id'];

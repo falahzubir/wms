@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\AccessTokenController;
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OperationalModelController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserController;
+use App\Models\Company;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -87,6 +90,8 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/', [CompanyController::class, 'index'])->name('companies.index');
         Route::get('edit/{company}', [CompanyController::class, 'edit'])->name('companies.edit');
         Route::post('update/{company}', [CompanyController::class, 'update'])->name('companies.update');
+        Route::get('add', [CompanyController::class, 'add'])->name('companies.add');
+        Route::post('create', [CompanyController::class, 'create'])->name('companies.create');
     });
 
     Route::group(['prefix'=>'permissions', 'middleware' => ['role:IT_Admin']], function(){
@@ -123,6 +128,17 @@ Route::middleware(['auth'])->group(function() {
         Route::post('update', [UserController::class, 'profile_update'])->name('profile.update');
         Route::post('update-password', [UserController::class, 'profile_update_password'])->name('profile.update_password');
     });
+
+    Route::prefix('access-tokens')->middleware('role:IT_Admin')->group(function () {
+        Route::get('/{company_id}', [AccessTokenController::class, 'show'])->name('access-tokens.show');
+        Route::post('/{company_id}', [AccessTokenController::class, 'update'])->name('access-tokens.update');
+    });
+
+    Route::prefix('operational_models')->group(function() {
+        Route::get('/', [OperationalModelController::class, 'index'])->name('operational_model.index');
+        Route::get('/{opmodel_id}', [OperationalModelController::class, 'show'])->name('operational_model.show');
+        Route::post('/{opmodel_id}', [OperationalModelController::class, 'update'])->name('operational_model.update');
+    });
 });
 
 
@@ -141,16 +157,24 @@ Route::middleware(['auth', 'role:admin'])->group(function() {
 });
 
 //migration for dev purpose only
-Route::get('run-migration', function () {
-    if(config('app.env')=="local"){
-        Artisan::call('migrate');
-        return 'Migrations ran successfully!';
-    }
-});
+Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
+    Route::get('run-migration', function () {
+        // if(config('app.env')=="local"){
+            Artisan::call('migrate');
+            return 'Migrations ran successfully!';
+        // }
+    });
+    Route::get('rollback-migration', function () {
+        if(config('app.env')=="local"){
+            Artisan::call('migrate:rollback');
+            return 'Rollback ran successfully!';
+        }
+    });
 
-Route::get('seed/permission', function () {
-    if(config('app.env')=="local"){
-        Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
-        return 'Seeds ran successfully!';
-    }
+    Route::get('seed/permission', function () {
+        // if(config('app.env')=="local"){
+            Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
+            return 'Seeds ran successfully!';
+        // }
+    });
 });

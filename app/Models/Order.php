@@ -10,6 +10,8 @@ class Order extends Model
     use HasFactory;
     protected $guarded = [];
 
+    protected $appends = ['is_multiple_carton'];
+
     public function bucket()
     {
         return $this->belongsTo(Bucket::class);
@@ -75,4 +77,19 @@ class Order extends Model
         return $this->belongsTo(PaymentType::class, 'payment_type');
     }
 
+    public function operationalModel()
+    {
+        return $this->belongsTo(OperationalModel::class);
+    }
+
+    public function getIsMultipleCartonAttribute()
+    {
+        $items = $this->items;
+        foreach ($items as $item) {
+            if ($item->quantity > $item->product->max_box) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
