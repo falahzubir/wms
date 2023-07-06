@@ -22,7 +22,8 @@ return new class extends Migration
             AccessToken::where('company_id', $key)->update([
                 'additional_data' => json_encode([
                     'dhl_pickup_account' => $value,
-                    'dhl_sold_to_account' => $value
+                    'dhl_sold_to_account' => $value,
+                    'dhl_pickup_account_blast' => "5298984040"
                 ])
             ]);
         }

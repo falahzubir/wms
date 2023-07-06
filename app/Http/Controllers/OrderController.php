@@ -322,10 +322,10 @@ class OrderController extends Controller
 
         $company_id = Company::where('code', $webhook['company'])->first()->id;
 
-        $operational_model = OperationalModel::where('id', $webhook['operation_model_id'])->first();
-        if ($operational_model->default_company_id != null) {
-            $company_id = $operational_model->default_company_id;
-        }
+        // $operational_model = OperationalModel::where('id', $webhook['operation_model_id'])->first();
+        // if ($operational_model->default_company_id != null) {
+        //     $company_id = $operational_model->default_company_id;
+        // }
 
         // create order
         $ids['sales_id'] = $webhook['sales_id'];

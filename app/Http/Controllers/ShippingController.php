@@ -775,6 +775,11 @@ class ShippingController extends Controller
         // }
         // $company_name = ($order->operational_model_id == OP_BLAST_ID && $blast) ? "EMZI BLAST" : $access_token->company->name;
 
+        if(count($array_data) > 1) { $mult = true; } else  { $mult = false; }
+
+        $company_name = ($order->operational_model_id == OP_BLAST_ID && $mult) ? "EMZI BLAST" : $access_token->company->name;
+        $pickup_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_pickup_account_blast: $access_token->additional_data->dhl_pickup_account;
+
         foreach ($array_data as $key => $cn) {
             //calculate COD amount
             $codAmmount = ($remainCodAmmount > MAX_DHL_COD_PER_PARCEL) ? MAX_DHL_COD_PER_PARCEL : $remainCodAmmount;
@@ -832,12 +837,12 @@ class ShippingController extends Controller
                                 'isMult' => "false", //true: multiple pieces, false: single piece
                             ],
                         ],
-                        'pickupAccountId' => $access_token->additional_data->dhl_pickup_account, //mandatory
+                        'pickupAccountId' => $pickup_account, //mandatory
                         'soldToAccountId' => $access_token->additional_data->dhl_sold_to_account, //mandatory
                         'inlineLabelReturn' => "Y", //mandatory
                         'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                         'pickupAddress' => [
-                            'name' => substr($access_token->company->name, 0, 50), // contact person, appears when DHL Scan, only on DHL site
+                            'name' => substr($company_name, 0, 50), // contact person, appears when DHL Scan, only on DHL site
                             'address1' => $access_token->company->address, //mandatory company name
                             'address2' => $access_token->company->address2 ?? null, //optional
                             'address3' => $access_token->company->address3 ?? null, //optional
@@ -859,7 +864,7 @@ class ShippingController extends Controller
             ];
 
             $data = json_encode($data);
-            // logger($data);
+
             $response = Http::withBody($data, 'application/json')->post($url);
             // $dhl_store = ['test'];
             $dhl_store = $this->dhl_store_for_mult($order, $response, $key);

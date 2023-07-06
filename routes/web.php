@@ -164,6 +164,12 @@ Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
             return 'Migrations ran successfully!';
         // }
     });
+    Route::get('rollback-migration', function () {
+        if(config('app.env')=="local"){
+            Artisan::call('migrate:rollback');
+            return 'Rollback ran successfully!';
+        }
+    });
 
     Route::get('seed/permission', function () {
         // if(config('app.env')=="local"){
