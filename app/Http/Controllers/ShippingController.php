@@ -492,7 +492,7 @@ class ShippingController extends Controller
     {
         $sorted_order_id = $this->sort_order_to_download($request->order_ids);
 
-        $attachments = Shipping::select('attachment', "order_id")->whereIn('order_id', $sorted_order_id)->get()
+        $attachments = Shipping::select('attachment', "order_id")->active()->whereIn('order_id', $sorted_order_id)->get()
             ->sortBy(function ($model) use ($sorted_order_id) {
                 return array_search($model->order_id, $sorted_order_id);
             });

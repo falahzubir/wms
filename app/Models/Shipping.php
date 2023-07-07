@@ -19,4 +19,9 @@ class Shipping extends Model
     {
         return $this->belongsTo(User::class, 'scanned_by');
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
 }
