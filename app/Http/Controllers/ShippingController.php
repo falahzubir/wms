@@ -779,6 +779,7 @@ class ShippingController extends Controller
 
         $company_name = ($order->operational_model_id == OP_BLAST_ID && $mult) ? "EMZI BLAST" : $access_token->company->name;
         $pickup_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_pickup_account_blast: $access_token->additional_data->dhl_pickup_account;
+        $soldto_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_sold_to_account_blast: $access_token->additional_data->dhl_sold_to_account;
 
         foreach ($array_data as $key => $cn) {
             //calculate COD amount
@@ -838,7 +839,7 @@ class ShippingController extends Controller
                             ],
                         ],
                         'pickupAccountId' => $pickup_account, //mandatory
-                        'soldToAccountId' => $access_token->additional_data->dhl_sold_to_account, //mandatory
+                        'soldToAccountId' => $soldto_account, //mandatory
                         'inlineLabelReturn' => "Y", //mandatory
                         'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                         'pickupAddress' => [
