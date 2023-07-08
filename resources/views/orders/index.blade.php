@@ -162,11 +162,11 @@
                                                 @endif
                                                 {{-- add shipping number modal --}}
                                                 @if (Route::is('orders.processing'))
-                                                   @if($order->is_multiple_carton)
+                                                   {{-- @if($order->is_multiple_carton) --}}
                                                         <button class="btn btn-warning p-0 px-1 m-1" onclick="multiple_cn({order:'{{ $order }}',ref_no:'{{ order_num_format($order) }}'})"></>
                                                             <i class="bi bi-file-earmark-ruled"></i>
                                                         </button>
-                                                    @endif
+                                                    {{-- @endif --}}
                                                     {{-- @empty($order->shippings) --}}
                                                         @can('tracking.update')
                                                             <button type="button"
@@ -191,14 +191,6 @@
                                                             </button>
                                                         @endif
                                                     @endcan
-                                                @endif
-                                                @if (request('multiple_parcels') == true)
-                                                    <button class="btn btn-warning p-0 px-1 split-parcels"
-                                                        title="Split Parcel" data-bs-toggle="modal"
-                                                        data-bs-target="#split-parcel-modal"
-                                                        data-orderid="{{ $order->id }}">
-                                                        <i class="bi bi-arrow-left-right"></i>
-                                                    </button>
                                                 @endif
                                             </div>
                                     </td>
