@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bucket;
+use App\Models\Company;
 use App\Models\Order;
 use App\Models\OrderLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class BucketController extends Controller
 {
@@ -99,12 +101,46 @@ class BucketController extends Controller
             'order_ids' => 'required',
         ]);
 
-        Order::whereIn('id', $request->order_ids)->update([
+
+        $upd = Order::whereIn('id', $request->order_ids)->update([
             'bucket_batch_id' => null, // Reset batch id
             'bucket_id' => $request->bucket_id,
             'status' => ORDER_STATUS_PROCESSING,
         ]);
 
+        if (!$upd) {
+            return response()->json(['message' => 'Failed to add order to bucket.']);
+        }
+
+        $orders = Order::with(['company'])->whereIn('id', $request->order_ids)->get();
+
+        // get orders
+        $orders = Order::with(['company'])->whereIn('id', $request->order_ids)->get();
+
+        //foreach company
+        $orders_company = [];
+        foreach ($orders as $order) {
+            $orders_company[$order->company->id][] = $order;
+        }
+
+        //send api to company
+        foreach ($orders_company as $orders) {
+            $company_url = $orders[0]->company->url;
+
+            if(!$company_url) continue;
+
+            // get sales ids from orders array
+            $orders = array_map(function ($order) {
+                return $order->sales_id;
+            }, $orders);
+
+            $data = [
+                'sales_ids' => $orders,
+            ];
+
+            Http::post($company_url . '/api/processed_order', $data);
+
+        }
 
         foreach ($request->order_ids as $order_id) {
             OrderLog::create([
