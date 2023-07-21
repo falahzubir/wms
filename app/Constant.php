@@ -43,6 +43,12 @@ if(!defined('MY_STATES')) define('MY_STATES', [
 if(!defined('COUNTRIES')) define('COUNTRIES', [
     'MY' => 'Malaysia',
 ]);
+if(!defined('COUNTRY_ID')) define('COUNTRY_ID', [
+    1 => 'Malaysia',
+    2 => 'Singapore',
+    3 => 'Indonesia',
+    4 => 'Pakistan'
+]);
 
 // actions
 if(!defined('ACTION_ADD_TO_BUCKET')) define('ACTION_ADD_TO_BUCKET', 'add-to-bucket');
