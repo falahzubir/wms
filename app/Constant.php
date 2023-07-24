@@ -37,6 +37,41 @@ if(!defined('MY_STATES')) define('MY_STATES', [
     14 => 'Labuan',
     15 => 'Kuala Lumpur',
     16 => 'Putrajaya',
+    17 => 'Singapore',
+    18 => 'LAMPUNG',
+    19 => 'KEPULAUAN BANGKA BELITUNG',
+    21 => 'KEPULAUAN RIAU',
+    31 => 'DKI JAKARTA',
+    32 => 'JAWA BARAT',
+    33 => 'JAWA TENGAH',
+    34 => 'DI YOGYAKARTA',
+    35 => 'JAWA TIMUR',
+    36 => 'Acheh',
+    37 => 'JAMBI',
+    38 => 'SUMATERA SELATAN',
+    39 => 'BENGKULU',
+    40 => 'BALI',
+    41 => 'NUSA TENGGARA BARAT',
+    42 => 'NUSA TENGGARA TIMUR',
+    43 => 'KALIMANTAN BARAT',
+    44 => 'KALIMANTAN TENGAH',
+    45 => 'KALIMANTAN SELATAN',
+    46 => 'KALIMANTAN TIMUR',
+    47 => 'KALIMANTAN UTARA',
+    48 => 'SULAWESI UTARA',
+    49 => 'SULAWESI TENGAH',
+    50 => 'SULAWESI SELATAN',
+    51 => 'SULAWESI TENGGARA',
+    52 => 'GORONTALO',
+    53 => 'SULAWESI BARAT',
+    54 => 'MALUKU',
+    55 => 'MALUKU UTARA',
+    56 => 'PAPUA BARAT',
+    57 => 'PAPUA',
+    58 => 'SUMATERA UTARA',
+    59 => 'SUMATERA BARAT',
+    60 => 'RIAU',
+    61 => 'Others'
 ]);
 
 // countries
@@ -45,8 +80,8 @@ if(!defined('COUNTRIES')) define('COUNTRIES', [
 ]);
 if(!defined('COUNTRY_ID')) define('COUNTRY_ID', [
     1 => 'Malaysia',
-    2 => 'Singapore',
-    3 => 'Indonesia',
+    2 => 'Indonesia',
+    3 => 'Singapore',
     4 => 'Pakistan'
 ]);
 
