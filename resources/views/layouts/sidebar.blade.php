@@ -114,6 +114,25 @@
             </li><!-- End Scan Parcel Nav -->
         @endcan
 
+        @can('product.list')
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-menu-button-wide"></i><span>Inventory</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="components-nav"
+                    class="nav-content {{ Route::current()->getName() != 'inventory.index' ? 'collapsed' : '' }} "
+                    data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="{{ route('products.index') }}"
+                            {{ Route::current()->getName() == 'products.index' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Product</span>
+                        </a>
+                    </li>
+                </ul>
+            </li><!-- End Components Nav -->
+        @endcan
+
         @can('view.settings')
             <li class="nav-item">
                 <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">

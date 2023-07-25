@@ -55,6 +55,11 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view.settings']);
         Permission::firstOrCreate(['name' => 'view.dashboard']);
 
+        //product permission
+        Permission::firstOrCreate(['name' => 'product.list']);
+        Permission::firstOrCreate(['name' => 'product.create']);
+        Permission::firstOrCreate(['name' => 'product.edit']);
+        Permission::firstOrCreate(['name' => 'product.delete']);
 
         // create roles and assign created permissions
         $role = Role::firstOrCreate(['name' => 'IT_Admin']);

@@ -126,3 +126,10 @@ if(!defined('AUTO_REJECT_DHL')) define('AUTO_REJECT_DHL', true);
 
 //blast id
 if(!defined('OP_BLAST_ID')) define('OP_BLAST_ID', 16);
+
+if(!defined('PROD_STORAGE_COND')) define('PROD_STORAGE_COND', [
+    1 => 'Ambient',
+    2 => 'Air-condition',
+    3 => 'Chill',
+    4 => 'Frozen',
+]);
