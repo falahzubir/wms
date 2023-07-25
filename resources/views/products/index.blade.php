@@ -89,7 +89,7 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-1">
+                                    <div class="d-flex justify-content-center gap-1">
                                         @can('product.delete')
                                             <button class="btn btn-sm btn-danger p-0 px-1"
                                                 onclick="destroyProduct({{ $product->id }})">

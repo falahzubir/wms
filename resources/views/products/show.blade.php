@@ -71,10 +71,12 @@
                 <div class="row mb-4">
                     <div class="col-md-3 fw-bold">Company <sup class="text-danger">*</sup></div>
                     <div class="col-md-9">
-                        <select name="company" id="company_id" class="form-control form-control tomsel" placeholder="Please select a company" required>
-                            <option value="" >Please select a company</option>
+                        <select name="company" id="company_id" class="form-control form-control tomsel"
+                            placeholder="Please select a company" required>
+                            <option value="">Please select a company</option>
                             @foreach ($companies as $company)
-                                <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                <option value="{{ $company->id }}" @if (isset($product->detail->company_id) && $product->detail->company_id == $company->id) selected @endif>
+                                    {{ $company->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -82,9 +84,9 @@
                 <div class="row mb-4">
                     <div class="col-md-3 fw-bold">Storage Condition <sup class="text-danger">*</sup></div>
                     <div class="col-md-9">
-                        <select name="storage_condition" id="company_id" class="form-control form-control tomsel" placeholder="Please select storage condition"
-                            required>
-                            <option value="" >Please select storage condition</option>
+                        <select name="storage_condition" id="company_id" class="form-control form-control tomsel"
+                            placeholder="Please select storage condition" required>
+                            <option value="">Please select storage condition</option>
                             @foreach (PROD_STORAGE_COND as $key => $value)
                                 <option value="{{ $key }}" @if (isset($product->detail->storage_cond) && $product->detail->storage_cond == $key) selected @endif>
                                     {{ $value }}</option>
@@ -95,9 +97,9 @@
                 <div class="row mb-4">
                     <div class="col-md-3 fw-bold">Product Category <sup class="text-danger">*</sup></div>
                     <div class="col-md-9">
-                        <select name="product_category" id="product_category" class="form-control form-control tomsel" placeholder="Please select product category"
-                            required>
-                            <option value="" >Please select product category</option>
+                        <select name="product_category" id="product_category" class="form-control form-control tomsel"
+                            placeholder="Please select product category" required>
+                            <option value="">Please select product category</option>
                             @foreach ($product_categories as $category)
                                 <option value="{{ $category->id }}" @if (isset($product->detail->category_id) && $product->detail->category_id == $category->id) selected @endif>
                                     {{ $category->name }}</option>
@@ -108,8 +110,8 @@
                 <div class="row mb-4 d-none">
                     <div class="col-md-3 fw-bold">Product Sub Category </div>
                     <div class="col-md-9">
-                        <select name="product_subcategory" id="product_subcategory" placeholder="Please select product sub category"
-                            class="form-control form-control tomsel">
+                        <select name="product_subcategory" id="product_subcategory"
+                            placeholder="Please select product sub category" class="form-control form-control tomsel">
                             <option value="">Please select product sub category</option>
                             @foreach ($product_sub_categories as $subcategory)
                                 <option value="{{ $subcategory->id }} "
@@ -150,7 +152,8 @@
                         </div>
                         <div class="row">
                             <div class="col-md-4">
-                                <div class="input-group @if ((isset($product->detail->shelf_life) && $product->detail->shelf_life == 0) || !isset($product->detail->shelf_life)) d-none @endif" id="shelf_life_days">
+                                <div class="input-group @if ((isset($product->detail->shelf_life) && $product->detail->shelf_life == 0) || !isset($product->detail->shelf_life)) d-none @endif"
+                                    id="shelf_life_days">
                                     <input type="text" name="shelf_life_period" class="form-control" placeholder=""
                                         value="{{ $product->detail->shelf_life_period ?? old('shelf_life_period') }}">
                                     <span class="input-group-text">days</span>
