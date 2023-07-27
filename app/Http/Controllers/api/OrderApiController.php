@@ -17,7 +17,6 @@ class OrderApiController extends Controller
     */
     public function reject(Request $request)
     {
-
         if (isset($request->sales_id)) { //from BOS
             $request->validate([
                 'sales_id' => 'required|exists:orders,sales_id',
@@ -32,23 +31,22 @@ class OrderApiController extends Controller
             $request->validate([
                 'order_id' => 'required|exists:orders,id',
                 'reason' => 'required',
-                'reject_reason' => 'required|in:1,2,3,4',
+                'reject_reason' => 'required|in:1,2,3,4,5',
             ]);
             $order = Order::find($request->order_id);
 
-            if (!empty($order)) {
-                $url = "https://qastg.groobok.com/api/reject_order";
-
+            if (!empty($order) && empty($request->from)) {
+                $url = "http://localhost/bos_v1/api/reject_order";
+                
                 if (env("APP_ENV") == "production") {
                     $url = $order->company->url . "/api/reject_order";
                 }
 
                 $json['from'] = "wms";
                 $json['sales_id'] = $order->sales_id;
-                $json['reason_reject'] = $request->input("reject_reason"); // 1-Phone, 2-Address, 3-Product(Qty), 4-Product(Other)
+                $json['reason_reject'] = $request->input("reject_reason"); // 1-Phone, 2-Address, 3-Product(Qty), 4-Product(Other), 5-Change Purchase Type
                 $json['approval_remark_textarea'] = $request->input("reason") . " - " . config("app.name");
-
-                Http::withHeaders([
+                $response = Http::withHeaders([
                     "Signature" => hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
                     'Content-Type' => 'application/json'
                 ])->post($url, $json);
