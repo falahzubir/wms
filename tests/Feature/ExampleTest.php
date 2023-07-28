@@ -19,10 +19,6 @@ class ExampleTest extends TestCase
      */
     public function test_the_application_returns_a_successful_response()
     {
-        // Order::where("id","!=",0)->update(["bucket_batch_id"=>null]);
-        BucketBatch::truncate();
-        // $response = $this->get('/');
-
         $this->assertTrue(true);
     }
 }
