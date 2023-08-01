@@ -217,7 +217,7 @@
                 <div class="row mb-4">
                     <div class="col-md-3 fw-bold">Description <sup class="text-danger">*</sup></div>
                     <div class="col-md-9 d-flex gap-5">
-                        <textarea name="description" id="description" rows="4" class="form-control">{{ $product->description ?? old('description') }}</textarea>
+                        <textarea name="description" id="description" rows="4" class="form-control" required>{{ $product->description ?? old('description') }}</textarea>
                     </div>
                 </div>
                 <div class="row mb-4">
@@ -363,7 +363,7 @@
                         {{-- input group --}}
                         <div class="input-group">
                             <input type="text" name="carton_weight" class="form-control" placeholder=""
-                                value="{{ $product->detail->carton_weight ?? old('carton_weight') }}">
+                                value="{{ $product->detail->carton_weight ?? old('carton_weight') }}" required>
                             <span class="input-group-text">kg</span>
                         </div>
                     </div>
@@ -497,6 +497,9 @@
                 let error = false;
                 requiredFields.forEach((field) => {
                     if (field.value == '') {
+                        if (field.tagName == 'SELECT') {
+                            field.nextElementSibling.classList.add('is-invalid');
+                        }
                         field.classList.add('is-invalid');
                         error = true;
                     } else {
@@ -505,9 +508,9 @@
                 });
                 if (error) {
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Error Detected!',
-                        html: 'Please fill in all required fields.<br>Required fields marked with <span class="text-danger">*</span>'
+                        icon: 'warning',
+                        title: 'Oops...',
+                        html: 'Please fill in all required fields ( <span class="text-danger">*</span> )'
                     });
                     return;
                 }

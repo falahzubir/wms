@@ -44,11 +44,9 @@
                             value="{{ old('search', Request::get('search')) }}">
                     </div>
 
-                    <div class="" id="accordionPanelsStayOpenExample">
-
+                    {{-- <div class="" id="accordionPanelsStayOpenExample">
                         <x-additional_filter :filter_data="$filter_data" />
-
-                    </div>
+                    </div> --}}
                     @if (request('bucket_id') != null)
                         <input type="hidden" name="bucket_id" value="{{ request('bucket_id') }}">
                     @endif
@@ -331,15 +329,15 @@
                                 ' m<sup>3</sup> (' + data.detail.length + ' m x ' + data.detail.width + ' m x ' + data
                                 .detail.height + ' m)';
                             weight.innerHTML = data.detail.weight + ' gram';
-                            casePack.innerHTML = data.detail.case_pack_carton + ' carton x ' + data.detail
-                                .case_pack_box + ' box x ' + data.detail.case_pack_unit + ' unit';
+                            casePack.innerHTML = data.detail.case_pack_carton != null ? data.detail.case_pack_carton + ' carton x ' + data.detail
+                                .case_pack_box + ' box x ' + data.detail.case_pack_unit + ' unit' : '-';
                             palletQty.innerHTML = data.detail.pallet_qty + ' unit';
                             tihi.innerHTML = data.detail.tie + ' x ' + data.detail.high;
-                            cartonDimension.innerHTML = data.detail.carton_length * data.detail.carton_width * data
+                            cartonDimension.innerHTML = data.detail.carton_length != null ? data.detail.carton_length * data.detail.carton_width * data
                                 .detail.carton_height + ' m<sup>3</sup> (' + data.detail.carton_length + ' m x ' + data
-                                .detail.carton_width + ' m x ' + data.detail.carton_height + ' m)';
+                            .detail.carton_width + ' m x ' + data.detail.carton_height + ' m)' : '-';
                             cartonWeight.innerHTML = data.detail.carton_weight + ' kg';
-                            containerLoad.innerHTML = data.detail.container_load + ' unit';
+                            containerLoad.innerHTML = data.detail.container_load != null ? data.detail.container_load + ' unit' : '-' ;
 
                             let customer = '';
                             if (data.customers.length > 0) {
@@ -362,9 +360,9 @@
 
             function destroyProduct(product_id) {
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You want to delete this product?",
-                    footer: "Order and product detail will be affected.",
+                    title: 'Delete this product?',
+                    // text: "You want to delete this product?",
+                    text: "Order and product detail will be affected.",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#dc3545',

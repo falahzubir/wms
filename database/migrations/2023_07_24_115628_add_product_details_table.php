@@ -42,6 +42,7 @@ return new class extends Migration
             $table->float("carton_height")->nullable()->comment("m");
             $table->float("carton_weight")->nullable()->comment("kg");
             $table->integer("container_load")->nullable()->comment("pcs");
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -8,6 +8,7 @@ use App\Models\ProductCategory;
 use App\Models\ProductCustomer;
 use App\Models\ProductDetail;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -19,7 +20,7 @@ class ProductController extends Controller
             ->orWhere('code', 'like', '%' . request()->search . '%')
             ->orWhere('description', 'like', '%' . request()->search . '%');
         }
-        $products = $products->orderBy('code')->paginate(10);
+        $products = $products->where('is_active', 1)->orderBy('code')->paginate(10);
 
         // return $products;
         return view('products.index', [
@@ -36,7 +37,7 @@ class ProductController extends Controller
                 'company' => 'required|exists:companies,id',
                 'storage_condition' => 'required|in:1,2,3,4',
                 'product_category' => 'required|exists:product_categories,id',
-                'product_subcategory' => 'required|exists:product_categories,id',
+                'product_subcategory' => ["nullable",Rule::requiredIf($request->product_category == 2), 'exists:product_categories,id'],
                 'expiry' => 'required|in:0,1',
                 'shelf_life' => 'required|in:0,1',
                 'shelf_life_period' => 'required_if:shelf_life,1|nullable|integer',
@@ -48,15 +49,15 @@ class ProductController extends Controller
                 'product_dimension_width' => 'required|numeric',
                 'product_dimension_height' => 'required|numeric',
                 'product_weight' => 'required|numeric',
-                'case_pack_carton' => 'nullable|integer',
-                'case_pack_box' => 'nullable|integer',
-                'case_pack_unit' => 'nullable|integer',
+                'case_pack_carton' => 'nullable|integer|required_with:case_pack_box,case_pack_unit',
+                'case_pack_box' => 'nullable|integer|required_with:case_pack_carton,case_pack_unit',
+                'case_pack_unit' => 'nullable|integer|required_with:case_pack_carton,case_pack_box',
                 'pallet_tie' => 'required|integer',
                 'pallet_high' => 'required|integer',
                 'pallet_qty' => 'required|integer',
-                'carton_dimension_length' => 'nullable|numeric',
-                'carton_dimension_width' => 'nullable|numeric',
-                'carton_dimension_height' => 'nullable|numeric',
+                'carton_dimension_length' => 'required_with:carton_dimension_width,carton_dimension_height|nullable|numeric',
+                'carton_dimension_width' => 'required_with:carton_dimension_length,carton_dimension_height|nullable|numeric',
+                'carton_dimension_height' => 'required_with:carton_dimension_length,carton_dimension_width|nullable|numeric',
                 'carton_weight' => 'required|numeric',
                 'container_load_qty' => 'nullable|integer',
                 'customers' => 'required|array',
@@ -160,12 +161,13 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->filled("product_subcategory"));
         $request->validate(
             [
                 'company' => 'required|exists:companies,id',
                 'storage_condition' => 'required|in:1,2,3,4',
                 'product_category' => 'required|exists:product_categories,id',
-                'product_subcategory' => 'required|exists:product_categories,id',
+                'product_subcategory' => ["nullable",Rule::requiredIf($request->product_category == 2), 'exists:product_categories,id'],
                 'expiry' => 'required|in:0,1',
                 'shelf_life' => 'required|in:0,1',
                 'shelf_life_period' => 'required_if:shelf_life,1|nullable|integer',
@@ -177,15 +179,15 @@ class ProductController extends Controller
                 'product_dimension_width' => 'required|numeric',
                 'product_dimension_height' => 'required|numeric',
                 'product_weight' => 'required|numeric',
-                'case_pack_carton' => 'nullable|integer',
-                'case_pack_box' => 'nullable|integer',
-                'case_pack_unit' => 'nullable|integer',
+                'case_pack_carton' => 'nullable|integer|required_with:case_pack_box,case_pack_unit',
+                'case_pack_box' => 'nullable|integer|required_with:case_pack_carton,case_pack_unit',
+                'case_pack_unit' => 'nullable|integer|required_with:case_pack_carton,case_pack_box',
                 'pallet_tie' => 'required|integer',
                 'pallet_high' => 'required|integer',
                 'pallet_qty' => 'required|integer',
-                'carton_dimension_length' => 'nullable|numeric',
-                'carton_dimension_width' => 'nullable|numeric',
-                'carton_dimension_height' => 'nullable|numeric',
+                'carton_dimension_length' => 'required_with:carton_dimension_width,carton_dimension_height|nullable|numeric',
+                'carton_dimension_width' => 'required_with:carton_dimension_length,carton_dimension_height|nullable|numeric',
+                'carton_dimension_height' => 'required_with:carton_dimension_length,carton_dimension_width|nullable|numeric',
                 'carton_weight' => 'required|numeric',
                 'container_load_qty' => 'nullable|integer',
                 'customers' => 'required|array',
@@ -257,8 +259,12 @@ class ProductController extends Controller
             $product->customers()->delete();
         }
 
-        $product->delete();
+        $product->status = 0;
+        $product->save();
 
-        return back()->with('success', 'Product deleted successfully');
+        return response([
+            'status' => 'success',
+            'message' => 'Product deleted successfully',
+        ]);
     }
 }
