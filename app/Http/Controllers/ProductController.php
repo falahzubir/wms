@@ -16,9 +16,11 @@ class ProductController extends Controller
     {
         $products = Product::with(['detail', 'detail.category', 'detail.subcategory'])->where('code', '!=', '');
         if (request()->has('search')) {
-            $products = $products->where('name', 'like', '%' . request()->search . '%')
-            ->orWhere('code', 'like', '%' . request()->search . '%')
-            ->orWhere('description', 'like', '%' . request()->search . '%');
+            $products = $products->where(function ($query) {
+                $query->where('name', 'like', '%' . request()->search . '%')
+                    ->orWhere('code', 'like', '%' . request()->search . '%')
+                    ->orWhere('description', 'like', '%' . request()->search . '%');
+            });
         }
         $products = $products->where('is_active', 1)->orderBy('code')->paginate(10);
 
