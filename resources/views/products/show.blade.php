@@ -380,6 +380,18 @@
                         </div>
                     </div>
                 </div>
+                <div class="row mb-4">
+                    <div class="col-md-3 fw-bold">Unit by Carton
+                    </div>
+                    <div class="col-md-9 d-flex gap-5 align-items-center">
+                        {{-- input group --}}
+                        <div class="input-group">
+                            <input type="text" name="unit_carton" class="form-control" placeholder=""
+                                value="{{ $product->max_box ?? old('unit_carton') }}">
+                            <span class="input-group-text">unit</span>
+                        </div>
+                    </div>
+                </div>
                 <hr>
                 <h6>Customer</h6>
 

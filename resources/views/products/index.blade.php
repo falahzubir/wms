@@ -220,6 +220,10 @@
                                 <td>Container Load Qty :</td>
                                 <td id="modal-container-load">&nbsp;unit</td>
                             </tr>
+                            <tr>
+                                <td>Unit by Carton :</td>
+                                <td id="modal-unit-carton">&nbsp;unit</td>
+                            </tr>
                         </table>
                     </div>
                     <div class="d-flex justify-content-center table-modal-bottom">
@@ -272,6 +276,7 @@
                 const cartonWeight = document.querySelector('#modal-carton-weight');
                 const containerLoad = document.querySelector('#modal-container-load');
                 const customerList = document.querySelector('#modal-customer-list');
+                const unitCarton = document.querySelector('#modal-unit-carton');
 
                 // empty all data
                 image.src = 'https://placehold.co/400x400';
@@ -293,6 +298,7 @@
                 cartonDimension.innerHTML = '';
                 cartonWeight.innerHTML = '';
                 containerLoad.innerHTML = '';
+                unitCarton.innerHTML = '';
                 customerList.innerHTML = '<tr><td colspan="3" class="text-center">No Data</td></tr>';
 
 
@@ -338,6 +344,7 @@
                             .detail.carton_width + ' m x ' + data.detail.carton_height + ' m)' : '-';
                             cartonWeight.innerHTML = data.detail.carton_weight + ' kg';
                             containerLoad.innerHTML = data.detail.container_load != null ? data.detail.container_load + ' unit' : '-' ;
+                            unitCarton.innerHTML = data.max_box != null ? data.max_box + ' unit' : '-' ;
 
                             let customer = '';
                             if (data.customers.length > 0) {

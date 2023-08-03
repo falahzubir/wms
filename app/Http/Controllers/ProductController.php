@@ -65,6 +65,7 @@ class ProductController extends Controller
                 'customers' => 'required|array',
                 'customers.*' => 'required|exists:companies,id',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'unit_carton' => 'required|integer',
             ],
             [
                 'code.unique' => 'Product SKU already exists',
@@ -75,6 +76,7 @@ class ProductController extends Controller
         $product->name = $request->input('name');
         $product->code = $request->input('code');
         $product->description = $request->input('description');
+        $product->max_box = $request->input('unit_carton');
         $product->save();
 
         $product_details = ProductDetail::where('product_id', $product->id)->first();
@@ -194,6 +196,7 @@ class ProductController extends Controller
                 'customers' => 'required|array',
                 'customers.*' => 'required|exists:companies,id',
                 'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+                'unit_carton' => 'required|integer',
             ],
             [
                 'code.unique' => 'Product SKU already exists',
@@ -201,10 +204,11 @@ class ProductController extends Controller
         );
 
         $product = Product::create([
-            'name' => $request->name,
-            'code' => $request->code,
-            'description' => $request->description,
+            'name' => $request->input('name'),
+            'code' => $request->input('code'),
+            'description' => $request->input('description'),
             'price' => 0,
+            'max_box' => $request->input('unit_carton'),
         ]);
 
         $product_details = ProductDetail::create([
