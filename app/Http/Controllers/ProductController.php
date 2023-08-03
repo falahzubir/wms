@@ -260,7 +260,7 @@ class ProductController extends Controller
             $product->customers()->delete();
         }
 
-        $product->status = 0;
+        $product->is_active = 0;
         $product->save();
 
         return response([
