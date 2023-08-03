@@ -163,7 +163,6 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->filled("product_subcategory"));
         $request->validate(
             [
                 'company' => 'required|exists:companies,id',
