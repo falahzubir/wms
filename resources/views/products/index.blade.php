@@ -221,7 +221,7 @@
                                 <td id="modal-container-load">&nbsp;unit</td>
                             </tr>
                             <tr>
-                                <td>Unit by Carton :</td>
+                                <td>Unit per Carton :</td>
                                 <td id="modal-unit-carton">&nbsp;unit</td>
                             </tr>
                         </table>

@@ -381,13 +381,15 @@
                     </div>
                 </div>
                 <div class="row mb-4">
-                    <div class="col-md-3 fw-bold">Unit by Carton
+                    <div class="col-md-3 fw-bold">Unit per Carton <sup class="text-danger">*</sup>
+                        <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="top"
+                            data-bs-original-title="Unit that can be fill in a carton box"></i>
                     </div>
                     <div class="col-md-9 d-flex gap-5 align-items-center">
                         {{-- input group --}}
                         <div class="input-group">
                             <input type="text" name="unit_carton" class="form-control" placeholder=""
-                                value="{{ $product->max_box ?? old('unit_carton') }}">
+                                value="{{ $product->max_box ?? old('unit_carton') }}" required>
                             <span class="input-group-text">unit</span>
                         </div>
                     </div>
