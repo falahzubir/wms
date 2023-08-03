@@ -1094,7 +1094,8 @@
                     1: 'Phone',
                     2: 'Address',
                     3: 'Product(Quantity)',
-                    4: 'Product(Others)'
+                    4: 'Product(Others)',
+                    5: 'Change Purchase Type'
                 },
                 inputPlaceholder: 'Select a reason',
                 inputValidator: (value) => {
