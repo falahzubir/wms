@@ -503,6 +503,9 @@
                         field.classList.add('is-invalid');
                         error = true;
                     } else {
+                        if (field.tagName == 'SELECT') {
+                            field.nextElementSibling.classList.remove('is-invalid');
+                        }
                         field.classList.remove('is-invalid');
                     }
                 });
