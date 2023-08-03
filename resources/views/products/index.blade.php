@@ -321,7 +321,7 @@
                             company.innerHTML = data.detail.owner.name ?? '-';
                             storageCond.innerHTML = data.detail.storage_condition ?? '-';
                             category.innerHTML = data.detail.category.name ?? '-';
-                            subcategory.innerHTML = data.detail.subcategory.name ?? '-';
+                            subcategory.innerHTML = data.detail.subcategory != null ? data.detail.subcategory.name : '-';
                             expiry.innerHTML = data.detail.expiry == 1 ? 'Yes' : 'No';
                             shelfLife.innerHTML = data.detail.shelf_life_period + ' days';
                             qaQc.innerHTML = data.detail.qa_qc == 1 ? 'Yes' : 'No';
