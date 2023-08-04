@@ -23,6 +23,11 @@ class Company extends Model
 
     public function operational_model()
     {
-    return $this->belongsTo(OperationalModel::class);
+        return $this->belongsTo(OperationalModel::class);
+    }
+
+    public function products()
+    {
+        return $this->hasMany(ProductCustomer::class);
     }
 }
