@@ -165,7 +165,7 @@ Route::middleware(['auth', 'role:admin'])->group(function() {
 Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
     Route::get('run-migration', function () {
         // if(config('app.env')=="local"){
-            Artisan::call('migrate');
+            Artisan::call('migrate', ['--force' => true]);
             return 'Migrations ran successfully!';
         // }
     });
