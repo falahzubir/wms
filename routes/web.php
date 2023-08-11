@@ -171,14 +171,14 @@ Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
     });
     Route::get('rollback-migration', function () {
         if(config('app.env')=="local"){
-            Artisan::call('migrate:rollback');
+            Artisan::call('migrate:rollback', ['--force' => true]);
             return 'Rollback ran successfully!';
         }
     });
 
     Route::get('seed/permission', function () {
         // if(config('app.env')=="local"){
-            Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder']);
+            Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder', '--force' => true]);
             return 'Seeds ran successfully!';
         // }
     });
