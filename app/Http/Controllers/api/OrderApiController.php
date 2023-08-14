@@ -182,7 +182,7 @@ class OrderApiController extends Controller
     {
         $sales_id = $request->input("sales_id");
 
-        $order = Order::with(['tracking'])
+        $order = Order::with(['shippings'])
         ->where("sales_id", $sales_id)
         ->where("is_active", IS_ACTIVE)
         ->where("company_id",3)
@@ -213,7 +213,7 @@ class OrderApiController extends Controller
         ->where("company_id",3)
         ->where("status", $status)
         ->get();
-        
+
         if($order){
             return response()->json([
             'success' => true,
