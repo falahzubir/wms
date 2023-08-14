@@ -177,4 +177,29 @@ class OrderApiController extends Controller
             return response()->json(['error' => 'error']);
         }
     }
+
+    public function getStatusWMS(Request $request)
+    {
+        $sales_id = $request->input("sales_id");
+
+        // dump($sales_id);
+        $order = Order::with(['tracking'])
+        ->where("sales_id", $sales_id)
+        ->where("is_active", IS_ACTIVE)
+        ->where("company_id",3)
+        ->first();
+
+        if($order){
+            return response()->json([
+            'success' => true,
+            'message' => 'Order found',
+            'data' => $order
+            ], 200);
+        }else{
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found'
+            ], 200);
+        }
+    }
 }
