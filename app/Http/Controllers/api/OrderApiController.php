@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 
 class OrderApiController extends Controller
@@ -182,10 +183,14 @@ class OrderApiController extends Controller
     {
         $sales_id = $request->input("sales_id");
 
-        $order = Order::with(['shippings'])
-        ->where("sales_id", $sales_id)
-        ->where("is_active", IS_ACTIVE)
-        ->where("company_id",3)
+        $order = DB::table('orders')
+        ->select('orders.sales_id','orders.status','shippings.tracking_number')
+        ->leftJoin('shippings', function($join) {
+            $join->on('orders.id', '=', 'shippings.order_id');
+          })
+        ->where("orders.sales_id", $sales_id)
+        ->where("orders.is_active", IS_ACTIVE)
+        ->where("orders.company_id",3)
         ->first();
 
         if($order){
