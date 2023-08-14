@@ -53,6 +53,7 @@ Route::prefix('orders')->group(function () {
     Route::post('approve-for-shipping', [OrderApiController::class, 'approve_for_shipping']);
     Route::post('set-order-completed', [OrderApiController::class, 'set_order_completed']);
     Route::match(array('GET','POST'),'getStatusWMS', [OrderApiController::class, 'getStatusWMS']);
+    Route::match(array('GET','POST'),'getStatusWMSFilter', [OrderApiController::class, 'getStatusWMSFilter']);
 });
 
 Route::prefix('shippings')->group(function () {
