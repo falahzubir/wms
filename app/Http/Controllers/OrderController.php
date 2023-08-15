@@ -387,8 +387,8 @@ class OrderController extends Controller
                 'created_by' => 1,
             ]);
         }
-        elseif($webhook['operation_model_id'] == 6){
-            set_order_status($order, ORDER_STATUS_PROCESSING, 'Order staff_purchase created from webhook');
+        elseif (strpos($data['sales_remarks'], 'Self Pickup') !== false)
+            set_order_status($order, ORDER_STATUS_PROCESSING, 'Order staff_purchase self-pickup created from webhook');
 
             Order::where('id', $order->id)->update([
                 'bucket_id' => 11, //for staff_purchase
