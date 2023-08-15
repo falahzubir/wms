@@ -388,6 +388,7 @@ class OrderController extends Controller
             ]);
         }
         elseif (strpos($data['sales_remarks'], 'Self Pickup') !== false)
+        {
             set_order_status($order, ORDER_STATUS_PROCESSING, 'Order staff_purchase self-pickup created from webhook');
 
             Order::where('id', $order->id)->update([
