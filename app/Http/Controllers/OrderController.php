@@ -387,7 +387,7 @@ class OrderController extends Controller
                 'created_by' => 1,
             ]);
         }
-        elseif (strpos($data['sales_remarks'], 'Self Pickup') !== false)
+        elseif (str_contains(urldecode(($data['sales_remarks'])), 'Self Pickup'))
         {
             set_order_status($order, ORDER_STATUS_PROCESSING, 'Order staff_purchase self-pickup created from webhook');
 
