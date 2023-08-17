@@ -14,4 +14,9 @@ class Courier extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', IS_ACTIVE);
+    }
 }

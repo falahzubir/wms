@@ -116,10 +116,10 @@
 
         @can('product.list')
             <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+                <a class="nav-link collapsed" data-bs-target="#components-nav-inventory" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-menu-button-wide"></i><span>Inventory</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <ul id="components-nav"
+                <ul id="components-nav-inventory"
                     class="nav-content {{ Route::current()->getName() != 'inventory.index' ? 'collapsed' : '' }} "
                     data-bs-parent="#sidebar-nav">
                     <li>
@@ -131,6 +131,53 @@
                     </li>
                 </ul>
             </li><!-- End Components Nav -->
+        @endcan
+
+        @can('report.view')
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#components-nav-report" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-menu-button-wide"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="components-nav-report"
+                class="nav-content {{ Route::current()->getName() != 'reports.index' ? 'collapsed' : '' }} "
+                data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="{{ route('reports.sla') }}"
+                        {{ Route::current()->getName() == 'reports.sla' ? 'class=active' : '' }}>
+                        <i class="bi bi-circle"></i>
+                        <span>Service Level Agreement (SLA)</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('reports.outbound') }}"
+                        {{ Route::current()->getName() == 'reports.outbound' ? 'class=active' : '' }}>
+                        <i class="bi bi-circle"></i>
+                        <span>Outbound</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('reports.order_matrix') }}"
+                        {{ Route::current()->getName() == 'reports.order_matrix' ? 'class=active' : '' }}>
+                        <i class="bi bi-circle"></i>
+                        <span>Order Matrix</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('reports.pending_report') }}"
+                        {{ Route::current()->getName() == 'reports.pending_report' ? 'class=active' : '' }}>
+                        <i class="bi bi-circle"></i>
+                        <span>Pending Report</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('reports.shipment') }}"
+                        {{ Route::current()->getName() == 'reports.shipment' ? 'class=active' : '' }}>
+                        <i class="bi bi-circle"></i>
+                        <span>Shipment</span>
+                    </a>
+                </li>
+            </ul>
+        </li><!-- End Components Nav -->
         @endcan
 
         @can('view.settings')

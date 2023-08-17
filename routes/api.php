@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\api\ShippingApiController;
 use App\Http\Controllers\api\WebhookController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
@@ -62,6 +63,17 @@ Route::prefix('shippings')->group(function () {
     Route::post('return-ongoing-milestone', [ShippingController::class, 'return_ongoing_milestone']);
     Route::post('return-delivered-milestone', [ShippingController::class, 'return_delivered_milestone']);
     Route::post('update_shopee_tracking', [ShippingApiController::class, 'update_shopee_tracking']);
+});
+
+Route::prefix('reports')->group(function() {
+    // Route::get('sla', [ReportController::class, 'sla']);
+    Route::get('outbound', [ReportController::class, 'get_outbound']);
+    Route::get('order-matrix/extract', [ReportController::class, 'get_order_matrix_extract']);
+    Route::get('order-matrix/pack', [ReportController::class, 'get_order_matrix_pack']);
+    Route::get('order-matrix/pickup', [ReportController::class, 'get_order_matrix_pickup']);
+    Route::get('order-matrix/comparison', [ReportController::class, 'get_order_matrix']);
+    Route::get('pending-report', [ReportController::class, 'get_pending_report']);
+    // Route::get('shipment', [ReportController::class, 'shipment']);
 });
 
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
