@@ -490,7 +490,7 @@ class ReportController extends Controller
         }
         if ($request->input('product') != null) {
             $orders->whereHas('items', function ($q) use ($request) {
-                $q->whereIn('product_id', explode(',', $request->input('product')));
+                $q->whereIn('product_id', explode(',', $request->input('product')))->where('status',1);
             });
         }
         $orders = $orders->get();

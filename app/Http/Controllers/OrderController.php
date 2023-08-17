@@ -474,6 +474,7 @@ class OrderController extends Controller
                 case 1: //date order added
                     $request->date_from != null ? $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from))) : '';
                     $request->date_to != null ? $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to))) : '';
+                    break;
                 case 2: //date request shipping
                     $request->date_from != null ? $query->where('dt_request_shipping', '>=', date("Y-m-d H:i:s", strtotime($request->date_from))) : '';
                     $request->date_to != null ? $query->where('dt_request_shipping', '<', date("Y-m-d 23:59:59", strtotime($request->date_to))) : '';
