@@ -36,11 +36,11 @@
                     </div>
                     <div class="col-md-3">
                         <input type="date" class="form-control" placeholder="From" name="date_from" id="start-date"
-                            value="{{ Request::get('date_from') ?? date("Y-m-d") }}">
+                            value="{{ Request::has('date_from') ? Request::get('date_from') : date("Y-m-d") }}">
                     </div>
                     <div class="col-md-3">
                         <input type="date" class="form-control" placeholder="To" name="date_to" id="end-date"
-                            value="{{ Request::get('date_to') ?? date("Y-m-d") }}">
+                            value="{{ Request::has('date_to') ? Request::get('date_to') : date("Y-m-d") }}">
                     </div>
                     <div class="row mt-3">
                         <div class="col-3">
@@ -89,21 +89,34 @@
                             </tr>
                         </thead>
                         <tbody class="outbound-list">
-                            @foreach ($product_lists as $prod)
-                                <tr>
-                                    <td id="prod-{{ $prod->id }}">{{ $prod->name }}</td>
-                                    <td colspan="{{ $companies->count() + 5 }}">
-                                        <p class="placeholder-wave">
-                                            <span class="placeholder col-12"></span>
-                                        </p>
-                                    </td>
-                                </tr>
-                            @endforeach
+                            @if(Request::get('product') == '')
+                                @foreach ($product_lists as $prod)
+                                    <tr>
+                                        <td id="prod-{{ $prod->id }}">{{ $prod->name }}</td>
+                                        <td colspan="{{ $companies->count() + 5 }}">
+                                            <p class="placeholder-wave">
+                                                <span class="placeholder col-12"></span>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                @else
+                                    <tr>
+                                        <td id="prod-{{ Request::get('product')}}">{{ $products->find(Request::get('product'))->name }}</td>
+                                        <td colspan="{{ $companies->count() + 5 }}">
+                                            <p class="placeholder-wave">
+                                                <span class="placeholder col-12"></span>
+                                            </p>
+                                        </td>
+                                    </tr>
+                            @endif
                         </tbody>
                     </table>
-                    <div class="d-flex justify-content-end">
-                        {{ $product_lists->withQueryString()->links() }}
-                    </div>
+                    @if(Request::get('product') == '')
+                        <div class="d-flex justify-content-end">
+                            {{ $product_lists->withQueryString()->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -166,8 +179,11 @@
                     params.set('page', 1);
                 }
 
-                const product_ids = {{ $product_lists->pluck('id') }};
+                let product_ids = {{ $product_lists->pluck('id') }};
 
+                if(document.querySelector('#product-list').value != '') {
+                    product_ids = [document.querySelector('#product-list').value];
+                }
 
                 fetchSequentially(product_ids, params)
                     .then(results => {
@@ -197,8 +213,11 @@
 
                 // let start_index = (page - 1) * pagination;
                 // let start_index = (page - 1);
-
-                for (let i = 0; i < 10; i++) {
+                let paginate_limit = 10;
+                if (product_ids.length == 1) {
+                    paginate_limit = product_ids.length;
+                }
+                for (let i = 0; i < paginate_limit; i++) {
                     const data = await fetchData(product_ids[i], params);
                 }
 

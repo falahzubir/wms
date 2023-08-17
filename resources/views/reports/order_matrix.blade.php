@@ -73,11 +73,11 @@
                     </div>
                     <div class="col-md-3">
                         <input type="date" class="form-control" placeholder="From" name="date_from" id="start-date"
-                            value="{{ Request::get('date_from') ?? date('Y-m-d') }}">
+                            value="{{ Request::has('date_from') ? Request::get('date_from') : date("Y-m-d") }}">
                     </div>
                     <div class="col-md-3">
                         <input type="date" class="form-control" placeholder="To" name="date_to" id="end-date"
-                            value="{{ Request::get('date_to') ?? date('Y-m-d') }}">
+                            value="{{ Request::has('date_to') ? Request::get('date_to') : date("Y-m-d") }}">
                     </div>
                     <div class="row mt-3">
                         <div class="col-3">
