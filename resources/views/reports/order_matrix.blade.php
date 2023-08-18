@@ -297,9 +297,9 @@
                             body +=
                                 `<td>${data.total_by_operational_model != undefined ? data.total_by_operational_model[16] != 0 ? data.total_by_operational_model[16]??'-' : '-':'-'}</td>`;
                             body +=
-                                `<td>${data.total_by_payment_type != undefined ? data.total_by_operational_model[22] != 0 ? data.total_by_operational_model[22]??'-' : '-':'-'}</td>`;
+                                `<td>${data.total_by_payment_type != undefined ? data.total_by_payment_type[22] != 0 ? data.total_by_payment_type[22]??'-' : '-':'-'}</td>`;
                             body +=
-                                `<td>${data.total_by_payment_type != undefined ? data.total_by_operational_model[23] != 0 ? data.total_by_operational_model[23]??'-' : '-':'-'}</td>`;
+                                `<td>${data.total_by_payment_type != undefined ? data.total_by_payment_type[23] != 0 ? data.total_by_payment_type[23]??'-' : '-':'-'}</td>`;
                             body +=
                                 `<td>${data.total_by_operational_model != undefined ? data.total_by_operational_model[6] != 0 ? data.total_by_operational_model[6]??'-' : '-':'-'}</td>`;
                             body += `<td>${sum}</td>`;
@@ -323,9 +323,9 @@
                                 body +=
                                     `<td>${data.total_by_operational_model[products[i].id] != undefined ? data.total_by_operational_model[products[i].id][16] != 0 ? data.total_by_operational_model[products[i].id][16]??'-' : '-':'-'}</td>`;
                                 body +=
-                                    `<td>${data.total_by_payment_type[products[i].id] != undefined ? data.total_by_operational_model[products[i].id][22] != 0 ? data.total_by_operational_model[products[i].id][22]??'-' : '-':'-'}</td>`;
+                                    `<td>${data.total_by_payment_type[products[i].id] != undefined ? data.total_by_payment_type[products[i].id][22] != 0 ? data.total_by_operational_model[products[i].id][22]??'-' : '-':'-'}</td>`;
                                 body +=
-                                    `<td>${data.total_by_payment_type[products[i].id] != undefined ? data.total_by_operational_model[products[i].id][23] != 0 ? data.total_by_operational_model[products[i].id][23]??'-' : '-':'-'}</td>`;
+                                    `<td>${data.total_by_payment_type[products[i].id] != undefined ? data.total_by_payment_type[products[i].id][23] != 0 ? data.total_by_operational_model[products[i].id][23]??'-' : '-':'-'}</td>`;
                                 body +=
                                     `<td>${data.total_by_operational_model[products[i].id] != undefined ? data.total_by_operational_model[products[i].id][6] != 0 ? data.total_by_operational_model[products[i].id][6]??'-' : '-':'-'}</td>`;
                                 body += `<td>${sum}</td>`;
@@ -378,9 +378,9 @@
                             body +=
                                 `<td>${data.total_by_operational_model != undefined ? data.total_by_operational_model[16] != 0 ? data.total_by_operational_model[16]??'-' : '-':'-'}</td>`;
                             body +=
-                                `<td>${data.total_by_payment_type != undefined ? data.total_by_operational_model[22] != 0 ? data.total_by_operational_model[22]??'-' : '-':'-'}</td>`;
+                                `<td>${data.total_by_payment_type != undefined ? data.total_by_payment_type[22] != 0 ? data.total_by_payment_type[22]??'-' : '-':'-'}</td>`;
                             body +=
-                                `<td>${data.total_by_payment_type != undefined ? data.total_by_operational_model[23] != 0 ? data.total_by_operational_model[23]??'-' : '-':'-'}</td>`;
+                                `<td>${data.total_by_payment_type != undefined ? data.total_by_payment_type[23] != 0 ? data.total_by_payment_type[23]??'-' : '-':'-'}</td>`;
                             body +=
                                 `<td>${data.total_by_operational_model != undefined ? data.total_by_operational_model[6] != 0 ? data.total_by_operational_model[6]??'-' : '-':'-'}</td>`;
                             body += `<td>${sum}</td>`;
@@ -402,9 +402,9 @@
                                 body +=
                                     `<td>${data.total_by_operational_model[couriers[i].id] != undefined ? data.total_by_operational_model[couriers[i].id][16] != 0 ? data.total_by_operational_model[couriers[i].id][16]??'-' : '-':'-'}</td>`;
                                 body +=
-                                    `<td>${data.total_by_payment_type[couriers[i].id] != undefined ? data.total_by_operational_model[couriers[i].id][22] != 0 ? data.total_by_operational_model[couriers[i].id][22]??'-' : '-':'-'}</td>`;
+                                    `<td>${data.total_by_payment_type[couriers[i].id] != undefined ? data.total_by_payment_type[couriers[i].id][22] != 0 ? data.total_by_payment_type[couriers[i].id][22]??'-' : '-':'-'}</td>`;
                                 body +=
-                                    `<td>${data.total_by_payment_type[couriers[i].id] != undefined ? data.total_by_operational_model[couriers[i].id][23] != 0 ? data.total_by_operational_model[couriers[i].id][23]??'-' : '-':'-'}</td>`;
+                                    `<td>${data.total_by_payment_type[couriers[i].id] != undefined ? data.total_by_payment_type[couriers[i].id][23] != 0 ? data.total_by_payment_type[couriers[i].id][23]??'-' : '-':'-'}</td>`;
                                 body +=
                                     `<td>${data.total_by_operational_model[couriers[i].id] != undefined ? data.total_by_operational_model[couriers[i].id][6] != 0 ? data.total_by_operational_model[couriers[i].id][6]??'-' : '-':'-'}</td>`;
                                 body += `<td>${sum}</td>`;
