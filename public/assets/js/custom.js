@@ -1,3 +1,29 @@
+
+if (document.querySelector('#start-date')) {
+    let start = document.querySelector('#start-date');
+    let end = document.querySelector('#end-date');
+    document.querySelector('#btn-check-today').onclick = function() {
+        start.value = moment().format('YYYY-MM-DD');
+        end.value = moment().format('YYYY-MM-DD');
+    }
+    document.querySelector('#btn-check-yesterday').onclick = function() {
+        start.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
+        end.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
+    }
+    document.querySelector('#btn-check-this-month').onclick = function() {
+        start.value = moment().startOf('month').format('YYYY-MM-DD');
+        end.value = moment().endOf('month').format('YYYY-MM-DD');
+    }
+    document.querySelector('#btn-check-last-month').onclick = function() {
+        start.value = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
+        end.value = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+    }
+    document.querySelector('#btn-check-overall').onclick = function() {
+        start.value = '';
+        end.value = '';
+    }
+}
+
 // select all checkboxes
 function toggleCheckboxes(source, cls) {
     checkboxes = document.querySelectorAll(`.${cls}`);

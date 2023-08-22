@@ -10,6 +10,7 @@ use App\Http\Controllers\OperationalModelController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShippingController;
@@ -143,6 +144,15 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/', [OperationalModelController::class, 'index'])->name('operational_model.index');
         Route::get('/{opmodel_id}', [OperationalModelController::class, 'show'])->name('operational_model.show');
         Route::post('/{opmodel_id}', [OperationalModelController::class, 'update'])->name('operational_model.update');
+    });
+
+    Route::prefix('reports')->group(function(){
+        Route::get('/', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('service-level-agreement', [ReportController::class, 'sla'])->name('reports.sla');
+        Route::get('outbound', [ReportController::class, 'outbound'])->name('reports.outbound');
+        Route::get('order-matrix', [ReportController::class, 'order_matrix'])->name('reports.order_matrix');
+        Route::get('pending-report', [ReportController::class, 'pending_report'])->name('reports.pending_report');
+        Route::get('shipment', [ReportController::class, 'shipment'])->name('reports.shipment');
     });
 });
 

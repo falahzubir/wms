@@ -6,6 +6,7 @@ use App\Models\Bucket;
 use App\Models\Company;
 use App\Models\Order;
 use App\Models\OrderLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -105,14 +106,13 @@ class BucketController extends Controller
         $upd = Order::whereIn('id', $request->order_ids)->update([
             'bucket_batch_id' => null, // Reset batch id
             'bucket_id' => $request->bucket_id,
+            'bucket_added_at' => Carbon::now(),
             'status' => ORDER_STATUS_PROCESSING,
         ]);
 
         if (!$upd) {
             return response()->json(['message' => 'Failed to add order to bucket.']);
         }
-
-        $orders = Order::with(['company'])->whereIn('id', $request->order_ids)->get();
 
         // get orders
         $orders = Order::with(['company'])->whereIn('id', $request->order_ids)->get();
