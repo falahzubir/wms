@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\api\ShippingApiController;
 use App\Http\Controllers\api\WebhookController;
+use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -63,6 +64,10 @@ Route::prefix('shippings')->group(function () {
     Route::post('return-ongoing-milestone', [ShippingController::class, 'return_ongoing_milestone']);
     Route::post('return-delivered-milestone', [ShippingController::class, 'return_delivered_milestone']);
     Route::post('update_shopee_tracking', [ShippingApiController::class, 'update_shopee_tracking']);
+});
+
+Route::prefix('claims')->group(function () {
+    Route::post('create', [ClaimController::class, 'create']);
 });
 
 Route::prefix('reports')->group(function() {

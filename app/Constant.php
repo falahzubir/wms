@@ -174,3 +174,9 @@ if(!defined('PROD_STORAGE_COND')) define('PROD_STORAGE_COND', [
     3 => 'Chill',
     4 => 'Frozen',
 ]);
+
+if(!defined('CLAIM_TYPE_PRODUCT')) define('CLAIM_TYPE_PRODUCT', 1);
+if(!defined('CLAIM_TYPE_COURIER')) define('CLAIM_TYPE_COURIER', 2);
+
+if(!defined('CLAIMANT_TYPE_COURIER')) define('CLAIMANT_TYPE_COURIER', 1);
+if(!defined('CLAIMANT_TYPE_COMPANY')) define('CLAIMANT_TYPE_COMPANY', 2);

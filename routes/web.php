@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccessTokenController;
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
+use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
@@ -153,43 +154,51 @@ Route::middleware(['auth'])->group(function() {
         Route::get('order-matrix', [ReportController::class, 'order_matrix'])->name('reports.order_matrix');
         Route::get('pending-report', [ReportController::class, 'pending_report'])->name('reports.pending_report');
         Route::get('shipment', [ReportController::class, 'shipment'])->name('reports.shipment');
-    });
-});
-
-
-Route::get('notifications', [NotificationController::class, 'list']);
-
-Route::get('dhl-access-token', [ShippingController::class, 'dhl_generate_access_token']);
-
-Auth::routes();
-
-Route::middleware(['auth', 'role:user'])->group(function() {
-    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-});
-
-Route::middleware(['auth', 'role:admin'])->group(function() {
-    // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-});
-
-//migration for dev purpose only
-Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
-    Route::get('run-migration', function () {
-        // if(config('app.env')=="local"){
-            Artisan::call('migrate', ['--force' => true]);
-            return 'Migrations ran successfully!';
-        // }
-    });
-    Route::get('rollback-migration', function () {
-        if(config('app.env')=="local"){
-            Artisan::call('migrate:rollback', ['--force' => true]);
-            return 'Rollback ran successfully!';
-        }
+        Route::get('shipment/attempt', [ReportController::class, 'shipment_attempt'])->name('reports.shipment.attempt-list');
+        Route::get('shipment/unattempt', [ReportController::class, 'shipment_unattempt'])->name('reports.shipment.unattempt-list');
+        Route::get('shipment/problem', [ReportController::class, 'shipment_problem'])->name('reports.shipment.problematic-list');
     });
 
-    Route::get('seed/permission', function () {
-        // if(config('app.env')=="local"){
-            Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder', '--force' => true]);
-            return 'Seeds ran successfully!';
-        // }
+    Route::prefix('claims')->group(function() {
+        Route::get('/product', [ClaimController::class, 'index_product'])->name('claims.product.index');
+        Route::get('/courier', [ClaimController::class, 'index_courier'])->name('claims.courier.index');
+    });
+
+
+    Route::get('notifications', [NotificationController::class, 'list']);
+
+    Route::get('dhl-access-token', [ShippingController::class, 'dhl_generate_access_token']);
+
+    Auth::routes();
+
+    Route::middleware(['auth', 'role:user'])->group(function() {
+        Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    });
+
+    Route::middleware(['auth', 'role:admin'])->group(function() {
+        // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    });
+
+    //migration for dev purpose only
+    Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
+        Route::get('run-migration', function () {
+            // if(config('app.env')=="local"){
+                Artisan::call('migrate', ['--force' => true]);
+                return 'Migrations ran successfully!';
+            // }
+        });
+        Route::get('rollback-migration', function () {
+            if(config('app.env')=="local"){
+                Artisan::call('migrate:rollback', ['--force' => true]);
+                return 'Rollback ran successfully!';
+            }
+        });
+
+        Route::get('seed/permission', function () {
+            // if(config('app.env')=="local"){
+                Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder', '--force' => true]);
+                return 'Seeds ran successfully!';
+            // }
+        });
     });
 });

@@ -7,6 +7,49 @@
         #filter-body .card-body * {
             font-size: 0.9rem;
         }
+        .outline-good, .outline-defect {
+            position: relative;
+        }
+
+        .outline-good {
+            border: 1px solid #00ff00 !important;
+        }
+
+        .outline-defect {
+            border: 1px solid #ff0000 !important;
+        }
+
+        .outline-good::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            bottom: 5px;
+            left: 5px;
+            border: 1px solid #00ff00;
+            box-shadow: 0 0 0 5px #CDF7E3;
+        }
+
+        .outline-defect::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            bottom: 5px;
+            left: 5px;
+            border: 1px solid #ff0000;
+            box-shadow: 0 0 0 5px #F9C2C2;
+        }
+
+        #returnModal table {
+            font-size: 0.8rem;
+        }
+
+        .img-50{
+            max-width: 50px;
+            max-height: 50px;
+        }
+
     </style>
 
     <section class="section">
@@ -160,6 +203,8 @@
                                                                     onclick="reject_order({{ $order->id }})"></i></button>
                                                     @endcan
                                                 @endif
+                                                    <button class="btn p-0 px-1 m-1 text-white" style="background-color: #006E9B"><i class="bi bi-box-seam"
+                                                            onclick="return_modal({{ $order->id }}, {{ $order->items }})"></i></button>
                                                 {{-- add shipping number modal --}}
                                                 @if (Route::is('orders.processing'))
                                                    {{-- @if($order->is_multiple_carton) --}}
@@ -533,6 +578,109 @@
         </div>
     </div>
 </div> <!-- end modal for split parcels -->
+
+  <!-- Modal -->
+    <div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h1 class="modal-title fs-5" id="returnModalLabel">Parcel Condition</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="upload" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="parcel_condition" id="parcel_condition">
+                    <input type="hidden" name="order_id" id="returnModalOrderId">
+                    <div class="modal-body">
+                        <div class="row mx-5 mb-3">
+                            <div class="col">
+                                <div id="good-cond" class="border mx-3 text-center p-4" role="button" onclick="parcel_cond(1)">
+                                    Good
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div id="bad-cond" class="border mx-3 text-center p-4" role="button" onclick="parcel_cond(0)">
+                                    Defect
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mx-5">
+                            <div id="good-cond-content" class="d-none">
+                                <div class="small text-center mb-3">
+                                    <i class="bi bi-info-circle-fill text-warning"></i>
+                                    All returned products were in good condition without defective units
+                                </div>
+                                <div class="row mx-5">
+                                    <div class="table d-flex justify-content-center align-items-center">
+                                        <table class="table table-bordered w-100">
+                                            <thead>
+                                                <tr class="text-center">
+                                                    <th>Product Name</th>
+                                                    <th>Total Unit</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="bad-cond-content" class="d-none">
+                                <div class="small text-center mb-3">
+                                    <i class="bi bi-info-circle-fill text-warning"></i>
+                                    At least one of the returned products was found to be defective
+                                </div>
+                                <div class="row">
+
+                                    <div class="mb-3">
+                                        <label for="claim_type" class="form-label ms-2"><strong>Claim</strong></label>
+                                        <select name="claim_type" id="claim_type" class="form-control">
+                                            <option value="1">Product</option>
+                                            <option value="2">Courier Cost</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="claim_from" class="form-label ms-2"><strong>Claim From</strong></label>
+                                        <select name="claim_from" id="claim_from" class="form-control">
+                                            <option value="1">Courier</option>
+                                            <option value="2">Company</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="claim_note" class="form-label ms-2"><strong>Claim Note</strong></label>
+                                        <textarea name="claim_note" id="claim_note" rows="2" class="form-control"></textarea>
+                                    </div>
+                                    <div class="mx-0">
+                                        <div class="table table-responsive w-100">
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr class="text-center">
+                                                        <th>Product Name</th>
+                                                        <th>Total Unit</th>
+                                                        <th>Defect Unit</th>
+                                                        <th>Batch No</th>
+                                                        <th>Upload Photo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="parcel_cond_submit()">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 @include("orders.multiple_cn_modal")
 <x-slot name="script">
@@ -1344,6 +1492,148 @@
                 el.innerHTML = new_address;
             }
         });
+
+        function return_modal(orderId, items){
+            document.querySelector('#good-cond').click();
+            // open returnModal modal pure js
+            let modal = document.getElementById('returnModal');
+            let modalLabel = document.getElementById('returnModalLabel');
+            modalLabel.innerHTML = `Order ${orderId} Condition`;
+            let modalBody = document.querySelector('#returnModal .modal-body');
+            let modalTableBodyGood = document.querySelector('#good-cond-content table tbody');
+            let modalTableBodyBad = document.querySelector('#bad-cond-content table tbody');
+            let body_good = '';
+            let body_bad = '';
+
+            document.querySelector('#returnModalOrderId').value = orderId;
+
+            for(let i = 0; i < items.length; i++){
+                body_good += `<tr>
+                        <td class="px-2">${items[i].product.name}</td>
+                        <td class="text-center">${items[i].quantity}</td>
+                    </tr>`;
+
+                body_bad += `<tr>
+                        <td>${items[i].product.name}</td>
+                        <td class="text-center">${items[i].quantity}</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <input type="number" name="defect_unit[${items[i].id}]" class="form-control form-control-sm text-center" size="4" value="0" required>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1 mb-1 batch-field">
+                                <input type="text" name="batch_no[${items[i].id}][]" class="form-control form-control-sm batch-no" required>
+                                <button class="btn btn-danger p-0 px-1"><i class="bi bi-trash"></i></button>
+                            </div>
+                            <div>
+                                <a href="javascript:void(0)" onclick="add_batch_no(this)">
+                                    <i class="bi bi-plus-circle-fill text-success"></i>
+                                    Add batch number
+                                </a>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <input type="file" id="uploadPhoto${items[i].id}" name="upload_photo[${items[i].id}]" class="form-control form-control-sm d-none" accept="image/*" onchange="read_photo(this)" />
+                            <img id="photo-${items[i].id}" src="https://placehold.co/50?text=Upload\\nPhoto" alt="" class="img-fluid img-thumbnail img-50" role="button" onclick="document.querySelector('#uploadPhoto${items[i].id}').click()">
+                        </td>
+                    </tr>`;
+
+            }
+            modalTableBodyGood.innerHTML = body_good;
+            modalTableBodyBad.innerHTML = body_bad;
+
+            // open modal
+            let myModal = new bootstrap.Modal(modal, {
+                keyboard: false
+            });
+            myModal.show();
+        }
+
+        function add_batch_no(el){
+            // clone previous element
+            let prev = el.parentNode.previousElementSibling;
+            let clone = prev.cloneNode(true);
+            // clear value
+            clone.querySelector('.batch-no').value = '';
+            // append to parent
+            el.parentNode.parentNode.insertBefore(clone, el.parentNode);
+
+            // add event listener to delete button
+            clone.querySelector('.btn-danger').addEventListener('click', function(){
+                clone.remove();
+            });
+        }
+
+        function read_photo(el){
+            let id = el.id.split('uploadPhoto')[1];
+            console.log(id);
+            let photo = document.querySelector(`#photo-${id}`);
+            if(el.files && el.files[0]){
+                let reader = new FileReader();
+                reader.onload = function(e){
+                    photo.src = e.target.result;
+                }
+                reader.readAsDataURL(el.files[0]);
+            }
+
+        }
+
+        function parcel_cond(cond){
+            document.querySelector('#parcel_condition').value = cond;
+            if(cond == 1){
+                document.querySelector('#good-cond').classList.add('outline-good');
+                document.querySelector('#bad-cond').classList.remove('outline-defect');
+                document.querySelector('#good-cond-content').classList.remove('d-none');
+                document.querySelector('#bad-cond-content').classList.add('d-none');
+            }else{
+                document.querySelector('#good-cond').classList.remove('outline-good');
+                document.querySelector('#bad-cond').classList.add('outline-defect');
+                document.querySelector('#good-cond-content').classList.add('d-none');
+                document.querySelector('#bad-cond-content').classList.remove('d-none');
+            }
+        }
+
+        function parcel_cond_submit(){
+            let form = document.querySelector('#returnModal form');
+            let formData = new FormData(form);
+
+            axios.post('/api/claims/create', formData)
+                .then(function(response) {
+                    if (response.data.success == 'ok') {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: response.data.message,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        })
+                            .then((result) => {
+                                if (result.isConfirmed) {
+                                    // location.reload();
+                                }
+                            })
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: "Something went wrong.",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                        return;
+                    }
+                })
+                .catch(function(error) {
+                    Swal.fire({
+                        title: 'Error!',
+                        html: error.response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
+                })
+
+        }
+
+
     </script>
 
 </x-slot>

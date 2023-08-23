@@ -35,7 +35,7 @@
         @break
 
         @case(ORDER_STATUS_RETURNED)
-            <span class="badge bg-success text-light">Returned</span>
+            <span class="badge text-light" style="background-color:#DA6A00">Returned</span>
         @break
 
         @case(ORDER_STATUS_REJECTED)

@@ -25,4 +25,9 @@ class OrderItem extends Model
     {
         return self::where("order_id", $this->order_id)->where('status', 1)->where("is_foc", 0)->count() > 1 ? "married" : "single";
     }
+
+    public function claim_item()
+    {
+        return $this->hasOne(ClaimItem::class);
+    }
 }

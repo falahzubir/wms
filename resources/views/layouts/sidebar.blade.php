@@ -93,6 +93,30 @@
             </li><!-- End return List Nav -->
         @endcan
 
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#claims-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-menu-button-wide"></i><span>Claim List</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="claims-nav"
+                class="nav-content {{ Route::current()->getName() != 'claims.index' ? 'collapsed' : '' }} "
+                data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="{{ route('claims.product.index') }}"
+                        {{ Route::current()->getName() == 'claims.product.index' ? 'class=active' : '' }}>
+                        <i class="bi bi-circle"></i>
+                        <span>Product</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('claims.courier.index') }}"
+                        {{ Route::current()->getName() == 'claims.courier.index' ? 'class=active' : '' }}>
+                        <i class="bi bi-circle"></i>
+                        <span>Courier</span>
+                    </a>
+                </li>
+            </ul>
+        </li><!-- End Components Nav -->
+
         @can('view.reject_list')
             <li class="nav-item">
                 <a class="nav-link {{ Route::current()->getName() != 'orders.rejected' ? 'collapsed' : '' }}"
@@ -170,11 +194,34 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('reports.shipment') }}"
-                        {{ Route::current()->getName() == 'reports.shipment' ? 'class=active' : '' }}>
-                        <i class="bi bi-circle"></i>
-                        <span>Shipment</span>
+                    <a class="nav-link collapsed" data-bs-target="#components-nav-report-shipment" data-bs-toggle="collapse" href="#">
+                        <i class="bi bi-menu-button-wide"></i><span>Shipment</span><i class="bi bi-chevron-down ms-auto"></i>
                     </a>
+                    <ul id="components-nav-report-shipment"
+                    class=" {{ Route::current()->getName() != 'reports.index' ? 'collapsed' : '' }} ">
+                    <li>
+                        <a href="{{ route('reports.shipment.attempt-list') }}"
+                            {{ Route::current()->getName() == 'reports.shipment.attempt-list' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Attempt List</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('reports.shipment.unattempt-list') }}"
+                            {{ Route::current()->getName() == 'reports.shipment.unattempt-list' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Unattempt List</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('reports.shipment.problematic-list') }}"
+                            {{ Route::current()->getName() == 'reports.shipment.problematic-list' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Problematic List</span>
+                        </a>
+                    </li>
+                </ul>
+
                 </li>
             </ul>
         </li><!-- End Components Nav -->
