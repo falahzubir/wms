@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Shipping;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 
 class ReportController extends Controller
@@ -40,15 +41,14 @@ class ReportController extends Controller
         $product_id = $request->input('product_id');
 
         $orders = Shipping::with('order.items')
-            // ->whereHas('order.items', function ($q) use ($product_id) {
-            //     $q->where('product_id', $product_id);
-            // })
+            ->whereHas('order.items', function ($q) use ($product_id) {
+                $q->where('product_id', $product_id);
+            })
             ->join('orders', 'orders.id', '=', 'shippings.order_id')
-            ->join('order_items', 'order_items.order_id', '=', 'orders.id')
+            ->join(DB::raw('(SELECT order_id, MAX(id) as id FROM order_items GROUP BY order_id) as order_items'), 'order_items.order_id', '=', 'orders.id')
             ->where('shippings.scanned_at', '>=', $start)
             ->where('shippings.scanned_at', '<=', $end)
             ->get();
-            // ->where('scanned_at', '>=', $start)->where('scanned_at', '<=', $end)->get();
 
 
         $total_orders = $orders->count();
