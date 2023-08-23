@@ -141,41 +141,51 @@
             <ul id="components-nav-report"
                 class="nav-content {{ Route::current()->getName() != 'reports.index' ? 'collapsed' : '' }} "
                 data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="{{ route('reports.sla') }}"
-                        {{ Route::current()->getName() == 'reports.sla' ? 'class=active' : '' }}>
-                        <i class="bi bi-circle"></i>
-                        <span>Service Level Agreement (SLA)</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('reports.outbound') }}"
-                        {{ Route::current()->getName() == 'reports.outbound' ? 'class=active' : '' }}>
-                        <i class="bi bi-circle"></i>
-                        <span>Outbound</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('reports.order_matrix') }}"
-                        {{ Route::current()->getName() == 'reports.order_matrix' ? 'class=active' : '' }}>
-                        <i class="bi bi-circle"></i>
-                        <span>Order Matrix</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('reports.pending_report') }}"
-                        {{ Route::current()->getName() == 'reports.pending_report' ? 'class=active' : '' }}>
-                        <i class="bi bi-circle"></i>
-                        <span>Pending Report</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('reports.shipment') }}"
-                        {{ Route::current()->getName() == 'reports.shipment' ? 'class=active' : '' }}>
-                        <i class="bi bi-circle"></i>
-                        <span>Shipment</span>
-                    </a>
-                </li>
+                @can('report.view_sla')
+                    <li>
+                        <a href="{{ route('reports.sla') }}"
+                            {{ Route::current()->getName() == 'reports.sla' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Service Level Agreement (SLA)</span>
+                        </a>
+                    </li>
+                @endcan
+                @can('report.view_outbound')
+                    <li>
+                        <a href="{{ route('reports.outbound') }}"
+                            {{ Route::current()->getName() == 'reports.outbound' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Outbound</span>
+                        </a>
+                    </li>
+                @endcan
+                @can('report.view_order_matrix')
+                    <li>
+                        <a href="{{ route('reports.order_matrix') }}"
+                            {{ Route::current()->getName() == 'reports.order_matrix' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Order Matrix</span>
+                        </a>
+                    </li>
+                @endcan
+                @can('report.view_pending')
+                    <li>
+                        <a href="{{ route('reports.pending_report') }}"
+                            {{ Route::current()->getName() == 'reports.pending_report' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Pending Report</span>
+                        </a>
+                    </li>
+                    @endcan
+                @can('report.view_shipment')
+                    <li>
+                        <a href="{{ route('reports.shipment') }}"
+                            {{ Route::current()->getName() == 'reports.shipment' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i>
+                            <span>Shipment</span>
+                        </a>
+                    </li>
+                @endcan
             </ul>
         </li><!-- End Components Nav -->
         @endcan
