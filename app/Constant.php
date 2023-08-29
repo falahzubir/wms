@@ -128,6 +128,9 @@ if(!defined('ORDER_DATE_TYPES')) define('ORDER_DATE_TYPES', [
     3 => ['Scan Parcel', ''],
     4 => ['Shipping', 'disabled'],
 ]);
+if(!defined('CLAIM_DATE_TYPES')) define('CLAIM_DATE_TYPES', [
+    1 => ['Claim Added', '']
+]);
 
 //DHL
 if(!defined('DHL_ID')) define('DHL_ID',15);

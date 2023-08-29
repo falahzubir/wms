@@ -20,9 +20,11 @@ class ClaimController extends Controller
             'items.order_item.product.detail', 'items.order_item.product.detail.owner']);
     }
 
-    public function index_product()
+    public function index_product(Request $request)
     {
-        $claims = $this->index()
+        $claims = $this->index();
+        $claims = $this->filter_claim($request, $claims);
+        $claims = $claims
             ->where('type', CLAIM_TYPE_PRODUCT)->orderBy('status')->orderBy('created_at')->paginate(10);
 
         return view('claims.index',[
@@ -33,9 +35,11 @@ class ClaimController extends Controller
         ]);
     }
 
-    public function index_courier()
+    public function index_courier(Request $request)
     {
-        $claims = $this->index()
+        $claims = $this->index();
+        $claims = $this->filter_claim($request, $claims);
+        $claims = $claims
             ->where('type', CLAIM_TYPE_COURIER)->orderBy('status')->orderBy('created_at')->paginate(10);
 
         return view('claims.index',[
@@ -157,7 +161,7 @@ class ClaimController extends Controller
 
         $claims->whereIn('id', $request->claim_ids);
 
-        // $claims = $this->filter_claim($request, $claims);
+        $claims = $this->filter_claim($request, $claims);
 
         $claims = $claims->get();
 
@@ -168,5 +172,38 @@ class ClaimController extends Controller
         return response([
             "file_name"=> $fileName
         ]);
+    }
+
+    private function filter_claim($request, $claims)
+    {
+        $claims->when($request->has('search'), function ($query) use ($request) {
+            $query->where(function ($query) use ($request) {
+                $query->where('reference_no', 'LIKE', "%$request->search%")
+                ->orwhere('note', 'LIKE', "%$request->search%")
+                    // ->orWhere('sales_remarks', 'LIKE', "%$request->search%")
+                    ->orWhereHas('order.customer', function ($q) use ($request) {
+                        $q->where('name', 'LIKE', "%$request->search%")
+                            ->orWhere('phone', 'LIKE', "%$request->search%")
+                            ->orWhere('address', 'LIKE', "%$request->search%");
+                    })
+                    ->orwhereHas('order', function ($q) use ($request) {
+                        $q->where('sales_id', 'LIKE', "%$request->search%");
+                    });
+            });
+        });
+
+        $claims->when($request->filled('date_type'), function ($query) use ($request) {
+            switch($request->date_type){
+                case 1: //date claims added
+                    $request->date_from != null ? $query->where('created_at', '>=', date("Y-m-d H:i:s", strtotime($request->date_from))) : '';
+                    $request->date_to != null ? $query->where('created_at', '<', date("Y-m-d 23:59:59", strtotime($request->date_to))) : '';
+                    break;
+                default:
+                    break;
+
+            }
+        });
+
+        return $claims;
     }
 }

@@ -213,29 +213,28 @@
                     </a>
                     <ul id="components-nav-report-shipment"
                     class=" {{ Route::current()->getName() != 'reports.index' ? 'collapsed' : '' }} ">
-                    <li>
-                        <a href="{{ route('reports.shipment.attempt-list') }}"
-                            {{ Route::current()->getName() == 'reports.shipment.attempt-list' ? 'class=active' : '' }}>
-                            <i class="bi bi-circle"></i>
-                            <span>Attempt List</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('reports.shipment.unattempt-list') }}"
-                            {{ Route::current()->getName() == 'reports.shipment.unattempt-list' ? 'class=active' : '' }}>
-                            <i class="bi bi-circle"></i>
-                            <span>Unattempt List</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('reports.shipment.problematic-list') }}"
-                            {{ Route::current()->getName() == 'reports.shipment.problematic-list' ? 'class=active' : '' }}>
-                            <i class="bi bi-circle"></i>
-                            <span>Problematic List</span>
-                        </a>
-                    </li>
-                </ul>
-
+                        <li>
+                            <a href="{{ route('reports.shipment.attempt-list') }}"
+                                {{ Route::current()->getName() == 'reports.shipment.attempt-list' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i>
+                                <span>Attempt List</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('reports.shipment.unattempt-list') }}"
+                                {{ Route::current()->getName() == 'reports.shipment.unattempt-list' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i>
+                                <span>Unattempt List</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('reports.shipment.problematic-list') }}"
+                                {{ Route::current()->getName() == 'reports.shipment.problematic-list' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i>
+                                <span>Problematic List</span>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </li><!-- End Components Nav -->

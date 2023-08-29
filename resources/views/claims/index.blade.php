@@ -86,7 +86,7 @@
                         </div>
                         <div class="col-md-3">
                             <select id="inputState" class="form-select" name="date_type">
-                                @foreach (ORDER_DATE_TYPES as $i => $type)
+                                @foreach (CLAIM_DATE_TYPES as $i => $type)
                                     <option value="{{ $i }}"
                                         {{ Request::get('date_type') == $i ? 'selected' : '' }} {{ $type[1] }}>
                                         {{ $type[0] }}</option>
@@ -103,7 +103,7 @@
                         </div>
                         <div class="" id="accordionPanelsStayOpenExample">
 
-                            <x-additional_filter :filter_data="$filter_data" />
+                            {{-- <x-additional_filter :filter_data="$filter_data" /> --}}
 
                         </div>
                         @if (request('bucket_id') != null)
