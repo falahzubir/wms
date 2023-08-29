@@ -203,8 +203,10 @@
                                                                     onclick="reject_order({{ $order->id }})"></i></button>
                                                     @endcan
                                                 @endif
+                                                @if (Route::is('orders.returned'))
                                                     <button class="btn p-0 px-1 m-1 text-white" style="background-color: #006E9B"><i class="bi bi-box-seam"
                                                             onclick="return_modal({{ $order->id }}, {{ $order->items }})"></i></button>
+                                                @endif
                                                 {{-- add shipping number modal --}}
                                                 @if (Route::is('orders.processing'))
                                                    {{-- @if($order->is_multiple_carton) --}}
@@ -1477,8 +1479,6 @@
             document.querySelector('#good-cond').click();
             // open returnModal modal pure js
             let modal = document.getElementById('returnModal');
-            let modalLabel = document.getElementById('returnModalLabel');
-            modalLabel.innerHTML = `Order ${orderId} Condition`;
             let modalBody = document.querySelector('#returnModal .modal-body');
             let modalTableBodyGood = document.querySelector('#good-cond-content table tbody');
             let modalTableBodyBad = document.querySelector('#bad-cond-content table tbody');
