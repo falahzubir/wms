@@ -138,7 +138,12 @@
                                     <th scope="col">Action</th>
                                     <th scope="col">Order</th>
                                     <th scope="col">Ref No.</th>
-                                    <th scope="col">Batch No.</th>
+                                    @if(Route::current()->getName() == 'claims.product.index')
+                                        <th scope="col">Batch No.</th>
+                                    @endif
+                                    @if(Route::current()->getName() == 'claims.courier.index')
+                                        <th scope="col">Tracking No.</th>
+                                    @endif
                                     <th scope="col">Product (s)</th>
                                     <th scope="col">Claimant</th>
                                     <th scope="col">Status</th>
@@ -192,11 +197,18 @@
                                                 <strong>{{ $claim->reference_no ?? 'N/A' }}</strong>
                                             </td>
                                             <td class="text-center">
-                                                @foreach ($claim->items as $item)
-                                                    @foreach (json_decode($item->batch_no) as $batch)
-                                                    <div><b>{{ $batch }}</b></div>
+                                                @if(Route::current()->getName() == 'claims.product.index')
+                                                    @foreach ($claim->items as $item)
+                                                        @foreach (json_decode($item->batch_no) as $batch)
+                                                        <div><b>{{ $batch }}</b></div>
+                                                        @endforeach
                                                     @endforeach
-                                                @endforeach
+                                                @endif
+                                                @if(Route::current()->getName() == 'claims.courier.index')
+
+                                                        <div><b>{{ implode("<br>", json_decode($claim->order->shippings->pluck('tracking_number'))) }}</b></div>
+
+                                                @endif
                                                 {{-- <strong>{{ json_decode($claim->items->pluck('batch_no'))[0] ?? 'N/A' }}</strong> --}}
                                             </td>
                                             <td class="text-center">
