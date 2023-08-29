@@ -14,7 +14,7 @@ class ClaimController extends Controller
 
     private function index(){
         return Claim::with([
-            'order', 'order.customer',
+            'order', 'order.customer', 'order.shippings',
             'order.company', 'order.courier',
             'items', 'items.order_item', 'items.order_item.product',
             'items.order_item.product.detail', 'items.order_item.product.detail.owner']);
@@ -188,6 +188,9 @@ class ClaimController extends Controller
                     })
                     ->orwhereHas('order', function ($q) use ($request) {
                         $q->where('sales_id', 'LIKE', "%$request->search%");
+                    })
+                    ->orwhereHas('order.shippings', function ($q) use ($request) {
+                        $q->where('tracking_number', 'LIKE', "%$request->search%");
                     });
             });
         });
