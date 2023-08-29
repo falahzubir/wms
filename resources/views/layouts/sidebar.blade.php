@@ -84,13 +84,27 @@
         @endcan
 
         @can('view.return_list')
-            <li class="nav-item">
-                <a class="nav-link {{ Route::current()->getName() != 'orders.returned' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.returned') }}">
-                    <i class="bi bi-arrow-return-left"></i>
-                    <span>Return List</span>
+        <a class="nav-link collapsed" data-bs-target="#return-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-menu-button-wide"></i><span>Return List</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="return-nav"
+            class="nav-content {{ Route::current()->getName() != 'orders.returned' ? 'collapsed' : '' }} "
+            data-bs-parent="#sidebar-nav">
+            <li>
+                <a href="{{ route('orders.returned') }}"
+                    {{ Route::current()->getName() == 'orders.returned' ? 'class=active' : '' }}>
+                    <i class="bi bi-circle"></i>
+                    <span>Pending</span>
                 </a>
-            </li><!-- End return List Nav -->
+            </li>
+            <li>
+                <a href="{{ route('orders.return_completed') }}"
+                    {{ Route::current()->getName() == 'orders.return_completed' ? 'class=active' : '' }}>
+                    <i class="bi bi-circle"></i>
+                    <span>Completed</span>
+                </a>
+            </li>
+        </ul>
         @endcan
 
         <li class="nav-item">

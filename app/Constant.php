@@ -18,7 +18,7 @@ if(!defined('ORDER_STATUS_RETURN_PENDING')) define('ORDER_STATUS_RETURN_PENDING'
 if(!defined('ORDER_STATUS_RETURN_SHIPPING')) define('ORDER_STATUS_RETURN_SHIPPING', 8);
 if(!defined('ORDER_STATUS_RETURNED')) define('ORDER_STATUS_RETURNED', 9);
 if(!defined('ORDER_STATUS_REJECTED')) define('ORDER_STATUS_REJECTED', 10);
-
+if(!defined('ORDER_STATUS_RETURN_COMPLETED')) define('ORDER_STATUS_RETURN_COMPLETED', 11);
 // states
 if(!defined('MY_STATES')) define('MY_STATES', [
     1 => 'Perlis',
@@ -93,6 +93,7 @@ if(!defined('ACTION_DOWNLOAD_ORDER')) define('ACTION_DOWNLOAD_ORDER', 'download-
 if(!defined('ACTION_GENERATE_PICKING')) define('ACTION_GENERATE_PICKING', 'generate-pl');
 if(!defined('ACTION_UPLOAD_TRACKING_BULK')) define('ACTION_UPLOAD_TRACKING_BULK', 'upload-tracking-bulk');
 if(!defined('ACTION_APPROVE_AS_SHIPPED')) define('ACTION_APPROVE_AS_SHIPPED', 'approve-as-shipped');
+if(!defined('ACTION_DOWNLOAD_CLAIM')) define('ACTION_DOWNLOAD_CLAIM', 'download-claim');
 
 // box minimum quantity
 if(!defined('BOX_MINIMUM_QUANTITY')) define('BOX_MINIMUM_QUANTITY', 5);
@@ -180,3 +181,6 @@ if(!defined('CLAIM_TYPE_COURIER')) define('CLAIM_TYPE_COURIER', 2);
 
 if(!defined('CLAIMANT_TYPE_COURIER')) define('CLAIMANT_TYPE_COURIER', 1);
 if(!defined('CLAIMANT_TYPE_COMPANY')) define('CLAIMANT_TYPE_COMPANY', 2);
+
+if(!defined('CLAIM_STATUS_PENDING')) define('CLAIM_STATUS_PENDING', 0);
+if(!defined('CLAIM_STATUS_COMPLETED')) define('CLAIM_STATUS_COMPLETED', 1);

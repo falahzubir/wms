@@ -68,6 +68,8 @@ Route::prefix('shippings')->group(function () {
 
 Route::prefix('claims')->group(function () {
     Route::post('create', [ClaimController::class, 'create']);
+    Route::post('upload-credit-note', [ClaimController::class, 'upload_cn']);
+    Route::delete('delete', [ClaimController::class, 'delete']);
 });
 
 Route::prefix('reports')->group(function() {
@@ -84,6 +86,7 @@ Route::prefix('reports')->group(function() {
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
 
 Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
+Route::post('download-claim-csv', [ClaimController::class, 'download_claim_csv']);
 
 Route::get('get-couriers', [CourierController::class, 'list']);
 

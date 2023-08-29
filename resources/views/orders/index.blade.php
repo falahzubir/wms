@@ -635,7 +635,7 @@
 
                                     <div class="mb-3">
                                         <label for="claim_type" class="form-label ms-2"><strong>Claim</strong></label>
-                                        <select name="claim_type" id="claim_type" class="form-control">
+                                        <select name="claim_type" id="claim_type" class="form-control" onchange="claim_type_click(this)">
                                             <option value="1">Product</option>
                                             <option value="2">Courier Cost</option>
                                         </select>
@@ -711,6 +711,8 @@
         document.querySelector('#filter-order').onclick = function() {
             document.querySelector('#order-table').style.display = 'block';
         }
+
+        claim_type_click(document.querySelector('#claim_type'));
 
         @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
             document.querySelector('#add-to-bucket-btn').onclick = function() {
@@ -1597,6 +1599,7 @@
         function parcel_cond_submit(){
             let form = document.querySelector('#returnModal form');
             let formData = new FormData(form);
+            formData.append('user_id', {{ Auth::user()->id }});
 
             axios.post('/api/claims/create', formData)
                 .then(function(response) {
@@ -1607,9 +1610,9 @@
                             icon: 'success',
                             confirmButtonText: 'OK'
                         })
-                            .then((result) => {
+                        .then((result) => {
                                 if (result.isConfirmed) {
-                                    // location.reload();
+                                    location.reload();
                                 }
                             })
                     } else {
@@ -1633,6 +1636,17 @@
 
         }
 
+        function claim_type_click(el){
+            let claim_type = el.value;
+            let claim_from = document.querySelector('#claim_from');
+
+            if(claim_type == 2){ // courier cost claim
+                claim_from.querySelector('option[value="2"]').disabled = true;
+                claim_from.querySelector('option[value="1"]').selected = true;
+            }else{
+                claim_from.querySelector('option[value="2"]').disabled = false;
+            }
+        }
 
     </script>
 

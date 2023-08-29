@@ -22,6 +22,7 @@ return new class extends Migration
             $table->text('note');
             $table->string('reference_no')->nullable();
             $table->string('img_path')->nullable();
+            $table->boolean('status')->default(0)->comment('0: Pending, 1: Approved');
             $table->softDeletes();
             $table->timestamps();
         });

@@ -48,6 +48,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('shipping', [OrderController::class, 'shipping'])->name('orders.shipping');
         Route::get('delivered', [OrderController::class, 'delivered'])->name('orders.delivered');
         Route::get('returned', [OrderController::class, 'returned'])->name('orders.returned');
+        Route::get('return-completed', [OrderController::class, 'return_completed'])->name('orders.return_completed');
         Route::get('scan', [OrderController::class, 'scan'])->name('orders.scan');
         Route::post('scan', [OrderController::class, 'scan_barcode'])->name('orders.scanned');
         Route::get('rejected', [OrderController::class, 'rejected'])->name('orders.rejected');

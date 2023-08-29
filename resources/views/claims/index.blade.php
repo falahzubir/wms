@@ -31,6 +31,19 @@
         .drop-area.uploaded:hover #output-img {
             opacity: 0.35;
         }
+
+        #claim-table td, #claim-table th {
+            vertical-align: middle !important;
+        }
+
+        .bg-orange{
+            background-color: #FD7F49 !important;
+        }
+
+        .btn-teal {
+            background-color: #008080 !important;
+            color: #fff !important;
+        }
     </style>
 
     <section class="section">
@@ -107,110 +120,133 @@
             <div class="card" style="font-size:0.8rem" id="order-table">
                 <div class="card-body">
                     <div class="card-title text-end">
-                        @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
+                        @if (in_array(ACTION_DOWNLOAD_CLAIM, $actions))
                             @can('order.download')
-                                <button class="btn btn-secondary" id="download-order-btn"><i
+                                <button class="btn btn-secondary" id="download-claim"><i
                                         class="bi bi-cloud-download"></i>
                                     Download CSV</button>
                             @endcan
                         @endif
                     </div>
-                    <!-- Default Table -->
-                    <table class="table">
-                        <thead class="text-center" class="bg-secondary">
-                            <tr class="align-middle">
-                                <th scope="col">#</th>
-                                <th scope="col"><input type="checkbox" name="" id=""
-                                        onchange="toggleCheckboxes(this, 'check-order')"></th>
-                                <th scope="col">Action</th>
-                                <th scope="col">Order</th>
-                                <th scope="col">Ref No.</th>
-                                <th scope="col">Batch No.</th>
-                                <th scope="col">Product (s)</th>
-                                <th scope="col">Claimant</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-center">
-                            @if ($claims->count())
-                                @foreach ($claims as $key => $claim)
-                                    <tr style="font-size: 0.8rem;">
-                                        <th scope="row">{{ $key + $claims->firstItem() }}</th>
-                                        <td><input type="checkbox" name="check_order[]" class="check-order"
-                                                id="" value="{{ $claim->id }}">
-                                        </td>
-                                        <td>
-                                            <div class="d-flex">
-                                                <button class="btn btn-danger p-0 px-1 m-1"
-                                                    onclick="delete_claim({{ $claim->id }})"><i
-                                                        class="bi bi-trash"></i></button>
-                                                <button class="btn btn-primary p-0 px-1 m-1"
-                                                    onclick="credit_note_detail({{ $claim }}, '{{ order_num_format($claim->order) }}')"><i
-                                                        class="bx bxs-message-square-detail"></i></button>
-                                                <button class="btn btn-success p-0 px-1 m-1"
-                                                    onclick="credit_note_upload({{ $claim->id }})"><i
-                                                        class="bx bx-check"></i></button>
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            <div>
-                                                <span role="button" class="order-num text-primary"
-                                                    data-sales-id="{{ $claim->order->sales_id }}"
-                                                    data-order-num="{{ order_num_format($claim->order) }}"
-                                                    title="Double Click to Copy">
-                                                    <strong>{{ order_num_format($claim->order) }}</strong>
-                                                </span>
-                                            </div>
-                                            <div style="font-size: 0.75rem; white-space: nowrap;"
-                                                data-bs-toggle="tooltip" data-bs-placement="right"
-                                                data-bs-original-title="Date Inserted">
-                                                {{ date('d/m/Y H:i', strtotime($claim->created_at)) }}
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            <strong>{{ $claim->reference_no ?? 'N/A' }}</strong>
-                                        </td>
-                                        <td>
-                                            @foreach ($claim->items as $item)
-
-                                                <br>
-
-                                            @endforeach
-                                            {{-- <strong>{{ json_decode($claim->items->pluck('batch_no'))[0] ?? 'N/A' }}</strong> --}}
-                                        </td>
-                                        <td class="text-center">
-                                            @foreach ($claim->items as $item)
-                                            <div class="d-flex justify-content-center gap-1">
-                                                <div>
-                                                    {{ $item->order_item->product->name }}
+                    <div class="table-responsive">
+                        <table class="table" id="claim-table">
+                            <thead class="text-center" class="bg-secondary">
+                                <tr class="align-middle">
+                                    <th scope="col">#</th>
+                                    <th scope="col"><input type="checkbox" name="" id=""
+                                            onchange="toggleCheckboxes(this, 'check-claim')"></th>
+                                    <th scope="col">Action</th>
+                                    <th scope="col">Order</th>
+                                    <th scope="col">Ref No.</th>
+                                    <th scope="col">Batch No.</th>
+                                    <th scope="col">Product (s)</th>
+                                    <th scope="col">Claimant</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-center">
+                                @if ($claims->count())
+                                    @foreach ($claims as $key => $claim)
+                                        <tr style="font-size: 0.8rem;">
+                                            <th scope="row">{{ $key + $claims->firstItem() }}</th>
+                                            <td><input type="checkbox" name="check_claim[]" class="check-claim"
+                                                    id="" value="{{ $claim->id }}">
+                                            </td>
+                                            <td>
+                                                <div class="d-flex">
+                                                    <button class="btn btn-danger p-0 px-1 m-1"
+                                                        onclick="delete_claim({{ $claim->id }}, '{{ order_num_format($claim->order) }}')" title="Delete Claim"
+                                                        {{ $claim->status == CLAIM_STATUS_COMPLETED ? 'disabled':'' }}><i
+                                                            class="bi bi-trash"></i></button>
+                                                    <button class="btn btn-success p-0 px-1 m-1"
+                                                        onclick="credit_note_detail({{ $claim }}, '{{ order_num_format($claim->order) }}')"><i
+                                                            class="bx bxs-message-square-detail"></i></button>
+                                                    @if($claim->status == CLAIM_STATUS_PENDING)
+                                                    <button class="btn bg-orange text-white p-0 px-1 m-1"
+                                                        onclick="credit_note_upload({{ $claim->id }})"><i
+                                                            class="bx bx-check"></i></button>
+                                                    @endif
+                                                    @if($claim->status == CLAIM_STATUS_COMPLETED)
+                                                    <button class="btn btn-teal p-0 px-1 m-1"
+                                                        onclick="download_credit_note({{ $claim }})"><i
+                                                            class="bi bi-printer"></i></button>
+                                                    @endif
                                                 </div>
+                                            </td>
+                                            <td class="text-center" valign="middle">
                                                 <div>
-                                                    <strong>[{{ $item->quantity }}]</strong>
+                                                    <span role="button" class="order-num text-primary"
+                                                        data-sales-id="{{ $claim->order->sales_id }}"
+                                                        data-order-num="{{ order_num_format($claim->order) }}"
+                                                        title="Double Click to Copy">
+                                                        <strong>{{ order_num_format($claim->order) }}</strong>
+                                                    </span>
                                                 </div>
-                                            </div>
-                                            @endforeach
-                                        </td>
-                                        <td>
-                                            <div class="d-flex justify-content-center gap-1">
-                                                @if($claim->claimant == CLAIMANT_TYPE_COURIER)
-                                                    {{ $claim->order->courier->name }}
-                                                @elseif ($claim->claimant == CLAIMANT_TYPE_COMPANY)
-                                                    {{ $claim->order->company->name }}
-                                                @endif
+                                                <div style="font-size: 0.75rem; white-space: nowrap;"
+                                                    data-bs-toggle="tooltip" data-bs-placement="right"
+                                                    data-bs-original-title="Date Inserted">
+                                                    {{ date('d/m/Y H:i', strtotime($claim->created_at)) }}
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <strong>{{ $claim->reference_no ?? 'N/A' }}</strong>
+                                            </td>
+                                            <td class="text-center">
+                                                @foreach ($claim->items as $item)
+                                                    @foreach (json_decode($item->batch_no) as $batch)
+                                                    <div><b>{{ $batch }}</b></div>
+                                                    @endforeach
+                                                @endforeach
+                                                {{-- <strong>{{ json_decode($claim->items->pluck('batch_no'))[0] ?? 'N/A' }}</strong> --}}
+                                            </td>
+                                            <td class="text-center">
+                                                @foreach ($claim->items as $item)
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <div>
+                                                        {{ $item->order_item->product->name }}
+                                                    </div>
+                                                    <div>
+                                                        <strong>[{{ $item->quantity }}]</strong>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            </td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-1 flex-column">
+                                                    @if($claim->claimant == CLAIMANT_TYPE_COURIER)
+                                                        {{ $claim->order->courier->name }}
+                                                    @elseif ($claim->claimant == CLAIMANT_TYPE_COMPANY)
+                                                        @foreach ($claim->items as $item)
+                                                            <div>
+                                                                {{ $item->order_item->product->detail != null ? $item->order_item->product->detail->owner->name : 'EMZI HEALTH SCIENCE SDN. BHD.' }}
+                                                            </div>
+                                                        @endforeach
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    @if ($claim->status == CLAIM_STATUS_PENDING)
+                                                        <span class="badge bg-warning text-black">Pending</span>
+                                                    @elseif ($claim->status == CLAIM_STATUS_COMPLETED)
+                                                        <span class="badge bg-orange text-light">Completed</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="100%" class="text-center">
+                                            <div class="alert alert-warning" role="alert">
+                                                No order found!
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
-                            @else
-                                <tr>
-                                    <td colspan="100%" class="text-center">
-                                        <div class="alert alert-warning" role="alert">
-                                            No order found!
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endif
-                        </tbody>
-                    </table>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             Showing {{ $claims->firstItem() }} to {{ $claims->lastItem() }} of
@@ -299,14 +335,6 @@
                             </thead>
                             <tbody>
                                 <!-- generated by ajax -->
-                                <tr class="text-center">
-                                    <td>1</td>
-                                    <td class="text-start">Product 1</td>
-                                    <td>1</td>
-                                    <td>123123123</td>
-                                    <td>
-                                        <img src="https://via.placeholder.com/100" alt="" width="100">
-                                    </td>
                             </tbody>
                         </table>
                     </div>
@@ -327,64 +355,72 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="creditNoteUploadModalBody">
-                    <div>
-                        <div class="row justify-content-center mb-4">
-                            <div class="col">
-                                <label for="reference_no">Reference No.</label>
-                                <input type="text" class="form-control" id="reference_no" placeholder="Reference No.">
+                    <form id="creditNoteUploadForm">
+                        @csrf
+                        <input type="hidden" name="claim_id" id="creditNoteUploadClaimId">
+                        <div>
+                            <div class="row justify-content-center mb-4">
+                                <div class="col">
+                                    <label for="reference_no" class="mb-1">Reference No.</label>
+                                    <input type="text" class="form-control" id="reference_no">
+                                </div>
                             </div>
-                        </div>
-                        <section class="drop-area">
-                            <div id="file-dropping-area">
-                                <input type="file" id="files" onchange="upload_pdf(event)" name="candidate-resume-1" accept="application/pdf" style="display:none">
-                                <input type="file" name="candidate-resume-2" accept="application/pdf" id="retest" class="hide">
-                                <label class="button" for="files">
-                                    <span class="click-upload-trigger">
-                                        <span>
-                                            <svg width="50" height="50" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill="currentColor" d="M20.987 16a.98.98 0 0 0-.039-.316l-2-6A.998.998 0 0 0 18 9h-4v2h3.279l1.667 5H5.054l1.667-5H10V9H6a.998.998 0 0 0-.948.684l-2 6a.98.98 0 0 0-.039.316C3 16 3 21 3 21a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1s0-5-.013-5zM16 7.904c.259 0 .518-.095.707-.283a1 1 0 0 0 0-1.414L12 1.5L7.293 6.207a1 1 0 0 0 0 1.414c.189.189.448.283.707.283s.518-.094.707-.283L11 5.328V12a1 1 0 0 0 2 0V5.328l2.293 2.293a.997.997 0 0 0 .707.283z"/>
-                                            </svg>
+                            <section class="drop-area">
+                                <div id="file-dropping-area">
+                                    <input type="file" id="files" onchange="upload_pdf(event)" name="candidate-resume-1" accept="application/pdf" style="display:none">
+                                    <input type="file" name="candidate-resume-2" accept="application/pdf" id="retest" class="hide">
+                                    <label class="button" for="files">
+                                        <span class="click-upload-trigger">
+                                            <span>
+                                                <svg width="50" height="50" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill="currentColor" d="M20.987 16a.98.98 0 0 0-.039-.316l-2-6A.998.998 0 0 0 18 9h-4v2h3.279l1.667 5H5.054l1.667-5H10V9H6a.998.998 0 0 0-.948.684l-2 6a.98.98 0 0 0-.039.316C3 16 3 21 3 21a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1s0-5-.013-5zM16 7.904c.259 0 .518-.095.707-.283a1 1 0 0 0 0-1.414L12 1.5L7.293 6.207a1 1 0 0 0 0 1.414c.189.189.448.283.707.283s.518-.094.707-.283L11 5.328V12a1 1 0 0 0 2 0V5.328l2.293 2.293a.997.997 0 0 0 .707.283z"/>
+                                                </svg>
+                                            </span>
+                                            <small class="d-block pdf-file-name">Upload format .pdf only</small>
                                         </span>
-                                        <small class="d-block pdf-file-name">Upload format .pdf only</small>
-                                    </span>
-                                </label>
+                                    </label>
+                                </div>
+                            </section>
+                            <div class="progress d-none">
+                                <div id="uploadProgress" class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 0%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
-                        </section>
-                    </div>
+                            <div id="output" class="text-center d-none">0%</div>
+                        </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button class="btn btn-success">Submit</button>
+                    <button class="btn btn-success" onclick="submit_upload_credit_note()">Submit</button>
                 </div>
             </div>
         </div>
     </div> <!-- end modal-->
 
+    <!-- Modal -->
+    <div class="modal fade" id="downloadCreditNoteModal" tabindex="-1" aria-labelledby="downloadCreditNoteModal-modalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="downloadCreditNoteModalLabel">Credit Note</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="downloadCreditNoteModalBody">
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div> <!-- end modal-->
+
+    <!-- Modal -->
+
+
     @include('orders.multiple_cn_modal')
     <x-slot name="script">
         <script>
-            let start = document.querySelector('#start-date');
-            let end = document.querySelector('#end-date');
-            document.querySelector('#btn-check-today').onclick = function() {
-                start.value = moment().format('YYYY-MM-DD');
-                end.value = moment().format('YYYY-MM-DD');
-            }
-            document.querySelector('#btn-check-yesterday').onclick = function() {
-                start.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
-                end.value = moment().subtract(1, 'days').format('YYYY-MM-DD');
-            }
-            document.querySelector('#btn-check-this-month').onclick = function() {
-                start.value = moment().startOf('month').format('YYYY-MM-DD');
-                end.value = moment().endOf('month').format('YYYY-MM-DD');
-            }
-            document.querySelector('#btn-check-last-month').onclick = function() {
-                start.value = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
-                end.value = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
-            }
-            document.querySelector('#btn-check-overall').onclick = function() {
-                start.value = '';
-                end.value = '';
-            }
 
             const initUpload = () => {
             const dropArea = document.querySelector(".drop-area");
@@ -424,32 +460,25 @@
         }
 
         function upload_pdf(event) {
-            console.log(event)
             let image = document.querySelector("#output-img");
-            console.log(image)
             let pdf_name = document.querySelector(".pdf-file-name")
-            let pdf_size = document.querySelector(".pdf-file-size")
             pdf_name.innerHTML = event.target.files[0].name;
-            pdf_size.innerHTML = event.target.files[0].size + " bytes";
             pdf_name.style.fontWeight = "700";
-            pdf_size.style.fontWeight = "700";
-            // image.src = URL.createObjectURL(event.target.files[0]);
-            // document.querySelector(".drop-area").classList.add("uploaded");
+            image.src = URL.createObjectURL(event.target.files[0]);
+            document.querySelector(".drop-area").classList.add("uploaded");
         }
 
         function preview_file(file) {
             let reader = new FileReader();
             reader.readAsDataURL(file);
-            console.log(file);
-            console.log(reader);
             reader.onloadend = function() {
-                let pdf_name = document.querySelector(".pdf-file-name");
-                let pdf_size = document.querySelector(".pdf-file-size");
+                // let pdf_name = document.querySelector(".pdf-file-name");
+                // let pdf_size = document.querySelector(".pdf-file-size");
                 // let pdf_type = document.querySelector(".pdf-file");
                 pdf_name.innerHTML = file.name;
-                pdf_size.innerHTML = file.size + " bytes";
+                // pdf_size.innerHTML = file.size + " bytes";
                 pdf_name.style.fontWeight = "700";
-                pdf_size.style.fontWeight = "700";
+                // pdf_size.style.fontWeight = "700";
                 // pdf_size.innerHTML = file.size;
                 // img.src = reader.result;
             }
@@ -460,7 +489,7 @@
             // download cn
             @if (in_array(ACTION_DOWNLOAD_CN, $actions))
                 document.querySelector('#download-cn-btn').onclick = function() {
-                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                    const inputElements = [].slice.call(document.querySelectorAll('.check-claim'));
                     let checkedValue = inputElements.filter(chk => chk.checked).length;
                     // sweet alert
                     if (checkedValue == 0) {
@@ -496,15 +525,15 @@
             @endif
 
             // download csv
-            @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
-                document.querySelector('#download-order-btn').onclick = function() {
-                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+            @if (in_array(ACTION_DOWNLOAD_CLAIM, $actions))
+                document.querySelector('#download-claim').onclick = function() {
+                    const inputElements = [].slice.call(document.querySelectorAll('.check-claim'));
                     let checkedValue = inputElements.filter(chk => chk.checked).length;
 
                     if (checkedValue == 0) {
                         Swal.fire({
                             title: 'No order selected!',
-                            html: `<div>Are you sure to download {{ isset($claim->orders) ? $claim->orders->total() : 0 }} order(s).</div>
+                            html: `<div>Are you sure to download {{ isset($claims) ? $claims->total() : 0 }} claims(s).</div>
                             <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
                             icon: 'warning',
                             confirmButtonText: 'Download',
@@ -533,12 +562,7 @@
                 }
             @endif
 
-
-
-
-
             function reject_order(orderId) {
-                console.log(213);
                 Swal.fire({
                     title: 'Are you sure to reject this order?',
                     html: `You are about to reject order ${orderId}.`,
@@ -640,8 +664,8 @@
                 if (checkedOrder.length == 0) {
                     checkedOrder = []
                 }
-                axios.post('/api/download-order-csv', {
-                        order_ids: checkedOrder,
+                axios.post('/api/download-claim-csv', {
+                        claim_ids: checkedOrder,
                     })
                     .then(function(response) {
                         // handle success, close or download
@@ -702,10 +726,9 @@
             });
 
             function credit_note_detail(claim, salesId) {
-                // open returnModal modal pure js
+
                 let modal = document.getElementById('creditNoteModal');
                 let modalBody = document.querySelector('#credit-note-table .modal-body');
-
                 document.querySelector('#creditNoteModalSalesId').innerHTML = salesId;
                 document.querySelector('#creditNoteModalDateAdded').innerHTML = moment(claim.created_at)
                     .format('DD/MM/YYYY');
@@ -714,16 +737,33 @@
                     .order.courier.name : claim.order.company.name;
                 document.querySelector('#creditNoteModalNotes').innerHTML = claim.note ?? 'N/A';
 
+                rows = '';
+                for(let i = 0; i < claim.items.length; i++){
+                    rows += `<tr class="text-center">
+                                <td>${i+1}</td>
+                                <td class="text-start">${claim.items[i].order_item.product.name}</td>
+                                <td>${claim.items[i].quantity}</td>
+                                <td>${JSON.parse(claim.items[i].batch_no).join('<br>')}</td>
+                                <td>
+                                    <img src="/storage/claims/product/${claim.items[i].img_path}" alt="" width="100">
+                                </td>
+                            </tr>`;
+                }
+
+                document.querySelector('#credit-note-table tbody').innerHTML = rows;
+
                 // open modal
                 let myModal = new bootstrap.Modal(modal, {
                     keyboard: false
                 });
                 myModal.show();
             }
-            function credit_note_upload(orderId) {
+            function credit_note_upload(claimId) {
                 // open returnModal modal pure js
                 let modal = document.getElementById('creditNoteUploadModal');
                 let modalLabel = document.getElementById('creditNoteUploadModalLabel');
+
+                document.querySelector('#creditNoteUploadClaimId').value = claimId;
 
                 // open modal
                 let myModal = new bootstrap.Modal(modal, {
@@ -745,8 +785,138 @@
                     document.querySelector('#bad-cond-content').classList.remove('d-none');
                 }
             }
+
+            function submit_upload_credit_note(){
+                let reference_no = document.querySelector('#reference_no').value;
+                let file = document.querySelector('#files').files[0];
+                let claim_id = document.querySelector('#creditNoteUploadClaimId').value;
+                let formData = new FormData();
+                let output = document.querySelector('#output');
+                let upload_progress = document.querySelector('#uploadProgress');
+                formData.append('reference_no', reference_no);
+                formData.append('file', file);
+                formData.append('claim_id', claim_id);
+                formData.append('user_id', {{ Auth::user()->id }});
+
+                output.classList.remove('d-none');
+                upload_progress.parentElement.classList.remove('d-none');
+
+                axios.post('/api/claims/upload-credit-note', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    onUploadProgress: function(progressEvent) {
+                        let percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
+                        output.innerHTML = percentCompleted + '%';
+                        upload_progress.style.width = percentCompleted + '%';
+                    }
+                }).then(function(response) {
+
+                    if (response.status == 200) {
+                        Swal.fire({
+                                title: 'Success!',
+                                text: "Credit note uploaded.",
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            })
+                            .then((result) => {
+                                if (result.isConfirmed) {
+                                    location.reload();
+                                }
+                            })
+                    } else {
+                        output.classList.add('d-none');
+                        upload_progress.parentElement.classList.add('d-none');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: "Something went wrong.",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                        return;
+                    }
+                }).catch(function(error) {
+                    output.classList.add('d-none');
+                    upload_progress.parentElement.classList.add('d-none');
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
+                })
+            }
+
+            function download_credit_note(claim){
+
+                //open modal
+                let modal = document.getElementById('downloadCreditNoteModal');
+                let modalBody = document.querySelector('#downloadCreditNoteModal .modal-body');
+                let modalLabel = document.getElementById('downloadCreditNoteModalLabel');
+                let claimId = document.querySelector('#creditNoteUploadClaimId').value;
+                modalLabel.innerHTML = `Credit Note Reference No - ${claim.reference_no}`;
+                modalBody.innerHTML = `<iframe src="/storage/claims/credit_note/${claim.img_path}" width="100%" height="500px"></iframe>`;
+                // open modal
+                let myModal = new bootstrap.Modal(modal, {
+                    keyboard: false
+                });
+                myModal.show();
+            }
+
+            function delete_claim(claimId, orderNum){
+                Swal.fire({
+                    title: 'Are you sure to delete claim?',
+                    text: "Order " + orderNum + " will be marked as return pending.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    confirmButtonColor: '#d33',
+                    cancelButtonText: 'No, keep it'
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        return;
+                    }
+
+                    axios.delete('/api/claims/delete', {
+                        data: {
+                            claim_id: claimId,
+                            user_id: {{ Auth::user()->id }}
+                        }
+                    })
+                    .then(function(response) {
+                        if (response.status == 200) {
+                            Swal.fire({
+                                    title: 'Success!',
+                                    text: "Claim deleted.",
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                })
+                                .then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                })
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: "Something went wrong. Please try again.",
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            })
+                            return;
+                        }
+                    }).catch(function(error) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: error.response.data.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                    })
+                })
+            }
+
         </script>
 
     </x-slot>
-    @stack('orders.multiple_cn_modal')
 </x-layout>
