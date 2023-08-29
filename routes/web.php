@@ -165,6 +165,8 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/courier', [ClaimController::class, 'index_courier'])->name('claims.courier.index');
     });
 
+});
+
 
     Route::get('notifications', [NotificationController::class, 'list']);
 
@@ -202,4 +204,4 @@ Route::middleware(['auth'])->group(function() {
             // }
         });
     });
-});
+
