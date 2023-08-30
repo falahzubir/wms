@@ -1509,7 +1509,7 @@
                             <div>
                                 <a href="javascript:void(0)" onclick="add_batch_no(this)">
                                     <i class="bi bi-plus-circle-fill text-success"></i>
-                                    Add batch number
+                                    Add batch No.
                                 </a>
                             </div>
                         </td>

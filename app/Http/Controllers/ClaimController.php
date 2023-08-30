@@ -69,13 +69,14 @@ class ClaimController extends Controller
                 'defect_unit.*' => 'required|integer',
                 'batch_no' => 'required|array',
                 'batch_no.*' => 'required',
-                'upload_photo' => 'array',
+                'upload_photo' => 'required|array',
+                'upload_photo.*' => 'required|array',
                 'upload_photo.*.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
             ],[
                 'defect_unit.*.required' => 'The defect unit field is required.',
                 'batch_no.*.required' => 'The batch no field is required.',
-                'upload_photo.*.*.required' => 'The photo field is required.',
-                'upload_photo.*.*.image' => 'The photo must be an image.',
+                'upload_photo.*.*.required' => 'Please Upload photo.',
+                'upload_photo.*.*.image' => 'The photo must be type of image.',
                 'upload_photo.*.*.mimes' => 'The photo must be a file of type: jpeg, png, jpg, gif, svg.',
             ]);
 
@@ -126,6 +127,8 @@ class ClaimController extends Controller
             'claim_id' => 'required|exists:claims,id',
             'reference_no' => 'required',
             'file' => ['required', File::types('pdf')],
+        ],[
+            'reference_no.required' => 'Reference No. field is required.',
         ]);
 
         $claim = Claim::find($request->input("claim_id"));
