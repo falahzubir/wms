@@ -427,11 +427,10 @@
         </div>
     </div> <!-- end modal-->
 
-    <!-- Modal -->
-
-
     @include('orders.multiple_cn_modal')
     <x-slot name="script">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
+        <script src="https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js"></script>
         <script>
 
             const initUpload = () => {
@@ -756,13 +755,21 @@
                                 <td class="text-start">${claim.items[i].order_item.product.name}</td>
                                 <td>${claim.items[i].quantity}</td>
                                 <td>${JSON.parse(claim.items[i].batch_no).join('<br>')}</td>
-                                <td>
-                                    <img src="/storage/claims/product/${claim.items[i].img_path}" alt="" width="100">
-                                </td>
-                            </tr>`;
+                                <td class="d-flex justify-content-center align-items-center gap-1">`;
+                    claim.items[i].img_path.split(',').forEach(img => {
+                        rows += `<a href="/storage/claims/product/${img}" class="glightbox">
+                                    <img src="/storage/claims/product/${img}" alt="image" width="100" />
+                                    </a>`;
+                    });
+                    rows += `</td>
+                        </tr>`;
                 }
 
                 document.querySelector('#credit-note-table tbody').innerHTML = rows;
+
+                const lightbox = GLightbox({
+                    selector: '.glightbox'
+                });
 
                 // open modal
                 let myModal = new bootstrap.Modal(modal, {

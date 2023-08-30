@@ -4,6 +4,7 @@
             <td>Order</td>
             <td>Company</td>
             <td>Sales ID</td>
+            <td>Tracking No</td>
             <td>Ref No</td>
             <td>Batch No</td>
             <td>Product</td>
@@ -19,7 +20,8 @@
                 <td>{{ order_num_format($claim->order) }}</td>
                 <td>{{ $claim->order->company->name }}</td>
                 <td>{{ $claim->order->sales_id }}</td>
-                <td>{{ $claim->ref_no }}</td>
+                <td>{{ $claim->order->shippings->pluck('tracking_number')->implode(', '); }}</td>
+                <td>{{ $claim->reference_no }}</td>
                 <td>{{ implode(", ", json_decode($item->batch_no)) }}</td>
                 <td>{{ $item->order_item->product->code }}</td>
                 <td>{{ $item->quantity }}</td>

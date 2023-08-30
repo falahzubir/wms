@@ -1504,7 +1504,7 @@
                         <td>
                             <div class="d-flex gap-1 mb-1 batch-field">
                                 <input type="text" name="batch_no[${items[i].id}][]" class="form-control form-control-sm batch-no" required>
-                                <button class="btn btn-danger p-0 px-1"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-danger p-0 px-1" type="button" disabled><i class="bi bi-trash"></i></button>
                             </div>
                             <div>
                                 <a href="javascript:void(0)" onclick="add_batch_no(this)">
@@ -1514,8 +1514,13 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            <input type="file" id="uploadPhoto${items[i].id}" name="upload_photo[${items[i].id}]" class="form-control form-control-sm d-none" accept="image/*" onchange="read_photo(this)" />
-                            <img id="photo-${items[i].id}" src="https://placehold.co/50?text=Upload\\nPhoto" alt="" class="img-fluid img-thumbnail img-50" role="button" onclick="document.querySelector('#uploadPhoto${items[i].id}').click()">
+                            <input type="file" id="uploadPhoto${items[i].id}" name="upload_photo[${items[i].id}][]" class="form-control form-control-sm d-none" accept="image/*" onchange="read_photo(this)" multiple />
+                            <div id="photo-${items[i].id}-preview"></div>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm text-success" type="button" onclick="document.querySelector('#uploadPhoto${items[i].id}').click()">
+                                    <i class="bi bi-plus-circle-fill"></i>
+                                    Upload</button>
+                            </div>
                         </td>
                     </tr>`;
 
@@ -1536,6 +1541,7 @@
             let clone = prev.cloneNode(true);
             // clear value
             clone.querySelector('.batch-no').value = '';
+            clone.querySelector('button').disabled = false;
             // append to parent
             el.parentNode.parentNode.insertBefore(clone, el.parentNode);
 
@@ -1546,16 +1552,23 @@
         }
 
         function read_photo(el){
+            console.log(el.files)
             let id = el.id.split('uploadPhoto')[1];
-            console.log(id);
-            let photo = document.querySelector(`#photo-${id}`);
-            if(el.files && el.files[0]){
-                let reader = new FileReader();
-                reader.onload = function(e){
-                    photo.src = e.target.result;
+            let photo = document.querySelector(`#photo-${id}-preview`);
+            photo.innerHTML = '';
+
+
+            // if(el.files && el.files[0]){
+                for(let i=0;i<el.files.length;i++){
+
+                    let reader = new FileReader();
+                    reader.onload = function(e){
+
+                        photo.insertAdjacentHTML('beforeend', `<img src='${e.target.result}' class="img-fluid img-thumbnail img-50" />`);
+                    }
+                    reader.readAsDataURL(el.files[i]);
                 }
-                reader.readAsDataURL(el.files[0]);
-            }
+            // }
 
         }
 

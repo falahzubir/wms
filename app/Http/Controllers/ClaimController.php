@@ -52,6 +52,7 @@ class ClaimController extends Controller
 
 
     public function create(Request $request){
+
         $request->validate([
             'parcel_condition' => 'required|boolean',
             'order_id' => 'required|exists:orders,id',
@@ -69,13 +70,13 @@ class ClaimController extends Controller
                 'batch_no' => 'required|array',
                 'batch_no.*' => 'required',
                 'upload_photo' => 'array',
-                'upload_photo.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+                'upload_photo.*.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
             ],[
                 'defect_unit.*.required' => 'The defect unit field is required.',
                 'batch_no.*.required' => 'The batch no field is required.',
-                'upload_photo.*.required' => 'The photo field is required.',
-                'upload_photo.*.image' => 'The photo must be an image.',
-                'upload_photo.*.mimes' => 'The photo must be a file of type: jpeg, png, jpg, gif, svg.',
+                'upload_photo.*.*.required' => 'The photo field is required.',
+                'upload_photo.*.*.image' => 'The photo must be an image.',
+                'upload_photo.*.*.mimes' => 'The photo must be a file of type: jpeg, png, jpg, gif, svg.',
             ]);
 
             $claim['order_id'] = $request->input("order_id");
@@ -88,14 +89,19 @@ class ClaimController extends Controller
             $claim_items = [];
             foreach($request->input("defect_unit") as $key => $value){
                 if($value > 0){
+                    $photos = [];
+                    foreach($request->file("upload_photo")[$key] as $photo){
+                        $name = $photo->hashName();
+                        $photos[] = $name;
+                        $photo->store('/public/claims/product');
+                    }
                     $claim_items[] = [
                         'claim_id' => $claim->id,
                         'order_item_id' => $key, //order_item_id
                         'quantity' => $value,
                         'batch_no' => json_encode($request->input("batch_no")[$key]),
-                        'img_path' => $request->file("upload_photo")[$key]->hashName()
+                        'img_path' => implode(",", $photos)
                     ];
-                    $request->file("upload_photo")[$key]->store('/public/claims/product');
                 }
             }
             $claim->items()->createMany($claim_items);
@@ -191,6 +197,9 @@ class ClaimController extends Controller
                     })
                     ->orwhereHas('order.shippings', function ($q) use ($request) {
                         $q->where('tracking_number', 'LIKE', "%$request->search%");
+                    })
+                    ->orWhereHas('items', function($q) use ($request){
+                        $q->where('batch_no', 'LIKE',  "%$request->search%");
                     });
             });
         });
