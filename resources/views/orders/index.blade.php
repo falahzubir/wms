@@ -1591,6 +1591,72 @@
             let form = document.querySelector('#returnModal form');
             let formData = new FormData(form);
             formData.append('user_id', {{ Auth::user()->id }});
+            //validate form
+            console.log(formData);
+            let error = '';
+            let parcel_condition = document.querySelector('#parcel_condition').value;
+            let defect_unit = document.querySelectorAll('input[name^="defect_unit"]');
+            let batch_no = document.querySelectorAll('input[name^="batch_no"]');
+            let upload_photo = document.querySelectorAll('input[name^="upload_photo"]');
+            let defect_unit_total = 0;
+            let batch_no_total = 0;
+            let upload_photo_total = 0;
+
+            if(parcel_condition == 0){
+                defect_unit.forEach(el => {
+                    defect_unit_total += parseInt(el.value);
+                });
+                batch_no.forEach(el => {
+                    if(el.value != ''){
+                        batch_no_total++;
+                    }
+                });
+                upload_photo.forEach(el => {
+                    if(el.files.length > 0){
+                        upload_photo_total++;
+                    }
+                });
+            }
+
+            if(parcel_condition == 0 && defect_unit_total == 0){
+                error += 'Defect unit must be more than 0.<br>';
+            }
+            else{
+                //find non zero defect unit array index
+                let defect_unit_arr = [];
+                defect_unit.forEach(el => {
+                    if(parseInt(el.value) > 0){
+                        defect_unit_arr.push(el);
+                    }
+                });
+                //check if batch no is empty
+                defect_unit_arr.forEach(el => {
+                    let index = el.name.split('[')[1].split(']')[0];
+                    let batch_no_el = document.querySelector(`input[name="batch_no[${index}][]"]`);
+                    if(batch_no_el.value == ''){
+                        error += 'Please enter batch no for defect unit with quantity more than 0.<br>';
+                    }
+                });
+                //check if upload photo is empty
+                defect_unit_arr.forEach(el => {
+                    let index = el.name.split('[')[1].split(']')[0];
+                    let upload_photo_el = document.querySelector(`input[name="upload_photo[${index}][]"]`);
+                    if(upload_photo_el.files.length == 0){
+                        error += 'Please upload photo for defect unit with quantity more than 0.<br>';
+                    }
+                });
+
+            }
+
+            if(error != ''){
+                Swal.fire({
+                    title: 'Error!',
+                    html: error,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                })
+                return;
+            }
 
             axios.post('/api/claims/create', formData)
                 .then(function(response) {
