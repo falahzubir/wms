@@ -1634,7 +1634,7 @@
                     let index = el.name.split('[')[1].split(']')[0];
                     let batch_no_el = document.querySelector(`input[name="batch_no[${index}][]"]`);
                     if(batch_no_el.value == ''){
-                        error += 'Please enter batch no for defect unit with quantity more than 0.<br>';
+                        error += 'Please enter batch no for defect unit.<br>';
                     }
                 });
                 //check if upload photo is empty
@@ -1642,7 +1642,7 @@
                     let index = el.name.split('[')[1].split(']')[0];
                     let upload_photo_el = document.querySelector(`input[name="upload_photo[${index}][]"]`);
                     if(upload_photo_el.files.length == 0){
-                        error += 'Please upload photo for defect unit with quantity more than 0.<br>';
+                        error += 'Please upload photo for defect unit.<br>';
                     }
                 });
 
