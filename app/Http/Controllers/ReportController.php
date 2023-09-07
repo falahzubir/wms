@@ -532,4 +532,33 @@ class ReportController extends Controller
     {
         return view('reports.shipment');
     }
+
+    public function shipment_attempt(){
+        return view('reports.shipment', [
+            'title' => 'List of Attepmted Parcel',
+            'filter_data' => [],
+            'actions' => [],
+            'orders' => Order::paginate(10)
+        ]);
+    }
+
+    public function shipment_unattempt(){
+        return view('reports.shipment',[
+            'title' => 'List of Unattepmted Parcel',
+            'filter_data' => [],
+            'actions' => [],
+            'orders' => Order::paginate(10)
+        ]);
+    }
+
+    public function shipment_problem(){
+        return view('reports.shipment', [
+            'title' => 'List of Problematic Shipment',
+            'filter_data' => [],
+            'actions' => [],
+            'orders' => Order::paginate(10)
+        ]);
+    }
+
+
 }

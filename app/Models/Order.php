@@ -97,4 +97,9 @@ class Order extends Model
         }
         return false;
     }
+
+    public function claim()
+    {
+        return $this->hasOne(Claim::class);
+    }
 }

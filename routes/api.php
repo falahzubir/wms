@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\api\ShippingApiController;
 use App\Http\Controllers\api\WebhookController;
+use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -65,6 +66,12 @@ Route::prefix('shippings')->group(function () {
     Route::post('update_shopee_tracking', [ShippingApiController::class, 'update_shopee_tracking']);
 });
 
+Route::prefix('claims')->group(function () {
+    Route::post('create', [ClaimController::class, 'create']);
+    Route::post('upload-credit-note', [ClaimController::class, 'upload_cn']);
+    Route::delete('delete', [ClaimController::class, 'delete']);
+});
+
 Route::prefix('reports')->group(function() {
     // Route::get('sla', [ReportController::class, 'sla']);
     Route::get('outbound', [ReportController::class, 'get_outbound']);
@@ -79,6 +86,7 @@ Route::prefix('reports')->group(function() {
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
 
 Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
+Route::post('download-claim-csv', [ClaimController::class, 'download_claim_csv']);
 
 Route::get('get-couriers', [CourierController::class, 'list']);
 
