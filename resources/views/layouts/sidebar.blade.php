@@ -107,6 +107,7 @@
         </ul>
         @endcan
 
+        @can('view.claim_list')
         <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#claims-nav" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-menu-button-wide"></i><span>Claim List</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -130,6 +131,7 @@
                 </li>
             </ul>
         </li><!-- End Components Nav -->
+        @endcan
 
         @can('view.reject_list')
             <li class="nav-item">
