@@ -261,6 +261,23 @@ class OrderController extends Controller
         ]);
     }
 
+
+    public function return_completed(Request $request)
+    {
+        $orders = $this->index()->where('status', ORDER_STATUS_RETURN_COMPLETED);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Return Completed Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL, ORDER_FILTER_STATE]),
+            'actions' => [ACTION_DOWNLOAD_ORDER],
+        ]);
+
+    }
+
     /**
      * Lists rejected order
      * @param  Request $request

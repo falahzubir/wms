@@ -52,3 +52,6 @@ function pagePagination(data) {
         el.insertAdjacentHTML('beforeend', html)
     }
 }
+import * as FilePond from 'filepond';
+
+window.FilePond = FilePond;
