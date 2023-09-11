@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 
 class OrderApiController extends Controller
@@ -175,6 +176,60 @@ class OrderApiController extends Controller
             return response()->json(['success' => 'ok']);
         } else {
             return response()->json(['error' => 'error']);
+        }
+    }
+
+    public function getStatusWMS(Request $request)
+    {
+        $sales_id = $request->input("sales_id");
+
+        $order = DB::table('orders')
+        ->select('orders.sales_id','orders.status','shippings.tracking_number')
+        ->leftJoin('shippings', function($join) {
+            $join->on('orders.id', '=', 'shippings.order_id');
+          })
+        ->where("orders.sales_id", $sales_id)
+        ->where("orders.is_active", IS_ACTIVE)
+        ->where("orders.company_id",3)
+        ->first();
+
+        if($order){
+            return response()->json([
+            'success' => true,
+            'message' => 'Order found',
+            'data' => $order
+            ], 200);
+        }else{
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found'
+            ], 200);
+        }
+    }
+
+    public function getStatusWMSFilter(Request $request)
+    {
+        $sales_id = $request->input("sales_id");
+        $status = $request->input("status");
+
+        $order = Order::select('sales_id','status')
+        ->whereIN("sales_id", $sales_id)
+        ->where("is_active", IS_ACTIVE)
+        ->where("company_id",3)
+        ->where("status", $status)
+        ->get();
+
+        if($order){
+            return response()->json([
+            'success' => true,
+            'message' => 'Order found',
+            'data' => $order
+            ], 200);
+        }else{
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found'
+            ], 200);
         }
     }
 }

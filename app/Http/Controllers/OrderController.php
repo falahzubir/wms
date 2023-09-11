@@ -404,6 +404,22 @@ class OrderController extends Controller
                 'created_by' => 1,
             ]);
         }
+        elseif (str_contains(urldecode(($data['sales_remarks'])), 'Self Pickup'))
+        {
+            set_order_status($order, ORDER_STATUS_PROCESSING, 'Order staff_purchase self-pickup created from webhook');
+
+            Order::where('id', $order->id)->update([
+                'bucket_id' => 11, //for staff_purchase
+                'status' => ORDER_STATUS_PROCESSING,
+            ]);
+
+            OrderLog::create([
+                'order_id' => $order->id,
+                'order_status_id' => ORDER_STATUS_PROCESSING,
+                'remarks' => 'Order added to bucket',
+                'created_by' => 1,
+            ]);
+        }
         else{
             if ($order->wasRecentlyCreated) {
                 set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
