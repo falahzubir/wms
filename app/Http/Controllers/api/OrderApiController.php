@@ -37,8 +37,8 @@ class OrderApiController extends Controller
             $order = Order::find($request->order_id);
 
             if (!empty($order) && empty($request->from)) {
-                $url = "https://qastg.groobok.com/api/reject_order"; 
-                
+                $url = "https://qastg.groobok.com/api/reject_order";
+
                 if (env("APP_ENV") == "production") {
                     $url = $order->company->url . "/api/reject_order";
                 }

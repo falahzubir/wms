@@ -13,7 +13,9 @@
     },
     "dependencies": {
         "bootstrap-select": "^1.13.18",
+        "filepond": "^4.30.4",
         "moment": "^2.29.4",
+        "simple-datatables": "^7.3.0",
         "sweetalert2": "^11.6.16"
     }
 }

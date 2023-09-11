@@ -12,6 +12,11 @@ class Order extends Model
 
     protected $appends = ['is_multiple_carton'];
 
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', IS_ACTIVE);
+    }
+
     public function bucket()
     {
         return $this->belongsTo(Bucket::class);
@@ -91,5 +96,10 @@ class Order extends Model
             }
         }
         return false;
+    }
+
+    public function claim()
+    {
+        return $this->hasOne(Claim::class);
     }
 }
