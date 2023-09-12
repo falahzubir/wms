@@ -301,3 +301,33 @@ if(!function_exists('is_digit_count')){
         return strlen((string)$number) == $count;
     }
 }
+
+if(!function_exists('hash_url_encode')){
+    /**
+     * Encode url
+     *
+     * @param  string $url
+     * @return string
+     */
+    function hash_url_encode($id)
+    {
+        $url_hash_key = 'Gr0b0xT3cH@URL===';
+        return urlencode(base64_encode($url_hash_key.$id));
+    }
+}
+
+if(!function_exists('hash_url_decode')){
+    /**
+     * Decode url
+     *
+     * @param  string $url
+     * @return string
+     */
+    function hash_url_decode($decoded_id)
+    {
+        $x = base64_decode(urldecode($decoded_id));
+        $arr_x = explode("===", $x);
+        $data_return = isset($arr_x[1]) ? $arr_x[1] : '';
+        return $data_return;
+    }
+}

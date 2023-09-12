@@ -76,6 +76,18 @@ Route::prefix('reports')->group(function() {
     // Route::get('shipment', [ReportController::class, 'shipment']);
 });
 
+Route::prefix('couriers')->group(function(){
+    Route::post('/listCourier', [CourierController::class, 'listCourier']);
+    Route::post('/listSLA', [CourierController::class, 'listSLA']);
+    Route::post('/addSLA', [CourierController::class, 'addSLA']);
+    Route::post('/editSLA', [CourierController::class, 'editSLA']);
+    Route::post('/listCoverage', [CourierController::class, 'listCoverage']);
+    Route::post('/listSelectedCoverage', [CourierController::class, 'listSelectedCoverage']);
+    Route::post('/defaultCoverageState', [CourierController::class, 'defaultCoverageState']);
+    Route::post('/exceptionalCoverage', [CourierController::class, 'exceptionalCoverage']);
+
+});
+
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
 
 Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
