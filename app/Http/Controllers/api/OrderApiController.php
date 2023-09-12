@@ -190,7 +190,7 @@ class OrderApiController extends Controller
           })
         ->where("orders.sales_id", $sales_id)
         ->where("orders.is_active", IS_ACTIVE)
-        ->where("orders.company_id",3)
+        ->where("orders.company_id",1)
         ->first();
 
         if($order){
