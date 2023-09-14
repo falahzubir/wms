@@ -4,6 +4,10 @@
         .placeholder-wave {
             margin: 0;
         }
+        /* table outbound 2nd td and onwards */
+        #table-outbound td:nth-child(n+2) {
+            text-align: center;
+        }
     </style>
 
     <section class="section">

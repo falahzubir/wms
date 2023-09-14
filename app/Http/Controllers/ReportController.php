@@ -50,6 +50,8 @@ class ReportController extends Controller
             ->where('shippings.scanned_at', '<=', $end)
             ->get();
 
+        $orders = $orders->unique('order_id');
+
 
         $total_orders = $orders->count();
         $total_products = $orders->sum(function ($order) use ($product_id) {
