@@ -277,6 +277,7 @@
                                         </div> --}}
                                     </td>
                                     <td class="text-start">
+                                        
                                         @if ($order->courier_id = DHL_ID && !is_digit_count($order->customer->postcode, 5))
                                             <div class="badge bg-danger text-wrap">
                                                 Postcode Error
@@ -289,7 +290,8 @@
                                         @endif
                                         <div><strong>{{ $order->customer->name }}</strong></div>
                                         <div>
-                                            {{ $order->customer->phone }}
+                                            <p class="mb-0">{{ $order->customer->phone }}</p>
+                                            <p class="mb-0">{{ $order->customer->phone_2 }}</p>
                                         </div>
                                         <div>
                                             <span class="customer-address">{{ $order->customer->address }}</span>,
