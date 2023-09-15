@@ -218,7 +218,7 @@ class ShippingController extends Controller
                         }
                         //if not existed
                         else {
-                            $second_phone_num = '(PIC:' . $order->sold_by . ')';
+                            $second_phone_num = '(PIC: ' . $order->sold_by . ')';
                         }
                     }
                     $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
