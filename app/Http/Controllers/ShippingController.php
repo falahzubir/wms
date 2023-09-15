@@ -314,9 +314,9 @@ class ShippingController extends Controller
             $second_phone_num = "HQ NO: 60122843214";
         }else {
             if($order->customer->phone_2 != null){
-                $second_phone_num = 'PHONE 2='.$order->customer->phone_2.'/(PIC='.$order->sold_by.')';
+                $second_phone_num = $order->customer->phone_2.'('.$order->sold_by.')';
             }else{
-                $second_phone_num = '-/(PIC='.$order->sold_by.')';
+                $second_phone_num = '('.$order->sold_by.')';
             }
         }
         $data = [
