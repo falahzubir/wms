@@ -228,7 +228,7 @@ class ShippingController extends Controller
                             'name' => $order->customer->name,
                             'address1' => $order->customer->address,
                             // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
-                            'address2' => "",
+                            'address2' => "-",
                             // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
                             'address3' => $second_phone_num,
                             'city' => $order->customer->city,
