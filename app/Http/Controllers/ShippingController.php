@@ -203,7 +203,7 @@ class ShippingController extends Controller
 
                     $second_phone_num = '';
                     //if ED
-                    if ($order->company_id == 3) {//ubah jadi 2 untuk merge
+                    if ($order->company_id == 2) {
                         //If secondary phone number existed
                         if ($order->customer->phone_2 != null) {
                             $second_phone_num = $order->customer->phone_2 . " (HQ NO: 60122843214)";
