@@ -201,14 +201,25 @@ class ShippingController extends Controller
                 $total_price = $order->total_price > 0 ? $order->total_price / 100 : null;
 
                 if ($order->company_id == $access_token->company_id) {
-
+                    
+                    $second_phone_num = '';
+                    if($order->company_id == 2){
+                        $second_phone_num = "HQ NO: 60122843214";
+                    }else {
+                        if($order->customer->phone_2 != null){
+                            $second_phone_num = 'PHONE 2='.$order->customer->phone_2.'/(PIC='.$order->sold_by.')';
+                        }else{
+                            $second_phone_num = '-/(PIC='.$order->sold_by.')';
+                        }
+                    }
                     $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
                         'consigneeAddress' => [
                             'companyName' => get_shipping_remarks($order),
                             'name' => $order->customer->name,
                             'address1' => $order->customer->address,
                             'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
-                            'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                            // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                            'address3' => $second_phone_num,
                             'city' => $order->customer->city,
                             'state' => MY_STATES[$order->customer->state],
                             'country' => "MY",
@@ -298,7 +309,16 @@ class ShippingController extends Controller
         $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
 
         $total_price = $order->total_price > 0 ? $order->total_price / 100 : null;
-
+        $second_phone_num = '';
+        if($order->company_id == 2){
+            $second_phone_num = "HQ NO: 60122843214";
+        }else {
+            if($order->customer->phone_2 != null){
+                $second_phone_num = 'PHONE 2='.$order->customer->phone_2.'/(PIC='.$order->sold_by.')';
+            }else{
+                $second_phone_num = '-/(PIC='.$order->sold_by.')';
+            }
+        }
         $data = [
             'labelRequest' => [
                 'hdr' => [
@@ -316,7 +336,8 @@ class ShippingController extends Controller
                                 'name' => $order->customer->name,
                                 'address1' => $order->customer->address,
                                 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
-                                'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                                // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                                'address3' => $second_phone_num,
                                 'city' => $order->customer->city,
                                 'state' => MY_STATES[$order->customer->state],
                                 'country' => "MY",
