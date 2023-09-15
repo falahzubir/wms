@@ -202,7 +202,8 @@ class ShippingController extends Controller
                 if ($order->company_id == $access_token->company_id) {
 
                     $second_phone_num = '';
-                    if ($order->company_id == 2) {
+                    //if ED
+                    if ($order->company_id == 3) {//ubah jadi 2 untuk merge
                         //If secondary phone number existed
                         if ($order->customer->phone_2 != null) {
                             $second_phone_num = $order->customer->phone_2 . " (HQ NO: 60122843214)";
@@ -211,7 +212,7 @@ class ShippingController extends Controller
                         else {
                             $second_phone_num = "(HQ NO: 60122843214)";
                         }
-                    } else {
+                    } else {//if EH
                         //If secondary phone number existed
                         if ($order->customer->phone_2 != null) {
                             $second_phone_num = $order->customer->phone_2 . ' (PIC: ' . $order->sold_by . ')';
@@ -226,7 +227,8 @@ class ShippingController extends Controller
                             'companyName' => get_shipping_remarks($order),
                             'name' => $order->customer->name,
                             'address1' => $order->customer->address,
-                            'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
+                            // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
+                            'address2' => "",
                             // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
                             'address3' => $second_phone_num,
                             'city' => $order->customer->city,
