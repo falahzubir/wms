@@ -311,12 +311,22 @@ class ShippingController extends Controller
         $total_price = $order->total_price > 0 ? $order->total_price / 100 : null;
         $second_phone_num = '';
         if($order->company_id == 2){
-            $second_phone_num = "HQ NO: 60122843214";
-        }else {
+            //If secondary phone number existed
             if($order->customer->phone_2 != null){
-                $second_phone_num = $order->customer->phone_2.'('.$order->sold_by.')';
-            }else{
-                $second_phone_num = '('.$order->sold_by.')';
+                $second_phone_num = $order->customer->phone_2."(HQ NO: 60122843214)";
+            }
+            //if not existed
+            else{
+                $second_phone_num = "(HQ NO: 60122843214)";
+            }
+        }else {
+            //If secondary phone number existed
+            if($order->customer->phone_2 != null){
+                $second_phone_num = $order->customer->phone_2.'(PIC:'.$order->sold_by.')';
+            }
+            //if not existed
+            else{
+                $second_phone_num = '(PIC:'.$order->sold_by.')';
             }
         }
         $data = [
