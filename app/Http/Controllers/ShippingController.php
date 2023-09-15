@@ -214,7 +214,7 @@ class ShippingController extends Controller
                     } else {
                         //If secondary phone number existed
                         if ($order->customer->phone_2 != null) {
-                            $second_phone_num = $order->customer->phone_2 . ' (PIC:' . $order->sold_by . ')';
+                            $second_phone_num = $order->customer->phone_2 . ' (PIC: ' . $order->sold_by . ')';
                         }
                         //if not existed
                         else {
