@@ -150,7 +150,6 @@ class ShippingController extends Controller
 
         foreach ($access_tokens as $access_token) {
             $data = [];
-
             $data['labelRequest']['hdr'] = [
                 "messageType" => "LABEL",
                 "messageDateTime" => date('Y-m-d\TH:i:s') . '+08:00',
@@ -202,13 +201,36 @@ class ShippingController extends Controller
 
                 if ($order->company_id == $access_token->company_id) {
 
+                    $second_phone_num = '';
+                    //if ED
+                    if ($order->company_id == 2) {
+                        //If secondary phone number existed
+                        if ($order->customer->phone_2 != null) {
+                            $second_phone_num = $order->customer->phone_2 . " (HQ NO: 60122843214)";
+                        }
+                        //if not existed
+                        else {
+                            $second_phone_num = "(HQ NO: 60122843214)";
+                        }
+                    } else {//if EH
+                        //If secondary phone number existed
+                        if ($order->customer->phone_2 != null) {
+                            $second_phone_num = $order->customer->phone_2 . ' (PIC: ' . $order->sold_by . ')';
+                        }
+                        //if not existed
+                        else {
+                            $second_phone_num = '(PIC: ' . $order->sold_by . ')';
+                        }
+                    }
                     $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
                         'consigneeAddress' => [
                             'companyName' => get_shipping_remarks($order),
                             'name' => $order->customer->name,
                             'address1' => $order->customer->address,
-                            'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
-                            'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                            // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
+                            'address2' => "-",
+                            // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                            'address3' => $second_phone_num,
                             'city' => $order->customer->city,
                             'state' => MY_STATES[$order->customer->state],
                             'country' => "MY",
@@ -298,7 +320,26 @@ class ShippingController extends Controller
         $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
 
         $total_price = $order->total_price > 0 ? $order->total_price / 100 : null;
-
+        $second_phone_num = '';
+        if ($order->company_id == 2) {
+            //If secondary phone number existed
+            if ($order->customer->phone_2 != null) {
+                $second_phone_num = $order->customer->phone_2 . "(HQ NO: 60122843214)";
+            }
+            //if not existed
+            else {
+                $second_phone_num = "(HQ NO: 60122843214)";
+            }
+        } else {
+            //If secondary phone number existed
+            if ($order->customer->phone_2 != null) {
+                $second_phone_num = $order->customer->phone_2 . '(PIC:' . $order->sold_by . ')';
+            }
+            //if not existed
+            else {
+                $second_phone_num = '(PIC:' . $order->sold_by . ')';
+            }
+        }
         $data = [
             'labelRequest' => [
                 'hdr' => [
@@ -316,7 +357,8 @@ class ShippingController extends Controller
                                 'name' => $order->customer->name,
                                 'address1' => $order->customer->address,
                                 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
-                                'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                                // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                                'address3' => $second_phone_num,
                                 'city' => $order->customer->city,
                                 'state' => MY_STATES[$order->customer->state],
                                 'country' => "MY",
@@ -775,11 +817,15 @@ class ShippingController extends Controller
         // }
         // $company_name = ($order->operational_model_id == OP_BLAST_ID && $blast) ? "EMZI BLAST" : $access_token->company->name;
 
-        if(count($array_data) > 1) { $mult = true; } else  { $mult = false; }
+        if (count($array_data) > 1) {
+            $mult = true;
+        } else {
+            $mult = false;
+        }
 
         $company_name = ($order->operational_model_id == OP_BLAST_ID && $mult) ? "EMZI BLAST" : $access_token->company->name;
-        $pickup_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_pickup_account_blast: $access_token->additional_data->dhl_pickup_account;
-        $soldto_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_sold_to_account_blast: $access_token->additional_data->dhl_sold_to_account;
+        $pickup_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_pickup_account_blast : $access_token->additional_data->dhl_pickup_account;
+        $soldto_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_sold_to_account_blast : $access_token->additional_data->dhl_sold_to_account;
 
         foreach ($array_data as $key => $cn) {
             //calculate COD amount
