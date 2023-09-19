@@ -92,9 +92,9 @@ class OrderController extends Controller
     public function overall(Request $request)
     {
         $orders = $this->index();
-        
+
         $orders = $this->filter_order($request, $orders);
-        
+
         return view('orders.index', [
             'title' => 'List Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
@@ -357,7 +357,7 @@ class OrderController extends Controller
         $data['operational_model_id'] = $webhook['operation_model_id'];
         $data['team_id'] = $webhook['team_id'];
         $data['payment_refund'] = isset($webhook['payment_refund']) ? $webhook['payment_refund'] * 100 : 0;
-        $data['sales_remarks'] = $webhook['sales_remark'] ?? '';
+        $data['sales_remarks'] = str_replace(array("\r", "\n"), '', $webhook['sales_remark'] ?? '');
         $data['dt_request_shipping'] = $webhook['dt_request_shipping'] ?? '';
         $data['payment_type'] = isset($webhook['payment_type']) ? $webhook['payment_type'] : null;
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
