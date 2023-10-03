@@ -338,7 +338,6 @@ class OrderController extends Controller
         }
 
         $company_id = Company::where('code', $webhook['company'])->first()->id;
-
         // $operational_model = OperationalModel::where('id', $webhook['operation_model_id'])->first();
         // if ($operational_model->default_company_id != null) {
         //     $company_id = $operational_model->default_company_id;
@@ -361,8 +360,20 @@ class OrderController extends Controller
         $data['dt_request_shipping'] = $webhook['dt_request_shipping'] ?? '';
         $data['payment_type'] = isset($webhook['payment_type']) ? $webhook['payment_type'] : null;
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
-
-        $customer = Customer::updateorCreate($webhook['customer']);
+       
+        $data_customer = $webhook['customer'];
+        if($data_customer['country'] == 1 || $data_customer['country'] == 2){
+            if(strlen($data_customer['postcode']) > 5){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
+            }
+        }
+        
+        if($data_customer['city'] == null){
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
+        }
+        
+        $customer = Customer::updateorCreate($data_customer);
+        // dd($customer);
         $data['customer_id'] = $customer->id;
 
         $order = Order::updateOrCreate($ids, $data);
