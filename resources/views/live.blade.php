@@ -206,6 +206,9 @@
                     barHeight: '50%'
                 }
             },
+            tooltip: {
+                enabled: false
+            },
             dataLabels: {
                 enabled: true,
                 textAnchor: 'middle',
