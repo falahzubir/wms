@@ -235,7 +235,7 @@
 
         setInterval(() => {
             getPerformanceMonth();
-        }, 30000);
+        }, 10000);
 
 
 
