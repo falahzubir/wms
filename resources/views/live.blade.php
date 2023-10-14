@@ -260,7 +260,7 @@
         const getPerformanceMonth = () => {
             const year = new Date().getFullYear();
             const month = new Date().getMonth() + 1;
-            const day = new Date().getDate()-1;
+            const day = new Date().getDate();
             fetch(`/api/scanned-parcel/${year}/${month}/${day}`)
                 .then(response => response.json())
                 .then(data => {
@@ -282,10 +282,10 @@
                         }
                         total_scans += item.count;
                         performanceMonth.innerHTML += `
-                        <div class="d-flex performance-month justify-content-between mb-2">
-                                <div class="d-flex align-items-center gap-2  w-100">
+                        <div class="d-flex performance-month justify-content-between my-2">
+                                <div class="d-flex align-items-center gap-2 w-100">
                                     <div>
-                                        <img src="https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250"
+                                        <img src="/storage/image/${item.img}" class="img-fluid"
                                             alt="">
                                     </div>
                                     <div class="pack-count-${item.count} d-flex gap-2">
