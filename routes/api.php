@@ -85,6 +85,8 @@ Route::prefix('reports')->group(function() {
     // Route::get('shipment', [ReportController::class, 'shipment']);
 });
 
+Route::get('scanned-parcel/{year}/{month}/{day?}', [OrderController::class, 'scanned_parcel']);
+
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
 
 Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
