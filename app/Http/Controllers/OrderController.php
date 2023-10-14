@@ -663,7 +663,7 @@ class OrderController extends Controller
         foreach($users as $user){
             $scans[] = [
                 'name' => $user->name,
-                'img' => $user->staff_id . '-test.jpeg',
+                'img' => $user->staff_id . '.jpeg',
                 'count' => $scanned_parcel_count[$user->id]
             ];
         }
