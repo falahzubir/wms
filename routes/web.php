@@ -167,6 +167,7 @@ Route::middleware(['auth'])->group(function() {
 
 });
 
+    Route::get('live', fn () => view('live'));
 
     Route::get('notifications', [NotificationController::class, 'list']);
 
