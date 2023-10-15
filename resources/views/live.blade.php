@@ -336,7 +336,7 @@
             }])
         }
 
-        const number_format = (num) => {
+        const number_format = (num = 0) => {
             //if num not integer
             if (num % 1 != 0) {
                 return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
