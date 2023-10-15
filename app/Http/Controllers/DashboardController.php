@@ -35,7 +35,7 @@ class DashboardController extends Controller
      *
      * @return json
      */
-    public function current_process()
+    public function current_process($live = false)
     {
         $status = [ORDER_STATUS_PENDING, ORDER_STATUS_PROCESSING, ORDER_STATUS_PACKING, ORDER_STATUS_READY_TO_SHIP, ORDER_STATUS_SHIPPING];
         $orders = Order::where('is_active', IS_ACTIVE)->whereIn('status', $status)->groupBy('status')->get([
@@ -52,6 +52,23 @@ class DashboardController extends Controller
         foreach ($orders as $status => $count) {
             $orderCounts[$status] = $count;
         }
+
+        if($live){
+
+            //order count for dhl orders only
+            $dhlOrders = Order::with('shippings')->where('is_active', IS_ACTIVE)->where('status', ORDER_STATUS_SHIPPING)->groupBy('status')
+                ->whereHas('shippings', function ($query) {
+                    $query->where('courier', 'dhl-ecommerce');
+                })->get([
+                    'status',
+                    DB::raw('count(*) as total')
+                ])->pluck('total', 'status')->all();
+
+            foreach ($dhlOrders as $status => $count) {
+                $orderCounts['dhl'] = $count;
+            }
+        }
+
         return response()->json(['count' => $orderCounts], 200);
     }
 

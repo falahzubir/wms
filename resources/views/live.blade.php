@@ -134,7 +134,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" class="icon-clock-second"><path fill="currentColor" d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m4.2 14.2L11 13V7h1.5v5.2l4.5 2.7l-.8 1.3Z"/></svg>
                     <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 32 32" class="icon-path-position"><path fill="currentColor" d="M4 16h12v2H4zm-2-5h10v2H2z"/><path fill="currentColor" d="m29.919 16.606l-3-7A.999.999 0 0 0 26 9h-3V7a1 1 0 0 0-1-1H6v2h15v12.556A3.992 3.992 0 0 0 19.142 23h-6.284a4 4 0 1 0 0 2h6.284a3.98 3.98 0 0 0 7.716 0H29a1 1 0 0 0 1-1v-7a.997.997 0 0 0-.081-.394ZM9 26a2 2 0 1 1 2-2a2.002 2.002 0 0 1-2 2Zm14-15h2.34l2.144 5H23Zm0 15a2 2 0 1 1 2-2a2.002 2.002 0 0 1-2 2Zm5-3h-1.142A3.995 3.995 0 0 0 23 20v-2h5Z"/></svg>
                     <div class="card-body d-flex flex-column justify-content-between">
-                        <h5 class="card-title"><strong>PENDING SHIPPING</strong></h5>
+                        <h5 class="card-title"><strong>PENDING COMPLETE<br>SHIPPING</strong></h5>
                         <div class="d-flex align-items-center">
                             <div class="info-value-position">
                                 <h3 class="pending-count text-center" id="pendingShipping">
@@ -150,7 +150,12 @@
             <div class="col-4 pe-4" id="performanceMonthContainer">
                 <div class="card bot-card" role="button" style="background-color: #A2CFD3;">
                     <div class="card-body">
-                        <h5 class="card-title text-black mb-3"><strong>MONTHLY PERFORMANCE</strong></h5>
+                        <div>
+                            <h5 class="card-title text-black mb-0"><strong>MONTHLY PERFORMANCE</strong></h5>
+                        </div>
+                        <div class=" mb-3">
+                            {{ date("F Y") }}
+                        </div>
                         <div class="d-flex justify-content-between w-100 mb-2" style="border-bottom: 1px solid black;">
                             <div>Ranking</div>
                             <div>Scan Order</div>
@@ -164,7 +169,7 @@
             <div class="col-8 ps-2">
                 <div class="card bot-card" role="button" style="background-color: #F5F5F5;">
                     <div class="card-body">
-                        <h6 class="card-title text-black"><strong>Total Scan Order</strong></h6>
+                        <h6 class="card-title text-black"><strong>Total Scan Order</strong> (Daily)</h6>
                         <div id="chart" style="height: 300px;"></div>
                     </div>
                 </div>
@@ -270,7 +275,7 @@
                     document.querySelector('#lastUpdated').innerHTML = moment().format('hh:mm:ss A');
                     performanceMonth.innerHTML = '';
                     pendingOrder.innerHTML = number_format(data.current_process[2]);
-                    pendingShipping.innerHTML = number_format(data.current_process[4]);
+                    pendingShipping.innerHTML = number_format(data.current_process['dhl']);
 
                     let data_scans = data.scans;
                     let data_scans_today = data.scans_today;
@@ -283,7 +288,6 @@
                         if (item.count > highest_scan) {
                             highest_scan = item.count;
                         }
-                        total_scans += item.count;
                         performanceMonth.innerHTML += `
                         <div class="d-flex performance-month justify-content-between mb-2 mt-3">
                                 <div class="d-flex align-items-center gap-2 w-100">
@@ -307,17 +311,18 @@
                         item.insertAdjacentHTML('beforeend', `<div class="crown"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 640 512"><path fill="currentColor" d="M528 448H112c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16zm64-320c-26.5 0-48 21.5-48 48c0 7.1 1.6 13.7 4.4 19.8L476 239.2c-15.4 9.2-35.3 4-44.2-11.6L350.3 85C361 76.2 368 63 368 48c0-26.5-21.5-48-48-48s-48 21.5-48 48c0 15 7 28.2 17.7 37l-81.5 142.6c-8.9 15.6-28.9 20.8-44.2 11.6l-72.3-43.4c2.7-6 4.4-12.7 4.4-19.8c0-26.5-21.5-48-48-48S0 149.5 0 176s21.5 48 48 48c2.6 0 5.2-.4 7.7-.8L128 416h384l72.3-192.8c2.5.4 5.1.8 7.7.8c26.5 0 48-21.5 48-48s-21.5-48-48-48z"/></svg></div>`);
                     });
 
-                    totalScan.innerHTML = number_format(total_scans);
 
                     // convert data to chart
                     const data_converted = [];
                     data_scans_today.forEach((item, index) => {
+                        total_scans += item.count;
                         data_converted.push({
                             x: item.name,
                             y: item.count
                         })
                     });
 
+                    totalScan.innerHTML = number_format(total_scans);
                     updateGraph(data_converted);
 
                 });
@@ -331,7 +336,7 @@
             }])
         }
 
-        const number_format = (num) => {
+        const number_format = (num = 0) => {
             //if num not integer
             if (num % 1 != 0) {
                 return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')

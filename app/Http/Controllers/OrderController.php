@@ -671,7 +671,7 @@ class OrderController extends Controller
         $result['scans'] = $scans;
 
         $current_process = new DashboardController();
-        $result['current_process'] = $current_process->current_process()->original['count'];
+        $result['current_process'] = $current_process->current_process(true)->original['count'];
 
         return $result;
     }
