@@ -79,6 +79,8 @@ Route::prefix('reports')->group(function() {
 Route::prefix('couriers')->group(function(){
     Route::post('/listCourier', [CourierController::class, 'listCourier']);
     Route::post('/listSLA', [CourierController::class, 'listSLA']);
+    Route::post('/addCourier', [CourierController::class, 'addCourier']);
+    Route::post('/deleteCourier', [CourierController::class, 'deleteCourier']);
     Route::post('/addSLA', [CourierController::class, 'addSLA']);
     Route::post('/editSLA', [CourierController::class, 'editSLA']);
     Route::post('/listCoverage', [CourierController::class, 'listCoverage']);

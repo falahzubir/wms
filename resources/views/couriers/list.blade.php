@@ -140,39 +140,41 @@
                 <div class="modal-header">
                     <h5 class="modal-title">Add Courier</h5>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3 row">
-                        <label for="courierName" class="col-sm-4 col-form-label">Courier Name</label>
-                        <div class="col-sm-8">
-                            <select class="form-select" name="courier_name" id="courierName">
-                                <option selected disabled>Select Courier</option>
-                                @if($couriers && count($couriers) > 0)
-                                @foreach($couriers as $courier)
-                                <option value="{{ $courier->id }}">{{ $courier->name }}</option>
-                                @endforeach
-                                @endif
-                            </select>
+                <form id="addCourierForm">
+                    <div class="modal-body">
+                        <div class="mb-3 row">
+                            <label for="courierName" class="col-sm-4 col-form-label">Courier Name</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="courier_name" class="form-control" id="courierName">
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label for="courierCode" class="col-sm-4 col-form-label">Courier Code</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="courier_code" class="form-control" id="courierCode">
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label for="minAttempt" class="col-sm-4 col-form-label">Minimum Attempt</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="minimum_attempt" class="form-control" id="minAttempt">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label for="statusCourier" class="col-sm-4 col-form-label">Status</label>
+                            <div class="col-sm-8" style="padding-top: 7px;">
+                                <label class="switch">
+                                    <input type="hidden" name="status_courier" value="0">
+                                    <input type="checkbox" name="status_courier" ${checked} id="statusCourier" value="1">
+                                    <span class="slider2 round"></span>
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-3 row">
-                        <label for="minAttempt" class="col-sm-4 col-form-label">Minimum Attempt</label>
-                        <div class="col-sm-8">
-                            <input type="text" name="minimum_attempt" class="form-control" id="minAttempt">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <label for="statusCourier" class="col-sm-4 col-form-label">Status</label>
-                        <div class="col-sm-8" style="padding-top: 7px;">
-                            <label class="switch">
-                                <input type="checkbox" name="status_courier" ${checked} id="statusCourier">
-                                <span class="slider2 round"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                </form>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary">Save</button>
+                    <button onclick="submitCourier()" type="button" class="btn btn-primary">Save</button>
                 </div>
             </div>
         </div>
@@ -184,6 +186,7 @@
     <x-slot name="script">
         <script>
             $(document).ready(function() {
+                let totalPages = 0;
                 loadTable();
             });
 
@@ -205,6 +208,7 @@
             // RENDER TABLE
             const renderTable = (data) => {
                 let newData = data.data;
+                totalPages = data.last_page;
                 $('#tbody').empty();
                 $('#pagination-laravel').empty();
                 let html = '';
@@ -226,7 +230,7 @@
                                 </td>
                                 <td>
                                     <label class="switch">
-                                        <input type="checkbox" ${checked}>
+                                        <input  type="checkbox" ${checked}>
                                         <span class="slider round"></span>
                                     </label>
                                 </td>
@@ -309,6 +313,37 @@
                 $('#modalAddCourier').modal('show');
             }
 
+            const submitCourier = async () => {
+                let formSerialized = $('#addCourierForm').serialize();
+                let response = await axios.post('/api/couriers/addCourier', formSerialized)
+                .then(function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Courier added successfully',
+                    })
+                    $('#modalAddCourier').modal('hide');
+                    loadTable();
+                }).catch(function(error) {
+                    switch (error.response.status){
+                        case 422:
+                            let errors = error.response.data.errors;
+                            let html = '';
+                            for (const [key, value] of Object.entries(errors)) {
+                                html += `<li>${value}</li>`;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                html: html,
+                            })
+                            break;
+                        default:
+                            console.log(error);
+                    }
+                });
+            }
+
             // DELETE COURIER
             const deleteCourier = (id) => {
 
@@ -325,15 +360,35 @@
 
                         $(`.tr-row-${id}`).remove();
 
-                        // let response = axios.post('/api/couriers/delete', {
-                        //         id: id,
-                        //     })
-                        //     .then(function(response) {
-                        //         $(`.tr-row-${id}`).remove();
-                        //     })
-                        //     .catch(function(error) {
-                        //         console.log(error);
-                        //     });
+                        let response = axios.post('/api/couriers/deleteCourier', {
+                                id: id,
+                            })
+                            .then(function(response) {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'Courier has been deleted.',
+                                    'success'
+                                )
+                                $(`.tr-row-${id}`).remove();
+                            })
+                            .catch(function(error) {
+                                switch (error.response.status) {
+                                    case 422:
+                                        let errors = error.response.data.errors;
+                                        let html = '';
+                                        for (const [key, value] of Object.entries(errors)) {
+                                            html += `<li>${value}</li>`;
+                                        }
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Oops...',
+                                            html: html,
+                                        })
+                                        break;
+                                    default:
+                                        console.log(error);
+                                }
+                            });
                     }
                 })
             }

@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Courier;
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class CourierController extends Controller
 {
@@ -40,11 +41,77 @@ class CourierController extends Controller
 
     public function listCourier(Request $request)
     {
-        $item = Courier::select('*')->paginate(10);
+        $item = Courier::select('*')->orderBy('id', 'desc')->paginate(10);
 
         $data = $item;
 
         return response()->json($data);
+    }
+
+    public function addCourier(Request $request)
+    {
+
+        $rules = [
+            'courier_name' => 'required | unique:couriers,name,NULL,id,deleted_at,NULL',
+            'courier_code' => 'required | unique:couriers,code,NULL,id,deleted_at,NULL',
+            'minimum_attempt' => 'required | integer',
+            'status_courier' => 'required | integer',
+        ];
+    
+        $customMessages = [
+            'required' => 'The :attribute field is required.',
+            'unique' => 'The :attribute field is already exist.',
+        ];
+
+        $this->validate($request, $rules, $customMessages);
+    
+        try {
+            $courier = new Courier();
+            $courier->code = $request->courier_code;
+            $courier->name = $request->courier_name;
+            $courier->min_attempt = $request->minimum_attempt;
+            $courier->status = $request->status_courier;
+            
+            $courier->save();
+    
+            return response([
+                "status" => "success",
+                "message" => "Courier has been added",
+                "data" => []
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'msg' => 'error',
+                'errors' => $e->errors()
+            ], 422);
+        }
+
+    }
+
+    public function deleteCourier(Request $request)
+    {
+        $request->validate([
+            'id' => 'required | integer',
+        ]);
+
+        try {
+            $courier = Courier::find($request->id);
+            $courier->delete();
+
+            return response([
+                "status" => "success",
+                "message" => "Courier has been deleted",
+                "data" => []
+            ]);
+
+        } catch (\Throwable $th) {
+            return response([
+                "status" => "error",
+                "message" => "Courier has been deleted",
+                "data" => []
+            ]);
+        }
     }
 
     public function editPage($id)

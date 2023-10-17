@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::table('couriers', function (Blueprint $table) {
             $table->integer('min_attempt')->default(0)->after('code')->comment('Minimum attempt to deliver the order');
+            $table->softDeletes();
         });
     }
 
@@ -27,6 +28,7 @@ return new class extends Migration
     {
         Schema::table('couriers', function (Blueprint $table) {
             $table->dropColumn(['min_attempt']);
+            $table->dropSoftDeletes();
         });
     }
 };
