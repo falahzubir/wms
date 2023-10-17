@@ -362,14 +362,29 @@ class OrderController extends Controller
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
        
         $data_customer = $webhook['customer'];
+        // dump($data_customer['country'].'=> country');
+        // dump(strlen($data_customer['postcode']).'=>postcode length');
+        // dump($data_customer['city'].'=>city');
         if($data_customer['country'] == 1 || $data_customer['country'] == 2){
-            if(strlen($data_customer['postcode']) > 5){
+            if(strlen($data_customer['postcode']) > 5 || strlen($data_customer['postcode']) < 5){
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
+                // dd($webhook);
+                return;
             }
+        }elseif($data_customer['country'] == 3){
+            if(strlen($data_customer['postcode']) > 6 || strlen($data_customer['postcode']) < 6){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
+                // dd($webhook);
+                return;
+            }
+        }else{
+
         }
         
         if($data_customer['city'] == null){
             throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
+            // dd($webhook);
+            return;
         }
         
         $customer = Customer::updateorCreate($data_customer);
