@@ -277,11 +277,18 @@
                                         </div> --}}
                                     </td>
                                     <td class="text-start">
-                                        
-                                        @if ($order->courier_id = DHL_ID && !is_digit_count($order->customer->postcode, 5))
-                                            <div class="badge bg-danger text-wrap">
-                                                Postcode Error
-                                            </div>
+                                        @if($order->courier_id == DHL_ID && ($order->customer->country == 1 || $order->customer->country == 2))
+                                            @if ($order->courier_id == DHL_ID && !is_digit_count($order->customer->postcode, 5))
+                                                <div class="badge bg-danger text-wrap">
+                                                    Postcode Error
+                                                </div>
+                                            @endif
+                                        @elseif($order->courier_id == DHL_ID && $order->customer->country == 3)
+                                            @if ($order->courier_id == DHL_ID && !is_digit_count($order->customer->postcode, 6))
+                                                <div class="badge bg-danger text-wrap">
+                                                    Postcode Error
+                                                </div>
+                                            @endif
                                         @endif
                                         @if (!last_two_digits_zero($order->customer->postcode))
                                             <a href="{{ route('orders.change_postcode_view') }}?sales={{ $order->sales_id }}&company={{ $order->company_id}}&current_postcode={{ $order->customer->postcode }}&redirect_to={{ urlencode(url()->full()) }}" class="badge bg-warning text-wrap text-dark">
