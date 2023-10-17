@@ -631,4 +631,59 @@ class OrderController extends Controller
         return back()->with('success', 'Postcode Changed Successfully');
 
     }
+
+    public function scanned_parcel($year, $month, $day = null){
+
+        // count scanned parcel by scanned by
+        $parcel = Shipping::whereYear('scanned_at', $year)
+            ->whereMonth('scanned_at', $month)
+            ->where('status', IS_ACTIVE);
+
+        $scanned_parcel = $parcel->get();
+
+        // tracking number unique
+        $scanned_parcel_count = $scanned_parcel->unique('tracking_number')
+            ->groupBy('scanned_by')
+            ->map(function ($item, $key) {
+                return count($item);
+            });
+
+            //filter by today
+            if($day != null){
+                $scanned_parcel_day = $parcel->whereDay('scanned_at', $day)->get();
+                $scanned_parcel_count_today = $scanned_parcel_day->unique('tracking_number')
+                ->groupBy('scanned_by')
+                ->map(function ($item, $key) {
+                    return count($item);
+                });
+                $users_today = \App\Models\User::whereIn('id', $scanned_parcel_count_today->keys()->toArray())->get();
+                $scans_today = [];
+                foreach($users_today as $user){
+                    $scans_today[] = [
+                        'name' => $user->name,
+                        'img' => $user->staff_id . '-test.jpeg',
+                        'count' => $scanned_parcel_count_today[$user->id]
+                    ];
+                }
+                $result['scans_today'] = $scans_today;
+            }
+
+            $users = \App\Models\User::whereIn('id', $scanned_parcel_count->keys()->toArray())->get();
+            $scans = [];
+
+        foreach($users as $user){
+            $scans[] = [
+                'name' => $user->name,
+                'img' => $user->staff_id . '.jpeg',
+                'count' => $scanned_parcel_count[$user->id]
+            ];
+        }
+
+        $result['scans'] = $scans;
+
+        $current_process = new DashboardController();
+        $result['current_process'] = $current_process->current_process(true)->original['count'];
+
+        return $result;
+    }
 }
