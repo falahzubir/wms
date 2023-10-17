@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+use App\Http\Traits\ShopeeTrait;
 
 class ShippingController extends Controller
 {
@@ -72,6 +73,17 @@ class ShippingController extends Controller
 
         $data['created_by'] = auth()->user()->id ?? 1;
 
+        //check order from which third party
+        $orders = Order::select('payment_type','id')->whereIn('id', $request->order_ids)->get();
+        
+        foreach($orders as $order){
+            if($order['payment_type'] == 22) { #which is shopee
+                $this->generateShopeeCN($order);
+            }else {
+                dd('Lazada order cannot request CN');
+            }
+        }
+        die;
         // OrderLog::create($data);
 
         return $this->dhl_label($request->order_ids); // for dhl orders
@@ -1200,5 +1212,13 @@ class ShippingController extends Controller
         }
 
         return $newOrders;
+    }
+
+    public function generateShopeeCN($orders)
+    {
+        // $shopeeTrait = new ShopeeTrait();
+        // $shopee = ShopeeTrait::getShippingDocument();
+        $shopee = ShopeeTrait::getShippingDocumentResult();
+        dd($shopee);
     }
 }
