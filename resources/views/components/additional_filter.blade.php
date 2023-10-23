@@ -10,7 +10,7 @@
     <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse
         {{ request('companies') != null || request('couriers') != null ||
             request('purchase_types') != null || request('customer_types') != null ||
-            request('products') != null || request('op_models') != null || request('states') != null ? 'show' : '' }}"
+            request('products') != null || request('op_models') != null || request('states') != null || request('events') !== null ? 'show' : '' }}"
         aria-labelledby="panelsStayOpen-headingOne">
         <div class="accordion-body">
             <div class="expand row">
@@ -85,8 +85,13 @@
                         class="col-4 mt-2">
                     </x-filter_select>
                 @endisset
-                @isset($filter_data->sales_events)
-                    <x-filter_select name="sales_events" label="Sales Event" id="sales-event-filter" class="col-4 mt-2">
+                @isset($filter_data->sale_events)
+                    <x-filter_select name="events" label="Sales Event" id="sales-event-filter" class="col-4 mt-2">
+                        @foreach ($filter_data->sale_events as $event)
+                            <option value="{{ $event['event_with_company'] }}"
+                                {{ request('events') != null ? (in_array($event['event_with_company'], request('events')) ? 'selected' : '') : '' }}>
+                                {{ $event['event_name'] }}</option>
+                        @endforeach
                     </x-filter_select>
                 @endisset
             </div>

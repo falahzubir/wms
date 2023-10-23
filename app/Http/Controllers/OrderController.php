@@ -15,6 +15,7 @@ use App\Models\OrderLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Traits\ApiTrait;
 
 class OrderController extends Controller
 {
@@ -70,7 +71,7 @@ class OrderController extends Controller
             ];
         }
         if (!in_array(ORDER_FILTER_SALES_EVENT, $exclude)) {
-            $filter_data['sale_events'] = true; // http request
+            $filter_data['sale_events'] = ApiTrait::getSalesEvent();
         }
         if (!in_array(ORDER_FILTER_TEAM, $exclude)) {
             $filter_data['teams'] = true; //http request
@@ -439,7 +440,14 @@ class OrderController extends Controller
             $query->whereIn('courier_id', $request->couriers);
         });
         $orders->when($request->filled('events'), function ($query) use ($request) {
-            $query->whereIn('event_id', $request->events);
+            $events = $request->input('events');
+            foreach ($events as $event) {
+                $list = explode('|', $event);
+                $event_id[] = $list[0];
+                $company_id[] = $list[1];
+            }
+            $query->whereIn('event_id', $event_id);
+            $query->whereIn('company_id', $company_id);
         });
         $orders->when($request->filled('op_models'), function ($query) use ($request) {
             $query->whereIn('operational_model_id', $request->op_models);
