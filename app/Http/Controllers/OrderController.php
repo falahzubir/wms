@@ -362,6 +362,7 @@ class OrderController extends Controller
         $data['dt_request_shipping'] = $webhook['dt_request_shipping'] ?? '';
         $data['payment_type'] = isset($webhook['payment_type']) ? $webhook['payment_type'] : null;
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
+        $data['is_active'] = IS_ACTIVE;
 
         $customer = Customer::updateorCreate($webhook['customer']);
         $data['customer_id'] = $customer->id;
