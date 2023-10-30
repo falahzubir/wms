@@ -551,13 +551,17 @@ class ShippingController extends Controller
             });
         $attachments = $attachments->pluck('attachment')->toArray();
 
+        if (count($attachments) == 0) {
+            return response()->json(['status' => false,'error' => 'No attachment found']);
+        }
+
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
         $file_path = public_path('generated_labels/' . $filename);
 
         $pdf_merge = ShopeeTrait::downloadPDF($attachments);
 
         if($pdf_merge == false){
-            return response()->json(['error' => 'Error in generating PDF']);
+            return response()->json(['status' => false,'error' => 'Error in generating PDF']);
         }
         file_put_contents($file_path, base64_decode($pdf_merge));
 

@@ -1260,6 +1260,17 @@
                     }
                 })
                 .then(function(res) {
+                    
+                    if(!res.data.status){
+                        Swal.fire({
+                            title: 'Error!',
+                            html: res.data.error ?? "Fail to generate CN",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                        return;
+                    }
+
                     const fileName = String(res.data.download_url).split("/").pop();
                     let a = document.createElement('a');
                     a.download = fileName;
