@@ -1279,7 +1279,7 @@ class ShippingController extends Controller
                     else
                     {
                         $order[$key]['error']['type'][] = 'getShippingDocumentResult';
-                        $order[$key]['error']['message'][] = $jsonGetShippingDocument['error'];
+                        $order[$key]['error']['message'][] = $jsonGetShippingDocument['message'];
                     }
                     #############################################
                     ###### end get shipping document result ######
@@ -1288,7 +1288,7 @@ class ShippingController extends Controller
                 else
                 {
                     $order[$key]['error']['type'][] = 'createShippingDocument';
-                    $order[$key]['error']['message'][] = $jsonGetCreateShippingDocument['error'];
+                    $order[$key]['error']['message'][] = $jsonGetCreateShippingDocument['message'];
                 }
                 ##########################################
                 ###### end create shipping document ######
@@ -1297,7 +1297,7 @@ class ShippingController extends Controller
             else
             {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
-                $order[$key]['error']['message'][] = $jsonGetShippingDocumentParameter['error'];
+                $order[$key]['error']['message'][] = $jsonGetShippingDocumentParameter['message'];
             }
             #################################################
             ###### end get shipping document parameter ######
