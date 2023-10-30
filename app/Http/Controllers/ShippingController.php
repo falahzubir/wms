@@ -550,30 +550,43 @@ class ShippingController extends Controller
                 return array_search($model->order_id, $sorted_order_id);
             });
         $attachments = $attachments->pluck('attachment')->toArray();
-        dd($attachments);
-        $pdf = PDFMerger::init();
-
-        foreach ($attachments as $attachment) {
-            if (!file_exists(storage_path('app/public/' . $attachment))) {
-                continue;
-            }
-
-            if (!is_file(storage_path('app/public/' . $attachment))) {
-                continue;
-            }
-
-            if (file_get_contents(storage_path('app/public/' . $attachment)) == "") {
-                continue;
-            }
-
-            $pdf->addPDF(storage_path('app/public/' . $attachment));
-        }
 
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
-        $pdf->merge();
-        $pdf->save(public_path('generated_labels/' . $filename), 'file');
-        //download
+        $file_path = public_path('generated_labels/' . $filename);
+
+        $pdf_merge = ShopeeTrait::downloadPDF($attachments);
+        
+        if($pdf_merge == false){
+            return response()->json(['error' => 'Error in generating PDF']);
+        }
+        file_put_contents($file_path, base64_decode($pdf_merge));
+
         return response()->json(['download_url' => '/generated_labels/' . $filename]);
+
+        //die code below is for multiple pdf merge
+        // $pdf = PDFMerger::init();
+
+        // foreach ($attachments as $attachment) {
+        //     if (!file_exists(storage_path('app/public/' . $attachment))) {
+        //         continue;
+        //     }
+
+        //     if (!is_file(storage_path('app/public/' . $attachment))) {
+        //         continue;
+        //     }
+
+        //     if (file_get_contents(storage_path('app/public/' . $attachment)) == "") {
+        //         continue;
+        //     }
+
+        //     $pdf->addPDF(storage_path('app/public/' . $attachment));
+        // }
+
+        // $filename = 'CN_' . date('Ymd_His') . '.pdf';
+        // $pdf->merge();
+        // $pdf->save(public_path('generated_labels/' . $filename), 'file');
+        // //download
+        // return response()->json(['download_url' => '/generated_labels/' . $filename]);
     }
 
     public function download_cn_bucket(Request $request)
@@ -1218,6 +1231,7 @@ class ShippingController extends Controller
     {
         $order = [];
         $CNS = [];
+        $message = '';
 
         foreach($orders as $key => $value)
         {
@@ -1304,7 +1318,7 @@ class ShippingController extends Controller
             else
             {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
-                $order[$key]['error']['message'][] = 'Already generated shipping document';
+                $order[$key]['error']['message'][] = $jsonGetShippingDocumentParameter['error'];
             }
             #################################################
             ###### end get shipping document parameter ######

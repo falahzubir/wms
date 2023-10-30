@@ -4,6 +4,7 @@ namespace App\Http\Traits;
 
 use App\Models\AccessToken;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 trait ShopeeTrait 
 {
@@ -24,17 +25,16 @@ trait ShopeeTrait
                     'shop_id' => $shop_id];
             }
             else{
-                $token = self::refreshToken($accessToken);
+                // $token = self::refreshToken($accessToken);
+                // return [
+                //     'token' => $token,
+                //     'shop_id' => $shop_id];
                 return [
-                    'token' => $token,
-                    'shop_id' => $shop_id];
+                    'token' => null,
+                    'shop_id' => null
+                ];
             }
         }
-
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Access token not found'
-        ], 404);
     }
 
     public static function refreshToken($accessToken)
@@ -498,6 +498,48 @@ trait ShopeeTrait
         } catch (\Throwable $th) {
             
             return false;
+        }
+
+        return false;
+    }
+
+    public static function downloadPDF($data)
+    {
+        $file['api'] = '1234567890';
+        $file['files'] = array_filter($data);
+        //add full link to file
+        foreach ($file['files'] as $key => $value) {
+            $file['files'][$key] = env('APP_URL').'/storage/'.$value;
+        }
+        dd($file);
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => 'https://pdf-merger.groobok.com/api/pdf-merger',
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 0,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => json_encode($file),
+          CURLOPT_HTTPHEADER => array(
+            'Content-Type: application/json'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        
+        curl_close($curl);
+        
+        $file = json_decode($response, true);
+
+        if(isset($file['message']) && $file['message'] == 'success')
+        {
+            $file_name = $file['data']['file'];
+
+            return $file_name;
         }
 
         return false;

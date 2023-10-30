@@ -1149,7 +1149,7 @@
                     {
                         Swal.fire({
                             title: 'Error!',
-                            text: "Fail to generate CN",
+                            html: `${response.data.message}` ?? "Fail to generate CN",
                             icon: 'error',
                             confirmButtonText: 'OK'
                         })
