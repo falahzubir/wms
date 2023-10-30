@@ -18,7 +18,7 @@ return new class extends Migration
                 ->string('third_party_sn')
                 ->nullable()
                 ->after('is_active')
-                ->comment('Third party serial number is from Sales Bot');
+                ->comment('Third party shipping number from Sales Bot');
         });
     }
 
@@ -29,7 +29,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('orders', function (Blueprint $table) {
+        Schema::table('orders', function (Blueprint $table) {    
             $table->dropColumn(['third_party_sn']);
         });
     }

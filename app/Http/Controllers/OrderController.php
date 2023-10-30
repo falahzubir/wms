@@ -15,6 +15,7 @@ use App\Models\OrderLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Route;
 
 class OrderController extends Controller
 {
@@ -82,6 +83,39 @@ class OrderController extends Controller
             $filter_data['states'] = MY_STATES; //http request
         }
 
+        if(!in_array(ORDER_FILTER_PLATFORM, $exclude)){
+            $filter_data['platforms'] = [
+                22 => 'Shopee',
+                23 => 'TikTok',
+            ];
+        }
+
+        if(!in_array(ORDER_FILTER_STATUS, $exclude)){
+
+            //check if route is pending, then show only pending status
+            if(Route::currentRouteName() == 'orders.pending'){
+                $filter_data['statuses'] = [
+                    ORDER_STATUS_PENDING => 'Pending',
+                    ORDER_STATUS_PENDING_SHIPMENT => 'Pending Shipment',
+                ];
+            }else{
+                $filter_data['statuses'] = [
+                    ORDER_STATUS_PENDING => 'Pending',
+                    ORDER_STATUS_PENDING_SHIPMENT => 'Pending Shipment',
+                    ORDER_STATUS_PROCESSING => 'Processing',
+                    ORDER_STATUS_READY_TO_SHIP => 'Ready To Ship',
+                    ORDER_STATUS_PACKING => 'Packing',
+                    ORDER_STATUS_SHIPPING => 'Shipping',
+                    ORDER_STATUS_DELIVERED => 'Delivered',
+                    ORDER_STATUS_RETURN_PENDING => 'Return Pending',
+                    ORDER_STATUS_RETURN_SHIPPING => 'Return Shipping',
+                    ORDER_STATUS_RETURNED => 'Returned',
+                    ORDER_STATUS_RETURN_COMPLETED => 'Return Completed',
+                    ORDER_STATUS_REJECTED => 'Rejected',
+                ];
+            }
+        }
+
         return (object) $filter_data;
     }
 
@@ -124,7 +158,7 @@ class OrderController extends Controller
      */
     public function pending(Request $request)
     {
-        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING])
+        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_SHIPMENT])
                 ->whereDate('dt_request_shipping', '<=', date('Y-m-d'));
                 // ->whereRaw('(payment_type IS NULL OR payment_type <> 22)'); //shopee order excluded
 
@@ -135,7 +169,7 @@ class OrderController extends Controller
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER,ACTION_ARRANGE_SHIPMENT],
         ]);
     }
 
@@ -494,6 +528,14 @@ class OrderController extends Controller
 
         $orders->when($request->filled('status'), function ($query) use ($request) {
             $query->where('status', $request->status);
+        });
+
+        $orders->when($request->filled('platforms'), function ($query) use ($request) {
+            $query->whereIn('payment_type', $request->platforms);
+        });
+
+        $orders->when($request->filled('statuses'), function ($query) use ($request) {
+            $query->whereIn('status', $request->statuses);
         });
 
         return $orders;

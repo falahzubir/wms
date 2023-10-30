@@ -93,10 +93,11 @@ class ShippingApiController extends ShippingController
         $sales_id = $request->sales_id;
         $tracking_no = $request->tracking_number;
         $shipping_date = $request->shipping_date;
+        $additional_data = $request->additional_data;
 
         $order = Order::select('orders.id', 'couriers.code')
             ->where('sales_id', $sales_id)
-            ->where('company_id', 2)
+            // ->where('company_id', 2)
             ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
             ->first();
 
@@ -105,10 +106,11 @@ class ShippingApiController extends ShippingController
             'tracking_number' => $request->tracking_number,
             'courier' => $order->code,
             'created_by' => auth()->user()->id ?? 1,
+            'additional_data' => $additional_data,
             // 'ship_date' => $request->shipping_date,
         ]);
 
-        set_order_status($order, ORDER_STATUS_PACKING);
+        set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT);
 
         return response()->json([
             'message' => 'Tracking number updated'

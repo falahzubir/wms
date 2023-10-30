@@ -10,6 +10,7 @@ use App\Http\Controllers\api\ShippingApiController;
 use App\Http\Controllers\api\WebhookController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
@@ -36,6 +37,7 @@ Route::get('dhl-store', [ShippingController::class, 'dhl_store']);
 Route::post('request-cn', [ShippingController::class, 'request_cn']);
 Route::post('check-cn-company', [ShippingController::class, 'check_cn_company']);
 Route::post('download-consignment-note', [ShippingController::class, 'download_cn']);
+Route::post('arrange-shipment', [ShippingController::class, 'arrange_shipment']);
 
 Route::prefix('dashboard')->group(function () {
     Route::get('current-process', [DashboardController::class, 'current_process']);
@@ -97,3 +99,5 @@ Route::get('get-couriers', [CourierController::class, 'list']);
 Route::get('get-failed-order/{date}', [WebhookController::class, 'fail_insert']);
 
 Route::webhooks('webhook/sales');
+
+Route::get('test',[TestController::class, 'test']);
