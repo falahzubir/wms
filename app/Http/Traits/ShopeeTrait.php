@@ -4,6 +4,7 @@ namespace App\Http\Traits;
 
 use App\Models\AccessToken;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 trait ShopeeTrait 
@@ -22,62 +23,39 @@ trait ShopeeTrait
             if($date <= $expired){
                 return [
                     'token' => $token,
-                    'shop_id' => $shop_id];
+                    'shop_id' => $shop_id
+                ];
             }
             else{
-                // $token = self::refreshToken($accessToken);
-                // return [
-                //     'token' => $token,
-                //     'shop_id' => $shop_id];
+                $new_token = self::refreshToken();
                 return [
-                    'token' => null,
-                    'shop_id' => null
+                    'token' => $new_token,
+                    'shop_id' => $shop_id
                 ];
             }
         }
     }
 
-    public static function refreshToken($accessToken)
+    public static function refreshToken()
     {
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/auth/access_token/get";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $refresh_token = $accessToken->additional_data['refresh_token'];
-        $shop_id = $accessToken->additional_data['shop_id'];
-        $current_time = date('Y-m-d H:i:s');
-        $timestamp = strtotime($current_time);
-
-        $sign = self::get_sign($path, $partner_id, $timestamp, null, null);
+        $url = app()->environment() == 'production' ? 'https://aa.bosemzi.com' : 'https://qastg.groobok.com';
+        $json['from'] = 'wms';
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'Signature' => hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
+        ])
+        ->post($url.'/api/get_tokenShopee', $json);
         
-        $url= ($host.$path."?partner_id=".$partner_id."&timestamp=".$timestamp."&sign=".$sign);
+        $response = json_decode($response, true);
+        //update access token
+        $access_token = AccessToken::where('type', 'shopee')->first();
+        $access_token->token = $response['token']['token'];
+        $access_token->expires_at = $response['token']['expired'];
 
-        $ch = curl_init();
+        $access_token->save();
 
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, '{
-            "refresh_token": "'.$refresh_token.'",
-            "partner_id": '.$partner_id.',
-            "shop_id": '.$shop_id.'
-        }');
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-        $response = curl_exec($ch);
-
-        curl_close($ch);
-
-        if(curl_error($ch)){
-            echo 'Request Error:' . curl_error($ch);
-        }
-        else
-        {
-            $res = json_decode($response,true);
-            dd($res);
-            // return $token;
-        }
+        return $response['token']['token'];
 
     }
 
