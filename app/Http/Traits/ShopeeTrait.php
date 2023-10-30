@@ -505,13 +505,13 @@ trait ShopeeTrait
 
     public static function downloadPDF($data)
     {
-        $file['api'] = '1234567890';
+        $file['api_key'] = '1234567890';
         $file['files'] = array_filter($data);
         //add full link to file
         foreach ($file['files'] as $key => $value) {
             $file['files'][$key] = env('APP_URL').'/storage/'.$value;
         }
-        dd(json_encode($file));
+        
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
