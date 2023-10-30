@@ -555,7 +555,7 @@ class ShippingController extends Controller
         $file_path = public_path('generated_labels/' . $filename);
 
         $pdf_merge = ShopeeTrait::downloadPDF($attachments);
-        
+        dd($pdf_merge);
         if($pdf_merge == false){
             return response()->json(['error' => 'Error in generating PDF']);
         }
