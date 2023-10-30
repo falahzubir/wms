@@ -550,8 +550,8 @@ class ShippingController extends Controller
                 return array_search($model->order_id, $sorted_order_id);
             });
         $attachments = $attachments->pluck('attachment')->toArray();
-
-        if (count($attachments) == 0) {
+        
+        if (isset($attachments) && empty($attachments[0])) {
             return response()->json(['status' => false,'error' => 'No attachment found']);
         }
 
