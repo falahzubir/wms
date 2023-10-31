@@ -1261,7 +1261,7 @@
                 })
                 .then(function(res) {
                     
-                    if(!res.data.status){
+                    if(res.data.status && res.data.status == false){
                         Swal.fire({
                             title: 'Error!',
                             html: res.data.error ?? "Fail to generate CN",

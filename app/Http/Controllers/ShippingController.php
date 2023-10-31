@@ -560,7 +560,7 @@ class ShippingController extends Controller
 
         $pdf_merge = ShopeeTrait::downloadPDF($attachments);
 
-        if($pdf_merge == false){
+        if(!$pdf_merge){
             return response()->json(['status' => false,'error' => 'Error in generating PDF']);
         }
         file_put_contents($file_path, base64_decode($pdf_merge));
