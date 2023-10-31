@@ -1389,7 +1389,7 @@ class ShippingController extends Controller
             }
         }
 
-        $message .= "Success: ".count($responseSuccess)." order.<br>Already Procesed/Shipped: ".count($responseProcessing)." orders.<br>";
+        $message .= "Success: ".count($responseSuccess)." order.<br>Already Processed/Shipped: ".count($responseProcessing)." orders.<br>";
 
         if(isset($responseFailed['order_id']) && count($responseFailed['order_id']) > 0)
         {
