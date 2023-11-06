@@ -15,6 +15,7 @@ use App\Models\OrderLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Traits\ApiTrait;
 
 class OrderController extends Controller
 {
@@ -70,7 +71,7 @@ class OrderController extends Controller
             ];
         }
         if (!in_array(ORDER_FILTER_SALES_EVENT, $exclude)) {
-            $filter_data['sale_events'] = true; // http request
+            $filter_data['sale_events'] = ApiTrait::getSalesEvent();
         }
         if (!in_array(ORDER_FILTER_TEAM, $exclude)) {
             $filter_data['teams'] = true; //http request
@@ -360,6 +361,8 @@ class OrderController extends Controller
         $data['dt_request_shipping'] = $webhook['dt_request_shipping'] ?? '';
         $data['payment_type'] = isset($webhook['payment_type']) ? $webhook['payment_type'] : null;
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
+
+        $data['is_active'] = IS_ACTIVE;
        
         $data_customer = $webhook['customer'];
         // dump($data_customer['country'].'=> country');
@@ -368,28 +371,23 @@ class OrderController extends Controller
         // dump($data_customer['city'].'=>city');
         if($data_customer['country'] == 1 || $data_customer['country'] == 2){
             if(strlen($data_customer['postcode']) > 5 || strlen($data_customer['postcode']) < 5){
-                // dump('entering malaysia indonesdia postcode error');
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
                 return;
             }
         }elseif($data_customer['country'] == 3){
             if(strlen($data_customer['postcode']) > 6 || strlen($data_customer['postcode']) < 6){
-                // dump('entering singapore postcode error');
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
-                // dd($webhook);
                 return;
             }
         }
         
         if($data_customer['city'] == null){
-            // dump('entering city error');
             throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
-            // dd($webhook);
             return;
         }
         
         $customer = Customer::updateorCreate($data_customer);
-        // dd($customer);
+        
         $data['customer_id'] = $customer->id;
 
         $order = Order::updateOrCreate($ids, $data);
@@ -468,7 +466,14 @@ class OrderController extends Controller
             $query->whereIn('courier_id', $request->couriers);
         });
         $orders->when($request->filled('events'), function ($query) use ($request) {
-            $query->whereIn('event_id', $request->events);
+            $events = $request->input('events');
+            foreach ($events as $event) {
+                $list = explode('|', $event);
+                $event_id[] = $list[0];
+                $company_id[] = $list[1];
+            }
+            $query->whereIn('event_id', $event_id);
+            $query->whereIn('company_id', $company_id);
         });
         $orders->when($request->filled('op_models'), function ($query) use ($request) {
             $query->whereIn('operational_model_id', $request->op_models);
