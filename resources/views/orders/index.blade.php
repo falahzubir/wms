@@ -50,6 +50,20 @@
             max-height: 50px;
         }
 
+        .btn-purple {
+            background-color: purple;
+            color: white; /* Set the text color to white or another contrasting color */
+        }
+
+        .btn-purple:hover {
+            background-color: #4b2b6b;
+            color: white; /* Set the text color to white or another contrasting color */
+        }
+
+        .bg-susu {
+            background-color: #FF8244;
+        }
+
     </style>
 
     <section class="section">
@@ -126,6 +140,15 @@
             <div class="card" style="font-size:0.8rem" id="order-table">
                 <div class="card-body">
                     <div class="card-title text-end">
+
+                        @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
+                            @can('order.download')
+                                <button class="btn btn-purple" id="arrange-shipment-btn"><i
+                                        class="bi bi-box2"></i>
+                                    Arrange Shipment</button>
+                            @endcan
+                        @endif
+
                         @if (in_array(ACTION_APPROVE_AS_SHIPPED, $actions))
                             @can('order.approve_for_shipping')
                                 <button class="btn btn-success" id="mark-as-shipped-btn"><i class="bi bi-truck"></i> Mark as
@@ -1032,6 +1055,49 @@
             }
         @endif
 
+        @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
+            document.querySelector('#arrange-shipment-btn').onclick = function() {
+                const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                let checkedValue = inputElements.filter(chk => chk.checked).length;
+                //get checked order
+                let checkedOrder = [];
+                inputElements.forEach(input => {
+                    if (input.checked) {
+                        checkedOrder.push(input.value);
+                    }
+                });
+                //check if checked order is empty return and remove Swal.showLoading()
+                if(checkedOrder.length == 0){
+                    Swal.fire({
+                        title: 'Error!',
+                        text: "Please select at least one order to arrange shipment.",
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+
+                    })
+                    return;
+                }
+
+                let response = axios.post('/api/arrange-shipment', {
+                    order_ids: checkedOrder,
+                })
+                .then(function(response) {
+                    Swal.fire({
+                        title: 'Success!',
+                        html: `${response.data.message}`,
+                        icon: 'success',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
+                        }
+                    });
+                }).catch(function(error) {
+                    // handle error
+                    console.log(error);
+                })
+            }
+        @endif
+
 
         async function generateCN() {
             //show loading modal
@@ -1069,6 +1135,18 @@
                         })
                         return;
                     }
+
+                    if (!response.data.success)
+                    {
+                        Swal.fire({
+                            title: 'Error!',
+                            html: `${response.data.message}` ?? "Fail to generate CN",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                        return;
+                    }
+
                     // handle success, close or download
                     if(response.data != null ){
                         if(response.data.error != null){
@@ -1173,6 +1251,17 @@
                     }
                 })
                 .then(function(res) {
+                    
+                    if(res.data.status && res.data.status == false){
+                        Swal.fire({
+                            title: 'Error!',
+                            html: res.data.error ?? "Fail to generate CN",
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                        return;
+                    }
+
                     const fileName = String(res.data.download_url).split("/").pop();
                     let a = document.createElement('a');
                     a.download = fileName;

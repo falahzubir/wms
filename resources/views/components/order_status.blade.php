@@ -46,6 +46,10 @@
             <span class="badge bg-danger text-light">Rejected</span>
         @break
 
+        @case(ORDER_STATUS_PENDING_SHIPMENT)
+            <span class="badge bg-susu text-light">Pending Shipment</span>
+        @break
+
         @default
     @endswitch
 </div>

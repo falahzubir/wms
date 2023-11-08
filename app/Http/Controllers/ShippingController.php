@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+use App\Http\Traits\ShopeeTrait;
 
 class ShippingController extends Controller
 {
@@ -72,9 +73,19 @@ class ShippingController extends Controller
 
         $data['created_by'] = auth()->user()->id ?? 1;
 
-        // OrderLog::create($data);
-
-        return $this->dhl_label($request->order_ids); // for dhl orders
+        //check order from which third party shopee
+        $ordersShopee = Order::with(['shippings'])
+        ->select('payment_type','id')
+        ->whereIn('id', $request->order_ids)
+        ->where('payment_type', 22)
+        ->get();
+        
+        if(count($ordersShopee) > 0){
+            return $this->generateShopeeCN($ordersShopee);
+        }
+        else{
+            return $this->dhl_label($request->order_ids); // for dhl orders
+        }
     }
 
     /**
@@ -539,28 +550,21 @@ class ShippingController extends Controller
                 return array_search($model->order_id, $sorted_order_id);
             });
         $attachments = $attachments->pluck('attachment')->toArray();
-        $pdf = PDFMerger::init();
-
-        foreach ($attachments as $attachment) {
-            if (!file_exists(storage_path('app/public/' . $attachment))) {
-                continue;
-            }
-
-            if (!is_file(storage_path('app/public/' . $attachment))) {
-                continue;
-            }
-
-            if (file_get_contents(storage_path('app/public/' . $attachment)) == "") {
-                continue;
-            }
-
-            $pdf->addPDF(storage_path('app/public/' . $attachment));
+        
+        if (isset($attachments) && empty($attachments[0])) {
+            return response()->json(['status' => false,'error' => 'No attachment found']);
         }
 
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
-        $pdf->merge();
-        $pdf->save(public_path('generated_labels/' . $filename), 'file');
-        //download
+        $file_path = public_path('generated_labels/' . $filename);
+
+        $pdf_merge = ShopeeTrait::downloadPDF($attachments);
+
+        if(!$pdf_merge){
+            return response()->json(['status' => false,'error' => 'Error in generating PDF']);
+        }
+        file_put_contents($file_path, base64_decode($pdf_merge));
+
         return response()->json(['download_url' => '/generated_labels/' . $filename]);
     }
 
@@ -1200,5 +1204,205 @@ class ShippingController extends Controller
         }
 
         return $newOrders;
+    }
+
+    public function generateShopeeCN($orders)
+    {
+        $order = [];
+        $CNS = [];
+        $message = '';
+
+        foreach($orders as $key => $value)
+        {
+            $order[$key]['id'] = $value->id;
+
+            if(isset($value->shippings) && !count($value->shippings) > 0)
+            {
+                $order[$key]['error']['type'][] = 'generateShopeeCN';
+                $order[$key]['error']['message'][] = 'No Tracking Number Found';
+                continue;
+            }
+
+            $order[$key]['additional_data'] = json_decode($value->shippings[0]->additional_data, true);
+            
+            ###### start get shipping document parameter ######
+            $getShippingDocumentParameter = ShopeeTrait::getShippingDocumentParameter($order[$key]['additional_data']);
+            $jsonGetShippingDocumentParameter = json_decode($getShippingDocumentParameter, true);
+
+            if(empty($jsonGetShippingDocumentParameter['error'])) 
+            {
+                $order[$key]['additional_data']['shipping_document_type'] = $jsonGetShippingDocumentParameter['response']['result_list'][0]['suggest_shipping_document_type'];
+
+                ############################################
+                ###### start create shipping document ######
+                ############################################
+                $getCreateShippingDocument = ShopeeTrait::createShippingDocument($order[$key]['additional_data']);
+                $jsonGetCreateShippingDocument = json_decode($getCreateShippingDocument, true);
+
+                if(empty($jsonGetCreateShippingDocument['error'])) 
+                {   
+                    ###############################################
+                    ###### start get shipping document result #####
+                    ###############################################
+                    $getShippingDocument = ShopeeTrait::getShippingDocumentResult($order[$key]['additional_data']);
+                    $jsonGetShippingDocument = json_decode($getShippingDocument, true);
+
+                    if(empty($jsonGetShippingDocument['error'])) 
+                    {
+                        $order[$key]['additional_data']['shipping_document_status'] = $jsonGetShippingDocument['response']['result_list'][0]['status'];
+
+                        #######################################
+                        ###### start generate_cn ##############
+                        #######################################
+                        $getDownloadShippingDocument = ShopeeTrait::downloadShippingDocument($order[$key]['additional_data']);
+
+                        if($getDownloadShippingDocument)
+                        {
+                            //save to shippings table
+                            $shipping = Shipping::where('order_id', $value->id)->first();
+                            $shipping->attachment = $getDownloadShippingDocument;
+                            $shipping->save();
+
+                            $order[$key]['attachment'] = $getDownloadShippingDocument;
+                            $CNS['order_ids'][] = $value->id;
+                            $CNS['attachment'][] = $getDownloadShippingDocument;
+                        }
+                        else
+                        {
+                            $order[$key]['error']['type'][] = 'downloadShippingDocument';
+                            $order[$key]['error']['message'][] = 'Failed to download shipping document';
+                        }
+                        #####################################
+                        ###### end generate_cn ##############
+                        #####################################
+                    }
+                    else
+                    {
+                        $order[$key]['error']['type'][] = 'getShippingDocumentResult';
+                        $order[$key]['error']['message'][] = $jsonGetShippingDocument['message'];
+                    }
+                    #############################################
+                    ###### end get shipping document result ######
+                    #############################################
+                }
+                else
+                {
+                    $order[$key]['error']['type'][] = 'createShippingDocument';
+                    $order[$key]['error']['message'][] = $jsonGetCreateShippingDocument['message'];
+                }
+                ##########################################
+                ###### end create shipping document ######
+                ##########################################
+            }
+            else
+            {
+                $order[$key]['error']['type'][] = 'generateShopeeCN';
+                $order[$key]['error']['message'][] = $jsonGetShippingDocumentParameter['message'];
+            }
+            #################################################
+            ###### end get shipping document parameter ######
+            #################################################
+        }
+
+        if(isset($CNS) && count($CNS) > 0)
+        {
+            return response()->json([
+                'success' => true,
+                'message' => 'Success',
+                'data' => $CNS
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed',
+            'data' => $order
+        ], 200);
+        
+    }
+
+    public function arrange_shipment(Request $request)
+    {
+        $responseSuccess = [];
+        $responseProcessing = [];
+        $responseFailed = [];
+        $message = '';
+        $data = $request->validate([
+            'order_ids' => 'required',
+        ]);
+
+        $data['created_by'] = auth()->user()->id ?? 1;
+
+        // check order from which third party shopee
+        $orders = Order::with(['shippings'])
+        ->select('orders.payment_type','orders.id','orders.third_party_sn','couriers.code')
+        ->whereIn('orders.id', $request->order_ids)
+        ->where('orders.payment_type', 22)
+        ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
+        ->get();
+        
+        foreach($orders as $order)
+        {
+            $order_details = ShopeeTrait::getOrderDetail($order->third_party_sn);
+            $detailsJson = json_decode($order_details, true);
+            $order_status = $detailsJson['response']['order_list'][0]['order_status'];
+
+            $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
+            $tracking_number = json_decode($tracking_number, true);
+
+            $additional_data = json_encode([
+                'ordersn' => $order->third_party_sn,
+                'package_number' => $detailsJson['response']['order_list'][0]['package_list'][0]['package_number'],
+                'tracking_no' => $tracking_number['response']['tracking_number'],
+            ]);
+
+            Shipping::updateOrCreate([
+                'order_id' => $order->id,
+                'tracking_number' => $tracking_number['response']['tracking_number'],
+                'courier' => $order->code,
+                'created_by' => auth()->user()->id ?? 1,
+                'additional_data' => $additional_data,
+            ]);
+
+            if($order_status == 'READY_TO_SHIP')
+            {
+                $process = ShopeeTrait::shipOrder($order->third_party_sn);
+                $processJson = json_decode($process, true);
+                if(empty($processJson['error']))
+                {
+                    $responseSuccess[] = $order->id;
+                    //update order status to pending shipment
+                    set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
+
+                }
+                else
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = $processJson['error'];
+                }
+            }
+
+            else
+            {
+                $responseProcessing[] = $order->id;
+                set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
+            }
+        }
+
+        $message .= "Success: ".count($responseSuccess)." order.<br>Already Processed/Shipped: ".count($responseProcessing)." orders.<br>";
+
+        if(isset($responseFailed['order_id']) && count($responseFailed['order_id']) > 0)
+        {
+           foreach($responseFailed['order_id'] as $key => $value)
+           {
+               $message .= "Failed: Order ID ".$value." - ".$responseFailed['message'][$key]."<br>";
+           }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => ''
+        ], 200);
     }
 }
