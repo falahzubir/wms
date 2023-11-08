@@ -1120,15 +1120,6 @@
             });
 
             let sameCompany = await check_same_company(checkedOrder);
-            if (sameCompany != 1) {
-                Swal.fire({
-                    title: 'Error!',
-                    text: "You have selected orders from different company.",
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                })
-                return;
-            }
 
             axios.post('/api/request-cn', {
                     order_ids: checkedOrder,
