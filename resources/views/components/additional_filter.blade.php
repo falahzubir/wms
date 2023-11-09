@@ -10,7 +10,7 @@
     <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse
         {{ request('companies') != null || request('couriers') != null ||
             request('purchase_types') != null || request('customer_types') != null ||
-            request('products') != null || request('op_models') != null || request('states') != null ? 'show' : '' }}"
+            request('products') != null || request('op_models') != null || request('states') != null || request('platforms') != null || request('statuses') != null || request('events') !== null  ? 'show' : '' }}"
         aria-labelledby="panelsStayOpen-headingOne">
         <div class="accordion-body">
             <div class="expand row">
@@ -85,8 +85,32 @@
                         class="col-4 mt-2">
                     </x-filter_select>
                 @endisset
-                @isset($filter_data->sales_events)
-                    <x-filter_select name="sales_events" label="Sales Event" id="sales-event-filter" class="col-4 mt-2">
+                @isset($filter_data->sale_events)
+                    <x-filter_select name="events" label="Sales Event" id="sales-event-filter" class="col-4 mt-2">
+                        @foreach ($filter_data->sale_events as $event)
+                            <option value="{{ $event['event_with_company'] }}"
+                                {{ request('events') != null ? (in_array($event['event_with_company'], request('events')) ? 'selected' : '') : '' }}>
+                                {{ $event['event_name'] }}</option>
+                        @endforeach
+                    </x-filter_select>
+                @endisset
+                @isset($filter_data->platforms)
+                    <x-filter_select name="platforms" label="Platform" id="platform-filter" class="col-4 mt-2">
+                        @foreach ($filter_data->platforms as $id => $name)
+                            <option value="{{ $id }}"
+                                {{ request('platforms') != null ? (in_array($id, request('platforms')) ? 'selected' : '') : '' }}>
+                                {{ $name }}</option>
+                        @endforeach
+                    </x-filter_select>
+                @endisset
+                @isset($filter_data->statuses)
+                    <x-filter_select name="statuses" label="Status" id="status-filter" class="col-4 mt-2">
+                        @foreach ($filter_data->statuses as $id => $name)
+                            <option value="{{ $id }}"
+                                {{ request('statuses') != null ? (in_array($id, request('statuses')) ? 'selected' : '') : '' }}>
+                                {{ $name }}
+                            </option>
+                        @endforeach
                     </x-filter_select>
                 @endisset
             </div>

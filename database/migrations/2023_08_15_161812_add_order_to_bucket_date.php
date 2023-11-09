@@ -14,6 +14,11 @@ return new class extends Migration
      */
     public function up()
     {
+          //check if column exists
+          if (Schema::hasColumn('orders', 'bucket_added_at')) {
+            return;
+        }
+
         Schema::table('orders', function (Blueprint $table) {
             $table->timestamp('bucket_added_at')->nullable()->after('bucket_id');
         });

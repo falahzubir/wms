@@ -9,7 +9,9 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\api\ShippingApiController;
 use App\Http\Controllers\api\WebhookController;
 use App\Http\Controllers\CourierServiceLevelAgreementController;
+use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
@@ -36,6 +38,7 @@ Route::get('dhl-store', [ShippingController::class, 'dhl_store']);
 Route::post('request-cn', [ShippingController::class, 'request_cn']);
 Route::post('check-cn-company', [ShippingController::class, 'check_cn_company']);
 Route::post('download-consignment-note', [ShippingController::class, 'download_cn']);
+Route::post('arrange-shipment', [ShippingController::class, 'arrange_shipment']);
 
 Route::prefix('dashboard')->group(function () {
     Route::get('current-process', [DashboardController::class, 'current_process']);
@@ -54,6 +57,8 @@ Route::prefix('orders')->group(function () {
     Route::post('split-parcels', [OrderApiController::class, 'get_order_split_parcels']);
     Route::post('approve-for-shipping', [OrderApiController::class, 'approve_for_shipping']);
     Route::post('set-order-completed', [OrderApiController::class, 'set_order_completed']);
+    Route::match(array('GET','POST'),'getStatusWMS', [OrderApiController::class, 'getStatusWMS']);
+    Route::match(array('GET','POST'),'getStatusWMSFilter', [OrderApiController::class, 'getStatusWMSFilter']);
 });
 
 Route::prefix('shippings')->group(function () {
@@ -64,6 +69,12 @@ Route::prefix('shippings')->group(function () {
     Route::post('return-ongoing-milestone', [ShippingController::class, 'return_ongoing_milestone']);
     Route::post('return-delivered-milestone', [ShippingController::class, 'return_delivered_milestone']);
     Route::post('update_shopee_tracking', [ShippingApiController::class, 'update_shopee_tracking']);
+});
+
+Route::prefix('claims')->group(function () {
+    Route::post('create', [ClaimController::class, 'create']);
+    Route::post('upload-credit-note', [ClaimController::class, 'upload_cn']);
+    Route::delete('delete', [ClaimController::class, 'delete']);
 });
 
 Route::prefix('reports')->group(function() {
@@ -102,13 +113,17 @@ Route::prefix('sla')->group(function(){
     Route::delete('/', [CourierServiceLevelAgreementController::class, 'delete']);
     Route::post('check-duplicate/{courier}/{id?}', [CourierServiceLevelAgreementController::class, 'check_duplicate']);
 });
+Route::get('scanned-parcel/{year}/{month}/{day?}', [OrderController::class, 'scanned_parcel']);
 
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);
 
 Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
+Route::post('download-claim-csv', [ClaimController::class, 'download_claim_csv']);
 
 Route::get('get-couriers', [CourierController::class, 'list']);
 
 Route::get('get-failed-order/{date}', [WebhookController::class, 'fail_insert']);
 
 Route::webhooks('webhook/sales');
+
+Route::get('test',[TestController::class, 'test']);

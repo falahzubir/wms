@@ -15,6 +15,8 @@ use App\Models\OrderLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Route;
+use App\Http\Traits\ApiTrait;
 
 class OrderController extends Controller
 {
@@ -70,7 +72,7 @@ class OrderController extends Controller
             ];
         }
         if (!in_array(ORDER_FILTER_SALES_EVENT, $exclude)) {
-            $filter_data['sale_events'] = true; // http request
+            $filter_data['sale_events'] = ApiTrait::getSalesEvent();
         }
         if (!in_array(ORDER_FILTER_TEAM, $exclude)) {
             $filter_data['teams'] = true; //http request
@@ -80,6 +82,39 @@ class OrderController extends Controller
         }
         if (!in_array(ORDER_FILTER_STATE, $exclude)) {
             $filter_data['states'] = MY_STATES; //http request
+        }
+
+        if(!in_array(ORDER_FILTER_PLATFORM, $exclude)){
+            $filter_data['platforms'] = [
+                22 => 'Shopee',
+                23 => 'TikTok',
+            ];
+        }
+
+        if(!in_array(ORDER_FILTER_STATUS, $exclude)){
+
+            //check if route is pending, then show only pending status
+            if(Route::currentRouteName() == 'orders.pending'){
+                $filter_data['statuses'] = [
+                    ORDER_STATUS_PENDING => 'Pending',
+                    ORDER_STATUS_PENDING_SHIPMENT => 'Pending Shipment',
+                ];
+            }else{
+                $filter_data['statuses'] = [
+                    ORDER_STATUS_PENDING => 'Pending',
+                    ORDER_STATUS_PENDING_SHIPMENT => 'Pending Shipment',
+                    ORDER_STATUS_PROCESSING => 'Processing',
+                    ORDER_STATUS_READY_TO_SHIP => 'Ready To Ship',
+                    ORDER_STATUS_PACKING => 'Packing',
+                    ORDER_STATUS_SHIPPING => 'Shipping',
+                    ORDER_STATUS_DELIVERED => 'Delivered',
+                    ORDER_STATUS_RETURN_PENDING => 'Return Pending',
+                    ORDER_STATUS_RETURN_SHIPPING => 'Return Shipping',
+                    ORDER_STATUS_RETURNED => 'Returned',
+                    ORDER_STATUS_RETURN_COMPLETED => 'Return Completed',
+                    ORDER_STATUS_REJECTED => 'Rejected',
+                ];
+            }
         }
 
         return (object) $filter_data;
@@ -124,9 +159,9 @@ class OrderController extends Controller
      */
     public function pending(Request $request)
     {
-        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING])
-                ->whereDate('dt_request_shipping', '<=', date('Y-m-d'))
-                ->whereRaw('(payment_type IS NULL OR payment_type <> 22)'); //shopee order excluded
+        $orders = $this->index()->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_SHIPMENT])
+                ->whereDate('dt_request_shipping', '<=', date('Y-m-d'));
+                // ->whereRaw('(payment_type IS NULL OR payment_type <> 22)'); //shopee order excluded
 
         $orders = $this->filter_order($request, $orders);
 
@@ -135,7 +170,7 @@ class OrderController extends Controller
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER,ACTION_ARRANGE_SHIPMENT],
         ]);
     }
 
@@ -261,6 +296,23 @@ class OrderController extends Controller
         ]);
     }
 
+
+    public function return_completed(Request $request)
+    {
+        $orders = $this->index()->where('status', ORDER_STATUS_RETURN_COMPLETED);
+
+        $orders = $this->filter_order($request, $orders);
+
+        return view('orders.index', [
+            'title' => 'Return Completed Orders',
+            'order_ids' => $orders->pluck('id')->toArray(),
+            'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL, ORDER_FILTER_STATE]),
+            'actions' => [ACTION_DOWNLOAD_ORDER],
+        ]);
+
+    }
+
     /**
      * Lists rejected order
      * @param  Request $request
@@ -340,10 +392,12 @@ class OrderController extends Controller
         $data['operational_model_id'] = $webhook['operation_model_id'];
         $data['team_id'] = $webhook['team_id'];
         $data['payment_refund'] = isset($webhook['payment_refund']) ? $webhook['payment_refund'] * 100 : 0;
-        $data['sales_remarks'] = $webhook['sales_remark'] ?? '';
+        $data['sales_remarks'] = str_replace(array("\r", "\n"), '', $webhook['sales_remark'] ?? '');
         $data['dt_request_shipping'] = $webhook['dt_request_shipping'] ?? '';
         $data['payment_type'] = isset($webhook['payment_type']) ? $webhook['payment_type'] : null;
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
+        $data['third_party_sn'] = $webhook['third_party_sn'] ?? null;
+        $data['is_active'] = IS_ACTIVE;
 
         $customer = Customer::updateorCreate($webhook['customer']);
         $data['customer_id'] = $customer->id;
@@ -372,22 +426,6 @@ class OrderController extends Controller
 
             OrderItem::updateOrCreate($p_ids, $product_data);
         }
-        if($data['payment_type'] == PAYMENT_TYPE_SHOPEE){ //shopee order skip to Bucket List
-            set_order_status($order, ORDER_STATUS_PROCESSING, 'Order shopee created from webhook');
-
-            Order::where('id', $order->id)->update([
-                'bucket_id' => 3, //for shopee
-                'status' => ORDER_STATUS_PROCESSING,
-            ]);
-
-            OrderLog::create([
-                'order_id' => $order->id,
-                'order_status_id' => ORDER_STATUS_PROCESSING,
-                'remarks' => 'Order added to bucket',
-                'created_by' => 1,
-            ]);
-        }
-        else{
             if ($order->wasRecentlyCreated) {
                 set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
             } else {
@@ -398,7 +436,6 @@ class OrderController extends Controller
                     set_order_status($order, $order->status, 'Order updated from webhook');
                 }
             }
-        }
 
 
         return response()->json(['message' => 'Order created successfully'], 201);
@@ -439,7 +476,14 @@ class OrderController extends Controller
             $query->whereIn('courier_id', $request->couriers);
         });
         $orders->when($request->filled('events'), function ($query) use ($request) {
-            $query->whereIn('event_id', $request->events);
+            $events = $request->input('events');
+            foreach ($events as $event) {
+                $list = explode('|', $event);
+                $event_id[] = $list[0];
+                $company_id[] = $list[1];
+            }
+            $query->whereIn('event_id', $event_id);
+            $query->whereIn('company_id', $company_id);
         });
         $orders->when($request->filled('op_models'), function ($query) use ($request) {
             $query->whereIn('operational_model_id', $request->op_models);
@@ -493,6 +537,14 @@ class OrderController extends Controller
 
         $orders->when($request->filled('status'), function ($query) use ($request) {
             $query->where('status', $request->status);
+        });
+
+        $orders->when($request->filled('platforms'), function ($query) use ($request) {
+            $query->whereIn('payment_type', $request->platforms);
+        });
+
+        $orders->when($request->filled('statuses'), function ($query) use ($request) {
+            $query->whereIn('status', $request->statuses);
         });
 
         return $orders;
@@ -619,5 +671,60 @@ class OrderController extends Controller
         }
         return back()->with('success', 'Postcode Changed Successfully');
 
+    }
+
+    public function scanned_parcel($year, $month, $day = null){
+
+        // count scanned parcel by scanned by
+        $parcel = Shipping::whereYear('scanned_at', $year)
+            ->whereMonth('scanned_at', $month)
+            ->where('status', IS_ACTIVE);
+
+        $scanned_parcel = $parcel->get();
+
+        // tracking number unique
+        $scanned_parcel_count = $scanned_parcel->unique('tracking_number')
+            ->groupBy('scanned_by')
+            ->map(function ($item, $key) {
+                return count($item);
+            });
+
+            //filter by today
+            if($day != null){
+                $scanned_parcel_day = $parcel->whereDay('scanned_at', $day)->get();
+                $scanned_parcel_count_today = $scanned_parcel_day->unique('tracking_number')
+                ->groupBy('scanned_by')
+                ->map(function ($item, $key) {
+                    return count($item);
+                });
+                $users_today = \App\Models\User::whereIn('id', $scanned_parcel_count_today->keys()->toArray())->get();
+                $scans_today = [];
+                foreach($users_today as $user){
+                    $scans_today[] = [
+                        'name' => $user->name,
+                        'img' => $user->staff_id . '-test.jpeg',
+                        'count' => $scanned_parcel_count_today[$user->id]
+                    ];
+                }
+                $result['scans_today'] = $scans_today;
+            }
+
+            $users = \App\Models\User::whereIn('id', $scanned_parcel_count->keys()->toArray())->get();
+            $scans = [];
+
+        foreach($users as $user){
+            $scans[] = [
+                'name' => $user->name,
+                'img' => $user->staff_id . '.jpeg',
+                'count' => $scanned_parcel_count[$user->id]
+            ];
+        }
+
+        $result['scans'] = $scans;
+
+        $current_process = new DashboardController();
+        $result['current_process'] = $current_process->current_process(true)->original['count'];
+
+        return $result;
     }
 }

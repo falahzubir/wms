@@ -35,11 +35,19 @@
         @break
 
         @case(ORDER_STATUS_RETURNED)
-            <span class="badge bg-success text-light">Returned</span>
+            <span class="badge text-light" style="background-color:#DA6A00">Return Pending</span>
+        @break
+
+        @case(ORDER_STATUS_RETURN_COMPLETED)
+            <span class="badge text-light" style="background-color:#da00a0">Return Completed</span>
         @break
 
         @case(ORDER_STATUS_REJECTED)
             <span class="badge bg-danger text-light">Rejected</span>
+        @break
+
+        @case(ORDER_STATUS_PENDING_SHIPMENT)
+            <span class="badge bg-susu text-light">Pending Shipment</span>
         @break
 
         @default

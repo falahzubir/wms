@@ -35,7 +35,7 @@
                 <td></td>
                 <td>="{{ $order->customer->phone }}"</td>
                 <td>{{ $order->customer->address }}</td>
-                <td>{{ $order->customer->postcode }}</td>
+                <td>="{{ $order->customer->postcode }}"</td>
                 <td></td>
                 <td></td>
                 <td></td>
