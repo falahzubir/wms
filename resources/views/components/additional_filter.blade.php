@@ -89,7 +89,7 @@
                     <x-filter_select name="events" label="Sales Event" id="sales-event-filter" class="col-4 mt-2">
                         @foreach ($filter_data->sale_events as $event)
                             <option value="{{ $event['event_id'].'|'.$event['company_id'] }}"
-                                {{ request('events') != null ? (in_array($event['event_with_company'], request('events')) ? 'selected' : '') : '' }}>
+                                {{ request('events') != null ? (in_array($event['event_id'].'|'.$event['company_id'], request('events')) ? 'selected' : '') : '' }}>
                                 {{ $event['event_name'] }}</option>
                         @endforeach
                     </x-filter_select>
