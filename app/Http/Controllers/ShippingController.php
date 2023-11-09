@@ -79,7 +79,7 @@ class ShippingController extends Controller
         ->whereIn('id', $request->order_ids)
         ->where('payment_type', 22)
         ->get();
-        
+
         if(count($ordersShopee) > 0){
             return $this->generateShopeeCN($ordersShopee);
         }
@@ -305,7 +305,9 @@ class ShippingController extends Controller
             ]);
         }
 
-        return true;
+        return response([
+            "success" => $orders_dhl->count() . " order(s) cn generated successfully."
+        ]);
     }
 
     /**
@@ -550,7 +552,7 @@ class ShippingController extends Controller
                 return array_search($model->order_id, $sorted_order_id);
             });
         $attachments = $attachments->pluck('attachment')->toArray();
-        
+
         if (isset($attachments) && empty($attachments[0])) {
             return response()->json(['status' => false,'error' => 'No attachment found']);
         }
@@ -1224,12 +1226,12 @@ class ShippingController extends Controller
             }
 
             $order[$key]['additional_data'] = json_decode($value->shippings[0]->additional_data, true);
-            
+
             ###### start get shipping document parameter ######
             $getShippingDocumentParameter = ShopeeTrait::getShippingDocumentParameter($order[$key]['additional_data']);
             $jsonGetShippingDocumentParameter = json_decode($getShippingDocumentParameter, true);
 
-            if(empty($jsonGetShippingDocumentParameter['error'])) 
+            if(empty($jsonGetShippingDocumentParameter['error']))
             {
                 $order[$key]['additional_data']['shipping_document_type'] = $jsonGetShippingDocumentParameter['response']['result_list'][0]['suggest_shipping_document_type'];
 
@@ -1239,15 +1241,15 @@ class ShippingController extends Controller
                 $getCreateShippingDocument = ShopeeTrait::createShippingDocument($order[$key]['additional_data']);
                 $jsonGetCreateShippingDocument = json_decode($getCreateShippingDocument, true);
 
-                if(empty($jsonGetCreateShippingDocument['error'])) 
-                {   
+                if(empty($jsonGetCreateShippingDocument['error']))
+                {
                     ###############################################
                     ###### start get shipping document result #####
                     ###############################################
                     $getShippingDocument = ShopeeTrait::getShippingDocumentResult($order[$key]['additional_data']);
                     $jsonGetShippingDocument = json_decode($getShippingDocument, true);
 
-                    if(empty($jsonGetShippingDocument['error'])) 
+                    if(empty($jsonGetShippingDocument['error']))
                     {
                         $order[$key]['additional_data']['shipping_document_status'] = $jsonGetShippingDocument['response']['result_list'][0]['status'];
 
@@ -1318,7 +1320,7 @@ class ShippingController extends Controller
             'message' => 'Failed',
             'data' => $order
         ], 200);
-        
+
     }
 
     public function arrange_shipment(Request $request)
@@ -1340,7 +1342,7 @@ class ShippingController extends Controller
         ->where('orders.payment_type', 22)
         ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
         ->get();
-        
+
         foreach($orders as $order)
         {
             $order_details = ShopeeTrait::getOrderDetail($order->third_party_sn);
@@ -1398,7 +1400,7 @@ class ShippingController extends Controller
                $message .= "Failed: Order ID ".$value." - ".$responseFailed['message'][$key]."<br>";
            }
         }
-        
+
         return response()->json([
             'success' => true,
             'message' => $message,
