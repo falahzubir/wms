@@ -15,8 +15,7 @@ Trait ApiTrait
             $responseED = Http::get('https://aa.bosemzi.com/api/getSalesEvent');
             $responseINT = Http::get('https://int.bosemzi.com/api/getSalesEvent');
         }else{
-            // $responseEH = Http::get('https://ecomstg.groobok.com/api/getSalesEvent');
-            $responseEH = Http::get('http://localhost/bos/api/getSalesEvent');
+            $responseEH = Http::get('https://ecomstg.groobok.com/api/getSalesEvent');
             $responseED = Http::get('https://qastg.groobok.com//api/getSalesEvent');
             $responseINT = Http::get('https://stg.groobok.com/api/getSalesEvent');
         }

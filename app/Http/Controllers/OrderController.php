@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
+use App\Models\OrderEvent;
 
 class OrderController extends Controller
 {
@@ -72,7 +73,7 @@ class OrderController extends Controller
             ];
         }
         if (!in_array(ORDER_FILTER_SALES_EVENT, $exclude)) {
-            $filter_data['sale_events'] = ApiTrait::getSalesEvent();
+            $filter_data['sale_events'] = OrderEvent::get();
         }
         if (!in_array(ORDER_FILTER_TEAM, $exclude)) {
             $filter_data['teams'] = true; //http request
