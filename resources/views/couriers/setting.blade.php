@@ -1,6 +1,5 @@
 @php
 $title = 'List of'. ' ' . $title;
-$current_uri = request()->segments();
 @endphp
 <x-layout :title="$title" :crumbList="$crumbList">
     <style>
@@ -28,22 +27,29 @@ $current_uri = request()->segments();
         <div class="row">
 
             <!-- START GENERAL -->
-            @if ($current_uri[2] == '1')
+            @if ($type == '1')
             <div class="card" id="filter-body">
                 <div class="card-body">
                     <div class="pt-5">
-                        <form action="" method="post">
+                        <form method="post" id="form-general-setting" method="POST">
+                            @csrf
                             <div class="mb-3 row">
                                 <label for="courierName" class="col-sm-2 col-form-label fw-normal">Courier Name</label>
                                 <div class="col-sm-10">
-                                    <input type="text" name="courier_name" class="form-control" id="courierName">
+                                    <input type="text" name="courier_name" class="form-control" id="courierName" value="{{ $courier['name'] }}">
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label for="courierMinAttempt" class="col-sm-2 col-form-label fw-normal">Minimum Attempt</label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="min_attempt" class="form-control" id="courierMinAttempt" value="{{ $courier['min_attempt'] }}">
                                 </div>
                             </div>
                             <div class="p-5"></div>
                             <hr>
                             <div class="text-end pt-4">
-                                <button type="button" class="btn btn-secondary" id="filter-order">Cancel</button>
-                                <button type="button" class="btn btn-primary" id="filter-order">Submit</button>
+                                <button type="button" onclick="goBack()" class="btn btn-secondary" id="filter-order">Cancel</button>
+                                <button type="button" onclick="submitGeneralSetting()" class="btn btn-primary" id="filter-order">Submit</button>
                             </div>
                         </form>
                     </div>
@@ -53,7 +59,7 @@ $current_uri = request()->segments();
             <!-- END GENERAL -->
 
             <!-- START SLA -->
-            @if ($current_uri[2] == '2')
+            @if ($type == '2')
             <div class="card" id="filter-body">
                 <div class="card-body" style="">
                     <h5 class="card-title">Filters..</h5>
@@ -93,7 +99,7 @@ $current_uri = request()->segments();
             <!-- END SLA -->
 
             <!-- START COURIER COVERAGE -->
-            @if ($current_uri[2] == '3')
+            @if ($type == '3')
             <div class="card" id="filter-body">
                 <div class="card-body" style="">
                     <h5 class="card-title">Filters..</h5>
@@ -136,8 +142,6 @@ $current_uri = request()->segments();
             </div>
             @endif
             <!-- END COURIER COVERAGE -->
-
-
         </div>
     </section>
 
@@ -162,7 +166,7 @@ $current_uri = request()->segments();
                         <div class="mb-3 row">
                             <label for="minAttempt" class="col-sm-4 col-form-label">Postcode (s)</label>
                             <div class="col-sm-8">
-                                <textarea class="form-control" name="postcode" id="postcode" cols="10" rows="2"></textarea>
+                                <textarea class="form-control" name="postcode" id="postcode" cols="10" rows="10"></textarea>
                             </div>
                         </div>
                         <div class="row">
@@ -176,10 +180,10 @@ $current_uri = request()->segments();
                                 <span class="uploadFileCss">
                                     <label class="btn btn-sm btn-secondary">
                                         Upload file
-                                        <input type="file" style="display: none;" id="fileInput">
+                                        <input type="file" style="display: none;" id="fileInput" accept=".csv" onchange="populateTextareaPostcode(this)">
                                     </label>
                                     <br>
-                                    <small class="text-muted"><a style="font-size: 10px;" href="#">[Download template csv]</a></small>
+                                    <small class="text-muted"><a style="font-size: 10px;" href="/assets/template/postcode_template.csv">[Download template csv]</a></small>
                                 </span>
                             </div>
                         </div>
@@ -223,7 +227,9 @@ $current_uri = request()->segments();
                             <label for="stateCA" class="col-sm-4 col-form-label">State</label>
                             <div class="col-sm-8">
                                 <select name="state" class="form-control" id="stateCA">
-                                    <option value="">Select State</option>
+                                    @foreach ($states as $id => $state)
+                                        <option value="{{ $id }}">{{ $state }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -232,7 +238,7 @@ $current_uri = request()->segments();
                             <div class="col-sm-8">
                                 <div class="input-group mb-3">
                                     <span class="input-group-text" id="basic-addon1">D +</span>
-                                    <input type="text" name="sla_name" class="form-control" id="slaName">
+                                    <input type="text" name="slaPeriod" class="form-control" id="slaPeriod">
                                 </div>
                             </div>
                         </div>
@@ -259,7 +265,7 @@ $current_uri = request()->segments();
     <x-slot name="script">
         <script>
             $(document).ready(function() {
-                let typeParam = "{{ $current_uri[2] }}";
+                let typeParam = "{{ $type }}";
 
                 if (typeParam == 2) {
                     loadTableSLA();
@@ -285,12 +291,15 @@ $current_uri = request()->segments();
                 }
             });
 
+            const goBack = () => {
+                const cour_id = {{ $courier['id'] }};
+                window.location.href = `/couriers/edit-page/${cour_id}`;
+            }
+
             // LOAD TABLE SLA
             const loadTableSLA = () => {
                 let form = $('#form-sla').serialize();
-                let response = axios.post('/api/couriers/listSLA', {
-                        form: form,
-                    })
+                let response = axios.get('/api/sla/list/' + {{ $courier['id'] }})
                     .then(function(response) {
                         renderTableSLA(response.data);
                     })
@@ -306,7 +315,7 @@ $current_uri = request()->segments();
                 if (data && data.length > 0) {
                     let x = 1;
                     data.forEach((item, index) => {
-                        let fullPostcode = item.postcode;
+                        let fullPostcode = item.postcodes;
                         let truncatedPostcode = fullPostcode.substring(0, 47);
                         let isTruncated = fullPostcode.length > 47;
 
@@ -349,15 +358,28 @@ $current_uri = request()->segments();
             // EDIT SLA
             const editSLA = (id, action) => {
                 let x = $('#modalAddEditSLA');
-
+                x.find($('#slaName')).val('');
+                x.find($('#postcode')).val('');
+                x.find($('#uploadCSV')).prop('checked', false);
                 if (action == 'edit') {
+                    x.find($('#slaName')).val('Loading...');
+                    x.find($('#postcode')).val('Loading...');
+                    x.find($('.modal-footer')).html(``);
+
+                    axios.get('/api/sla/show/'+id).then(
+                        function(response) {
+                            let data = response.data;
+                            x.find($('#slaName')).val(data.days);
+                            x.find($('#slaName')).attr('readonly', true);
+                            x.find($('#postcode')).val(data.postcodes);
+                        }
+                    )
                     x.find($('.modal-title')).text('Edit Service-Level Aggrement (SLA)');
-                    x.find($('#slaName')).val('2');
-                    x.find($('#postcode')).val('08000,08001,08002');
+
                     //footer button
                     x.find($('.modal-footer')).html(`
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button onclick="submitSLAFrom('edit')" type="button" class="btn btn-primary">Submit</button>
+                        <button onclick="submitSLAFrom('edit', ${id})" type="button" class="btn btn-primary">Submit</button>
                     `);
 
                 } else {
@@ -384,18 +406,22 @@ $current_uri = request()->segments();
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-
-                        $(`.tr-row-${id}`).remove();
-
-                        // let response = axios.post('/api/couriers/delete', {
-                        //         id: id,
-                        //     })
-                        //     .then(function(response) {
-                        //         $(`.tr-row-${id}`).remove();
-                        //     })
-                        //     .catch(function(error) {
-                        //         console.log(error);
-                        //     });
+                        axios.delete('/api/sla', {
+                                data: {
+                                    id: id
+                                }
+                            })
+                            .then(function(response) {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'SLA has been deleted.',
+                                    'success'
+                                );
+                                $(`.tr-row-${id}`).remove();
+                            })
+                            .catch(function(error) {
+                                console.log(error);
+                            });
                     }
                 })
             }
@@ -438,37 +464,97 @@ $current_uri = request()->segments();
             }
 
             // SUBMIT SLA FORM
-            const submitSLAFrom = (action) => {
-                let form = $('#add-edit-sla').serialize();
-                let url = action == 'add' ? '/api/couriers/addSLA' : '/api/couriers/editSLA';
-                let response = axios.post(url, {
-                        form: form,
-                    })
-                    .then(function(response) {
-                        response.data.status = 'failed'
-                        if (response.data.status == 'success') {
-                            //
-                        } else {
-                            //duplicate postcode
+            const submitSLAFrom = (action, id = null) => {
+                // loading
+                Swal.fire({
+                    title: 'Please wait...',
+                    html: 'Checking duplicate',
+                    allowOutsideClick: false,
+                    showCancelButton: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    },
+                });
+
+                axios.post('/api/sla/check-duplicate/' + {{ $courier['id'] }} + `/${id}`, {
+                    postcode: $('#postcode').val(),
+                })
+                .then(function(response) {
+                    if(response.data.duplicate.length == 0){
+                        proceedSubmitSLAForm(action, id);
+                    }else{
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Duplicate Postcode',
+                            html: `
+                            <div>Some postcode already exist, are you sure to proceed?</div>
+                            <div>If yes, your postcode will be remove from previous listing.</div>
+                            <div class="text-danger mt-2">
+                            Duplicate postcode: ${response.data.duplicate.join(', ')}
+                            </div>`,
+                            width: '38rem',
+                            showCancelButton: true,
+                            confirmButtonText: 'Proceed',
+                            cancelButtonText: 'Cancel',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                proceedSubmitSLAForm(action, id, response.data.duplicate);
+                            }
+                        })
+                        .catch(function(error) {
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Duplicate Postcode',
-                                html: `Some postcode already exist, are you sure to proceed? 
-                                <br>
-                                If yes, your postcode will be remove from previous listing. 
-                                <br><br>
-                                <span class="text-danger">
-                                Duplicate postcode: 08000,08001,08002
-                                </span>`,
-                                width: '38rem',
-
+                                title: 'Oops...',
+                                text: error.response.data.message,
                             })
-                        }
+                        });
+                    }
+                }).catch(function(error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error.response.data.message,
+                    })
+                });
+            }
+
+            const proceedSubmitSLAForm = (action, id, duplicate = []) => {
+
+                Swal.fire({
+                    title: 'Please wait...',
+                    html: 'Saving data',
+                    allowOutsideClick: false,
+                    showCancelButton: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    },
+                });
+                let sla_name = $('#slaName').val();
+                let postcode = $('#postcode').val();
+                let url = (action == 'add' ? '/api/sla/add/' + {{ $courier['id'] }} : '/api/sla/update/' + id);
+                let response = axios.post(url, {
+                        sla_name: sla_name,
+                        postcode: postcode,
+                        duplicate: duplicate,
+                    })
+                    .then(function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'SLA added',
+                            showConfirmButton: false,
+                            timer: 1500
+                        })
+                        loadTableSLA();
+                        $('#modalAddEditSLA').modal('hide');
                     })
                     .catch(function(error) {
                         console.log(error);
                     });
             }
+
 
             // LOAD TABLE COURIER COVERAGE
             const loadTableCourierCoverage = () => {
@@ -517,6 +603,67 @@ $current_uri = request()->segments();
                 let y = $('#modalAddEditCourierCoverage');
                 y.find($('.modal-title')).text('Add Coverage');
                 y.modal('show');
+            }
+
+            const submitGeneralSetting = () => {
+                let response = axios.post('/api/couriers/updateGeneralSettings', {
+                        courier_id: "{{ $courier['id'] }}",
+                        courier_name: $('#courierName').val(),
+                        min_attempt: $('#courierMinAttempt').val(),
+                    })
+                    .then(function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'General setting updated',
+                            showConfirmButton: false,
+                            timer: 1500
+                        })
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+            }
+
+            const submitCourierCoverage = () => {
+               axios.post('/api/couriers/addCoverage', {
+                        postcode: $('#postcodeCA').val(),
+                        area: $('#areaCA').val(),
+                        district: $('#districtCA').val(),
+                        state: $('#stateCA').val(),
+                        sla: $('#slaPeriod').val(),
+                        cod: $('#codCA').is(':checked') ? 1 : 0,
+                    })
+                    .then(function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Coverage added',
+                            showConfirmButton: false,
+                            timer: 1500
+                        })
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+            }
+
+            const populateTextareaPostcode = (el) => {
+                console.log(el);
+                let file = el.files[0];
+                let reader = new FileReader();
+                reader.readAsText(file);
+                reader.onload = function(event) {
+                    let csv = event.target.result;
+                    let data = csv.split(/\r?\n|\r/);
+                    data = data.filter(function(str) {
+                        return /\S/.test(str);
+                    });
+                    data = data.sort();
+                    let csvData = data.join(',');
+                    $('#postcode').val(csvData);
+
+                };
             }
         </script>
 

@@ -13,6 +13,9 @@
             color: var(--bs-table-color);
             border-color: var(--bs-table-border-color);
         }
+        td {
+            vertical-align: middle !important;
+        }
     </style>
 
     <section class="section">
@@ -22,10 +25,10 @@
             <div class="card" id="filter-body">
                 <div class="card-body" style="">
                     <h5 class="card-title">Filters..</h5>
-                    <!-- No Labels Form -->
-                    <form id="form-courier-coverage" class="row g-3" action="{{ url()->current() }}">
+                    <!-- No Labels Form if press enter click button -->
+                    <form id="form-courier-coverage" class="row g-3" action="{{ url()->current() }}" onkeydown="if(event.keyCode==13) event.preventDefault()">
                         <div class="col-md-12">
-                            <input type="text" class="form-control" placeholder="Search" name="search" value="{{ old('search', Request::get('search')) }}">
+                            <input type="text" class="form-control" placeholder="Search" name="search" value="{{ old('search', Request::get('search')) }}" id="search">
                         </div>
                         <div class="text-end">
                             <button type="button" onclick="loadTableSelectedCoverage()" class="btn btn-primary" id="filter-order">Search</button>
@@ -67,9 +70,17 @@
 
             // LOAD TABLE
             const loadTableSelectedCoverage = () => {
-                let form = $('#form-courier-coverage').serialize();
+                let search_data = $('#search').val();
+                if(search_data == '') {
+                    $('#tbody-selected-coverage').html(`
+                        <tr>
+                            <td colspan="3" class="text-center">Search to display data</td>
+                        </tr>
+                    `);
+                    return;
+                }
                 let response = axios.post('/api/couriers/listSelectedCoverage', {
-                        form: form,
+                        search: search_data
                     })
                     .then(function(response) {
                         renderTable(response.data);
@@ -83,23 +94,16 @@
             const renderTable = (data) => {
                 $('#tbody-selected-coverage').empty();
                 let html = '';
-                let html2 = '';
-                let html3 = '';
-                if (data && data.length > 0) {
-                    data.forEach((item, index) => {
-                        item.couriers.forEach((item2, index2) => {
-                            html2 += `
-                                <tr>
-                                    <td class="fw-bold">${item2.delivery_type}</td>
-                                    <td class="fw-bold">${item2.courier_name}</td>
-                                </tr>
-                            `;
-                        });
-
+                // let html2 = '';
+                // let html3 = '';
+                if (data.couriers && data.couriers.length > 0) {
+                    td_postcode = `<td rowspan="${data.couriers.length}" class="fw-bold">${data.postcode}</td>`;
+                    data.couriers.forEach((item, index) => {
                         html += `
-                            <tr class="tr-row-${item.id}">
-                                <td rowspan="3" class="fw-bold">${item.postcode}</td>
-                                ${html2}
+                            <tr>
+                                ${index == 0 ? td_postcode : ''}
+                                <td class="fw-bold">${item.type == 1 ? 'COD' : 'Non-COD'}</td>
+                                <td class="fw-bold">${item.courier.name}</td>
                             </tr>
                         `;
                     });

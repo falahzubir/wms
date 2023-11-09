@@ -114,6 +114,7 @@
                                 <th scope="col">Action</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Courier</th>
+                                <th scope="col">Courier Code</th>
                                 <th scope="col">Minimum Attempt</th>
                             </tr>
                         </thead>
@@ -192,11 +193,9 @@
 
             // LOAD TABLE
             const loadTable = (page = null) => {
-                let pagination = page ? '?page=' + page : '';
+                let pagination = '?page=' + (page ? page : 1);
                 let form = $('#form-listCourier').serialize();
-                let response = axios.post('/api/couriers/listCourier' + pagination, {
-                        form: form,
-                    })
+                let response = axios.post('/api/couriers/listCourier' + pagination + `&${form}`)
                     .then(function(response) {
                         renderTable(response.data);
                     })
@@ -216,7 +215,7 @@
                     newData.forEach((item, index) => {
                         let checked = item.status == 1 ? 'checked' : '';
                         let classs = item.status == 1 ? 'opacity-10 bg-success border border-success' : 'opacity-10 bg-danger border border-danger';
-                        let action = "{{ route('couriers.editPage','wmsemzi') }}" + item.hash_id;
+                        let action = `/couriers/edit-page/` + item.id;
                         html += `
                             <tr class="tr-row-${item.id}">
                                 <td>
@@ -224,9 +223,9 @@
                                         <button type="button" class="btn btn-sm btn-danger" onclick="deleteCourier(${item.id})"><i class="bi bi-trash"></i></button>
                                         @csrf
                                         @method('POST')
-                                        <button href="${action}" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></button>
+                                        <a href="${action}" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></a>
                                     </form>
-                                    
+
                                 </td>
                                 <td>
                                     <label class="switch">
@@ -235,6 +234,7 @@
                                     </label>
                                 </td>
                                 <td>${item.name}</td>
+                                <td>${item.code}</td>
                                 <td>${item.min_attempt}</td>
                             </tr>
                         `;

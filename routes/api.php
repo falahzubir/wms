@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\api\ShippingApiController;
 use App\Http\Controllers\api\WebhookController;
+use App\Http\Controllers\CourierServiceLevelAgreementController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -78,16 +79,28 @@ Route::prefix('reports')->group(function() {
 
 Route::prefix('couriers')->group(function(){
     Route::post('/listCourier', [CourierController::class, 'listCourier']);
-    Route::post('/listSLA', [CourierController::class, 'listSLA']);
     Route::post('/addCourier', [CourierController::class, 'addCourier']);
     Route::post('/deleteCourier', [CourierController::class, 'deleteCourier']);
-    Route::post('/addSLA', [CourierController::class, 'addSLA']);
-    Route::post('/editSLA', [CourierController::class, 'editSLA']);
     Route::post('/listCoverage', [CourierController::class, 'listCoverage']);
+    Route::post('/addCoverage', [CourierController::class, 'addCoverage']);
     Route::post('/listSelectedCoverage', [CourierController::class, 'listSelectedCoverage']);
     Route::post('/defaultCoverageState', [CourierController::class, 'defaultCoverageState']);
+    Route::put('/defaultCoverageState', [CourierController::class, 'updateDefaultCoverageState']);
     Route::post('/exceptionalCoverage', [CourierController::class, 'exceptionalCoverage']);
+    Route::put('/exceptionalCoverage', [CourierController::class, 'updateExceptionalCoverage']);
+    Route::post('/uploadExceptionalCoverage', [CourierController::class, 'uploadExceptionalCoverage']);
+    Route::delete('/exceptionalCoverage', [CourierController::class, 'deleteExceptionalCoverage']);
+    Route::post('/addExceptionalCoverage', [CourierController::class, 'addExceptionalCoverage']);
+    Route::post('/updateGeneralSettings', [CourierController::class, 'updateGeneralSettings']);
+});
 
+Route::prefix('sla')->group(function(){
+    Route::get('list/{courier}', [CourierServiceLevelAgreementController::class, 'list']);
+    Route::get('show/{id}', [CourierServiceLevelAgreementController::class, 'show']);
+    Route::post('add/{courier}', [CourierServiceLevelAgreementController::class, 'create']);
+    Route::post('update/{sla}', [CourierServiceLevelAgreementController::class, 'update']);
+    Route::delete('/', [CourierServiceLevelAgreementController::class, 'delete']);
+    Route::post('check-duplicate/{courier}/{id?}', [CourierServiceLevelAgreementController::class, 'check_duplicate']);
 });
 
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);

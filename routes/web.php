@@ -158,8 +158,8 @@ Route::middleware(['auth'])->group(function() {
 
     Route::prefix('couriers')->group(function(){
         Route::get('/', [CourierController::class, 'listAll'])->name('couriers.index');
-        Route::get('editPage/{id}', [CourierController::class, 'editPage'])->name('couriers.editPage');
-        Route::get('/general-setting/{type}', [CourierController::class, 'generalSetting'])->name('couriers.generalSetting');
+        Route::get('edit-page/{id}', [CourierController::class, 'editPage'])->name('couriers.editPage');
+        Route::get('general-setting/{courier_id}/{type}', [CourierController::class, 'generalSetting'])->name('couriers.generalSetting');
         Route::get('editSLA/{id}', [CourierController::class, 'editSLA'])->name('couriers.editSLA');
         Route::get('selected-coverage', [CourierController::class, 'selectedcoverage'])->name('couriers.selectedCoverage');
         Route::get('default-coverage', [CourierController::class, 'defaultcoverage'])->name('couriers.defaultCoverage');

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Courier;
+use App\Models\CoverageCourier;
+use App\Models\State;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -41,8 +43,11 @@ class CourierController extends Controller
 
     public function listCourier(Request $request)
     {
-        $item = Courier::select('*')->orderBy('id', 'desc')->paginate(10);
-
+        if($request->search){
+            $item = Courier::select('*')->where('name', 'like', '%'.$request->search.'%')->orderBy('id', 'desc')->paginate(10);
+        }else{
+            $item = Courier::select('*')->orderBy('id', 'desc')->paginate(10);
+        }
         $data = $item;
 
         return response()->json($data);
@@ -57,23 +62,23 @@ class CourierController extends Controller
             'minimum_attempt' => 'required | integer',
             'status_courier' => 'required | integer',
         ];
-    
+
         $customMessages = [
             'required' => 'The :attribute field is required.',
             'unique' => 'The :attribute field is already exist.',
         ];
 
         $this->validate($request, $rules, $customMessages);
-    
+
         try {
             $courier = new Courier();
             $courier->code = $request->courier_code;
             $courier->name = $request->courier_name;
             $courier->min_attempt = $request->minimum_attempt;
             $courier->status = $request->status_courier;
-            
+
             $courier->save();
-    
+
             return response([
                 "status" => "success",
                 "message" => "Courier has been added",
@@ -82,7 +87,7 @@ class CourierController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => 'error',
-                'msg' => 'error',
+                'message' => 'error',
                 'errors' => $e->errors()
             ], 422);
         }
@@ -117,6 +122,9 @@ class CourierController extends Controller
     public function editPage($id)
     {
         $title = 'Courier Setting';
+
+        $courier = Courier::find($id);
+
         $crumbList = array(
             array(
                 'name' => 'Setting',
@@ -127,22 +135,20 @@ class CourierController extends Controller
                 'url' => route('couriers.index'),
             ),
             array(
-                'name' => 'DHL',
-                'url' => route('couriers.editPage', $id),
+                'name' => $courier->name,
+                'url' => route('couriers.editPage', $courier->id),
                 'active' => 'active',
             ),
         );
-        $id = str_replace('wmsemzi', '', $id);
-        $id = hash_url_decode($id);
+
         $item['id'] = $id;
-        $item['hash_id'] = hash_url_encode($id);
-        $item['courier_id'] = '1';
-        $item['courier_name'] = 'DHL';
+        $item['courier_id'] = $courier->id;
+        $item['courier_name'] = $courier->name;
 
         return view('couriers.edit-courier', compact('title', 'item', 'crumbList'));
     }
 
-    public function generalSetting($type)
+    public function generalSetting($courier_id, $type)
     {
         if ($type == 1) {
             $title = 'General';
@@ -152,6 +158,10 @@ class CourierController extends Controller
             $title = 'Courier Coverage';
         }
 
+        $courier = Courier::find($courier_id);
+        $states =  Arr::where(MY_STATES, function ($value, $key) {
+            return $key > 0 && $key < 17;
+        });
         $crumbList = array(
             array(
                 'name' => 'Setting',
@@ -162,93 +172,17 @@ class CourierController extends Controller
                 'url' => route('couriers.index'),
             ),
             array(
-                'name' => 'DHL',
-                'url' => route('couriers.editPage', 'wmsemzi1'),
+                'name' => $courier->name,
+                'url' => route('couriers.editPage', $courier->id),
             ),
             array(
                 'name' => $title,
-                'url' => route('couriers.generalSetting', $type),
+                'url' => route('couriers.generalSetting', ['courier_id' => $courier_id, 'type' => $type]),
                 'active' => 'active',
             ),
         );
 
-        return view('couriers.setting', compact('title', 'crumbList'));
-    }
-
-    public function listSLA()
-    {
-        $item = array(
-            array(
-                'id' => 1,
-                'hash_id' => hash_url_encode(1),
-                'courier_id' => '1',
-                'courier_name' => 'DHL',
-                'sla_name' => 'D + 1',
-                'postcode' =>  '00000,00001,00002,00003,00004,00005,00006,00007,00008,00009,10000,76221',
-                'status' => 1,
-            ),
-            array(
-                'id' => 2,
-                'hash_id' => hash_url_encode(2),
-                'courier_id' => '2',
-                'courier_name' => 'Fedex',
-                'sla_name' => 'D + 2',
-                'postcode' => '00001,90100',
-                'status' => 1,
-            ),
-            array(
-                'id' => 3,
-                'hash_id' => hash_url_encode(3),
-                'courier_id' => '3',
-                'courier_name' => 'JNE',
-                'sla_name' => 'D + 3',
-                'postcode' => '00003,18000',
-                'status' => 1,
-            ),
-            array(
-                'id' => 4,
-                'hash_id' => hash_url_encode(4),
-                'courier_id' => '4',
-                'courier_name' => 'JNT',
-                'sla_name' => 'D + 4',
-                'postcode' => '10000,10002',
-                'status' => 1,
-            ),
-            array(
-                'id' => 5,
-                'hash_id' => hash_url_encode(5),
-                'courier_id' => '5',
-                'courier_name' => 'TIKI',
-                'sla_name' => 'D + 5',
-                'postcode' => '30000',
-                'status' => 1,
-            ),
-            array(
-                'id' => 6,
-                'hash_id' => hash_url_encode(6),
-                'courier_id' => '6',
-                'courier_name' => 'Wahana',
-                'sla_name' => 'D + 6',
-                'postcode' => '50000',
-                'status' => 1,
-            ),
-        );
-
-        $data = $item;
-
-        return response()->json($data);
-    }
-
-    public function addSLA(Request $request)
-    {
-        dd($request->all());
-    }
-
-    public function editSLA(Request $request)
-    {
-        $form = $request->form;
-        $form = explode('&', $form);
-        $data = array();
+        return view('couriers.setting', compact('title', 'crumbList', 'courier', 'type', 'states'));
     }
 
     public function listCoverage(Request $request)
@@ -288,6 +222,10 @@ class CourierController extends Controller
         return response()->json($data);
     }
 
+    public function addCoverage(Request $request){
+        dd($request);
+    }
+
     public function selectedcoverage()
     {
         $title = 'Selected Coverage';
@@ -305,31 +243,46 @@ class CourierController extends Controller
         return view('couriers.selectedCoverage', compact('title', 'crumbList'));
     }
 
-    public function listSelectedCoverage()
+    public function listSelectedCoverage(Request $request)
     {
-        $item = array(
-            array(
-                'id' => 1,
-                'hash_id' => hash_url_encode(1),
-                'postcode' => '08000',
-                'couriers' => array(
-                    array(
-                        'courier_id' => '1',
-                        'courier_name' => 'DHL',
-                        'delivery_type' => 'COD',
-                    ),
-                    array(
-                        'courier_id' => '2',
-                        'courier_name' => 'Fedex',
-                        'delivery_type' => 'NON-COD',
-                    ),
-                ),
-            )
-        );
+        $data = [];
+        $postcodes = CoverageCourier::with('courier')
+            ->where('postcode', $request->input('search'))
+            ->get();
 
-        $data = $item;
+        if(!$postcodes){
+            return response([
+                'status' => 'error',
+                'message' => 'Postcode not found',
+                'errors' => []
+            ], 422);
+        }
 
-        return response()->json($data);
+        $data['postcode'] = $request->input('search');
+        $data['couriers'] = $postcodes;
+        // $item = array(
+        //     array(
+        //         'id' => 1,
+        //         'hash_id' => hash_url_encode(1),
+        //         'postcode' => '08000',
+        //         'couriers' => array(
+        //             array(
+        //                 'courier_id' => '1',
+        //                 'courier_name' => 'DHL',
+        //                 'delivery_type' => 'COD',
+        //             ),
+        //             array(
+        //                 'courier_id' => '2',
+        //                 'courier_name' => 'Fedex',
+        //                 'delivery_type' => 'NON-COD',
+        //             ),
+        //         ),
+        //     )
+        // );
+
+        // $data = $item;
+
+        return response($data);
     }
 
     public function defaultCoverage()
@@ -349,68 +302,227 @@ class CourierController extends Controller
                 'url' => route('couriers.defaultCoverage'),
             ),
         );
+        $states = State::select('id', 'name')->where('country_code', 'MY')->get();
+        $couriers = Courier::select('id', 'name')->where('status', IS_ACTIVE)->get();
 
-        return view('couriers.defaultCoverage', compact('title', 'crumbList'));
+        return view('couriers.defaultCoverage', compact('title', 'crumbList', 'states', 'couriers'));
     }
 
     public function defaultCoverageState(Request $request)
     {
         $state_id = $request->state_id;
 
-        $item = array(
-            array(
-                'id' => 1,
-                'state_id' => $state_id,
-                'hash_id' => hash_url_encode(1),
-                'couriers' => 1,2
-            )
-        );
+        $state = State::find($state_id);
 
-        $data = $item;
+        return response($state);
 
-        return response()->json($data);
+    }
 
+    public function updateDefaultCoverageState(Request $request)
+    {
+        $state_id = $request->input('state_id');
+        $cod_courier_id = $request->input('cod_courier_id');
+        $non_cod_courier_id = $request->input('non_cod_courier_id');
+
+        $state = State::find($state_id);
+
+        if(!$state){
+            return response([
+                'status' => 'error',
+                'message' => 'State not found',
+                'errors' => []
+            ], 422);
+        }
+
+        $state->cod_courier_id = $cod_courier_id;
+        $state->non_cod_courier_id = $non_cod_courier_id;
+
+        $state->save();
+
+        return response([
+            'status' => 'success',
+            'message' => 'Courier updated',
+            'errors' => []
+        ], 200);
     }
 
     public function exceptionalCoverage(Request $request)
     {
-        $item = array(
-            array(
-                'id' => 1,
-                'courier_id' => '1',
-                'postcode' => '08000',
-                'courier_name' => 'DHL',
-                'delivery_type' => 'COD',
-                'status' => 1,
-            ),
-            array(
-                'id' => 2,
-                'courier_id' => '2',
-                'postcode' => '08001',
-                'courier_name' => 'Fedex',
-                'delivery_type' => 'NON-COD',
-                'status' => 0,
-            ),
-            array(
-                'id' => 3,
-                'courier_id' => '3',
-                'postcode' => '08002',
-                'courier_name' => 'JNE',
-                'delivery_type' => 'COD',
-                'status' => 1,
-            ),
-            array(
-                'id' => 4,
-                'courier_id' => '4',
-                'postcode' => '08003',
-                'courier_name' => 'JNT',
-                'delivery_type' => 'NON-COD',
-                'status' => 1,
-            ),
-        );
 
-        $data = $item;
+        $data = [];
+        $lists = CoverageCourier::with('courier')->where('state_id', $request->state);
 
-        return response()->json($data);
+        if($request->search != null){
+            $lists = $lists->where('postcode', $request->search);
+        }
+
+        $lists = $lists->get();
+
+        return response()->json($lists);
+    }
+
+    public function addExceptionalCoverage(Request $request)
+    {
+        $request->validate([
+            'postcode' => 'required | numeric | digits:5',
+            'delivery_type' => 'required | integer',
+            'courier' => 'required | integer | exists:couriers,id',
+            'state_id' => 'required | integer | exists:states,id',
+            'status_courier' => 'required | integer',
+        ]);
+
+        $coverage = CoverageCourier::where('postcode', $request->input('postcode'))
+            ->where('state_id', $request->input('state_id'))
+            ->where('type', $request->input('delivery_type'))
+            ->whereNull('deleted_at')
+            ->first();
+
+        if($coverage){
+            return response([
+                'status' => 'error',
+                'message' => 'Postcode already exist',
+                'errors' => []
+            ], 422);
+        }
+
+        CoverageCourier::create([
+            'postcode' => $request->input('postcode'),
+            'type' => $request->input('delivery_type'),
+            'courier_id' => $request->input('courier'),
+            'state_id' => $request->input('state_id'),
+            'status' => $request->input('status_courier'),
+        ]);
+
+        return response([
+            'status' => 'success',
+            'message' => 'Courier updated',
+            'errors' => []
+        ], 200);
+    }
+
+    public function deleteExceptionalCoverage(Request $request)
+    {
+        $request->validate([
+            'id' => 'required | integer | exists:coverage_couriers,id',
+        ]);
+
+        $coverage = CoverageCourier::find($request->input('id'));
+        $coverage->delete();
+
+        return response([
+            'status' => 'success',
+            'message' => 'Courier updated',
+            'errors' => []
+        ], 200);
+    }
+
+    public function updateExceptionalCoverage(Request $request)
+    {
+        $request->validate([
+            'id' => 'required | integer | exists:coverage_couriers,id',
+            'status_courier' => 'required | integer',
+        ]);
+
+        $coverage = CoverageCourier::find($request->input('id'));
+        $coverage->status = $request->input('status_courier');
+        $coverage->save();
+
+        return response([
+            'status' => 'success',
+            'message' => 'Courier updated',
+            'errors' => []
+        ], 200);
+    }
+
+    public function updateGeneralSettings(Request $request){
+
+        $request->validate([
+            'courier_id' => 'required | integer | exists:couriers,id',
+            'courier_name' => 'required | string',
+            'min_attempt' => 'required | integer',
+        ]);
+
+        $courier = Courier::find($request->courier_id);
+        if(!$courier){
+            return response([
+                'status' => 'error',
+                'message' => 'Courier not found',
+                'errors' => []
+            ], 422);
+        }
+        $courier->name = $request->courier_name;
+        $courier->min_attempt = $request->min_attempt;
+        $courier->save();
+        return response([
+            'status' => 'success',
+            'message' => 'Courier updated',
+            'errors' => []
+        ], 200);
+    }
+
+    public function uploadExceptionalCoverage(Request $request)
+    {
+        $request->validate([
+            'file' => 'required | mimes:xlsx,xls,csv',
+            'state_id' => 'required | integer | exists:states,id',
+        ]);
+
+        $file = $request->file('file');
+        // 1: postcode, 2: delivery type, 3: courier code, 4: status
+        $state_id = $request->input('state_id');
+
+        // store csv to array ignore first row
+        $csv = array_map('str_getcsv', file($file));
+        array_shift($csv);
+
+        //check if all courier code exist
+        //unique courier code
+        $couriers = array_unique(array_column($csv, 2));
+        foreach($couriers as $courier){
+            $courier = Courier::where('code', $courier)->first();
+            if(!$courier){
+                return response([
+                    'status' => 'error',
+                    'message' => 'Courier code '.$courier.' not found',
+                    'errors' => []
+                ], 422);
+            }
+            $courier_ids[$courier->code] = $courier->id;
+        }
+
+        // store csv to database
+        foreach($csv as $row){
+            $postcode = $row[0];
+            $delivery_type = $row[1] == 'YES' ? '1' : '0';
+            $courier = $courier_ids[$row[2]];
+            $status = $row[3] == 'YES' ? '1' : '0';
+
+            $coverage = CoverageCourier::where('postcode', $postcode)
+                ->where('state_id', $state_id)
+                ->where('type', $delivery_type)
+                ->first();
+
+            if($coverage){
+                $coverage->courier_id = $courier;
+                $coverage->status = $status;
+                $coverage->save();
+            }
+            else{
+                CoverageCourier::create([
+                    'postcode' => $postcode,
+                    'type' => $delivery_type,
+                    'courier_id' => $courier,
+                    'state_id' => $state_id,
+                    'status' => $status,
+                ]);
+            }
+        }
+
+        return response([
+            'status' => 'success',
+            'message' => 'Courier updated',
+            'errors' => []
+        ], 200);
+
     }
 }

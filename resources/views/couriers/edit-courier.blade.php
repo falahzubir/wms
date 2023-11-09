@@ -103,7 +103,6 @@
                 <div class="card-body">
                     <div class="container">
                         <div class="row row-cols-2">
-
                             <div class="col">
                                 <div class="card custom-card" onclick="generalSetting(1)">
                                     <div class="icon-position-custom align-items-center">
@@ -130,7 +129,7 @@
                                 </div>
                             </div>
 
-                            <div class="col">
+                            {{-- <div class="col">
                                 <div class="card custom-card" onclick="generalSetting(3)">
                                     <div class="icon-position-custom align-items-center">
                                         <span class="d-inline-block">
@@ -141,13 +140,12 @@
                                         </span>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </section>
 
@@ -155,11 +153,12 @@
     <x-slot name="script">
         <script>
             $(document).ready(function() {
-                
+
             });
 
             const generalSetting = (type) => {
-                window.location.href = '/couriers/general-setting/' + type;
+                const cour_id = {{ $item['courier_id'] }};
+                window.location.href = `/couriers/general-setting/${cour_id}/` + type;
             }
 
         </script>
