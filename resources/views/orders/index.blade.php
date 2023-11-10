@@ -1125,6 +1125,7 @@
                     order_ids: checkedOrder,
                 })
                 .then(function(response) {
+
                     let text = "Shipping label generated."
                     if (response.data == 0) {
                         Swal.fire({
@@ -1140,7 +1141,7 @@
                     {
                         Swal.fire({
                             title: 'Error!',
-                            html: `${response.data.message}` ?? "Fail to generate CN",
+                            html: `${response.data.all_fail.message}` ?? "Fail to generate CN",
                             icon: 'error',
                             confirmButtonText: 'OK'
                         })
