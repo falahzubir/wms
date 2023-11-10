@@ -1408,6 +1408,12 @@ class ShippingController extends Controller
                 continue;
             }
             $timeslot = json_decode($timeslot, true);
+            if(!isset($timeslot['response']['pickup']['address_list'][0]))
+            {
+                $responseFailed['order_id'][] = $order->id;
+                $responseFailed['message'][] = 'No slot time found';
+                continue;
+            }
             $timeslot = $timeslot['response']['pickup']['address_list'][0];
             $timeslots = $timeslot['time_slot_list'];
 
