@@ -1319,10 +1319,26 @@ class ShippingController extends Controller
             ], 200);
         }
 
+        $message .= "Success: ".count($CNS)." generated.<br>";
+
+        if(isset($order) && count($order) > 0)
+        {
+            foreach($order as $key => $value)
+            {
+                if(isset($value['error']['type']) && count($value['error']['type']) > 0)
+                {
+                    foreach($value['error']['type'] as $k => $v)
+                    {
+                        $message .= "Failed: Order ID ".$value['id']." - ".$value['error']['message'][$k]."<br>";
+                    }
+                }
+            }
+        }
+
         return response()->json([
             'success' => false,
-            'message' => 'Failed',
-            'data' => $order
+            'message' => $message,
+            'data' => $CNS ?? ''
         ], 200);
 
     }
