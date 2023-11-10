@@ -282,7 +282,7 @@ class ShippingController extends Controller
             $response = Http::withBody($json, 'application/json')->post($url);
           
             $dhl_store = $this->dhl_store($orders_dhl, $response);
-           
+           dd($dhl_store);
             if ($dhl_store != null) {
                
                 $dhl_store_content = $dhl_store->getContent();
