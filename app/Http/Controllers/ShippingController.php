@@ -1222,7 +1222,7 @@ class ShippingController extends Controller
         {
             $order[$key]['id'] = $value->id;
 
-            if(isset($value->shippings) && !count($value->shippings) > 0)
+            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->tracking_number))
             {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
                 $order[$key]['error']['message'][] = 'No Tracking Number Found';
@@ -1294,7 +1294,7 @@ class ShippingController extends Controller
                 else
                 {
                     $order[$key]['error']['type'][] = 'createShippingDocument';
-                    $order[$key]['error']['message'][] = $jsonGetCreateShippingDocument['message'];
+                    $order[$key]['error']['message'][] = $jsonGetCreateShippingDocument['response']['result_list'][0]['fail_message'];
                 }
                 ##########################################
                 ###### end create shipping document ######
