@@ -139,7 +139,7 @@ class ShippingController extends Controller
      */
     public function dhl_label($order_ids)
     {
-
+        
         $url = $this->dhl_label_url;
 
         // filter only selected order shipping not exists
@@ -159,7 +159,6 @@ class ShippingController extends Controller
         $access_tokens = AccessToken::with(['company'])->whereIn('company_id', $companies)->where('type', 'dhl')->get(); // DHL API access token, expires every 24 hours, could be refreshed every 12 hours
 
         $count = 0;
-
         foreach ($access_tokens as $access_token) {
             $data = [];
             $data['labelRequest']['hdr'] = [
@@ -194,7 +193,6 @@ class ShippingController extends Controller
                     'layout' => "1x1",
                 ],
             ];
-
 
 
             foreach ($companies as $company_id) {
@@ -283,14 +281,20 @@ class ShippingController extends Controller
             $json = json_encode($data);
 
             $response = Http::withBody($json, 'application/json')->post($url);
+          
             $dhl_store = $this->dhl_store($orders_dhl, $response);
-
+           
             if ($dhl_store != null) {
+               
+                $dhl_store_content = $dhl_store->getContent();
+                $decode_store_content = json_decode($dhl_store_content, true);
                 return response([
-                    "all_fail" => implode(" . ", collect($dhl_store)->pluck("messageDetail")->toArray())
+                    // "all_fail" => implode(" . ", collect($dhl_store)->pluck("messageDetail")->toArray())
+                    "all_fail" => $decode_store_content
                 ]);
             }
         }
+
 
         if (($failer = Order::doesntHave('shippings')->with([
             'customer', 'items', 'items.product', 'company',
@@ -468,12 +472,13 @@ class ShippingController extends Controller
         $data = [];
         $tracking_no[] = [];
         $json = json_decode($json);
-
+        
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
             if (isset($label->responseStatus)) {
                 if (isset($label->responseStatus->message)) {
                     if ($label->responseStatus->message != "SUCCESS") {
                         if (isset($label->responseStatus->messageDetails)) {
+                           
                             Log::error('DHL Error: ' . $label->shipmentID);
                             return response([
                                 'success' => false,
