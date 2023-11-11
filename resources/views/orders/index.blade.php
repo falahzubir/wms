@@ -1102,7 +1102,12 @@
                     });
                 }).catch(function(error) {
                     // handle error
-                    console.log(error);
+                    Swal.fire({
+                        title: 'Error!',
+                        html: 'Something went wrong Please contact admin',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
                 })
             }
         @endif
