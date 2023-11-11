@@ -1435,8 +1435,11 @@ class ShippingController extends Controller
                 'tracking_no' => $tracking_number['response']['tracking_number'],
             ]);
 
-            Shipping::updateOrCreate([
+            Shipping::updateOrCreate(
+            [
                 'order_id' => $order->id,
+            ],
+            [
                 'tracking_number' => $tracking_number['response']['tracking_number'],
                 'courier' => $order->code,
                 'created_by' => auth()->user()->id ?? 1,
