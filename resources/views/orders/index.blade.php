@@ -1057,6 +1057,15 @@
 
         @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
             document.querySelector('#arrange-shipment-btn').onclick = function() {
+                //add loading to button 
+                Swal.fire({
+                    title: 'Arranging shipment...',
+                    html: 'Please wait while we are arranging shipment for your order(s).',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    },
+                });
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
                 //get checked order
@@ -1093,7 +1102,12 @@
                     });
                 }).catch(function(error) {
                     // handle error
-                    console.log(error);
+                    Swal.fire({
+                        title: 'Error!',
+                        html: 'Something went wrong Please contact admin',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
                 })
             }
         @endif
