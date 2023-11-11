@@ -1389,66 +1389,39 @@ class ShippingController extends Controller
             $detailsJson = json_decode($order_details, true);
             $order_status = $detailsJson['response']['order_list'][0]['order_status'];
 
-            //get tracking number
-            $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
-            if(!empty($tracking_number['error']))
-            {
-                $responseFailed['order_id'][] = $order->id;
-                $responseFailed['message'][] = $tracking_number['message'];
-                continue;
-            }
-            $tracking_number = json_decode($tracking_number, true);
-
-            //get time slot
-            $timeslot = ShopeeTrait::getShippingParameter($order->third_party_sn);
-            if(!empty($timeslot['error']))
-            {
-                $responseFailed['order_id'][] = $order->id;
-                $responseFailed['message'][] = $timeslot['message'];
-                continue;
-            }
-            $timeslot = json_decode($timeslot, true);
-            if(!isset($timeslot['response']['pickup']['address_list'][0]))
-            {
-                $responseFailed['order_id'][] = $order->id;
-                $responseFailed['message'][] = 'No slot time found';
-                continue;
-            }
-            $timeslot = $timeslot['response']['pickup']['address_list'][0];
-            $timeslots = $timeslot['time_slot_list'];
-
-            //get time slot
-            $availablePickupTimes = [];
-            $now = Carbon::now();
-            foreach ($timeslots as $pickupTime) {
-                $pickupDate = Carbon::createFromTimestamp($pickupTime['date']);
-            
-                if ($pickupDate->isAfter($now)) {
-                    // Date is before now, add it to the available pickup times
-                    $availablePickupTimes[] = $pickupTime;
-                }
-            }
-
-            $additional_data = json_encode([
-                'ordersn' => $order->third_party_sn,
-                'package_number' => $detailsJson['response']['order_list'][0]['package_list'][0]['package_number'],
-                'tracking_no' => $tracking_number['response']['tracking_number'],
-            ]);
-
-            Shipping::updateOrCreate(
-            [
-                'order_id' => $order->id,
-            ],
-            [
-                'tracking_number' => $tracking_number['response']['tracking_number'],
-                'courier' => $order->code,
-                'created_by' => auth()->user()->id ?? 1,
-                'additional_data' => $additional_data,
-            ]);
-
             //check order status to arrange shipment
             if($order_status == 'READY_TO_SHIP')
             {
+                //get time slot
+                $timeslot = ShopeeTrait::getShippingParameter($order->third_party_sn);
+                if(!empty($timeslot['error']))
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = $timeslot['message'];
+                    continue;
+                }
+                $timeslot = json_decode($timeslot, true);
+                if(!isset($timeslot['response']['pickup']['address_list'][0]))
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = 'No slot time found';
+                    continue;
+                }
+                $timeslot = $timeslot['response']['pickup']['address_list'][0];
+                $timeslots = $timeslot['time_slot_list'];
+
+                //get time slot
+                $availablePickupTimes = [];
+                $now = Carbon::now();
+                foreach ($timeslots as $pickupTime) {
+                    $pickupDate = Carbon::createFromTimestamp($pickupTime['date']);
+                
+                    if ($pickupDate->isAfter($now)) {
+                        // Date is before now, add it to the available pickup times
+                        $availablePickupTimes[] = $pickupTime;
+                    }
+                }
+
                 $process = ShopeeTrait::shipOrder($order->third_party_sn,$availablePickupTimes[0]['pickup_time_id']);
                 $processJson = json_decode($process, true);
                 if(!empty($processJson['error']))
@@ -1458,12 +1431,64 @@ class ShippingController extends Controller
                     continue;
                 }
 
+                //get tracking number
+                $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
+                if(!empty($tracking_number['error']))
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = $tracking_number['message'];
+                    continue;
+                }
+                $tracking_number = json_decode($tracking_number, true);
+
+                $additional_data = json_encode([
+                    'ordersn' => $order->third_party_sn,
+                    'package_number' => $detailsJson['response']['order_list'][0]['package_list'][0]['package_number'],
+                    'tracking_no' => $tracking_number['response']['tracking_number'],
+                ]);
+
+                Shipping::updateOrCreate([
+                    'order_id' => $order->id
+                ],
+                [
+                    'tracking_number' => $tracking_number['response']['tracking_number'],
+                    'courier' => $order->code,
+                    'created_by' => auth()->user()->id ?? 1,
+                    'additional_data' => $additional_data,
+                ]);
+
                 $responseSuccess[] = $order->id;
                 //update order status to pending shipment
                 set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
             }
             else
             {
+                //get tracking number
+                $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
+                if(!empty($tracking_number['error']))
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = $tracking_number['message'];
+                    continue;
+                }
+                $tracking_number = json_decode($tracking_number, true);
+
+                $additional_data = json_encode([
+                    'ordersn' => $order->third_party_sn,
+                    'package_number' => $detailsJson['response']['order_list'][0]['package_list'][0]['package_number'],
+                    'tracking_no' => $tracking_number['response']['tracking_number'],
+                ]);
+
+                Shipping::updateOrCreate([
+                    'order_id' => $order->id
+                ],
+                [
+                    'tracking_number' => $tracking_number['response']['tracking_number'],
+                    'courier' => $order->code,
+                    'created_by' => auth()->user()->id ?? 1,
+                    'additional_data' => $additional_data,
+                ]);
+
                 $responseProcessing[] = $order->id;
                 set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
             }
