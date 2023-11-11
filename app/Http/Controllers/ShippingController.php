@@ -19,6 +19,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 use App\Http\Traits\ShopeeTrait;
+use Illuminate\Support\Carbon;
 
 class ShippingController extends Controller
 {
@@ -1226,7 +1227,7 @@ class ShippingController extends Controller
         {
             $order[$key]['id'] = $value->id;
 
-            if(isset($value->shippings) && !count($value->shippings) > 0)
+            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->tracking_number))
             {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
                 $order[$key]['error']['message'][] = 'No Tracking Number Found';
@@ -1298,7 +1299,7 @@ class ShippingController extends Controller
                 else
                 {
                     $order[$key]['error']['type'][] = 'createShippingDocument';
-                    $order[$key]['error']['message'][] = $jsonGetCreateShippingDocument['message'];
+                    $order[$key]['error']['message'][] = $jsonGetCreateShippingDocument['response']['result_list'][0]['fail_message'];
                 }
                 ##########################################
                 ###### end create shipping document ######
@@ -1323,10 +1324,26 @@ class ShippingController extends Controller
             ], 200);
         }
 
+        $message .= "Success: ".count($CNS)." generated.<br>";
+
+        if(isset($order) && count($order) > 0)
+        {
+            foreach($order as $key => $value)
+            {
+                if(isset($value['error']['type']) && count($value['error']['type']) > 0)
+                {
+                    foreach($value['error']['type'] as $k => $v)
+                    {
+                        $message .= "Failed: Order ID ".$value['id']." - ".$value['error']['message'][$k]."<br>";
+                    }
+                }
+            }
+        }
+
         return response()->json([
             'success' => false,
-            'message' => 'Failed',
-            'data' => $order
+            'message' => $message,
+            'data' => $CNS ?? ''
         ], 200);
 
     }
@@ -1353,12 +1370,64 @@ class ShippingController extends Controller
 
         foreach($orders as $order)
         {
+            //check third party sn
+            if(empty($order->third_party_sn))
+            {
+                $responseFailed['order_id'][] = $order->id;
+                $responseFailed['message'][] = 'Third party sn not found';
+                continue;
+            }
+
+            //get order status
             $order_details = ShopeeTrait::getOrderDetail($order->third_party_sn);
+            if(!empty($processJson['error']))
+            {
+                $responseFailed['order_id'][] = $order->id;
+                $responseFailed['message'][] = $order_details['message'];
+                continue;
+            }
             $detailsJson = json_decode($order_details, true);
             $order_status = $detailsJson['response']['order_list'][0]['order_status'];
 
+            //get tracking number
             $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
+            if(!empty($tracking_number['error']))
+            {
+                $responseFailed['order_id'][] = $order->id;
+                $responseFailed['message'][] = $tracking_number['message'];
+                continue;
+            }
             $tracking_number = json_decode($tracking_number, true);
+
+            //get time slot
+            $timeslot = ShopeeTrait::getShippingParameter($order->third_party_sn);
+            if(!empty($timeslot['error']))
+            {
+                $responseFailed['order_id'][] = $order->id;
+                $responseFailed['message'][] = $timeslot['message'];
+                continue;
+            }
+            $timeslot = json_decode($timeslot, true);
+            if(!isset($timeslot['response']['pickup']['address_list'][0]))
+            {
+                $responseFailed['order_id'][] = $order->id;
+                $responseFailed['message'][] = 'No slot time found';
+                continue;
+            }
+            $timeslot = $timeslot['response']['pickup']['address_list'][0];
+            $timeslots = $timeslot['time_slot_list'];
+
+            //get time slot
+            $availablePickupTimes = [];
+            $now = Carbon::now();
+            foreach ($timeslots as $pickupTime) {
+                $pickupDate = Carbon::createFromTimestamp($pickupTime['date']);
+            
+                if ($pickupDate->isAfter($now)) {
+                    // Date is before now, add it to the available pickup times
+                    $availablePickupTimes[] = $pickupTime;
+                }
+            }
 
             $additional_data = json_encode([
                 'ordersn' => $order->third_party_sn,
@@ -1377,24 +1446,22 @@ class ShippingController extends Controller
                 'additional_data' => $additional_data,
             ]);
 
+            //check order status to arrange shipment
             if($order_status == 'READY_TO_SHIP')
             {
-                $process = ShopeeTrait::shipOrder($order->third_party_sn);
+                $process = ShopeeTrait::shipOrder($order->third_party_sn,$availablePickupTimes[0]['pickup_time_id']);
                 $processJson = json_decode($process, true);
-                if(empty($processJson['error']))
-                {
-                    $responseSuccess[] = $order->id;
-                    //update order status to pending shipment
-                    set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
-
-                }
-                else
+                if(!empty($processJson['error']))
                 {
                     $responseFailed['order_id'][] = $order->id;
-                    $responseFailed['message'][] = $processJson['error'];
+                    $responseFailed['message'][] = $processJson['message'];
+                    continue;
                 }
-            }
 
+                $responseSuccess[] = $order->id;
+                //update order status to pending shipment
+                set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
+            }
             else
             {
                 $responseProcessing[] = $order->id;
