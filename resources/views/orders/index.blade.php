@@ -1057,6 +1057,15 @@
 
         @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
             document.querySelector('#arrange-shipment-btn').onclick = function() {
+                //add loading to button 
+                Swal.fire({
+                    title: 'Arranging shipment...',
+                    html: 'Please wait while we are arranging shipment for your order(s).',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    },
+                });
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
                 //get checked order
