@@ -108,18 +108,21 @@ class AlternativePostcodeController extends Controller
                     ->orWhere('alternative_postcode.alternative_city', 'like', "%$searchTerm%")
                     ->orWhere('states.name', 'like', "%$searchTerm%");
             });
+
+            // Apply this when user select filter by
+            if ($request->filled('filter_by')) {
+                $filterBy = $request->input('filter_by');
+                $query->where("alternative_postcode.$filterBy", $searchTerm);
+            }
         }
 
-        // if ($request->filled('filter_by')) {
-        //     $filterBy = $request->input('filter_by');
-        //     $query->where('alternative_postcode.actual_city', $filterBy);
-        // }
-
+        // Filter State
         if ($request->filled('filter_state')) {
             $stateFilter = $request->input('filter_state');
             $query->where('states.id', $stateFilter);
         }
 
+        // Filter City
         if ($request->filled('filter_city')) {
             $cityFilter = $request->input('filter_city');
             $query->where('alternative_postcode.actual_city', $cityFilter);

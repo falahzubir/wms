@@ -48,9 +48,10 @@
                             <label>Filter By</label>
                             <select id="filter_by" class="form-select" name="filter_by">
                                 <option selected disabled>Nothing Selected</option>
-                                <option value="actual">Actual Postcode</option>
-                                <option value="alternative">Alternative Postcode</option>
-                                <option value="both">Both</option>
+                                <option value="actual_postcode">Actual Postcode</option>
+                                <option value="actual_city">Actual City</option>
+                                <option value="alternative_postcode">Alternative Postcode</option>
+                                <option value="alternative_city">Alternative City</option>
                             </select>
                         </div>
 
@@ -66,14 +67,7 @@
 
                         <div class="col-md-4">
                             <label>City</label>
-                            <select id="filter_city" class="form-select" name="filter_city">
-                                <option selected disabled>Nothing Selected</option>
-                                @foreach ($alternativePostcodes as $city)
-                                    @if ($city->delete_status == 0)
-                                        <option value="{{ $city->id }}">{{ $city->actual_city }}</option>
-                                    @endif
-                                @endforeach
-                            </select>
+                            <input type="text" class="form-control" name="filter_city" value="{{ old('search') }}">
                         </div>
                         
                         <div class="text-end">
