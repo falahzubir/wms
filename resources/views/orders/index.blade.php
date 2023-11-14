@@ -1121,6 +1121,15 @@
 
         @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
             document.querySelector('#arrange-shipment-btn').onclick = function() {
+                //add loading to button 
+                Swal.fire({
+                    title: 'Arranging shipment...',
+                    html: 'Please wait while we are arranging shipment for your order(s).',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    },
+                });
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
                 //get checked order
@@ -1157,7 +1166,12 @@
                     });
                 }).catch(function(error) {
                     // handle error
-                    console.log(error);
+                    Swal.fire({
+                        title: 'Error!',
+                        html: 'Something went wrong Please contact admin',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
                 })
             }
         @endif
@@ -1190,6 +1204,7 @@
                     type: type,
                 })
                 .then(function(response) {
+
                     let text = "Shipping label generated."
                     if (response.data == 0) {
                         Swal.fire({
@@ -1205,7 +1220,7 @@
                     {
                         Swal.fire({
                             title: 'Error!',
-                            html: `${response.data.message}` ?? "Fail to generate CN",
+                            html: `${response.data.all_fail.message}` ?? "Fail to generate CN",
                             icon: 'error',
                             confirmButtonText: 'OK'
                         })

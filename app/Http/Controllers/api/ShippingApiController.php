@@ -137,8 +137,11 @@ class ShippingApiController extends ShippingController
             ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
             ->first();
 
-        Shipping::updateOrCreate([
+        Shipping::updateOrCreate(
+        [
             'order_id' => $order->id,
+        ],
+        [
             'tracking_number' => $request->tracking_number,
             'courier' => $order->code,
             'created_by' => auth()->user()->id ?? 1,
