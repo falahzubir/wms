@@ -99,6 +99,34 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            <div class="accordion accordion-flush mb-3" id="accordionFlushExample">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="flush-headingTwo">
+                                        <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo"
+                                            aria-expanded="false" aria-controls="flush-collapseTwo">
+                                            Pos Malaysia
+                                        </button>
+                                    </h2>
+                                    <div id="flush-collapseTwo" class="accordion-collapse collapse"
+                                        aria-labelledby="flush-collapseTwo" data-bs-parent="#accordionFlushExample">
+                                        <div class="accordion-body">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <label for="">Client ID</label>
+                                                    <input type="text" id="dhl-client-id" name="posmalaysia_client_id"
+                                                        class="form-control">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label for="">Client Secret</label>
+                                                    <input type="text" id="dhl-client-secret"
+                                                        name="posmalaysia_client_secret" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                     {{-- <div class="accordion-item">
                                         <h2 class="accordion-header" id="flush-headingTwo">
                                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
