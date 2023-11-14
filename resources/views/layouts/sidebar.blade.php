@@ -251,6 +251,12 @@
                     class="nav-content {{ Route::current()->getName() != 'companies.index' ? 'collapsed' : '' }} "
                     data-bs-parent="#sidebar-nav">
                     <li>
+                        <a href="{{ route('alternative_postcode.index') }}"
+                            {{ Route::current()->getName() == 'alternative_postcode.index' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Alternative Postcode</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ route('companies.index') }}"
                             {{ Route::current()->getName() == 'companies.index' ? 'class=active' : '' }}>
                             <i class="bi bi-circle"></i>

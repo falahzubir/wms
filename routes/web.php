@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AlternativePostcodeController;
 use App\Http\Controllers\AccessTokenController;
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
@@ -163,6 +164,14 @@ Route::middleware(['auth'])->group(function() {
     Route::prefix('claims')->group(function() {
         Route::get('/product', [ClaimController::class, 'index_product'])->name('claims.product.index');
         Route::get('/courier', [ClaimController::class, 'index_courier'])->name('claims.courier.index');
+    });
+
+    Route::prefix('alternative_postcode')->group(function() {
+        Route::get('/', [AlternativePostcodeController::class, 'index'])->name('alternative_postcode.index');
+        Route::post('save', [AlternativePostcodeController::class, 'store'])->name('alternative_postcode.save');
+        Route::post('update', [AlternativePostcodeController::class, 'update'])->name('alternative_postcode.update');
+        Route::get('delete/{id}', [AlternativePostcodeController::class, 'destroy'])->name('alternative_postcode.delete');
+        Route::get('/search', [AlternativePostcodeController::class, 'handleSearch'])->name('search');
     });
 
 });
