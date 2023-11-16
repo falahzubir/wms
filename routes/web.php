@@ -13,7 +13,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserController;
 use App\Models\Company;
@@ -165,6 +165,8 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/courier', [ClaimController::class, 'index_courier'])->name('claims.courier.index');
     });
 
+    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
     Route::get('live', fn () => view('live'));
