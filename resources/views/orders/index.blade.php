@@ -1323,6 +1323,7 @@
                     }
                 })
                 .then(function(res) {
+                    console.log(res);
                     if(!res.data.status || typeof res.data.download_url !== "undefined") {
                         Swal.fire({
                             title: 'Error!',
