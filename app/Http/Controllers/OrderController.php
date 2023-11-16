@@ -406,6 +406,20 @@ class OrderController extends Controller
         $order = Order::updateOrCreate($ids, $data);
         $p_ids['order_id'] = $order->id;
 
+        //create shipping for shopee and tiktok
+        $sosMed = [22,23];
+        if(in_array($order->payment_type, $sosMed))
+        {
+            Shipping::updateOrCreate(
+            [
+                'order_id' => $order->id,
+            ],
+            [
+                'created_by' => auth()->user()->id ?? 1,
+                'additional_data' => $webhook['additional_data'] ?? null,
+            ]);
+        }
+
         // create order item
         // group product by code
         $product_list = array_reduce($webhook['product'], function ($result, $item) {
