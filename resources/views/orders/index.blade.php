@@ -1323,12 +1323,10 @@
                     }
                 })
                 .then(function(res) {
-                    console.log(res.data.status);
-                    if(!res.data.status){
-                        console.log(res.data.error);
+                    if(!res.data.status || typeof res.data.download_url !== "undefined") {
                         Swal.fire({
                             title: 'Error!',
-                            html: res.data.error ?? "Fail to generate CN",
+                            html: res.data.error ?? "Fail to download CN",
                             icon: 'error',
                             confirmButtonText: 'OK'
                         })
