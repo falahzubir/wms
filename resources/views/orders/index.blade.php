@@ -72,6 +72,16 @@
             box-shadow: 1px 1px 0px 0px #cecece;
         }
 
+        .swal2-dhl-ecommerce {
+            background-color: #FFCC00;
+            color: #D40510;
+        }
+
+        .swal2-posmalaysia {
+            background-color: #fff;
+            color: #FF0000;
+        }
+
         .swal2-tiktok {
             background-color: #000;
             color: #fff;
@@ -318,7 +328,7 @@
                                         </div> --}}
                                     </td>
                                     <td class="text-start">
-                                        
+
                                         @if ($order->courier_id = DHL_ID && !is_digit_count($order->customer->postcode, 5))
                                             <div class="badge bg-danger text-wrap">
                                                 Postcode Error
@@ -735,6 +745,13 @@
             'tiktok' : 'TikTok'
         };
 
+        let generate_cn_couriers = {
+            'dhl-ecommerce' : 'DHL Ecommerce',
+            'posmalaysia' : 'POS Malaysia',
+            'shopee' : 'Shopee',
+            'tiktok' : 'TikTok'
+        };
+
         document.querySelector('#filter-order').onclick = function() {
             document.querySelector('#order-table').style.display = 'block';
         }
@@ -863,22 +880,50 @@
                 })
                 return;
             }
-                //confirmation to generate cn
-                Swal.fire({
-                    title: 'Are you sure to generate shipping label?',
-                    html: `You are about to generate shipping label for ${checkedValue} order(s).`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, generate it!',
-                    footer: '<small>Note: Order with existing Consignment Note will be ignored.</small>',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        generateCN();
-                    }
-                })
-            }
+
+            //sweetalert courier options
+            Swal.fire({
+                title: 'Please select courier!',
+                html: `
+                <div class="swal2-actins" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="swal2-loader"></div>
+                    ${Object.keys(generate_cn_couriers).map((key) => {
+                        return `<button type="button" class="swal2-custom swal2-${key} swal2-styled" style="display: inline-block;"
+                            aria-label="" onclick="conformationDownloadCN('${key}', '${checkedValue}')" >
+                            ${generate_cn_couriers[key]}
+                            </button>`;
+                    }).join('')}
+                    </div>
+                </div>
+                `,
+                showCancelButton: true,
+                showConfirmButton: false,
+
+            })
+
+        }
+
+        const conformationDownloadCN = (type,checkedValue) => {
+
+            Swal.fire({
+                title: `Are you sure to generate ${generate_cn_couriers[type]} shipping label?`,
+                html: `You are about to generate shipping label for ${checkedValue} order(s).`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, generate it!',
+                footer: '<small>Note: Order with existing Consignment Note will be ignored.</small>',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Please select courier!',
+
+                    })
+                    generateCN(type);
+                }
+            })
+        }
         @endif
 
         @if (in_array(ACTION_APPROVE_AS_SHIPPED, $actions))
@@ -1102,7 +1147,7 @@
                         checkedOrder.push(input.value);
                     }
                 });
-                
+
                 //sweetalert platform options
                 Swal.fire({
                     title: 'Please select platform!',
@@ -1126,7 +1171,7 @@
         @endif
 
 
-        async function generateCN() {
+        async function generateCN(type) {
             //show loading modal
             Swal.fire({
                 title: 'Generating shipping label...',
@@ -1150,9 +1195,9 @@
 
             axios.post('/api/request-cn', {
                     order_ids: checkedOrder,
+                    type: type,
                 })
                 .then(function(response) {
-
                     let text = "Shipping label generated."
                     if (response.data == 0) {
                         Swal.fire({
@@ -1168,7 +1213,7 @@
                     {
                         Swal.fire({
                             title: 'Error!',
-                            html: `${response.data.all_fail.message}` ?? "Fail to generate CN",
+                            html: `${response.data.message}` ?? "Fail to generate CN",
                             icon: 'error',
                             confirmButtonText: 'OK'
                         })
@@ -1202,29 +1247,28 @@
                         }
                     }
 
-                    Swal.fire({
-                        title: 'Success!',
-                        text: text,
-                        icon: 'success',
-                        confirmButtonText: 'Download',
-                        showCancelButton: true,
-                        cancelButtonText: 'Ok',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            download_cn(checkedOrder)
-                        } else {
-                            location.reload();
-                        }
-                    });
-                })
-                .catch(function(error) {
-                    // handle error
-                    console.log(error);
-                })
-                .then(function() {
-                    // always executed
+                Swal.fire({
+                    title: 'Success!',
+                    text: text,
+                    icon: 'success',
+                    confirmButtonText: 'Download',
+                    showCancelButton: true,
+                    cancelButtonText: 'Ok',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        download_cn(checkedOrder)
+                    } else {
+                        location.reload();
+                    }
                 });
-
+            })
+            .catch(function(error) {
+                // handle error
+                console.log(error);
+            })
+            .then(function() {
+                // always executed
+            });
         } //end of generateCN
 
         function approveAsShipped(checkedOrders) {
@@ -1279,7 +1323,7 @@
                     }
                 })
                 .then(function(res) {
-                    
+
                     if(res.data.status && res.data.status == false){
                         Swal.fire({
                             title: 'Error!',
@@ -1834,7 +1878,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
 
-                    // add loading to button 
+                    // add loading to button
                     Swal.fire({
                         title: 'Arranging shipment...',
                         html: 'Please wait while we are arranging shipment for your order(s).',

@@ -75,19 +75,28 @@ class ShippingController extends Controller
 
         $data['created_by'] = auth()->user()->id ?? 1;
 
-        //check order from which third party shopee
-        $ordersShopee = Order::with(['shippings'])
-        ->select('payment_type','id')
-        ->whereIn('id', $request->order_ids)
-        ->where('payment_type', 22)
-        ->get();
-
-        if(count($ordersShopee) > 0){
-            return $this->generateShopeeCN($ordersShopee);
-        }
-        else{
-            return $this->dhl_label($request->order_ids); // for dhl orders
-        }
+        switch($request->input('type')):
+            case('dhl-ecommerce'):
+                return $this->dhl_label($request->order_ids);
+                break;
+            case('shopee'):
+                return $this->generateShopeeCN($request->order_ids);
+                break;
+            case('tiktok'):
+                return $this->generateTiktokCN($request->order_ids);
+                break;
+            case('posmalaysia'):
+                return $this->posmalaysia_cn($request->order_ids);
+                break;
+            case('ninjavan'):
+                return $this->ninjavan_cn($request->order_ids);
+                break;
+            default:
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid courier type',
+                ], 400);
+        endswitch;
     }
 
     /**
@@ -140,7 +149,7 @@ class ShippingController extends Controller
      */
     public function dhl_label($order_ids)
     {
-        
+
         $url = $this->dhl_label_url;
 
         // filter only selected order shipping not exists
@@ -282,11 +291,11 @@ class ShippingController extends Controller
             $json = json_encode($data);
 
             $response = Http::withBody($json, 'application/json')->post($url);
-          
+
             $dhl_store = $this->dhl_store($orders_dhl, $response);
-           
+
             if ($dhl_store != null) {
-               
+
                 $dhl_store_content = $dhl_store->getContent();
                 $decode_store_content = json_decode($dhl_store_content, true);
                 return response([
@@ -473,13 +482,13 @@ class ShippingController extends Controller
         $data = [];
         $tracking_no[] = [];
         $json = json_decode($json);
-        
+
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
             if (isset($label->responseStatus)) {
                 if (isset($label->responseStatus->message)) {
                     if ($label->responseStatus->message != "SUCCESS") {
                         if (isset($label->responseStatus->messageDetails)) {
-                           
+
                             Log::error('DHL Error: ' . $label->shipmentID);
                             return response([
                                 'success' => false,
@@ -1218,8 +1227,14 @@ class ShippingController extends Controller
         return $newOrders;
     }
 
-    public function generateShopeeCN($orders)
+    public function generateShopeeCN($orderIds)
     {
+        $orders = Order::with(['shippings'])
+        ->select('payment_type','id')
+        ->whereIn('id', $orderIds)
+        ->where('payment_type', 22)
+        ->get();
+
         $order = [];
         $CNS = [];
         $message = '';
@@ -1228,7 +1243,7 @@ class ShippingController extends Controller
         {
             $order[$key]['id'] = $value->id;
 
-            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->tracking_number))
+            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings[0]->tracking_number))
             {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
                 $order[$key]['error']['message'][] = 'No Tracking Number Found';
@@ -1349,6 +1364,19 @@ class ShippingController extends Controller
 
     }
 
+    public function generateTiktokCN($orderIds)
+    {
+        $orders = Order::with(['shippings'])
+        ->select('payment_type','id')
+        ->whereIn('id', $orderIds)
+        ->where('payment_type', 23)
+        ->get();
+
+        $order = [];
+        $CNS = [];
+        $message = '';
+    }
+
     public function arrange_shipment(Request $request)
     {
         $responseSuccess = [];
@@ -1391,7 +1419,7 @@ class ShippingController extends Controller
                     $responseFailed['message'][] = 'Third party sn not found';
                     continue;
                 }
-    
+
                 //get order status
                 $order_details = ShopeeTrait::getOrderDetail($order->third_party_sn);
                 $detailsJson = json_decode($order_details, true);
@@ -1402,7 +1430,7 @@ class ShippingController extends Controller
                     continue;
                 }
                 $order_status = $detailsJson['response']['order_list'][0]['order_status'];
-    
+
                 //check order status to arrange shipment
                 if($order_status == 'READY_TO_SHIP')
                 {
@@ -1424,19 +1452,19 @@ class ShippingController extends Controller
                     }
                     $timeslot = $timeslot['response']['pickup']['address_list'][0];
                     $timeslots = $timeslot['time_slot_list'];
-    
+
                     //get time slot
                     $availablePickupTimes = [];
                     $now = Carbon::now();
                     foreach ($timeslots as $pickupTime) {
                         $pickupDate = Carbon::createFromTimestamp($pickupTime['date']);
-                    
+
                         if ($pickupDate->isAfter($now)) {
                             // Date is before now, add it to the available pickup times
                             $availablePickupTimes[] = $pickupTime;
                         }
                     }
-    
+
                     $process = ShopeeTrait::shipOrder($order->third_party_sn,$availablePickupTimes[0]['pickup_time_id']);
                     $processJson = json_decode($process, true);
                     if(!empty($processJson['error']))
@@ -1445,7 +1473,7 @@ class ShippingController extends Controller
                         $responseFailed['message'][] = $processJson['message'];
                         continue;
                     }
-    
+
                     //get tracking number
                     $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
                     $tracking_number = json_decode($tracking_number, true);
@@ -1460,7 +1488,7 @@ class ShippingController extends Controller
                         'package_number' => $detailsJson['response']['order_list'][0]['package_list'][0]['package_number'],
                         'tracking_no' => $tracking_number['response']['tracking_number'],
                     ]);
-    
+
                     Shipping::updateOrCreate([
                         'order_id' => $order->id
                     ],
@@ -1470,7 +1498,7 @@ class ShippingController extends Controller
                         'created_by' => auth()->user()->id ?? 1,
                         'additional_data' => $additional_data,
                     ]);
-    
+
                     $responseSuccess[] = $order->id;
                     //update order status to pending shipment
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
@@ -1491,7 +1519,7 @@ class ShippingController extends Controller
                         'package_number' => $detailsJson['response']['order_list'][0]['package_list'][0]['package_number'],
                         'tracking_no' => $tracking_number['response']['tracking_number'],
                     ]);
-    
+
                     Shipping::updateOrCreate([
                         'order_id' => $order->id
                     ],
@@ -1501,7 +1529,7 @@ class ShippingController extends Controller
                         'created_by' => auth()->user()->id ?? 1,
                         'additional_data' => $additional_data,
                     ]);
-    
+
                     $responseProcessing[] = $order->id;
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
                 }
