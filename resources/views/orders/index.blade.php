@@ -1323,8 +1323,7 @@
                     }
                 })
                 .then(function(res) {
-                    console.log(res);
-                    if(!res.data.status || typeof res.data.download_url !== "undefined") {
+                    if(!res.data.status && res.data.download_url == null){
                         Swal.fire({
                             title: 'Error!',
                             html: res.data.error ?? "Fail to download CN",
