@@ -1375,6 +1375,73 @@ class ShippingController extends Controller
         $order = [];
         $CNS = [];
         $message = '';
+
+        foreach($orders as $key => $value)
+        {
+            $order[$key]['id'] = $value->id;
+            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings[0]->tracking_number))
+            {
+                $order[$key]['error']['type'][] = 'generateTiktokCN';
+                $order[$key]['error']['message'][] = 'No Tracking Number Found';
+                continue;
+            }
+
+            $order[$key]['additional_data'] = json_decode($value->shippings[0]->additional_data, true);
+
+            ###### download shipping document ######
+            $generateCN = TiktokTrait::generateCN($order[$key]['additional_data']);
+            $generateCN = json_decode($generateCN, true);
+
+            if($generateCN['code'] != 0)
+            {
+                $order[$key]['error']['type'][] = 'generateCN';
+                $order[$key]['error']['message'][] = $generateCN['message'];
+                continue;
+            }
+
+            // save to shippings table
+            $shipping = Shipping::where('order_id', $value->id)->first();
+            $shipping->attachment = $generateCN['data']['file_name'];
+            $shipping->save();
+
+            $order[$key]['attachment'] = $generateCN['data']['file_name'];
+            $CNS['order_ids'][] = $value->id;
+            $CNS['attachment'][] = $generateCN['data']['file_name'];
+            #################################################
+            ###### end get shipping document parameter ######
+            #################################################
+        }
+
+        if(isset($CNS) && count($CNS) > 0)
+        {
+            return response()->json([
+                'success' => true,
+                'message' => 'Success',
+                'data' => $CNS
+            ], 200);
+        }
+
+        $message .= "Success: ".count($CNS)." generated.<br>";
+
+        if(isset($order) && count($order) > 0)
+        {
+            foreach($order as $key => $value)
+            {
+                if(isset($value['error']['type']) && count($value['error']['type']) > 0)
+                {
+                    foreach($value['error']['type'] as $k => $v)
+                    {
+                        $message .= "Failed: Order ID ".$value['id']." - ".$value['error']['message'][$k]."<br>";
+                    }
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'data' => $CNS ?? ''
+        ], 200);
     }
 
     public function arrange_shipment(Request $request)

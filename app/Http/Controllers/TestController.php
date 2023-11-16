@@ -34,7 +34,7 @@ class TestController extends Controller
         $resPonse = json_decode($res,true);
         $tracking_number = $resPonse['data']['order_list'][0]['order_line_list'][0]['tracking_number'];
         $package_number = $resPonse['data']['order_list'][0]['package_list'][0]['package_id'];
-        dd($package_number);
+        // dd($package_number);
 
         // $res = '{
         //     "package_list": [

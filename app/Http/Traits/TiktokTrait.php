@@ -4,6 +4,7 @@ namespace App\Http\Traits;
 
 use App\Models\AccessToken;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Carbon;
 
 ### Tiktok Order Status
 // - UNPAID = 100;
@@ -20,7 +21,7 @@ Trait TiktokTrait
     public static function getAccessToken($shop_id)
     {
         $date = date('Y-m-d H:i:s');
-        
+
         $accessToken = AccessToken::where('type', 'tiktok')->where('additional_data->shop_id',$shop_id)->first();
         if($accessToken){
             $token = $accessToken->token;
@@ -54,7 +55,7 @@ Trait TiktokTrait
             'Signature' => hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
         ])
         ->post($url.'/api/get_tokenTiktok', $json);
-        
+
         $response = json_decode($response, true);
 
         if(isset($response['token'])){
@@ -89,7 +90,7 @@ Trait TiktokTrait
 
         //Wrap string generated in step 3 with app_secret.
         $sign = $app_secret . $sign . $app_secret;
-        
+
         //hmac-sha256
         $sign = hash_hmac('sha256', $sign, $app_secret);
 
@@ -111,11 +112,11 @@ Trait TiktokTrait
             'timestamp' => $timestamp,
             // Include all the necessary parameters for signing
         ];
-        
+
         $order_id['order_id_list'][] = $params['order_id'];
 
         $sign = self::getSign($info_sign, TIKTOK_APP_SECRET, $action);
-  
+
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp;
 
         $curl = curl_init();
@@ -166,11 +167,11 @@ Trait TiktokTrait
         $order_id['pick_up_type'] = 1;
 
         $sign = self::getSign($info_sign, TIKTOK_APP_SECRET, $action);
-  
+
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&package_id='.$params['package_id'];
 
         $curl = curl_init();
-    
+
         curl_setopt_array($curl, array(
             CURLOPT_URL => $curl_url,
             CURLOPT_RETURNTRANSFER => true,
@@ -186,7 +187,7 @@ Trait TiktokTrait
         ));
 
         $response = curl_exec($curl);
-        
+
         curl_close($curl);
         return $response;
     }
@@ -214,11 +215,11 @@ Trait TiktokTrait
         $order_id['pick_up_type'] = 1;
 
         $sign = self::getSign($info_sign, TIKTOK_APP_SECRET, $action);
-  
+
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&package_id='.$params['package_id'];
 
         $curl = curl_init();
-    
+
         curl_setopt_array($curl, array(
             CURLOPT_URL => $curl_url,
             CURLOPT_RETURNTRANSFER => true,
@@ -234,7 +235,7 @@ Trait TiktokTrait
         ));
 
         $response = curl_exec($curl);
-        
+
         curl_close($curl);
         return $response;
     }
@@ -263,11 +264,11 @@ Trait TiktokTrait
         $order_id['pick_up_type'] = 1;
 
         $sign = self::getSign($info_sign, TIKTOK_APP_SECRET, $action);
-  
+
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&package_id='.$params['package_id'].'&pick_up_type=1';
 
         $curl = curl_init();
-    
+
         curl_setopt_array($curl, array(
             CURLOPT_URL => $curl_url,
             CURLOPT_RETURNTRANSFER => true,
@@ -286,9 +287,9 @@ Trait TiktokTrait
         $response = curl_exec($curl);
 
         curl_close($curl);
-        
+
         return $response;
-        
+
     }
 
     public static function batchShipOrder($params)
@@ -312,11 +313,11 @@ Trait TiktokTrait
         $order_id['package_list'][] = $params['package_id'];
 
         $sign = self::getSign($info_sign, TIKTOK_APP_SECRET, $action);
-  
+
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp;
 
         $curl = curl_init();
-    
+
         curl_setopt_array($curl, array(
             CURLOPT_URL => $curl_url,
             CURLOPT_RETURNTRANSFER => true,
@@ -335,9 +336,9 @@ Trait TiktokTrait
         $response = curl_exec($curl);
 
         curl_close($curl);
-        
+
         return $response;
-        
+
     }
 
     public static function generateCNJugak($params)
@@ -360,13 +361,13 @@ Trait TiktokTrait
             'document_size' => 0,
             // Include all the necessary parameters for signing
         ];
-        
+
         $sign = self::getSign($info_sign, TIKTOK_APP_SECRET, $action);
-  
+
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&package_id='.$params['package_id'].'&document_type=1&document_size=0';
 
         $curl = curl_init();
-    
+
         curl_setopt_array($curl, array(
             CURLOPT_URL => $curl_url,
             CURLOPT_RETURNTRANSFER => true,
@@ -382,9 +383,9 @@ Trait TiktokTrait
         $response = curl_exec($curl);
 
         curl_close($curl);
-        
+
         $response = json_decode($response,true);
-        
+
         return $response;
     }
 
@@ -403,17 +404,17 @@ Trait TiktokTrait
             'app_key' => TIKTOK_APP_KEY,
             'timestamp' => $timestamp,
             'shop_id' => $shop_id,
-            'order_id' => $params['order_id'],
+            'order_id' => $params['ordersn'],
             'document_type' => 'SHIPPING_LABEL'
             // Include all the necessary parameters for signing
         ];
-        
+
         $sign = self::getSign($info_sign, TIKTOK_APP_SECRET, $action);
-  
-        $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&order_id='.$params['order_id'].'&document_type=SHIPPING_LABEL';
+
+        $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&order_id='.$params['ordersn'].'&document_type=SHIPPING_LABEL';
 
         $curl = curl_init();
-    
+
         curl_setopt_array($curl, array(
             CURLOPT_URL => $curl_url,
             CURLOPT_RETURNTRANSFER => true,
@@ -429,9 +430,61 @@ Trait TiktokTrait
         $response = curl_exec($curl);
 
         curl_close($curl);
-        
+
         $response = json_decode($response,true);
-    
-        return $response;
+
+        try {
+
+            if($response['code'] != 0)
+            {
+                return json_encode([
+                    'code' => $response['code'],
+                    'message' => $response['message']
+                ]);
+            }
+
+            //download file to storage
+            $file_name = 'tiktok/'.Carbon::now()->format('YmdHis').'_'.$params['ordersn'].'.pdf';
+            $file_path = storage_path('app/public/'.$file_name);
+
+            $ch = curl_init($response['data']['doc_url']);
+
+            // Set cURL options
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            // Execute cURL session and get the content
+            $fileContent = curl_exec($ch);
+
+            // Check for cURL errors
+            if (curl_errno($ch)) {
+                return json_encode([
+                    'code' => 500,
+                    'message' => 'Failed to download file (1)'
+                ]);
+            }
+            curl_close($ch);
+
+            file_put_contents($file_path, $fileContent);
+
+            return json_encode([
+                'code' => 0,
+                'message' => 'Success',
+                'data' => [
+                    'file_name' => $file_name
+                ]
+            ]);
+
+        } catch (\Throwable $th) {
+
+            return json_encode([
+                'code' => 500,
+                'message' => 'Failed to download file (2)'
+            ]);
+        }
+
+        return json_encode([
+            'code' => 500,
+            'message' => 'Failed to download file (3)'
+        ]);
     }
 }
