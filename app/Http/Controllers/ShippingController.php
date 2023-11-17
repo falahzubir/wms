@@ -562,14 +562,20 @@ class ShippingController extends Controller
             });
         $attachments = $attachments->pluck('attachment')->toArray();
 
-        if (isset($attachments) && empty($attachments[0])) {
-            return response()->json(['status' => false,'error' => 'No attachment found']);
+        // Filter out null values
+        $filteredAttachments = array_filter($attachments, function ($attachment) {
+            return !is_null($attachment);
+        });
+
+        // Check if there are any attachments after filtering
+        if (empty($filteredAttachments)) {
+            return response()->json(['status' => false, 'error' => 'No attachment found']);
         }
 
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
         $file_path = public_path('generated_labels/' . $filename);
 
-        $pdf_merge = ShopeeTrait::downloadPDF($attachments);
+        $pdf_merge = ShopeeTrait::downloadPDF($filteredAttachments);
 
         if(!$pdf_merge){
             return response()->json(['status' => false,'error' => 'Error in generating PDF']);
