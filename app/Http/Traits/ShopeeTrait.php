@@ -7,12 +7,12 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
-trait ShopeeTrait 
+trait ShopeeTrait
 {
     public static function getAccessToken()
     {
         $date = date('Y-m-d H:i:s');
-        
+
         $accessToken = AccessToken::where('type', 'shopee')->first();
 
         if($accessToken){
@@ -46,7 +46,7 @@ trait ShopeeTrait
             'Signature' => hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
         ])
         ->post($url.'/api/get_tokenShopee', $json);
-        
+
         $response = json_decode($response, true);
         //update access token
         $access_token = AccessToken::where('type', 'shopee')->first();
@@ -84,7 +84,7 @@ trait ShopeeTrait
         $response_optional_field = "buyer_user_id,buyer_username,recipient_address,item_list,total_amount,shipping_carrier,estimated_shipping_fee,pay_time,package_list,fulfillment_flag";
 
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
+
         $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp."&order_sn_list=".$order_list."&response_optional_fields=".$response_optional_field;
 
         $ch = curl_init();
@@ -115,7 +115,7 @@ trait ShopeeTrait
         $timestamp = strtotime($current_time);
 
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
+
         $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp."&order_sn=".$order_sn;
 
         $curl = curl_init();
@@ -137,7 +137,7 @@ trait ShopeeTrait
         $response = curl_exec($curl);
 
         curl_close($curl);
-        
+
         return $response;
     }
 
@@ -153,7 +153,7 @@ trait ShopeeTrait
         $timestamp = strtotime($current_time);
 
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
+
         $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp."&order_sn=".$order_sn."&package_number=-";
 
         $curl = curl_init();
@@ -191,7 +191,7 @@ trait ShopeeTrait
         $timestamp = strtotime($current_time);
 
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
+
         $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp."&order_sn=".$order_sn."&package_number=-";
 
         $curl = curl_init();
@@ -213,7 +213,7 @@ trait ShopeeTrait
         $response = curl_exec($curl);
 
         curl_close($curl);
-        
+
         return $response;
     }
 
@@ -229,9 +229,9 @@ trait ShopeeTrait
         $timestamp = strtotime($current_time);
 
         $address_id = 200007694;
-        
+
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
+
         $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
 
         $curl = curl_init();
@@ -257,9 +257,9 @@ trait ShopeeTrait
             'Content-Type: application/json'
           ),
         ));
-        
+
         $response = curl_exec($curl);
-        
+
         return $response;
     }
 
@@ -277,7 +277,7 @@ trait ShopeeTrait
         $timestamp = strtotime($current_time);
 
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
+
         $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
 
         $curl = curl_init();
@@ -307,11 +307,11 @@ trait ShopeeTrait
         $response = curl_exec($curl);
 
         curl_close($curl);
-        
+
         return $response;
     }
 
-    public static function createShippingDocument($data) 
+    public static function createShippingDocument($data)
     {
         $accessToken = $accessToken = self::getAccessToken();
         $host = "https://partner.shopeemobile.com";
@@ -323,7 +323,7 @@ trait ShopeeTrait
         $timestamp = strtotime($current_time);
 
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
+
         $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
 
         $curl = curl_init();
@@ -371,7 +371,7 @@ trait ShopeeTrait
         $timestamp = strtotime($current_time);
 
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
+
         $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
 
         $curl = curl_init();
@@ -393,7 +393,7 @@ trait ShopeeTrait
                     "shipping_document_type": "'.$data['shipping_document_type'].'"
                 }
             ]
-        }',        
+        }',
         CURLOPT_HTTPHEADER => array(
             'Content-Type: application/json'
         ),
@@ -417,7 +417,7 @@ trait ShopeeTrait
         $timestamp = strtotime($current_time);
 
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
+
         $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
 
         $curl = curl_init();
@@ -457,7 +457,7 @@ trait ShopeeTrait
 
             return $file_name;
         } catch (\Throwable $th) {
-            
+
             return false;
         }
 
@@ -472,7 +472,7 @@ trait ShopeeTrait
         foreach ($file['files'] as $key => $value) {
             $file['files'][$key] = env('APP_URL').'/storage/'.$value;
         }
-        
+
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -489,11 +489,11 @@ trait ShopeeTrait
             'Content-Type: application/json'
           ),
         ));
-        
+
         $response = curl_exec($curl);
-        
+
         curl_close($curl);
-        
+
         $file = json_decode($response, true);
 
         if(isset($file['message']) && $file['message'] == 'success')
