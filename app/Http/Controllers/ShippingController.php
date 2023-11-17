@@ -572,16 +572,28 @@ class ShippingController extends Controller
             return response()->json(['status' => false, 'error' => 'No attachment found']);
         }
 
-        $filename = 'CN_' . date('Ymd_His') . '.pdf';
-        $file_path = public_path('generated_labels/' . $filename);
+        $pdf = PDFMerger::init();
 
-        $pdf_merge = ShopeeTrait::downloadPDF($filteredAttachments);
+        foreach ($filteredAttachments as $attachment) {
+            if (!file_exists(storage_path('app/public/' . $attachment))) {
+                continue;
+            }
 
-        if(!$pdf_merge){
-            return response()->json(['status' => false,'error' => 'Error in generating PDF']);
+            if (!is_file(storage_path('app/public/' . $attachment))) {
+                continue;
+            }
+
+            if (file_get_contents(storage_path('app/public/' . $attachment)) == "") {
+                continue;
+            }
+
+            $pdf->addPDF(storage_path('app/public/' . $attachment));
         }
-        file_put_contents($file_path, base64_decode($pdf_merge));
 
+        $filename = 'CN_' . date('Ymd_His') . '.pdf';
+        $pdf->merge();
+        $pdf->save(public_path('generated_labels/' . $filename), 'file');
+        //download
         return response()->json(['download_url' => '/generated_labels/' . $filename]);
     }
 
