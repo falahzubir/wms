@@ -28,8 +28,6 @@
         }
     </style>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.9.0/dist/sweetalert2.min.css">
-
     <section class="section">
 
         <div class="row">
@@ -41,18 +39,7 @@
                     <!-- Filter Card -->
                     <form class="row g-3" action="{{ route('search') }}" method="GET">
                         <div class="col-md-12">
-                            <input type="text" class="form-control" placeholder="Search" name="search" value="{{ old('search') }}">
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <label>Filter By</label>
-                            <select id="filter_by" class="form-select" name="filter_by">
-                                <option selected disabled>Nothing Selected</option>
-                                <option value="actual_postcode">Actual Postcode</option>
-                                <option value="actual_city">Actual City</option>
-                                <option value="alternative_postcode">Alternative Postcode</option>
-                                <option value="alternative_city">Alternative City</option>
-                            </select>
+                            <input type="text" class="form-control" placeholder="Search" name="search" @if (isset($searchTerm)) value="{{ $searchTerm }}" @endif>
                         </div>
 
                         <div class="col-md-4">
@@ -60,14 +47,11 @@
                             <select id="filter_state" class="form-select" name="filter_state">
                                 <option selected disabled>Nothing Selected</option>
                                 @foreach ($states as $state)
-                                    <option value="{{ $state->id }}">{{ $state->name }}</option>
+                                    <option value="{{ $state->id }}" {{ isset($stateFilter) == $state->id ? 'selected' : '' }}>
+                                        {{ $state->name }}
+                                    </option>
                                 @endforeach
                             </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label>City</label>
-                            <input type="text" class="form-control" name="filter_city" value="{{ old('search') }}">
                         </div>
                         
                         <div class="text-end">
@@ -148,7 +132,7 @@
     <div class="modal fade" id="addNew">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <form method="POST" action="{{ route('alternative_postcode.save') }}">
+                <form id="addForm" method="POST" action="{{ route('alternative_postcode.save') }}">
                     @csrf
                     <!-- Modal Header -->
                     <div class="modal-header">
@@ -163,10 +147,12 @@
                                 <label>State: </label>
                             </div>
                             <div class="col-md-10">
-                                <select id="state" class="form-select" name="state">
+                                <select id="add-state" class="form-select" name="state">
                                     <option selected disabled>Nothing Selected</option>
                                     @foreach ($states as $state)
-                                        <option value="{{ $state->id }}">{{ $state->name }}</option>
+                                        <option value="{{ $state->id }}" {{ old('state') == $state->id ? 'selected' : '' }}>
+                                            {{ $state->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 @error('state')
@@ -179,7 +165,7 @@
                             <div class="col-md-5">
                                 <div class="col-md-12 mb-5 text-center">
                                     <label>Actual Postcode: </label>
-                                    <input type="text" name="actual_postcode" class="form-control mt-2" value="{{ old('actual_postcode') }}">
+                                    <input type="text" name="actual_postcode" class="form-control mt-2" value="{{ old('actual_postcode') }}" required>
                                     @error('actual_postcode')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -187,7 +173,7 @@
     
                                 <div class="col-md-12 text-center">
                                     <label>Actual City: </label>
-                                    <input type="text" name="actual_city" class="form-control mt-2" value="{{ old('actual_city') }}">
+                                    <input type="text" name="actual_city" class="form-control mt-2" value="{{ old('actual_city') }}" required>
                                     @error('actual_city')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -199,9 +185,9 @@
                             </div>
     
                             <div class="col-md-5">
-                                <div class="col-md-12 mb-5">
+                                <div class="col-md-12 mb-5 text-center">
                                     <label>Alternative Postcode: </label>
-                                    <input type="text" name="alternative_postcode" class="form-control mt-2" value="{{ old('alternative_postcode') }}">
+                                    <input type="text" name="alternative_postcode" class="form-control mt-2" value="{{ old('alternative_postcode') }}" required>
                                     @error('alternative_postcode')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -209,7 +195,7 @@
     
                                 <div class="col-md-12 text-center">
                                     <label>Alternative City: </label>
-                                    <input type="text" name="alternative_city" class="form-control mt-2" value="{{ old('alternative_city') }}">
+                                    <input type="text" name="alternative_city" class="form-control mt-2" value="{{ old('alternative_city') }}" required>
                                     @error('alternative_city')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -221,7 +207,7 @@
                     <!-- Modal footer -->
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="submit" class="btn btn-primary" onclick="submitForm()">Submit</button>
                     </div>
                 </form>
             </div>
@@ -232,7 +218,7 @@
     <div class="modal fade" id="editPostcode">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <form method="POST" action="{{ route('alternative_postcode.update') }}">
+                <form id="editForm" method="POST" action="{{ route('alternative_postcode.update') }}">
                     @csrf
                     <!-- Modal Header -->
                     <div class="modal-header">
@@ -250,10 +236,12 @@
                                 <label>State: </label>
                             </div>
                             <div class="col-md-10">
-                                <select id="state" class="form-select" name="state">
+                                <select id="edit-state" class="form-select" name="state">
                                     <option id="value_from_db" value="" selected>Select State</option>
                                     @foreach ($states as $state)
-                                        <option value="{{ $state->id }}">{{ $state->name }}</option>
+                                        <option value="{{ $state->id }}" {{ old('state') == $state->id ? 'selected' : '' }}>
+                                            {{ $state->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 @error('state')
@@ -266,7 +254,7 @@
                             <div class="col-md-5">
                                 <div class="col-md-12 mb-5 text-center">
                                     <label>Actual Postcode: </label>
-                                    <input type="text" name="actual_postcode" id="actual_postcode" class="form-control mt-2" value="{{ old('actual_postcode') }}">
+                                    <input type="text" name="actual_postcode" id="actual_postcode" class="form-control mt-2" value="{{ old('actual_postcode') }}" required>
                                     @error('actual_postcode')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -274,7 +262,7 @@
     
                                 <div class="col-md-12 text-center">
                                     <label>Actual City: </label>
-                                    <input type="text" name="actual_city" id="actual_city" class="form-control mt-2" value="{{ old('actual_city') }}">
+                                    <input type="text" name="actual_city" id="actual_city" class="form-control mt-2" value="{{ old('actual_city') }}" required>
                                     @error('actual_city')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -286,9 +274,9 @@
                             </div>
     
                             <div class="col-md-5">
-                                <div class="col-md-12 mb-5">
+                                <div class="col-md-12 mb-5 text-center">
                                     <label>Alternative Postcode: </label>
-                                    <input type="text" name="alternative_postcode" id="alternative_postcode" class="form-control mt-2" value="{{ old('alternative_postcode') }}">
+                                    <input type="text" name="alternative_postcode" id="alternative_postcode" class="form-control mt-2" value="{{ old('alternative_postcode') }}" required>
                                     @error('alternative_postcode')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -296,7 +284,7 @@
     
                                 <div class="col-md-12 text-center">
                                     <label>Alternative City: </label>
-                                    <input type="text" name="alternative_city" id="alternative_city" class="form-control mt-2" value="{{ old('alternative_city') }}">
+                                    <input type="text" name="alternative_city" id="alternative_city" class="form-control mt-2" value="{{ old('alternative_city') }}" required>
                                     @error('alternative_city')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -308,7 +296,7 @@
                     <!-- Modal footer -->
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="submit" class="btn btn-primary" onclick="editForm()">Save</button>
                     </div>
                 </form>
             </div>
@@ -318,12 +306,36 @@
     <x-slot name="script">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
         <script src="https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.9.0/dist/sweetalert2.all.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-        {{-- Handle Edit Button --}}
         <script>
-            // Listen for the click event on the "Edit" button
+            // Handle Sumbit Modal
+            function submitForm() {
+                // Use JavaScript to validate the form before submitting
+                var form = document.getElementById('addForm');
+                var stateSelect = document.getElementById('add-state');
+
+                if (form.checkValidity() && stateSelect.value !== '') {
+                    // If the form is valid, submit it
+                    form.submit();
+                } else {
+                    // If the form is invalid, display an error alert and retain the entered values
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to add new Alternative Postcode!',
+                        text: 'All fields are required!',
+                    });
+
+                    // Retain the entered values in the form fields
+                    form.querySelectorAll('[name]').forEach(function(element) {
+                        if (element.type !== 'select-one') {
+                            element.value = element.value.trim();
+                        }
+                    });
+                }
+            }
+
+            // Handle Edit Modal
             $(document).on('click', '.edit-postcode', function () {
                 // Capture data attributes from the clicked button
                 var id = $(this).data('id');
@@ -347,10 +359,34 @@
                 // Show the modal
                 $('#editPostcode').modal('show');
             });
-        </script>
 
-        {{-- Handle Delete Button --}}
-        <script>
+            // Handle Submit Edit
+            function editForm() {
+                var form = document.getElementById('editForm');
+                var stateSelect = document.getElementById('edit-state');
+
+                if (form.checkValidity() && stateSelect.value !== '') {
+                    // If the form is valid, submit it
+                    form.submit();
+                } else {
+                    // If the form is invalid, display an error alert and retain the entered values
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to edit Alternative Postcode!',
+                        text: 'All fields are required!',
+                    });
+
+                    // Retain the entered values in the form fields
+                    form.querySelectorAll('[name]').forEach(function(element) {
+                        if (element.type !== 'select-one') {
+                            element.value = element.value.trim();
+                        }
+                    });
+                }
+                }
+       
+
+            // Handle Delete Button
             $('.delete-link').on('click', function (e) {
                 e.preventDefault();
                 const deleteLink = $(this);
@@ -373,26 +409,5 @@
                 });
             });
         </script>
-
-        @if(session('success'))
-            <script>
-                Swal.fire({
-                    title: {{ session('success') }},
-                    icon: "success"
-                });
-            </script>
-        @endif
-
-        @if ($errors->any())
-            @foreach ($errors->all() as $error)
-                <script>
-                    Swal.fire({
-                        title: "Failed To Add New Alternative Postcode!",
-                        text: {{ $error }}
-                        icon: "error"
-                    });
-                </script>
-            @endforeach
-        @endif
     </x-slot>
 </x-layout>
