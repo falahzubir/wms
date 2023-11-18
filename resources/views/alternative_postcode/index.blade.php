@@ -47,7 +47,7 @@
                             <select id="filter_state" class="form-select" name="filter_state">
                                 <option selected disabled>Nothing Selected</option>
                                 @foreach ($states as $state)
-                                    <option value="{{ $state->id }}" {{ isset($stateFilter) == $state->id ? 'selected' : '' }}>
+                                    <option value="{{ $state->id }}" {{ isset($stateFilter) && $state->id == $stateFilter ? 'selected' : '' }}>
                                         {{ $state->name }}
                                     </option>
                                 @endforeach
