@@ -40,7 +40,7 @@ class AlternativePostcodeController extends Controller
             ]);
 
             // Check if a record with the same actual_postcode already exists
-            $existingRecord = AlternativePostcode::where('actual_postcode', $request->input('actual_postcode'))->first();
+            $existingRecord = AlternativePostcode::where('actual_postcode', $request->input('actual_postcode'))->where('delete_status', 0)->first();
 
             if ($existingRecord) {
                 // Record already exists, throw a validation exception
@@ -85,6 +85,17 @@ class AlternativePostcodeController extends Controller
                 'alternative_postcode' => 'required',
                 'alternative_city' => 'required',
             ]);
+
+            // Check if a record with the same actual_postcode already exists
+            $existingRecord = AlternativePostcode::where('actual_postcode', $request->input('actual_postcode'))->where('delete_status', 0)->first();
+
+            if ($existingRecord) {
+                // Record already exists, throw a validation exception
+                Alert::error('Error', 'The actual postcode already exists in the database.');
+        
+                // Redirect back
+                return redirect()->back();
+            }
     
             $id = $request->id;
     

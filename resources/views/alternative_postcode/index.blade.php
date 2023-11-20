@@ -148,7 +148,7 @@
                             </div>
                             <div class="col-md-10">
                                 <select id="add-state" class="form-select" name="state">
-                                    <option selected disabled>Nothing Selected</option>
+                                    <option selected disabled value="0">Nothing Selected</option>
                                     @foreach ($states as $state)
                                         <option value="{{ $state->id }}" {{ old('state') == $state->id ? 'selected' : '' }}>
                                             {{ $state->name }}
@@ -315,11 +315,11 @@
                 var form = document.getElementById('addForm');
                 var stateSelect = document.getElementById('add-state');
 
-                if (form.checkValidity() && stateSelect.value !== '') {
-                    // If the form is valid, submit it
+                if (form.checkValidity() && stateSelect.value !== '0') {
+                    // If the form is valid and the selected value is not 0, submit it
                     form.submit();
                 } else {
-                    // If the form is invalid, display an error alert and retain the entered values
+                    // If the form is invalid or the selected value is 0, display an error alert and retain the entered values
                     Swal.fire({
                         icon: 'error',
                         title: 'Failed to add new Alternative Postcode!',
@@ -332,6 +332,10 @@
                             element.value = element.value.trim();
                         }
                     });
+
+                    // Prevent the default form submission
+                    event.preventDefault();
+                    event.stopPropagation();
                 }
             }
 
