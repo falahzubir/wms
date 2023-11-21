@@ -477,14 +477,19 @@ class OrderController extends Controller
         //check if duplicate by phone
         if(config('settings.detect_by_phone') == 1){
             //get all addresses from orders with address id as array index
-            $phones = $orders->whereHas('customer', function ($q) use ($cur_customer) {
-                $q->where('phone', $cur_customer->phone)
-                    ->orWhere('phone_2', $cur_customer->phone)
-                    ->orWhere('phone', $cur_customer->phone_2)
-                    ->orWhere('phone_2', $cur_customer->phone_2);
+            $phones = [];
+            if($cur_customer->phone != null){
+                $phones[] = $cur_customer->phone;
+            }
+            if($cur_customer->phone_2 != null){
+                $phones[] = $cur_customer->phone_2;
+            }
+            $phone = $orders->whereHas('customer', function ($q) use ($phones) {
+                $q->whereIn('phone', $phones)
+                    ->orWhereIn('phone_2', $phones);
             })->get();
-            if(count($phones) > 0){
-                foreach($phones as $order){
+            if(count($phone) > 0){
+                foreach($phone as $order){
                     $duplicate_phone[] = $order;
                 }
             }
