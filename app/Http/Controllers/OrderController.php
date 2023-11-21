@@ -455,7 +455,9 @@ class OrderController extends Controller
             return false;
         }
 
-        $orders = Order::with('customer')->where('processed_at', '>=', Carbon::now()->subSeconds(config('settings.detection_time')))->whereNot('id', $cur_order->id);
+        $orders = Order::with('customer')
+            ->where('processed_at', '>=', Carbon::now()->subSeconds(config('settings.detection_time')))
+            ->whereNot('id', $cur_order->id);
 
         $duplicate_address = [];
         $duplicate_phone = [];
@@ -507,6 +509,8 @@ class OrderController extends Controller
                     $order->duplicate_orders = implode(',', $array);
                     $order->save();
                 }
+                $cur_order->duplicate_orders = implode(',', $array);
+                $cur_order->save();
                 return true;
             }
             return false;
@@ -519,6 +523,8 @@ class OrderController extends Controller
                     $order->duplicate_orders = implode(',', $array);
                     $order->save();
                 }
+                $cur_order->duplicate_orders = implode(',', $array);
+                $cur_order->save();
                 return true;
             }
             return false;
@@ -533,6 +539,8 @@ class OrderController extends Controller
                         $order->duplicate_orders = implode(',', $array);
                         $order->save();
                     }
+                    $cur_order->duplicate_orders = implode(',', $array);
+                    $cur_order->save();
                     return true;
                 }
                 return false;
@@ -547,6 +555,8 @@ class OrderController extends Controller
                         $order->duplicate_orders = implode(',', $array);
                         $order->save();
                     }
+                    $cur_order->duplicate_orders = implode(',', $array);
+                    $cur_order->save();
                     return true;
                 }
                 return false;
