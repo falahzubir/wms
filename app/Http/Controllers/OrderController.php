@@ -428,7 +428,7 @@ class OrderController extends Controller
             OrderItem::updateOrCreate($p_ids, $product_data);
         }
             if ($order->wasRecentlyCreated) {
-                $this->duplicate_order($customer, $order);
+                $this->check_duplicate($customer, $order);
                 set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
             } else {
                 if($order->status == ORDER_STATUS_REJECTED){
