@@ -1,0 +1,65 @@
+{
+    "error": "",
+    "message": "",
+    "response": {
+        "info_needed": {
+            "dropoff": [],
+            "pickup": ["address_id", "pickup_time_id"]
+        },
+        "dropoff": { "branch_list": null, "slug_list": null },
+        "pickup": {
+            "address_list": [
+                {
+                    "address_id": 200007694,
+                    "region": "MY",
+                    "state": "Kedah",
+                    "city": "Kuala Muda",
+                    "district": "",
+                    "town": "",
+                    "address": "Lot 3, Ground Floor, SP Plaza, Jalan Ibrahim",
+                    "zipcode": "08000",
+                    "address_flag": [
+                        "default_address",
+                        "pickup_address",
+                        "return_address"
+                    ],
+                    "time_slot_list": [
+                        { "date": 1698134400, "pickup_time_id": "1698134400" },
+                        { "date": 1698220800, "pickup_time_id": "1698220800" }
+                    ]
+                },
+                {
+                    "address_id": 109136881,
+                    "region": "MY",
+                    "state": "Kedah",
+                    "city": "Kuala Muda",
+                    "district": "Sungai Petani",
+                    "town": "",
+                    "address": "H-1, Persiaran 2/1 Kedah Halal Park, Sungai Petani",
+                    "zipcode": "08000",
+                    "address_flag": [],
+                    "time_slot_list": [
+                        { "date": 1698134400, "pickup_time_id": "1698134400" },
+                        { "date": 1698220800, "pickup_time_id": "1698220800" }
+                    ]
+                },
+                {
+                    "address_id": 200002618,
+                    "region": "MY",
+                    "state": "Kedah",
+                    "city": "Kuala Muda",
+                    "district": "",
+                    "town": "",
+                    "address": "B1-4, PERSIARAN 3/1, KEDAH HALAL PARK, 08000 SUNGAI PETANI, KEDAH",
+                    "zipcode": "08000",
+                    "address_flag": [],
+                    "time_slot_list": [
+                        { "date": 1698134400, "pickup_time_id": "1698134400" },
+                        { "date": 1698220800, "pickup_time_id": "1698220800" }
+                    ]
+                }
+            ]
+        }
+    },
+    "request_id": "2975e86a0a23137e0a49663872a6d821"
+}

@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+use App\Http\Traits\ShopeeTrait;
+use Illuminate\Support\Carbon;
 
 class ShippingController extends Controller
 {
@@ -72,9 +74,19 @@ class ShippingController extends Controller
 
         $data['created_by'] = auth()->user()->id ?? 1;
 
-        // OrderLog::create($data);
+        //check order from which third party shopee
+        $ordersShopee = Order::with(['shippings'])
+        ->select('payment_type','id')
+        ->whereIn('id', $request->order_ids)
+        ->where('payment_type', 22)
+        ->get();
 
-        return $this->dhl_label($request->order_ids); // for dhl orders
+        if(count($ordersShopee) > 0){
+            return $this->generateShopeeCN($ordersShopee);
+        }
+        else{
+            return $this->dhl_label($request->order_ids); // for dhl orders
+        }
     }
 
     /**
@@ -127,7 +139,7 @@ class ShippingController extends Controller
      */
     public function dhl_label($order_ids)
     {
-
+        
         $url = $this->dhl_label_url;
 
         // filter only selected order shipping not exists
@@ -147,7 +159,6 @@ class ShippingController extends Controller
         $access_tokens = AccessToken::with(['company'])->whereIn('company_id', $companies)->where('type', 'dhl')->get(); // DHL API access token, expires every 24 hours, could be refreshed every 12 hours
 
         $count = 0;
-
         foreach ($access_tokens as $access_token) {
             $data = [];
             $data['labelRequest']['hdr'] = [
@@ -182,7 +193,6 @@ class ShippingController extends Controller
                     'layout' => "1x1",
                 ],
             ];
-
 
 
             foreach ($companies as $company_id) {
@@ -271,14 +281,20 @@ class ShippingController extends Controller
             $json = json_encode($data);
 
             $response = Http::withBody($json, 'application/json')->post($url);
+          
             $dhl_store = $this->dhl_store($orders_dhl, $response);
-
+           
             if ($dhl_store != null) {
+               
+                $dhl_store_content = $dhl_store->getContent();
+                $decode_store_content = json_decode($dhl_store_content, true);
                 return response([
-                    "all_fail" => implode(" . ", collect($dhl_store)->pluck("messageDetail")->toArray())
+                    // "all_fail" => implode(" . ", collect($dhl_store)->pluck("messageDetail")->toArray())
+                    "all_fail" => $decode_store_content
                 ]);
             }
         }
+
 
         if (($failer = Order::doesntHave('shippings')->with([
             'customer', 'items', 'items.product', 'company',
@@ -294,7 +310,9 @@ class ShippingController extends Controller
             ]);
         }
 
-        return true;
+        return response([
+            "success" => $orders_dhl->count() . " order(s) cn generated successfully."
+        ]);
     }
 
     /**
@@ -454,14 +472,18 @@ class ShippingController extends Controller
         $data = [];
         $tracking_no[] = [];
         $json = json_decode($json);
-
+        
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
             if (isset($label->responseStatus)) {
                 if (isset($label->responseStatus->message)) {
                     if ($label->responseStatus->message != "SUCCESS") {
                         if (isset($label->responseStatus->messageDetails)) {
+                           
                             Log::error('DHL Error: ' . $label->shipmentID);
-                            return $label->responseStatus->messageDetails;
+                            return response([
+                                'success' => false,
+                                'message' => $label->responseStatus->messageDetails[0]->messageDetail . '. Shipment ID: ' . $label->shipmentID
+                            ]);
                         }
                     }
                 }
@@ -539,9 +561,20 @@ class ShippingController extends Controller
                 return array_search($model->order_id, $sorted_order_id);
             });
         $attachments = $attachments->pluck('attachment')->toArray();
+
+        // Filter out null values
+        $filteredAttachments = array_filter($attachments, function ($attachment) {
+            return !is_null($attachment);
+        });
+
+        // Check if there are any attachments after filtering
+        if (empty($filteredAttachments)) {
+            return response()->json(['status' => false, 'error' => 'No attachment found']);
+        }
+
         $pdf = PDFMerger::init();
 
-        foreach ($attachments as $attachment) {
+        foreach ($filteredAttachments as $attachment) {
             if (!file_exists(storage_path('app/public/' . $attachment))) {
                 continue;
             }
@@ -1200,5 +1233,299 @@ class ShippingController extends Controller
         }
 
         return $newOrders;
+    }
+
+    public function generateShopeeCN($orders)
+    {
+        $order = [];
+        $CNS = [];
+        $message = '';
+
+        foreach($orders as $key => $value)
+        {
+            $order[$key]['id'] = $value->id;
+
+            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->tracking_number))
+            {
+                $order[$key]['error']['type'][] = 'generateShopeeCN';
+                $order[$key]['error']['message'][] = 'No Tracking Number Found';
+                continue;
+            }
+
+            $order[$key]['additional_data'] = json_decode($value->shippings[0]->additional_data, true);
+
+            ###### start get shipping document parameter ######
+            $getShippingDocumentParameter = ShopeeTrait::getShippingDocumentParameter($order[$key]['additional_data']);
+            $jsonGetShippingDocumentParameter = json_decode($getShippingDocumentParameter, true);
+
+            if(empty($jsonGetShippingDocumentParameter['error']))
+            {
+                $order[$key]['additional_data']['shipping_document_type'] = $jsonGetShippingDocumentParameter['response']['result_list'][0]['suggest_shipping_document_type'];
+
+                ############################################
+                ###### start create shipping document ######
+                ############################################
+                $getCreateShippingDocument = ShopeeTrait::createShippingDocument($order[$key]['additional_data']);
+                $jsonGetCreateShippingDocument = json_decode($getCreateShippingDocument, true);
+
+                if(empty($jsonGetCreateShippingDocument['error']))
+                {
+                    ###############################################
+                    ###### start get shipping document result #####
+                    ###############################################
+                    $getShippingDocument = ShopeeTrait::getShippingDocumentResult($order[$key]['additional_data']);
+                    $jsonGetShippingDocument = json_decode($getShippingDocument, true);
+
+                    if(empty($jsonGetShippingDocument['error']))
+                    {
+                        $order[$key]['additional_data']['shipping_document_status'] = $jsonGetShippingDocument['response']['result_list'][0]['status'];
+
+                        #######################################
+                        ###### start generate_cn ##############
+                        #######################################
+                        $getDownloadShippingDocument = ShopeeTrait::downloadShippingDocument($order[$key]['additional_data']);
+
+                        if($getDownloadShippingDocument)
+                        {
+                            //save to shippings table
+                            $shipping = Shipping::where('order_id', $value->id)->first();
+                            $shipping->attachment = $getDownloadShippingDocument;
+                            $shipping->save();
+
+                            $order[$key]['attachment'] = $getDownloadShippingDocument;
+                            $CNS['order_ids'][] = $value->id;
+                            $CNS['attachment'][] = $getDownloadShippingDocument;
+                        }
+                        else
+                        {
+                            $order[$key]['error']['type'][] = 'downloadShippingDocument';
+                            $order[$key]['error']['message'][] = 'Failed to download shipping document';
+                        }
+                        #####################################
+                        ###### end generate_cn ##############
+                        #####################################
+                    }
+                    else
+                    {
+                        $order[$key]['error']['type'][] = 'getShippingDocumentResult';
+                        $order[$key]['error']['message'][] = $jsonGetShippingDocument['message'];
+                    }
+                    #############################################
+                    ###### end get shipping document result ######
+                    #############################################
+                }
+                else
+                {
+                    $order[$key]['error']['type'][] = 'createShippingDocument';
+                    $order[$key]['error']['message'][] = $jsonGetCreateShippingDocument['response']['result_list'][0]['fail_message'];
+                }
+                ##########################################
+                ###### end create shipping document ######
+                ##########################################
+            }
+            else
+            {
+                $order[$key]['error']['type'][] = 'generateShopeeCN';
+                $order[$key]['error']['message'][] = $jsonGetShippingDocumentParameter['message'];
+            }
+            #################################################
+            ###### end get shipping document parameter ######
+            #################################################
+        }
+
+        if(isset($CNS) && count($CNS) > 0)
+        {
+            return response()->json([
+                'success' => true,
+                'message' => 'Success',
+                'data' => $CNS
+            ], 200);
+        }
+
+        $message .= "Success: ".count($CNS)." generated.<br>";
+
+        if(isset($order) && count($order) > 0)
+        {
+            foreach($order as $key => $value)
+            {
+                if(isset($value['error']['type']) && count($value['error']['type']) > 0)
+                {
+                    foreach($value['error']['type'] as $k => $v)
+                    {
+                        $message .= "Failed: Order ID ".$value['id']." - ".$value['error']['message'][$k]."<br>";
+                    }
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'data' => $CNS ?? ''
+        ], 200);
+
+    }
+
+    public function arrange_shipment(Request $request)
+    {
+        $responseSuccess = [];
+        $responseProcessing = [];
+        $responseFailed = [];
+        $message = '';
+        $data = $request->validate([
+            'order_ids' => 'required',
+        ]);
+
+        $data['created_by'] = auth()->user()->id ?? 1;
+
+        // check order from which third party shopee
+        $orders = Order::with(['shippings'])
+        ->select('orders.payment_type','orders.id','orders.third_party_sn','couriers.code')
+        ->whereIn('orders.id', $request->order_ids)
+        ->where('orders.payment_type', 22)
+        ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
+        ->get();
+
+        foreach($orders as $order)
+        {
+            //check third party sn
+            if(empty($order->third_party_sn))
+            {
+                $responseFailed['order_id'][] = $order->id;
+                $responseFailed['message'][] = 'Third party sn not found';
+                continue;
+            }
+
+            //get order status
+            $order_details = ShopeeTrait::getOrderDetail($order->third_party_sn);
+            if(!empty($processJson['error']))
+            {
+                $responseFailed['order_id'][] = $order->id;
+                $responseFailed['message'][] = $order_details['message'];
+                continue;
+            }
+            $detailsJson = json_decode($order_details, true);
+            $order_status = $detailsJson['response']['order_list'][0]['order_status'];
+
+            //check order status to arrange shipment
+            if($order_status == 'READY_TO_SHIP')
+            {
+                //get time slot
+                $timeslot = ShopeeTrait::getShippingParameter($order->third_party_sn);
+                if(!empty($timeslot['error']))
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = $timeslot['message'];
+                    continue;
+                }
+                $timeslot = json_decode($timeslot, true);
+                if(!isset($timeslot['response']['pickup']['address_list'][0]))
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = 'No slot time found';
+                    continue;
+                }
+                $timeslot = $timeslot['response']['pickup']['address_list'][0];
+                $timeslots = $timeslot['time_slot_list'];
+
+                //get time slot
+                $availablePickupTimes = [];
+                $now = Carbon::now();
+                foreach ($timeslots as $pickupTime) {
+                    $pickupDate = Carbon::createFromTimestamp($pickupTime['date']);
+                
+                    if ($pickupDate->isAfter($now)) {
+                        // Date is before now, add it to the available pickup times
+                        $availablePickupTimes[] = $pickupTime;
+                    }
+                }
+
+                $process = ShopeeTrait::shipOrder($order->third_party_sn,$availablePickupTimes[0]['pickup_time_id']);
+                $processJson = json_decode($process, true);
+                if(!empty($processJson['error']))
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = $processJson['message'];
+                    continue;
+                }
+
+                //get tracking number
+                $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
+                if(!empty($tracking_number['error']))
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = $tracking_number['message'];
+                    continue;
+                }
+                $tracking_number = json_decode($tracking_number, true);
+
+                $additional_data = json_encode([
+                    'ordersn' => $order->third_party_sn,
+                    'package_number' => $detailsJson['response']['order_list'][0]['package_list'][0]['package_number'],
+                    'tracking_no' => $tracking_number['response']['tracking_number'],
+                ]);
+
+                Shipping::updateOrCreate([
+                    'order_id' => $order->id
+                ],
+                [
+                    'tracking_number' => $tracking_number['response']['tracking_number'],
+                    'courier' => $order->code,
+                    'created_by' => auth()->user()->id ?? 1,
+                    'additional_data' => $additional_data,
+                ]);
+
+                $responseSuccess[] = $order->id;
+                //update order status to pending shipment
+                set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
+            }
+            else
+            {
+                //get tracking number
+                $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
+                if(!empty($tracking_number['error']))
+                {
+                    $responseFailed['order_id'][] = $order->id;
+                    $responseFailed['message'][] = $tracking_number['message'];
+                    continue;
+                }
+                $tracking_number = json_decode($tracking_number, true);
+
+                $additional_data = json_encode([
+                    'ordersn' => $order->third_party_sn,
+                    'package_number' => $detailsJson['response']['order_list'][0]['package_list'][0]['package_number'],
+                    'tracking_no' => $tracking_number['response']['tracking_number'],
+                ]);
+
+                Shipping::updateOrCreate([
+                    'order_id' => $order->id
+                ],
+                [
+                    'tracking_number' => $tracking_number['response']['tracking_number'],
+                    'courier' => $order->code,
+                    'created_by' => auth()->user()->id ?? 1,
+                    'additional_data' => $additional_data,
+                ]);
+
+                $responseProcessing[] = $order->id;
+                set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
+            }
+        }
+
+        $message .= "Success: ".count($responseSuccess)." order.<br>Already Processed/Shipped: ".count($responseProcessing)." orders.<br>";
+
+        if(isset($responseFailed['order_id']) && count($responseFailed['order_id']) > 0)
+        {
+           foreach($responseFailed['order_id'] as $key => $value)
+           {
+               $message .= "Failed: Order ID ".$value." - ".$responseFailed['message'][$key]."<br>";
+           }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => ''
+        ], 200);
     }
 }

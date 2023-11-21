@@ -1,0 +1,16 @@
+{
+    "error": "",
+    "message": "",
+    "response": {
+        "result_list": [
+            {
+                "order_sn": "231019C39312N7",
+                "package_number": "OFG151415844220402",
+                "suggest_shipping_document_type": "THERMAL_AIR_WAYBILL",
+                "selectable_shipping_document_type": ["THERMAL_AIR_WAYBILL"]
+            }
+        ]
+    },
+    "warning": null,
+    "request_id": "144d68ff15892a1b4859f11f11215721"
+}
