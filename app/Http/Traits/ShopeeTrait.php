@@ -217,7 +217,7 @@ trait ShopeeTrait
         return $response;
     }
 
-    public static function shipOrder($order_sn)
+    public static function shipOrder($order_sn,$pickup_time_id)
     {
         $accessToken = $accessToken = self::getAccessToken();
         $host = "https://partner.shopeemobile.com";
@@ -229,23 +229,6 @@ trait ShopeeTrait
         $timestamp = strtotime($current_time);
 
         $address_id = 200007694;
-        //check if time is before 11 am, then pickup time today else pickup time tomorrow
-        $now = Carbon::now();
-        if ($now->isWeekend()) 
-        {
-            // If today is Saturday or Sunday, set pickup time for Monday at 4:00 PM
-            $pickup_time_id = $now->next(Carbon::MONDAY)->setTime(16, 0, 0)->timestamp;
-        } 
-        elseif ($now->hour < 11) 
-        {
-            // If it's a weekday and the current time is before 11 AM, set pickup time today at 4:00 PM
-            $pickup_time_id = $now->setTime(16, 0, 0)->timestamp;
-        } 
-        else 
-        {
-            // If it's a weekday and the current time is 11 AM or later, set pickup time tomorrow at 4:00 PM
-            $pickup_time_id = $now->addDay()->setTime(16, 0, 0)->timestamp;
-        }
         
         $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
         

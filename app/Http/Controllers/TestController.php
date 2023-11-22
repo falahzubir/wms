@@ -14,8 +14,8 @@ class TestController extends Controller
         // $address_id = '200007694';
         // $pickup_time_id = '231024QX6B35H2';
         // $res = ShopeeTrait::getOrderDetail($order_sn);
-        // $res = ShopeeTrait::getShippingParameter($order_sn);
-        $res = ShopeeTrait::createShippingDocument($order_sn);
+        $res = ShopeeTrait::getShippingParameter('2311097221EU5E');
+        // $res = ShopeeTrait::createShippingDocument($order_sn);
         // $res = ShopeeTrait::getTrackingNumber($order_sn);
         // $res = ShopeeTrait::getTrackingNumber($order_sn);
         dd(json_decode($res));

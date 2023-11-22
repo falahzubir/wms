@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
+use App\Models\OrderEvent;
 
 class OrderController extends Controller
 {
@@ -72,7 +73,7 @@ class OrderController extends Controller
             ];
         }
         if (!in_array(ORDER_FILTER_SALES_EVENT, $exclude)) {
-            $filter_data['sale_events'] = ApiTrait::getSalesEvent();
+            $filter_data['sale_events'] = OrderEvent::get();
         }
         if (!in_array(ORDER_FILTER_TEAM, $exclude)) {
             $filter_data['teams'] = true; //http request
@@ -373,7 +374,6 @@ class OrderController extends Controller
         }
 
         $company_id = Company::where('code', $webhook['company'])->first()->id;
-
         // $operational_model = OperationalModel::where('id', $webhook['operation_model_id'])->first();
         // if ($operational_model->default_company_id != null) {
         //     $company_id = $operational_model->default_company_id;
@@ -398,8 +398,31 @@ class OrderController extends Controller
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
         $data['third_party_sn'] = $webhook['third_party_sn'] ?? null;
         $data['is_active'] = IS_ACTIVE;
-
-        $customer = Customer::updateorCreate($webhook['customer']);
+       
+        $data_customer = $webhook['customer'];
+        // dump($data_customer['country'].'=> country');
+        // dump($data_customer['postcode'].'=>postcode length');
+        // dump(strlen($data_customer['postcode']).'=>postcode length');
+        // dump($data_customer['city'].'=>city');
+        if($data_customer['country'] == 1 || $data_customer['country'] == 2){
+            if(strlen($data_customer['postcode']) > 5 || strlen($data_customer['postcode']) < 5){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
+                return;
+            }
+        }elseif($data_customer['country'] == 3){
+            if(strlen($data_customer['postcode']) > 6 || strlen($data_customer['postcode']) < 6){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
+                return;
+            }
+        }
+        
+        if($data_customer['city'] == null){
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
+            return;
+        }
+        
+        $customer = Customer::updateorCreate($data_customer);
+        
         $data['customer_id'] = $customer->id;
 
         $order = Order::updateOrCreate($ids, $data);
@@ -417,6 +440,8 @@ class OrderController extends Controller
             return $result;
         }, array());
         OrderItem::where('order_id', $order->id)->update(['status' => 0]);
+
+        // dd($product_list);
         foreach ($product_list as $product) {
             $p_ids['product_id'] = $products[$product['code']];
             $product_data['price'] = $product['price'] * 100;
