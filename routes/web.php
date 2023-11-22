@@ -14,7 +14,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserController;
 use App\Models\Company;
@@ -174,8 +174,12 @@ Route::middleware(['auth'])->group(function() {
         Route::get('selected-coverage', [CourierController::class, 'selectedcoverage'])->name('couriers.selectedCoverage');
         Route::get('default-coverage', [CourierController::class, 'defaultcoverage'])->name('couriers.defaultCoverage');
     });
+
+    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
+Route::get('live', fn () => view('live'));
 
 Route::get('notifications', [NotificationController::class, 'list']);
 
@@ -204,45 +208,13 @@ Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
             Artisan::call('migrate:rollback', ['--force' => true]);
             return 'Rollback ran successfully!';
         }
-});
-
-    Route::get('live', fn () => view('live'));
-
-    Route::get('notifications', [NotificationController::class, 'list']);
-
-    Route::get('dhl-access-token', [ShippingController::class, 'dhl_generate_access_token']);
-
-    Auth::routes();
-
-    Route::middleware(['auth', 'role:user'])->group(function() {
-        Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     });
 
-    Route::middleware(['auth', 'role:admin'])->group(function() {
-        // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-    });
-
-    //migration for dev purpose only
-    Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
-        Route::get('run-migration', function () {
-            // if(config('app.env')=="local"){
-                Artisan::call('migrate', ['--force' => true]);
-                return 'Migrations ran successfully!';
-            // }
-        });
-        Route::get('rollback-migration', function () {
-            if(config('app.env')=="local"){
-                Artisan::call('migrate:rollback', ['--force' => true]);
-                return 'Rollback ran successfully!';
-            }
-        });
-
-        Route::get('seed/permission', function () {
-            // if(config('app.env')=="local"){
-                Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder', '--force' => true]);
-                return 'Seeds ran successfully!';
-            // }
-        });
+    Route::get('seed/permission', function () {
+        // if(config('app.env')=="local"){
+            Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder', '--force' => true]);
+            return 'Seeds ran successfully!';
+        // }
     });
 });
 
