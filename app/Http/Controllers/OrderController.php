@@ -374,7 +374,6 @@ class OrderController extends Controller
         }
 
         $company_id = Company::where('code', $webhook['company'])->first()->id;
-
         // $operational_model = OperationalModel::where('id', $webhook['operation_model_id'])->first();
         // if ($operational_model->default_company_id != null) {
         //     $company_id = $operational_model->default_company_id;
@@ -399,8 +398,31 @@ class OrderController extends Controller
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
         $data['third_party_sn'] = $webhook['third_party_sn'] ?? null;
         $data['is_active'] = IS_ACTIVE;
-
-        $customer = Customer::updateorCreate($webhook['customer']);
+       
+        $data_customer = $webhook['customer'];
+        // dump($data_customer['country'].'=> country');
+        // dump($data_customer['postcode'].'=>postcode length');
+        // dump(strlen($data_customer['postcode']).'=>postcode length');
+        // dump($data_customer['city'].'=>city');
+        if($data_customer['country'] == 1 || $data_customer['country'] == 2){
+            if(strlen($data_customer['postcode']) > 5 || strlen($data_customer['postcode']) < 5){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
+                return;
+            }
+        }elseif($data_customer['country'] == 3){
+            if(strlen($data_customer['postcode']) > 6 || strlen($data_customer['postcode']) < 6){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
+                return;
+            }
+        }
+        
+        if($data_customer['city'] == null){
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
+            return;
+        }
+        
+        $customer = Customer::updateorCreate($data_customer);
+        
         $data['customer_id'] = $customer->id;
 
         $order = Order::updateOrCreate($ids, $data);
@@ -418,6 +440,8 @@ class OrderController extends Controller
             return $result;
         }, array());
         OrderItem::where('order_id', $order->id)->update(['status' => 0]);
+
+        // dd($product_list);
         foreach ($product_list as $product) {
             $p_ids['product_id'] = $products[$product['code']];
             $product_data['price'] = $product['price'] * 100;
@@ -428,6 +452,7 @@ class OrderController extends Controller
             OrderItem::updateOrCreate($p_ids, $product_data);
         }
             if ($order->wasRecentlyCreated) {
+                $this->check_duplicate($customer, $order);
                 set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
             } else {
                 if($order->status == ORDER_STATUS_REJECTED){
@@ -443,6 +468,129 @@ class OrderController extends Controller
     }
 
     /**
+     * Check possible duplicate order
+     * @param  object $cur_customer, object $cur_order
+     * @return boolean
+     */
+    public function check_duplicate($cur_customer, $cur_order)
+    {
+        //return if duplicate detection is off
+        if(config('settings.detect_by_phone') == 0 && config('settings.detect_by_address') == 0){
+            return false;
+        }
+
+        $orders = Order::with('customer')
+            ->where('processed_at', '>=', Carbon::now()->subSeconds(config('settings.detection_time')))
+            ->whereNot('id', $cur_order->id);
+
+        $duplicate_address = [];
+        $duplicate_phone = [];
+        $all_duplicate = [];
+
+        //check if duplicate by address
+        if(config('settings.detect_by_address') == 1){
+            $addresses = $orders->get();
+            if(count($addresses) > 0){
+                foreach($addresses as $order){
+                    similar_text(strtoupper($order->customer->address), strtoupper($cur_customer->address), $percent);
+                    if($percent >= config('settings.detect_by_address_percentage')){
+                        $duplicate_address[] = $order;
+                    }
+                }
+            }
+        }
+
+        //check if duplicate by phone
+        if(config('settings.detect_by_phone') == 1){
+            //get all addresses from orders with address id as array index
+            $phones = [];
+            if($cur_customer->phone != null){
+                $phones[] = $cur_customer->phone;
+            }
+            if($cur_customer->phone_2 != null){
+                $phones[] = $cur_customer->phone_2;
+            }
+            $phone = $orders->whereHas('customer', function ($q) use ($phones) {
+                $q->whereIn('phone', $phones)
+                    ->orWhereIn('phone_2', $phones);
+            })->get();
+            if(count($phone) > 0){
+                foreach($phone as $order){
+                    $duplicate_phone[] = $order;
+                }
+            }
+        }
+
+        //return if not duplicate
+        if(count($duplicate_address) == 0 && count($duplicate_phone) == 0){
+            return false;
+        }
+
+        if(config('settings.detect_by_phone') == 1 && config('settings.detect_by_address') == 0){
+            $array = collect($duplicate_phone)->pluck('id')->toArray();
+            if(count($duplicate_phone) > 0){
+                foreach($duplicate_phone as $order){
+                    $order->duplicate_orders = implode(',', $array);
+                    $order->save();
+                }
+                $cur_order->duplicate_orders = implode(',', $array);
+                $cur_order->save();
+                return true;
+            }
+            return false;
+        }
+
+        if(config('settings.detect_by_address') == 1 && config('settings.detect_by_phone') == 0){
+            $array = collect($duplicate_address)->pluck('id')->toArray();
+            if(count($duplicate_address) > 0){
+                foreach($duplicate_address as $order){
+                    $order->duplicate_orders = implode(',', $array);
+                    $order->save();
+                }
+                $cur_order->duplicate_orders = implode(',', $array);
+                $cur_order->save();
+                return true;
+            }
+            return false;
+        }
+
+        if(config('settings.detect_operation_type') == 'OR'){
+            if(config('settings.detect_by_address') == 1 || config('settings.detect_by_phone') == 1){
+                if(count($duplicate_address) > 0 || count($duplicate_phone) > 0){
+                    $all_duplicate = array_merge($duplicate_address, $duplicate_phone);
+                    $array = array_unique(collect($all_duplicate)->pluck('id')->toArray());
+                    foreach($all_duplicate as $order){
+                        $order->duplicate_orders = implode(',', $array);
+                        $order->save();
+                    }
+                    $cur_order->duplicate_orders = implode(',', $array);
+                    $cur_order->save();
+                    return true;
+                }
+                return false;
+            }
+        }
+        else {
+            if(config('settings.detect_by_address') == 1 && config('settings.detect_by_phone') == 1){
+                if(count($duplicate_address) > 0 && count($duplicate_phone) > 0){
+                    $all_duplicate = array_intersect($duplicate_address, $duplicate_phone);
+                    $array = collect($all_duplicate)->pluck('id')->toArray();
+                    foreach($all_duplicate as $order){
+                        $order->duplicate_orders = implode(',', $array);
+                        $order->save();
+                    }
+                    $cur_order->duplicate_orders = implode(',', $array);
+                    $cur_order->save();
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * filter order by request
      *
      * @param  Request $request
@@ -450,6 +598,9 @@ class OrderController extends Controller
      */
     public function filter_order($request, $orders)
     {
+        $orders->when($request->filled('ids'), function ($query) use ($request) {
+            $query->whereIn('id', explode(',', $request->ids));
+        });
         $orders->when($request->filled('bucket_id'), function ($query) use ($request) {
             $query->where('bucket_id', $request->bucket_id);
         });

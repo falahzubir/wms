@@ -64,6 +64,10 @@
             background-color: #FF8244;
         }
 
+        .bg-purple {
+            background-color: purple;
+        }
+
     </style>
 
     <section class="section">
@@ -265,6 +269,11 @@
                                             </div>
                                     </td>
                                     <td class="text-center">
+                                        @unless($order->duplicate_orders == null)
+                                            <div class="badge bg-purple text-wrap" onclick="duplicateModal('{{ $order->duplicate_orders }}')" style="cursor: pointer;">
+                                                Possible Duplicate
+                                            </div>
+                                        @endunless
                                         <div>
                                             <span role="button" class="order-num text-primary" data-sales-id="{{ $order->sales_id }}" data-order-num="{{ order_num_format($order) }}"
                                                 title="Double Click to Copy">
@@ -300,11 +309,18 @@
                                         </div> --}}
                                     </td>
                                     <td class="text-start">
-                                        
-                                        @if ($order->courier_id = DHL_ID && !is_digit_count($order->customer->postcode, 5))
-                                            <div class="badge bg-danger text-wrap">
-                                                Postcode Error
-                                            </div>
+                                        @if($order->courier_id == DHL_ID && ($order->customer->country == 1 || $order->customer->country == 2))
+                                            @if ($order->courier_id == DHL_ID && !is_digit_count($order->customer->postcode, 5))
+                                                <div class="badge bg-danger text-wrap">
+                                                    Postcode Error
+                                                </div>
+                                            @endif
+                                        @elseif($order->courier_id == DHL_ID && $order->customer->country == 3)
+                                            @if ($order->courier_id == DHL_ID && !is_digit_count($order->customer->postcode, 6))
+                                                <div class="badge bg-danger text-wrap">
+                                                    Postcode Error
+                                                </div>
+                                            @endif
                                         @endif
                                         @if (!last_two_digits_zero($order->customer->postcode))
                                             <a href="{{ route('orders.change_postcode_view') }}?sales={{ $order->sales_id }}&company={{ $order->company_id}}&current_postcode={{ $order->customer->postcode }}&redirect_to={{ urlencode(url()->full()) }}" class="badge bg-warning text-wrap text-dark">
@@ -1057,7 +1073,7 @@
 
         @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
             document.querySelector('#arrange-shipment-btn').onclick = function() {
-                //add loading to button 
+                //add loading to button
                 Swal.fire({
                     title: 'Arranging shipment...',
                     html: 'Please wait while we are arranging shipment for your order(s).',
@@ -1799,6 +1815,22 @@
             }else{
                 claim_from.querySelector('option[value="2"]').disabled = false;
             }
+        }
+
+        const duplicateModal = (ids) => {
+            ids = ids.split(',');
+            let count = ids.length;
+            Swal.fire({
+                title: `Possible ${count-1} duplicate order(s) found`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: `View`,
+            })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/orders/overall?ids=${ids}`;
+                }
+            })
         }
 
     </script>
