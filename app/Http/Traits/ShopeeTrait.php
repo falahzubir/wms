@@ -458,6 +458,7 @@ trait ShopeeTrait
             // * convert pdf version to 1.4 using ghostscript
             $new_file_name = 'shopee/'.Carbon::now()->format('YmdHis').'_'.$data['ordersn'].'.pdf';
             $new_file_path = storage_path('app/public/'.$new_file_name);
+            logger('gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile='.$new_file_path.' -dCompatibilityLevel=1.4 '.$file_path);
             exec('gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile='.$new_file_path.' -dCompatibilityLevel=1.4 '.$file_path);
             // ! delete initial file
             unlink($file_path);
