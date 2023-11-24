@@ -459,7 +459,6 @@ trait ShopeeTrait
             $new_file_name = 'shopee/'.Carbon::now()->format('YmdHis').'_'.$data['ordersn'].'.pdf';
             $new_file_path = storage_path('app/public/'.$new_file_name);
             $exec = 'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile='.$new_file_path.' '.$file_path;
-            logger($exec);
             shell_exec($exec);
             // ! delete initial file
             unlink($file_path);
