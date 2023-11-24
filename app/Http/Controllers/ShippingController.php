@@ -1361,6 +1361,7 @@ class ShippingController extends Controller
         return response()->json([
             'success' => false,
             'message' => $message,
+            'all_fail' => ['message' => $message],
             'data' => $CNS ?? ''
         ], 200);
 
