@@ -233,6 +233,26 @@ trait ShopeeTrait
             'Content-Type' => 'application/json',
         ];
 
+        if($method == 'get') {
+            $url = $host . $path;
+
+            $headers = [
+                'Content-Type' => 'application/json',
+            ];
+
+            $response = Http::withHeaders($headers)
+                ->$method($url, array_merge([
+                    'access_token' => $token,
+                    'partner_id' => $partner_id,
+                    'shop_id' => $shop_id,
+                    'sign' => $sign,
+                    'timestamp' => $timestamp,
+                ], $data));
+
+            return $response->body();
+        }
+
+
         $response = Http::withHeaders($headers)->$method($url, $data);
 
         return $response->body();
