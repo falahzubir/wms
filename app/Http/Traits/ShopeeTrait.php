@@ -464,7 +464,7 @@ trait ShopeeTrait
             // ! delete initial file
             unlink($file_path);
 
-            return $file_name;
+            return $new_file_name;
         } catch (\Throwable $th) {
 
             return false;
