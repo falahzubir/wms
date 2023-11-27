@@ -278,6 +278,15 @@ $title = 'List of'. ' ' . $title;
 
             });
 
+            const convert_errors = (errors) => {
+                errors = Object.values(errors.response.data.errors);
+                let html = ''
+                errors.forEach((item, index) => {
+                    html += `<i class="bi bi-dot"></i> ${item[0]}<br>`;
+                });
+                return html;
+            }
+
             const fileInput = document.getElementById('fileInput');
 
             fileInput.addEventListener('change', (event) => {
@@ -298,8 +307,12 @@ $title = 'List of'. ' ' . $title;
 
             // LOAD TABLE SLA
             const loadTableSLA = () => {
-                let form = $('#form-sla').serialize();
-                let response = axios.get('/api/sla/list/' + {{ $courier['id'] }})
+                let search = $(`#form-sla input[name="search"]`).val();
+                let response = axios.get('/api/sla/list/' + {{ $courier['id'] }}, {
+                        params: {
+                            search: search,
+                        }
+                    })
                     .then(function(response) {
                         renderTableSLA(response.data);
                     })
@@ -478,6 +491,7 @@ $title = 'List of'. ' ' . $title;
                 });
 
                 axios.post('/api/sla/check-duplicate/' + {{ $courier['id'] }} + `/${id}`, {
+                    sla_name: $('#slaName').val(),
                     postcode: $('#postcode').val(),
                 })
                 .then(function(response) {
@@ -506,7 +520,7 @@ $title = 'List of'. ' ' . $title;
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Oops...',
-                                text: error.response.data.message,
+                                html: convert_errors(error),
                             })
                         });
                     }
@@ -514,7 +528,7 @@ $title = 'List of'. ' ' . $title;
                     Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
-                        text: error.response.data.message,
+                        html: convert_errors(error),
                     })
                 });
             }
@@ -551,7 +565,11 @@ $title = 'List of'. ' ' . $title;
                         $('#modalAddEditSLA').modal('hide');
                     })
                     .catch(function(error) {
-                        console.log(error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            html: error.response.data.message,
+                        });
                     });
             }
 
@@ -621,7 +639,11 @@ $title = 'List of'. ' ' . $title;
                         })
                     })
                     .catch(function(error) {
-                        console.log(error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            html: convert_errors(error),
+                        });
                     });
             }
 

@@ -217,4 +217,3 @@ Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
         // }
     });
 });
-

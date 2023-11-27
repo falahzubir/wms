@@ -59,7 +59,7 @@ class CourierController extends Controller
         $rules = [
             'courier_name' => 'required | unique:couriers,name,NULL,id,deleted_at,NULL',
             'courier_code' => 'required | unique:couriers,code,NULL,id,deleted_at,NULL',
-            'minimum_attempt' => 'required | integer',
+            'minimum_attempt' => 'required | integer | min:1',
             'status_courier' => 'required | integer',
         ];
 
@@ -439,7 +439,7 @@ class CourierController extends Controller
         $request->validate([
             'courier_id' => 'required | integer | exists:couriers,id',
             'courier_name' => 'required | string',
-            'min_attempt' => 'required | integer',
+            'min_attempt' => 'required | integer | min:1',
         ]);
 
         $courier = Courier::find($request->courier_id);

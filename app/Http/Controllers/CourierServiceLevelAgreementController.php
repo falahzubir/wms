@@ -8,11 +8,17 @@ use Illuminate\Http\Request;
 
 class CourierServiceLevelAgreementController extends Controller
 {
-    public function list($courier)
+    public function list($courier, Request $request)
     {
         $sla_list = CourierServiceLevelAgreement::where('courier_id', $courier)
-            ->orderBy('days', 'asc')
-            ->get();
+            ->orderBy('days', 'asc');
+
+        if($request->has('search') && $request->input('search') != ''){
+            $sla_list = $sla_list->where('postcodes', 'like', '%"' . trim($request->input('search')) . '"%' )
+                ->limit(1);
+        }
+
+         $sla_list = $sla_list->get();
 
         foreach ($sla_list as $key => $value) {
             $sla_list[$key]['sla_name'] = 'D + ' . $value->days;
@@ -108,6 +114,21 @@ class CourierServiceLevelAgreementController extends Controller
 
     public function check_duplicate($courier, $exception = null, Request $request)
     {
+        $request->validate([
+            'sla_name' => ["required", "integer", "min:0", function ($attribute, $value, $fail) use ($courier, $exception) {
+                $sla = CourierServiceLevelAgreement::where('courier_id', $courier)
+                ->where('days', $value);
+                if($exception){
+                    $sla = $sla->whereNot('id', $exception);
+                }
+                $sla = $sla->first();
+
+                if($sla){
+                    $fail('SLA for this courier already exist');
+                }
+            }],
+            'postcode' => 'required | string',
+        ]);
         $all_postcodes = CourierServiceLevelAgreement::where('courier_id', $courier);
         if ($exception) {
             $all_postcodes->whereNotIn('id', [$exception]);

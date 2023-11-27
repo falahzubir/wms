@@ -245,7 +245,7 @@
                             </div>
                         </div>
                         <div class="mb-3 row">
-                            <label for="courierCA" class="col-sm-4 col-form-label">Delivery Type</label>
+                            <label for="courierCA" class="col-sm-4 col-form-label">Courier</label>
                             <div class="col-sm-8">
                                 <select name="courier" class="form-control" id="courierCA">
                                     <option value="">Select Courier</option>
