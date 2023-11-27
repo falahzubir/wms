@@ -465,10 +465,19 @@
                         loadTableExceptionalCoverage();
                     })
                     .catch(function(error) {
+                        let html = '';
+                        if (error.response.data.errors) {
+                            Object.keys(error.response.data.errors).forEach(function(key) {
+                                html += `<div><i class="bi bi-dot"></i> ${error.response.data.errors[key][0]}</div>`;
+                            });
+                        } else {
+                            html = error.response.data.message;
+                        }
+
                         Swal.fire({
                             icon: 'error',
                             title: 'Oops...',
-                            text: error.response.data.message,
+                            html: html
                         });
                     });
             }
