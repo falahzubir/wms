@@ -119,29 +119,15 @@ Trait TiktokTrait
 
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp;
 
-        $curl = curl_init();
+        $response = Http::post("$curl_url", [
+            'app_key' => TIKTOK_APP_KEY,
+            'access_token' => $token,
+            'sign' => $sign,
+            'timestamp' => $timestamp,
+            'order_id_list' => $order_id['order_id_list'],
+        ]);
 
-        //post curl
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $curl_url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_POSTFIELDS => json_encode($order_id),
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json'
-            ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        return $response;
+        return $response->body();
     }
 
     public static function getPackageDetail($params)
@@ -170,26 +156,9 @@ Trait TiktokTrait
 
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&package_id='.$params['package_id'];
 
-        $curl = curl_init();
+        $response = Http::get("$curl_url");
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $curl_url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json'
-            ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-        return $response;
+        return $response->body();
     }
 
     public static function getConfigPickup($params)
@@ -218,26 +187,9 @@ Trait TiktokTrait
 
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&package_id='.$params['package_id'];
 
-        $curl = curl_init();
+        $response = Http::get("$curl_url");
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $curl_url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json'
-            ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-        return $response;
+        return $response->body();
     }
 
     public static function shipOrder($params)
@@ -267,28 +219,17 @@ Trait TiktokTrait
 
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&package_id='.$params['package_id'].'&pick_up_type=1';
 
-        $curl = curl_init();
+        $response = Http::post("$curl_url", [
+            'app_key' => TIKTOK_APP_KEY,
+            'access_token' => $token,
+            'sign' => $sign,
+            'timestamp' => $timestamp,
+            'shop_id' => $shop_id,
+            'package_id' => $params['package_id'],
+            'pick_up_type' => 1,
+        ]);
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $curl_url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_POSTFIELDS => json_encode($order_id),
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json'
-            ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        return $response;
+        return $response->body();
 
     }
 
@@ -316,28 +257,16 @@ Trait TiktokTrait
 
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp;
 
-        $curl = curl_init();
+        $response = Http::post("$curl_url", [
+            'app_key' => TIKTOK_APP_KEY,
+            'access_token' => $token,
+            'sign' => $sign,
+            'timestamp' => $timestamp,
+            'shop_id' => $shop_id,
+            'package_list' => $order_id['package_list'],
+        ]);
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $curl_url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_POSTFIELDS => json_encode($order_id),
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json'
-            ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        return $response;
+        return $response->body();
 
     }
 
@@ -366,27 +295,9 @@ Trait TiktokTrait
 
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&package_id='.$params['package_id'].'&document_type=1&document_size=0';
 
-        $curl = curl_init();
+        $response = Http::get("$curl_url");
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $curl_url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            )
-        );
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        $response = json_decode($response,true);
-
-        return $response;
+        return $response->body();
     }
 
     public static function generateCN($params)
@@ -413,25 +324,9 @@ Trait TiktokTrait
 
         $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&order_id='.$params['ordersn'].'&document_type=SHIPPING_LABEL';
 
-        $curl = curl_init();
+        $response = Http::get("$curl_url");
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $curl_url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            )
-        );
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        $response = json_decode($response,true);
+        $response = json_decode($response->body(),true);
 
         try {
 
