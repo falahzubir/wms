@@ -20,6 +20,7 @@ use Monolog\Logger as MonologLogger;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 use App\Http\Traits\ShopeeTrait;
 use Illuminate\Support\Carbon;
+use App\Http\Controllers\Api\ShippingApiController;
 
 class ShippingController extends Controller
 {
@@ -156,8 +157,10 @@ class ShippingController extends Controller
 
         $companies = Order::select('company_id')->distinct()->whereIn('id', $order_ids)->get()->pluck('company_id'); //temporary, need to check if all orders are from same company
 
-        $access_tokens = AccessToken::with(['company'])->whereIn('company_id', $companies)->where('type', 'dhl')->get(); // DHL API access token, expires every 24 hours, could be refreshed every 12 hours
-
+        //check first token expiry date
+        $shipingApiController = new ShippingApiController();
+        $access_tokens = $shipingApiController->checkExpiryTokenDHL($companies);
+        // $access_tokens = AccessToken::with(['company'])->whereIn('company_id', $companies)->where('type', 'dhl')->get(); // DHL API access token, expires every 24 hours, could be refreshed every 12 hours
         $count = 0;
         foreach ($access_tokens as $access_token) {
             $data = [];
@@ -334,8 +337,11 @@ class ShippingController extends Controller
         }
 
         $url = $this->dhl_label_url;
+        //check first token expiry date
+        $shipingApiController = new ShippingApiController();
+        $access_token = $shipingApiController->checkExpiryTokenDHL([$order->company_id]);
 
-        $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
+        // $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
 
         $total_price = $order->total_price > 0 ? $order->total_price / 100 : null;
         $second_phone_num = '';
@@ -831,8 +837,10 @@ class ShippingController extends Controller
         }
 
         $url = $this->dhl_label_url;
+        $shipingApiController = new ShippingApiController();
+        $access_token = $shipingApiController->checkExpiryTokenDHL([$order->company_id]);
 
-        $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
+        // $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
         // $access_token = AccessToken::with(['company'])->where('company_id', 3)->where('type', 'dhl')->first(); //testing
         $remainCodAmmount = $order->purchase_type == 1 ? $order->total_price : null;
         $data = [];

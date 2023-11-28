@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Shipping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ShippingApiController extends ShippingController
 {
@@ -119,5 +120,27 @@ class ShippingApiController extends ShippingController
         return response()->json([
             'message' => 'Tracking number updated'
         ], 200);
+    }
+
+    public function checkExpiryTokenDHL($companies)
+    {
+        $dhl_tokens = AccessToken::where('type', 'dhl')->whereIn('company_id', $companies)->get();
+        foreach ($dhl_tokens as $token) {
+            if (strtotime($token->expires_at) < strtotime('now')) {
+                // Log the token information before updating
+                Log::info("Token about to be updated - Company ID: {$token->company_id}, Expires At: {$token->expires_at}");
+
+                $this->dhl_generate_access_token($token->company_id);
+
+                // Log the token information after updating
+                $updatedToken = AccessToken::find($token->id);
+                Log::info("Token updated - Company ID: {$updatedToken->company_id}, Expires At: {$updatedToken->expires_at}");
+            }
+        }
+
+        $new_dhl_tokens = AccessToken::where('type', 'dhl')->whereIn('company_id', $companies)->get();
+
+        return $new_dhl_tokens;
+
     }
 }
