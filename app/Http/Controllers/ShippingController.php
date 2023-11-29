@@ -235,7 +235,8 @@ class ShippingController extends Controller
                     $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
                         'consigneeAddress' => [
                             'companyName' => get_shipping_remarks($order),
-                            'name' => $order->customer->name,
+                            // 'name' => $order->customer->name,
+                            'name' => substr($order->customer->name, 0, 30),
                             'address1' => $order->customer->address,
                             // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
                             'address2' => "-",
