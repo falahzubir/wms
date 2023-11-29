@@ -285,6 +285,14 @@
                             <i class="bi bi-circle"></i><span>Users</span>
                         </a>
                     </li>
+                    @role('IT_Admin')
+                    <li>
+                        <a href="{{ route('settings.index') }}"
+                            {{ Route::current()->getName() == 'settings.index' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Settings</span>
+                        </a>
+                    </li>
+                    @endrole
                 </ul>
             </li><!-- End Components Nav -->
         @endcan

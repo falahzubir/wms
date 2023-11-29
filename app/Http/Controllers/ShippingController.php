@@ -597,20 +597,38 @@ class ShippingController extends Controller
             });
         $attachments = $attachments->pluck('attachment')->toArray();
 
-        if (isset($attachments) && empty($attachments[0])) {
-            return response()->json(['status' => false,'error' => 'No attachment found']);
+        // Filter out null values
+        $filteredAttachments = array_filter($attachments, function ($attachment) {
+            return !is_null($attachment);
+        });
+
+        // Check if there are any attachments after filtering
+        if (empty($filteredAttachments)) {
+            return response()->json(['status' => false, 'error' => 'No attachment found']);
+        }
+
+        $pdf = PDFMerger::init();
+
+        foreach ($filteredAttachments as $attachment) {
+            if (!file_exists(storage_path('app/public/' . $attachment))) {
+                continue;
+            }
+
+            if (!is_file(storage_path('app/public/' . $attachment))) {
+                continue;
+            }
+
+            if (file_get_contents(storage_path('app/public/' . $attachment)) == "") {
+                continue;
+            }
+
+            $pdf->addPDF(storage_path('app/public/' . $attachment));
         }
 
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
-        $file_path = public_path('generated_labels/' . $filename);
-
-        $pdf_merge = ShopeeTrait::downloadPDF($attachments);
-
-        if(!$pdf_merge){
-            return response()->json(['status' => false,'error' => 'Error in generating PDF']);
-        }
-        file_put_contents($file_path, base64_decode($pdf_merge));
-
+        $pdf->merge();
+        $pdf->save(public_path('generated_labels/' . $filename), 'file');
+        //download
         return response()->json(['download_url' => '/generated_labels/' . $filename]);
     }
 
@@ -1262,7 +1280,7 @@ class ShippingController extends Controller
         {
             $order[$key]['id'] = $value->id;
 
-            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->tracking_number))
+            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->first()->tracking_number))
             {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
                 $order[$key]['error']['message'][] = 'No Tracking Number Found';
@@ -1378,6 +1396,7 @@ class ShippingController extends Controller
         return response()->json([
             'success' => false,
             'message' => $message,
+            'all_fail' => ['message' => $message],
             'data' => $CNS ?? ''
         ], 200);
 
