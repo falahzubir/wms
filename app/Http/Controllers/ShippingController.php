@@ -833,6 +833,7 @@ class ShippingController extends Controller
     {
         $order_id = $request->validate([
             'order_id' => 'required',
+            'courier_id' => 'required',
         ]);
 
         $array_data = ($request->input('cn_data'));
@@ -844,7 +845,19 @@ class ShippingController extends Controller
             }
         ])->whereIn('id', $order_id)->where('courier_id', DHL_ID)->get();
 
-        return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+        // for now support only dhl-ecommerce and posmalaysia
+        if($request->input('courier_id') == DHL_ID){
+            return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+        }
+        elseif($request->input('courier_id') == POSMALAYSIA_ID){
+            $posmalaysia = new \App\Http\Controllers\ThirdParty\PosMalaysiaController();
+            return $posmalaysia->generate_connote_multiple($order_id, $array_data); // for posmalaysia orders
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Courier not supported yet, please check with admin',
+        ], 400);
     }
 
     /**
@@ -1563,272 +1576,5 @@ class ShippingController extends Controller
             'message' => $message,
             'data' => ''
         ], 200);
-    }
-
-    private function posmalaysia_cn($order_ids)
-    {
-        $orders_pos = Order::doesntHave('shippings')->with([
-            'customer', 'items', 'items.product', 'company',
-            'company.access_tokens' => function ($query) {
-                $query->where('type', 'posmalaysia');
-            }
-        ])->whereIn('id', $order_ids)->where('courier_id', POSMALAYSIA_ID)->get();
-
-        if (count($orders_pos) == 0) {
-            return 0;
-        }
-
-        $companies = Order::select('company_id')->distinct()->whereIn('id', $order_ids)->get()->pluck('company_id'); //temporary, need to check if all orders are from same company
-
-        $access_tokens = AccessToken::with(['company'])->where('type', 'posmalaysia')->get();
-
-        $count = 0;
-
-        // $request = new HttpRequest();$request->setUrl('https://gateway-usc.pos.com.my/staging/as01/gen-connote/v1/api/GConnote');$request->setMethod(HTTP_METH_GET);$request->setQueryData([  'numberOfItem' => 'SOME_STRING_VALUE',  'Prefix' => 'SOME_STRING_VALUE',  'ApplicationCode' => 'SOME_STRING_VALUE',  'Secretid' => 'SOME_STRING_VALUE',  'Orderid' => 'SOME_STRING_VALUE',  'username' => 'SOME_STRING_VALUE']);$request->setHeaders([  'Authorization' => 'Bearer REPLACE_BEARER_TOKEN']);try {  $response = $request->send();  echo $response->getBody();} catch (HttpException $ex) {  echo $ex;}
-
-        $connote_no = [];
-        $fails = [];
-        // generate connote]
-        foreach($orders_pos as $order){
-            // $connote_generate = Http::withToken($access_tokens[0]->token, 'Bearer')->get($this->posmalaysia_generate_connote, [
-            //     'numberOfItem' => 1,
-            //     'Prefix' => 'ER',
-            //     'ApplicationCode' => 'StagingPos',
-            //     'Secretid' => 'StagingPos@1234',
-            //     'Orderid' => shipment_num_format($order).'15',
-            //     'username' => 'StagingPos',
-            // ])->json();
-
-            // dump($connote_generate);
-
-            // if($connote_generate['StatusCode'] != "01"){
-            //     $fails[] = [$order->id, $connote_generate->json()['Message']];
-            //     continue;
-            // }
-
-            // $connote_no[] = $connote_generate['ConnoteNo'];
-
-            // // Shipping::updateOrCreate([
-            // //     'order_id' => $order->id,
-            // //     'shipment_number' => shipment_num_format($order),
-            // //     'tracking_number' => $connote_generate['ConnoteNo'],
-            // //     'courier' => 'poslaju',
-            // //     'created_by' => auth()->user()->id ?? 1,
-            // // ]);
-
-            // $pl9_generate = Http::withToken($access_tokens[0]->token, 'Bearer')->get($this->posmalaysia_generate_pl9, [
-            //     'AccountNo' => '8800586268',
-            //     'Secretid' => '1234',
-            //     'Orderid' => shipment_num_format($order).'15',
-            //     'username' => 'EmziHoldings',
-            //     'ConnoteList' => implode('|', $connote_no),
-            // ])->json();
-
-            // if($pl9_generate['StatusCode'] != "01"){
-            //     $fails[] = [$order->id, $pl9_generate['Message']];
-            //     continue;
-            // }
-
-            // dump($pl9_generate);
-
-            // $json_data = [
-            //     'subscriptionCode' => 'ECON001',
-            //     'requireToPickup' => true,
-            //     'requireWebHook' => true,
-            //     'accountNo' => '8800586268',
-            //     'callerName' => 'EMZI FULFILMENT',
-            //     'callerPhone' => '01912345678',
-            //     'pickupLocationID' => 104242,
-            //     'pickupLocationName' => 'EMZI Holding SDN. BHD.',
-            //     'contactPerson' => '.',
-            //     'phoneNo' => '601312345678',
-            //     'pickupAddress' => 'EMZI FULFILMENT, Kompleks SP Plaza, Jalan Ibrahim, Sungai Petani, 08000 Sungai Petani, Kedah',
-            //     'pickupDistrict' => 'Sungai Petani',
-            //     'pickupProvince' => 'Kedah',
-            //     'pickupCountry' => 'MY',
-            //     'pickupLocation' => '',
-            //     'pickupEmail' => 'pickup@abc.com',
-            //     'postCode' => '08000',
-            //     'ItemType' => 2,
-            //     'totalQuantityToPickup' => 1,
-            //     'totalWeight' => get_order_weight($order)/1000,
-            //     'ConsignmentNoteNumber' => $connote_generate['ConnoteNo'],
-            //     'CreatedDate' => date('dmY').': '.date('H:i:s'),
-            //     'PaymentType' => 2,
-            //     'Amount' => $order->total_price/100,
-            //     'readyToCollectAt' => '11:30 AM',
-            //     'closeAt' => '06:00 PM',
-            //     'receiverName' => $order->customer->name,
-            //     'receiverFname' => $order->customer->name,
-            //     'receiverLname' => $order->customer->name,
-            //     'receiverID' => '',
-            //     'receiverAddress' => $order->customer->address,
-            //     'receiverAddress2' => '',
-            //     'receiverDistrict' => $order->customer->city,
-            //     'receiverProvince' => $order->customer->state,
-            //     'receiverCity' => $order->customer->city,
-            //     'receiverPostCode' => $order->customer->postcode,
-            //     'receiverCountry' => 'MY',
-            //     'receiverEmail' => '',
-            //     'receiverPhone01' => $order->customer->phone,
-            //     'receiverPhone02' => $order->customer->phone,
-            //     'sellerReferenceNo' => shipment_num_format($order).'15',
-            //     'itemDescription' => $this->package_description($order),
-            //     'sellerOrderNo' => $order->sales_id,
-            //     'comments' => $order->shipping_remarks,
-            //     'packDesc' => get_shipping_remarks($order),
-            //     'packVol' => '',
-            //     'packLeng' => '',
-            //     'packWidth' => '',
-            //     'packHeight' => '',
-            //     'packTotalitem' => '',
-            //     'orderDate' => '',
-            //     'packDeliveryType' => '',
-            //     'ShipmentName' => 'PosLaju',
-            //     'pickupProv' => '',
-            //     'deliveryProv' => '',
-            //     'postalCode' => '',
-            //     'currency' => 'MYR',
-            //     'countryCode' => 'MY',
-            //     'pickupDate' => '',
-            // ];
-
-            $client = new Client();
-            $puppeteer = new Puppeteer();
-
-            // Make a request to get the PDF URL
-            $response = $client->get('https://stagingsdsonprem.pos.com.my/Tracking.WebhookV3.Portal/labelpdf', [
-                'query' => [
-                    'id' => 'cf32fb370fc62cb36be2c0b55bf19923f56de7dac52ec860ed50b4c89c582479',
-                    't' => '',
-                ],
-            ]);
-
-            // Extract PDF URL from the response
-            $pdfUrl = json_decode($response->getBody()->getContents())->pdf_url;
-
-            // Use Puppeteer to generate PDF
-            $browser = $puppeteer->launch();
-            $page = $browser->newPage();
-            $page->goto($pdfUrl);
-            $page->pdf(['path' => storage_path('app/public/your_filename.pdf')]);
-
-            $browser->close();
-
-            dd($pdfUrl);
-
-            // $request = Http::withToken($access_tokens[0]->token, 'Bearer')->post($this->posmalaysia_download_connote, $json_data)->json();
-
-            $pdf = Http::get('https://stagingsdsonprem.pos.com.my/Tracking.WebhookV3.Portal/labelpdf', [
-                'id' => 'cf32fb370fc62cb36be2c0b55bf19923f56de7dac52ec860ed50b4c89c582479',
-                't' => '',
-            ]);
-
-            //load javascript to open browser new tab
-            $pdf = $pdf->body();
-            echo $pdf;
-            die;
-
-            try {
-                //store in storage
-                Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', $pdf);
-            } catch (\Exception $e) {
-                dd($e);
-            }
-
-            //sample response
-            // {"TransactionID":3498313,"userName":"razmeer78@gmail.com","subscriptionID":109,"Subscriptions":{"subscriptionID":109,"userName":"razmeer78@gmail.com","subscriptionCode":"ECON001","requireToAuthenticate":false,"authenticationURL":null,"authenticationMethod":0,"param01Flag":false,"param01Name":null,"param01Value":null,"param02Flag":false,"param02Name":null,"param02Value":null,"param03Flag":false,"param03Name":null,"param03Value":null,"authenticationTokenName":null,"postBackAddress":"http:\/\/172.19.1.16:8083","authenticationType":0,"tokenName":null,"requestBodyContentType":1,"requireMapping":false,"mappingConnoteNo":null,"mappingsubscriptionCode":null,"mappingEventCode":null,"mappingReasonCode":null,"mappingOfficeCode":null,"mappingOtherInfo":null,"mappingDateTime":null,"mappingRemark":null,"sendinJsonArrayFlag":false,"jsonArrayNode":null,"maxRecordPerpost":10,"sendOnlyInEventMapping":false,"createdDate":"2020-09-10T09:17:06.523","requirePOD":true,"requireWeight":false,"isCustom":false,"requireDimension":false},"requireToPickup":true,"requireWebHook":true,"accountNo":8800586268,"callerName":"EMZI FULFILMENT","callerPhone":"01912345678","pickupLocationID":"104242","pickupLocationName":"EMZI Holding SDN. BHD.","contactPerson":".","phoneNo":"601312345678","pickupAddress":"EMZI FULFILMENT, Kompleks SP Plaza, Jalan Ibrahim, Sungai Petani, 08000 Sungai Petani, Kedah","postCode":"08000","ItemType":2,"totalQuantityToPickup":1,"totalWeight":2.095,"consignmentNoteNumber":"ER002836414MY","PaymentType":2,"amount":180,"readyToCollectAt":"11:30 AM","closeAt":"06:00 PM","receiverName":"Munah binti Aip","receiverID":"","receiverAddress":"KAMPUNG KEBUAW BATANG IGAN DALAT","receiverPostCode":"96300","receiverEmail":"","receiverPhone01":"60133391402","receiverPhone02":"60133391402","sellerReferenceNo":"MYQA-OSE001110450-231110-0024","itemDescription":"Neloco, Quick-O (FOC)","sellerOrderNo":"1110450","comments":null,"pickupDistrict":"Sungai Petani","pickupProvince":"Kedah","pickupEmail":"pickup@abc.com","pickupCountry":"MY","pickupLocation":"","receiverFname":"Munah binti Aip","receiverLname":"Munah binti Aip","receiverAddress2":"","receiverDistrict":"Dalat","receiverProvince":"13","receiverCity":"Dalat","receiverCountry":"MY","packDesc":"NLC[5]QO FOC[1]","packVol":"","packLeng":"0.65","packWidth":"0.5","packHeight":"0.75","packTotalitem":"","orderDate":"","packDeliveryType":"","ShipmentName":"PosLaju","pickupProv":"","deliveryProv":"","postalCode":"","currency":"MYR","countryCode":"MY","CreatedDate":"2023-11-10T13:00:38.5910867+08:00","PSSInterfaceStatus":0,"PSSresponseStatusCode":null,"PSSresponseDetails":null,"PSSstatusDateTime":null,"PSSretryCount":0,"PickupAPITransactionID":null,"webHookInterfaceStatus":0,"WebHookresponseStatusCode":null,"WebHookresponseDetails":null,"WebHookstatusDateTime":null,"WebHookretryCount":0,"WebHookTransactionID":null,"pickupDate":null,"isInsured":false,"valueAddedCode":null,"sumInsuredValue":null,"SSTcharge":null,"roundingCharge":null,"pdf":"https:\/\/stagingsdsonprem.pos.com.my\/Tracking.WebhookV3.Portal\/labelpdf?id=cf32fb370fc62cb36be2c0b55bf1992344690ea557f10f64875fca4c00796a0b&t=","ZPL":"https:\/\/stagingsdsonprem.pos.com.my\/Tracking.WebhookV3.Portal\/labelprn?id=cf32fb370fc62cb36be2c0b55bf1992344690ea557f10f64875fca4c00796a0b&t=","jpeg":"https:\/\/stagingsdsonprem.pos.com.my\/Tracking.WebhookV3.Portal\/jpeg?id=cf32fb370fc62cb36be2c0b55bf1992344690ea557f10f64875fca4c00796a0b","item_details":null,"isMPS":false,"mps":null}
-
-
-
-
-            // if($request['StatusCode'] != "01"){
-            //     $fails[] = [$order->id, $request['Message']];
-            //     continue;
-            // }
-
-            dd($pdf);
-
-        }
-        // dump($connote_no[] = $connote_generate->json()['ConnoteNo']);
-        dd($connote_generate->json()); //[  "StatusCode" => "01", "Message" => "success", "ConnoteNo" => "ER002836330MY"]
-
-        //generate pl9 with connote
-        // <?php$request = new HttpRequest();$request->setUrl('https://gateway-usc.pos.com.my/staging/as01/generate-pl9-with-connote/v1/api/GPL9C');$request->setMethod(HTTP_METH_GET);$request->setQueryData([  'AccountNo' => 'SOME_STRING_VALUE',  'Secretid' => 'SOME_STRING_VALUE',  'Orderid' => 'SOME_STRING_VALUE',  'username' => 'SOME_STRING_VALUE',  'ConnoteList' => 'SOME_STRING_VALUE']);$request->setHeaders([  'Authorization' => 'Bearer REPLACE_BEARER_TOKEN']);try {  $response = $request->send();  echo $response->getBody();} catch (HttpException $ex) {  echo $ex;}
-
-        // $connote_list = $connote_generate->json()['ConnoteNo'];
-
-        //test
-        $json = '{
-            "subscriptionCode": "ECON001",
-            "requireToPickup": true,
-            "requireWebHook": true,
-            "accountNo": 9999999999,
-            "callerName": "EMZI FULFILMENT",
-            "callerPhone": "01912345678",
-            "pickupLocationID": 104242,
-            "pickupLocationName": "EMZI Holding SDN. BHD.",
-            "contactPerson": ".",
-            "phoneNo": "601312345678",
-            "pickupAddress": "EMZI FULFILMENT, Kompleks SP Plaza, Jalan Ibrahim, Sungai Petani, 08000 Sungai Petani, Kedah",
-            "pickupDistrict": "Sungai Petani",
-            "pickupProvince": "Kedah",
-            "pickupCountry": "MY",
-            "pickupLocation": "",
-            "pickupEmail": "pickup@abc.com",
-            "postCode": 08000,
-            "ItemType": 2,
-            "totalQuantityToPickup": 1,
-            "totalWeight": 1,
-            "ConsignmentNoteNumber": "ER002836330MY",
-            "CreatedDate": "26052022: 11:47:21",
-            "PaymentType": 2,
-            "Amount": 100,
-            "readyToCollectAt": "11:30 AM",
-            "closeAt": "06:00 PM",
-            "receiverName": "Furvit Pet Industries",
-            "receiverFname": "Furvit Pet Industries",
-            "receiverLname": "Furvit Pet Industries",
-            "receiverID": "",
-            "receiverAddress": "32-G, Jln Musytari AQ U5/AQBandar Pinggiran Subang, Seksyen U5",
-            "receiverAddress2": "",
-            "receiverDistrict": "Shah Alam",
-            "receiverProvince": "Selangor",
-            "receiverCity": "Shah Alam",
-            "receiverPostCode": "40150",
-            "receiverCountry": "MY",
-            "receiverEmail": "",
-            "receiverPhone01": "60132555256",
-            "receiverPhone02": "60132555256",
-            "sellerReferenceNo": "",
-            "itemDescription": "",
-            "sellerOrderNo": "",
-            "comments": ",",
-            "packDesc": "",
-            "packVol": "",
-            "packLeng": "0.65",
-            "packWidth": "0.5",
-            "packHeight": "0.75",
-            "packTotalitem": "",
-            "orderDate": "",
-            "packDeliveryType": "",
-            "ShipmentName": "PosLaju",
-            "pickupProv": "",
-            "deliveryProv": "",
-            "postalCode": "",
-            "currency": "MYR",
-            "countryCode": "MY",
-            "pickupDate": ""
-        }';
-
-        $array = json_decode($json, true);
-
-        $request = Http::withToken($access_tokens[0]->token, 'Bearer')->post($this->posmalaysia_download_connote, $array);
-
-        dd($request->json());
-
-        dd($array);
-
-
     }
 }

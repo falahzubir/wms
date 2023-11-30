@@ -30,7 +30,7 @@ class OrderController extends Controller
     public function index()
     {
         return Order::with([
-            'customer', 'items', 'items.product', 'shippings',
+            'customer', 'items', 'items.product', 'shippings', 'paymentType',
             'bucket', 'batch', 'company', 'courier', 'operationalModel',
             'logs' => function ($query) {
                 $query->orderBy('id', 'desc');
