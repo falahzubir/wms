@@ -451,7 +451,9 @@ class PosMalaysiaController extends ShippingController
 
             if($save !== true){
                 $error[] = $save;
+                set_order_status($order, ORDER_STATUS_PACKING, 'Connote downloaded successfully', auth()->user()->id ?? 1);
             }
+
         }
         if(count($error) > 0){
             return response()->json([
@@ -460,7 +462,6 @@ class PosMalaysiaController extends ShippingController
             ], 400);
         }
 
-        set_order_status($order, ORDER_STATUS_PACKING, 'Connote downloaded successfully', auth()->user()->id ?? 1);
 
         return response()->json([
             'status' => 'success',

@@ -1514,7 +1514,11 @@
                     allowOutsideClick: false,
                     icon: 'success',
                     showConfirmButton: true,
-                });
+                })
+                // if confirm button clicked reload
+                Swal.getConfirmButton().onclick = function(){
+                    location.reload();
+                }
             })
 
         }

@@ -71,6 +71,15 @@
 
     function multiple_cn(data) {
         _order = JSON.parse(data.order);
+        if(_order.bucket_batch_id == null){
+            Swal.fire({
+                title: 'Error!',
+                text: 'Please assign bucket batch first',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            })
+            return;
+        }
         const myModal = new bootstrap.Modal('#multiple-cn-modal', {
             backdrop: 'static',
             keyboard: false
