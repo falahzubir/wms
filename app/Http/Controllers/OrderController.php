@@ -18,7 +18,6 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
-use App\Models\AlternativePostcode;
 
 class OrderController extends Controller
 {
@@ -421,16 +420,8 @@ class OrderController extends Controller
             throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
             return;
         }
-        
-        // Check for alternative postcode
-        $result = AlternativePostcode::where('actual_postcode', $data_customer['postcode'])->first();
 
-        if ($result) {
-            $data_customer['postcode'] = $result->alternative_postcode;
-        }
-
-        // $customer = Customer::updateorCreate($data_customer);
-        $customer = Customer::updateOrCreate($data_customer);
+        $customer = Customer::updateorCreate($data_customer);
         
         $data['customer_id'] = $customer->id;
 
