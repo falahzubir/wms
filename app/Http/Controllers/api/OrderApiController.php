@@ -40,9 +40,11 @@ class OrderApiController extends Controller
 
                 if (env("APP_ENV") == "production") {
                     $url = $order->company->url . "/api/reject_order";
+                    $json['testing'] = false;
                 }
                 else{
-                    $url = "https://qastg.groobok.com/api/reject_order";
+                    $url = "https://qastg.groobok.com/api/reject_order?v1";
+                    $json['testing'] = true;
                 }
 
                 $json['from'] = "wms";
