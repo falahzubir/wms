@@ -20,7 +20,7 @@ class PosMalaysiaController extends ShippingController
     {
         parent::__construct();
 
-        if(config('settings.genconnote_prefix') == null){
+        if(config('settings.genconnote_application_code') == null){
             $seeder = new PosMalaysiaSettingSeeder();
             $seeder->run();
             Artisan::call('config:cache');
@@ -51,7 +51,7 @@ class PosMalaysiaController extends ShippingController
 
             $connote = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_connote, [
                 'numberOfItem' => 1,
-                'Prefix' => config('settings.genconnote_prefix'),
+                'Prefix' => $order->purchase_type == PURCHASE_TYPE_COD ? config('settings.genconnote_prefix_cod') : config('settings.genconnote_prefix_paid'),
                 'ApplicationCode' => config('settings.genconnote_application_code'),
                 'Secretid' => config('settings.genconnote_secret_id'),
                 'Orderid' => shipment_num_format($order),
@@ -203,9 +203,9 @@ class PosMalaysiaController extends ShippingController
                     'totalQuantityToPickup' => 1, //to be confirmed
                     'totalWeight' => get_order_weight($order)/1000,
                     'ConsignmentNoteNumber' => $shipping->tracking_number,
-                    'PaymentType' => $order->purchase_type == 1 ? 1 : 2, //to be confirmed
+                    'PaymentType' => $order->purchase_type == PURCHASE_TYPE_COD ? 0 : 2,
                     'Amount' => $order->total_price/100,
-                    'readyToCollectAt' => '11:30 AM', //to be confirmed
+                    'readyToCollectAt' => date('h:i A', strtotime('+1 hour')),
                     'closeAt' => config('settings.genpreacceptedsingle_close_at'),
                     'receiverName' => $order->customer->name,
                     'receiverFname' => $order->customer->name,
@@ -231,7 +231,7 @@ class PosMalaysiaController extends ShippingController
                     'packWidth' => '',
                     'packHeight' => '',
                     'packTotalitem' => '',
-                    'orderDate' => '', //to be confirmed
+                    'orderDate' => date('Y-m-d'),
                     'packDeliveryType' => '',
                     'ShipmentName' => 'PosLaju',
                     'pickupProv' => '',
@@ -239,7 +239,7 @@ class PosMalaysiaController extends ShippingController
                     'postalCode' => '',
                     'currency' => 'MYR',
                     'countryCode' => 'MY',
-                    'pickupDate' => date('Y-m-d'), //to be confirmed
+                    'pickupDate' => '',
                 ];
 
                 $request = Http::withToken($bearer->token, 'Bearer')->post($this->posmalaysia_download_connote, $json_data)->json();

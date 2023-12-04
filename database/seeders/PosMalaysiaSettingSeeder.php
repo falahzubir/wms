@@ -24,8 +24,11 @@ class PosMalaysiaSettingSeeder extends Seeder
             //setting lists bulk
             $pos->children()->createMany([
                 [
-                    'key' => 'genconnote_prefix',
+                    'key' => 'genconnote_prefix_paid',
                     'value' => 'ER',
+                ], [
+                    'key' => 'genconnote_prefix_cod',
+                    'value' => 'EC',
                 ], [
                     'key' => 'genconnote_application_code',
                     'value' => 'StagingPos',
