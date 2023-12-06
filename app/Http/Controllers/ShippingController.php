@@ -139,7 +139,7 @@ class ShippingController extends Controller
      */
     public function dhl_label($order_ids)
     {
-        
+
         $url = $this->dhl_label_url;
 
         // filter only selected order shipping not exists
@@ -282,11 +282,11 @@ class ShippingController extends Controller
             $json = json_encode($data);
 
             $response = Http::withBody($json, 'application/json')->post($url);
-          
+
             $dhl_store = $this->dhl_store($orders_dhl, $response);
-           
+
             if ($dhl_store != null) {
-               
+
                 $dhl_store_content = $dhl_store->getContent();
                 $decode_store_content = json_decode($dhl_store_content, true);
                 return response([
@@ -473,13 +473,13 @@ class ShippingController extends Controller
         $data = [];
         $tracking_no[] = [];
         $json = json_decode($json);
-        
+
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
             if (isset($label->responseStatus)) {
                 if (isset($label->responseStatus->message)) {
                     if ($label->responseStatus->message != "SUCCESS") {
                         if (isset($label->responseStatus->messageDetails)) {
-                           
+
                             Log::error('DHL Error: ' . $label->shipmentID);
                             return response([
                                 'success' => false,
@@ -1246,7 +1246,7 @@ class ShippingController extends Controller
         {
             $order[$key]['id'] = $value->id;
 
-            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->tracking_number))
+            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->first()->tracking_number))
             {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
                 $order[$key]['error']['message'][] = 'No Tracking Number Found';
@@ -1362,6 +1362,7 @@ class ShippingController extends Controller
         return response()->json([
             'success' => false,
             'message' => $message,
+            'all_fail' => ['message' => $message],
             'data' => $CNS ?? ''
         ], 200);
 
@@ -1434,7 +1435,7 @@ class ShippingController extends Controller
                 $now = Carbon::now();
                 foreach ($timeslots as $pickupTime) {
                     $pickupDate = Carbon::createFromTimestamp($pickupTime['date']);
-                
+
                     if ($pickupDate->isAfter($now)) {
                         // Date is before now, add it to the available pickup times
                         $availablePickupTimes[] = $pickupTime;
