@@ -226,6 +226,11 @@ if (!function_exists('get_shipping_remarks')) {
         if(strlen($remark) > 50){
             $remark = str_replace('FOC', 'F', $remark);
         }
+        if(strlen($remark) > 50){
+            $remark = str_replace('[', '', $remark);
+            $remark = str_replace(']', ',', $remark);
+            $remark = rtrim($remark, ',');
+        }
         return $remark;
     }
 }
