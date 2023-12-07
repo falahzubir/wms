@@ -13,15 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('alternative_postcode', function (Blueprint $table) {
+        Schema::create('states', function (Blueprint $table) {
             $table->id();
-            $table->string('state');
-            $table->string('actual_postcode');
-            $table->string('actual_city');
-            $table->string('alternative_postcode');
-            $table->string('alternative_city');
+            $table->string('name');
+            $table->string('country_code');
+            $table->bigInteger('cod_courier_id')->nullable();
+            $table->bigInteger('non_cod_courier_id')->nullable();
             $table->timestamps();
-            $table->bigInteger('delete_status', 2);
         });
     }
 
@@ -32,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('alternative_postcode');
+        Schema::dropIfExists('states');
     }
 };
