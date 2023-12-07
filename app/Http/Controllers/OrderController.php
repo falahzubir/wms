@@ -420,7 +420,7 @@ class OrderController extends Controller
             throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
             return;
         }
-        
+
         $customer = Customer::updateorCreate($data_customer);
         
         $data['customer_id'] = $customer->id;
