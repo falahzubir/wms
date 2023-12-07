@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('alternative_postcode');
             $table->string('alternative_city');
             $table->timestamps();
-            $table->integer('delete_status', 2);
+            $table->unsignedBigInteger('delete_status', 2);
         });
     }
 
