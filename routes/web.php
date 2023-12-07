@@ -203,7 +203,7 @@ Route::middleware(['auth'])->group(function() {
             // }
         });
         Route::get('rollback-migration', function () {
-            if(config('app.env')=="local"){
+            if(config('app.env')!="production"){
                 Artisan::call('migrate:rollback', ['--force' => true]);
                 return 'Rollback ran successfully!';
             }
