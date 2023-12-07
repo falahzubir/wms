@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('country_code');
-            $table->bigInteger('cod_courier_id');
-            $table->bigInteger('non_cod_courier_id');
+            $table->bigInteger('cod_courier_id')->nullable();
+            $table->bigInteger('non_cod_courier_id')->nullable();
             $table->timestamps();
         });
     }
