@@ -411,7 +411,7 @@ class OrderController extends Controller
                 return;
             }
         }elseif($data_customer['country'] == 3){
-            if(strlen($data_customer['postcode']) > 7 || strlen($data_customer['postcode']) < 7){
+            if(strlen($data_customer['postcode']) > 6 || strlen($data_customer['postcode']) < 6){
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
                 return;
             }
