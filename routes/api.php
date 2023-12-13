@@ -47,6 +47,9 @@ Route::prefix('buckets')->group(function () {
     Route::get('show/{id}', [BucketController::class, 'show']);
     Route::post('check-empty-batch', [BucketController::class, 'check_empty_batch']);
     Route::post('delete', [BucketController::class, 'delete']);
+    Route::post('add-category', [BucketController::class, 'add_category']);
+    Route::post('edit-category', [BucketController::class, 'edit_category']);
+    Route::post('delete-category', [BucketController::class, 'delete_category']);
 });
 
 Route::prefix('orders')->group(function () {

@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
+use App\Models\Order;
 use App\Models\Bucket;
 use App\Models\Company;
-use App\Models\Order;
 use App\Models\OrderLog;
-use Carbon\Carbon;
+use App\Models\CategoryMain;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -184,6 +185,99 @@ class BucketController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Bucket deleted successfully.'
+        ]);
+    }
+
+    public function bucket_category(Request $request)
+    {
+        $title = 'List of Bucket Category';
+        $statuses = [
+            '1' => 'Active',
+            '2' => 'Inactive',
+        ];
+        $buckets = Bucket::where('status', IS_ACTIVE)->get();
+
+        $categories = CategoryMain::with(['categoryBuckets', 'categoryBuckets.bucket'])
+            ->where(function ($q) use ($request) {
+                if (!empty($request->search)) {
+                    $q->where('category_name', 'like', '%' . $request->search . '%');
+                }
+                if (!empty($request->status)) {
+                    $q->where('category_status', $request->status);
+                }
+            })
+            ->paginate(10);
+
+        return view('buckets.category.index', compact('title', 'statuses', 'categories', 'buckets'));
+    }
+
+    public function add_category(Request $request)
+    {
+        $request->validate([
+            'category_name' => 'required|string|max:255',
+            'category_status' => 'required|int',
+            'category_bucket' => 'required|array',
+        ]);
+
+        $categoryMain = CategoryMain::create([
+            'category_name' => $request->category_name,
+            'category_status' => $request->category_status,
+        ]);
+
+        foreach ($request->category_bucket as $bucket_id) {
+            $categoryMain->categoryBuckets()->create([
+                'bucket_id' => $bucket_id,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket category added successfully.'
+        ]);
+    }
+
+    public function edit_category(Request $request)
+    {
+        $request->validate([
+            'category_id' => 'required|int',
+            'category_name' => 'required|string|max:255',
+            'category_status' => 'required|int',
+            'category_bucket' => 'required|array',
+        ]);
+
+        $categoryMain = CategoryMain::find($request->category_id);
+        $categoryMain->category_name = $request->category_name;
+        $categoryMain->category_status = $request->category_status;
+        $categoryMain->save();
+
+        $categoryMain->categoryBuckets()->delete();
+
+        foreach ($request->category_bucket as $bucket_id) {
+            $categoryMain->categoryBuckets()->create([
+                'bucket_id' => $bucket_id,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket Category edited successfully.'
+        ]);
+    }
+
+    public function delete_category(Request $request)
+    {
+        $request->validate([
+            'category_id' => 'required|int',
+        ]);
+
+        $categoryMain = CategoryMain::find($request->category_id);
+        $categoryMain->delete();
+
+        $categoryMain->categoryBuckets()->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket category deleted successfully.'
         ]);
     }
 }

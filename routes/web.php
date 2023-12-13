@@ -176,6 +176,11 @@ Route::middleware(['auth'])->group(function() {
 
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/bucket-category', [BucketController::class, 'bucket_category'])->name('bucket_category');
+    });
+
 });
 
     Route::get('live', fn () => view('live'));
