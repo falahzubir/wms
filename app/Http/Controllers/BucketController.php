@@ -17,14 +17,27 @@ class BucketController extends Controller
      * List all buckets
      * @return view
      */
-    public function index()
+    public function index(Request $request)
     {
-        $buckets = Bucket::with(['orders' => function($query){
-            $query->where('status', ORDER_STATUS_PROCESSING);
-        }])->where('status', IS_ACTIVE)->get();
+        $categories = CategoryMain::all();
+        $buckets = Bucket::with(['categoryBuckets','processingOrders'])
+        ->where('status', IS_ACTIVE)
+        ->where(function ($q) use ($request) {
+            if (!empty($request->search)) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            }
+            if (!empty($request->category_id)) {
+                $q->whereHas('categoryBuckets', function ($q) use ($request) {
+                    $q->whereIn('category_id', $request->category_id);
+                });
+            }
+        })
+        ->get();
+
         return view('buckets.index', [
             'title' => 'List Buckets',
             'buckets' => $buckets,
+            'categories' => $categories,
         ]);
     }
 

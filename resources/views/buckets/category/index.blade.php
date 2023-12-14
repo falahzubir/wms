@@ -240,6 +240,7 @@
                                     icon: 'success',
                                     title: 'Success',
                                     text: response.data.message,
+                                    allowOutsideClick: false,
                                 }).then((result) => {
                                     if (result.isConfirmed) {
                                         window.location.reload();
@@ -268,6 +269,7 @@
                                     icon: 'success',
                                     title: 'Success',
                                     text: response.data.message,
+                                    allowOutsideClick: false,
                                 }).then((result) => {
                                     if (result.isConfirmed) {
                                         window.location.reload();
@@ -324,6 +326,7 @@
                                         icon: 'success',
                                         title: 'Success',
                                         text: response.data.message,
+                                        allowOutsideClick: false,
                                     }).then((result) => {
                                         if (result.isConfirmed) {
                                             window.location.reload();

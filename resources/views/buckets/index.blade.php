@@ -16,6 +16,34 @@
             <x-toasts message="{{ session('success') }}" bg="success" />
         @endif --}}
         <div class="row">
+            <div class="card" id="filter-body">
+                <div class="card-body" style="">
+                    <h5 class="card-title">Filters..</h5>
+
+                    <!-- Filter Card -->
+                    <form class="row g-3" method="GET" action="{{ route('buckets.index') }}">
+                        <div class="col-md-12">
+                            <input type="text" class="form-control" placeholder="Search" name="search"
+                                value="{{ old('search', Request::get('search')) }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category-bucket" class="form-label">Bucket Category</label>
+                            <select id="category-bucket" class="form-select" name="category_id[]" multiple>
+                                <option selected value="">All</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}"
+                                        {{ request('category_id') != null ? (in_array($category->id, request('category_id')) ? 'selected' : '') : '' }}>
+                                        {{ $category->category_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary" id="filter-order">Submit</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
             @php
             $title = ['Northen Region 1 (NR1)', 'Southen Region 2 (SR2)', 'Easten Region 3 (ER3)', 'Westen Region 4 (WR4)', 'Northen Region 5 (NR5)', 'Southen Region 6 (SR6)', 'Easten Region 7 (ER7)', 'Westen Region 8 (WR8)', 'Northen Region 9 (NR9)'];
             @endphp
@@ -44,17 +72,18 @@
                         <div style="font-size:0.9rem;">
                             <div class="text-center">
                                 <strong><i class="bi bi-basket"></i>&nbsp; {{ $bucket->name }} </strong>
+                                <i class="bi bi-arrow-down"></i>
                             </div>
                             <hr>
                             <div class="mb-3 text-center">
                             <div>Processing: <strong><span
-                                    id="pending-count">{{ $bucket->orders->count() }}</span></strong>
+                                    id="pending-count">{{ $bucket->processingOrders->count() }}</span></strong>
                                 </div>
 
                                 <div>&nbsp;
-                                    @if($bucket->orders->sum('payment_refund'))
+                                    @if($bucket->processingOrders->sum('payment_refund'))
                                         Refund: <strong><span class="text-danger"
-                                            id="refund-count">RM{{ currency($bucket->orders->sum('payment_refund')) }} ({{$bucket->orders->where('payment_refund', '>', 0)->count()}})</span></strong>
+                                            id="refund-count">RM{{ currency($bucket->processingOrders->sum('payment_refund')) }} ({{$bucket->processingOrders->where('payment_refund', '>', 0)->count()}})</span></strong>
                                     @endif
                                 </div>
                             </div>
@@ -63,13 +92,13 @@
                                 @can('picking_list.generate')
                                 <button class="btn btn-primary rounded-pill" title="Generate Picking List"
                                             id="generate-pl"
-                                            onclick="generate_pl({{ $bucket->id }},{{ $bucket->orders->pluck('id') }})">
+                                            onclick="generate_pl({{ $bucket->id }},{{ $bucket->processingOrders->pluck('id') }})">
                                             <i class="bi bi-card-text"></i>
                                         </button>
                                 @endcan
                                 @can('consignment_note.generate')
                                 <button class="btn btn-warning rounded-pill generate-cn" title="Generate CN"
-                                            onclick="generate_cn({{ $bucket->id }}, {{ $bucket->orders->pluck('id') }})"
+                                            onclick="generate_cn({{ $bucket->id }}, {{ $bucket->processingOrders->pluck('id') }})"
                                             data-bucketId="{{ $bucket->id }}">
                                             <i class="bi bi-truck"></i>
                                         </button>
@@ -211,6 +240,26 @@
     </div>
     <x-slot name="script">
         <script>
+
+        var eventHandler = function(name) {
+            return function() {
+                // console.log(name, arguments);
+            };
+        };
+
+        new TomSelect("#category-bucket", {
+            onInitialize: eventHandler('onInitialize'),
+            onChange: eventHandler('onChange'),
+            onItemAdd: eventHandler('onItemAdd'),
+            plugins: {
+                remove_button: {
+                    title: 'Remove this item',
+                }
+            },
+            hidePlaceholder: true,
+            create: false,
+        });
+
             // add bucket
             function add_bucket() {
                 document.querySelector('#bucket-form').setAttribute('action', '/buckets/store');

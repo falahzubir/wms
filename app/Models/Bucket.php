@@ -19,4 +19,14 @@ class Bucket extends Model
     {
         return $this->hasMany(BucketBatch::class);
     }
+
+    public function categoryBuckets()
+    {
+        return $this->hasMany(CategoryBucket::class);
+    }
+
+    public function processingOrders()
+    {
+        return $this->hasMany(Order::class)->where('status', ORDER_STATUS_PROCESSING);
+    }
 }
