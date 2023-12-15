@@ -183,7 +183,7 @@ Route::middleware(['auth'])->group(function() {
 
 });
 
-    Route::get('live', fn () => view('live'));
+    // Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
 
     Route::get('notifications', [NotificationController::class, 'list']);
 
