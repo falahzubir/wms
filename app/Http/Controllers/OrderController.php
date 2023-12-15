@@ -18,6 +18,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
+use App\Models\AlternativePostcode;
 
 class OrderController extends Controller
 {
@@ -398,7 +399,7 @@ class OrderController extends Controller
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
         $data['third_party_sn'] = $webhook['third_party_sn'] ?? null;
         $data['is_active'] = IS_ACTIVE;
-       
+
         $data_customer = $webhook['customer'];
         // dump($data_customer['country'].'=> country');
         // dump($data_customer['postcode'].'=>postcode length');
@@ -410,18 +411,26 @@ class OrderController extends Controller
                 return;
             }
         }elseif($data_customer['country'] == 3){
-            if(strlen($data_customer['postcode']) > 6 || strlen($data_customer['postcode']) < 6){
+            if(strlen($data_customer['postcode']) != 6 && strlen($data_customer['postcode']) != 4){
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
                 return;
             }
         }
-        
+
         if($data_customer['city'] == null){
             throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
             return;
         }
         
-        $customer = Customer::updateorCreate($data_customer);
+        // Check for alternative postcode
+        $result = AlternativePostcode::where('actual_postcode', $data_customer['postcode'])->first();
+
+        if ($result) {
+            $data_customer['postcode'] = $result->alternative_postcode;
+        }
+
+        // $customer = Customer::updateorCreate($data_customer);
+        $customer = Customer::updateOrCreate($data_customer);
         
         $data['customer_id'] = $customer->id;
 
@@ -650,9 +659,20 @@ class OrderController extends Controller
             $query->whereIn('purchase_type', $request->purchase_types);
         });
         $orders->when($request->filled('products'), function ($query) use ($request) {
-            $query->whereHas('items', function ($q) use ($request) {
-                $q->whereIn('product_id', $request->products);
-            });
+            if(count($request->products) == 1){
+                $query->whereHas('items', function ($q) use ($request) {
+                    $q->whereIn('product_id', $request->products);
+                });
+            }
+            else {
+                $query->whereHas('items', function ($q) use ($request) {
+                    $q->whereIn('product_id', $request->products);
+                }, '=', count($request->products));
+
+                $query->whereDoesntHave('items', function ($q) use ($request) {
+                    $q->whereNotIn('product_id', $request->products);
+                });
+            }
         });
         $orders->when($request->filled('not_products'), function ($query) use ($request) {
             $query->whereDoesntHave('items', function ($q) use ($request) {

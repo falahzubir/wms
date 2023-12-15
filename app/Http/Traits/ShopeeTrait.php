@@ -115,7 +115,7 @@ trait ShopeeTrait
             'pickup' => [
                 'address_id' => 200007694,
                 'pickup_time_id' => $pickup_time_id,
-                'tracking_number' => '-',
+                'tracking_number' => '',
             ],
         ];
 
