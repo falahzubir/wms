@@ -262,7 +262,7 @@ class BucketController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Bucket category added successfully.'
+            'message' => 'Bucket Category added successfully.'
         ]);
     }
 
@@ -307,7 +307,7 @@ class BucketController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Bucket category deleted successfully.'
+            'message' => 'Bucket Category deleted successfully.'
         ]);
     }
 }

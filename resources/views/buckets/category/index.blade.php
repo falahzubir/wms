@@ -238,7 +238,7 @@
                             if (response.data.status == 'success') {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Success',
+                                    title: 'Success!',
                                     text: response.data.message,
                                     allowOutsideClick: false,
                                 }).then((result) => {
@@ -267,7 +267,7 @@
                             if (response.data.status == 'success') {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Success',
+                                    title: 'Success!',
                                     text: response.data.message,
                                     allowOutsideClick: false,
                                 }).then((result) => {
@@ -308,7 +308,7 @@
 
             const deleteBucket = (id) => {
                 Swal.fire({
-                    title: "Delete bucket category?",
+                    title: "Delete Bucket Category?",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -324,7 +324,7 @@
                                 if (response.data.status == 'success') {
                                     Swal.fire({
                                         icon: 'success',
-                                        title: 'Success',
+                                        title: 'Success!',
                                         text: response.data.message,
                                         allowOutsideClick: false,
                                     }).then((result) => {
