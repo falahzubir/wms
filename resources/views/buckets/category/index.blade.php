@@ -57,9 +57,9 @@
                             </tr>
                         </thead>
                         <tbody class="text-center">
-                            @forelse ($categories as $category)
+                            @forelse ($categories as $index => $category)
                                 <tr class="align-middle">
-                                    <th scope="row">{{ $loop->iteration }}</th>
+                                    <th scope="row">{{ $categories->firstItem() + $index }}</th>
                                     <td>
                                         @if ($category->category_status == 1)
                                             <span class="badge bg-success">Active</span>
@@ -210,13 +210,10 @@
 
     <x-slot name="script">
         <script>
-            var eventHandler = function(name) {
-                return function() {
-                    // console.log(name, arguments);
-                };
+            let eventHandler = function(name) {
+                console.log('attaching event', name);
             };
-
-            new TomSelect("#category-bucket", {
+            let settings = {
                 onInitialize: eventHandler('onInitialize'),
                 onChange: eventHandler('onChange'),
                 onItemAdd: eventHandler('onItemAdd'),
@@ -227,6 +224,9 @@
                 },
                 hidePlaceholder: true,
                 create: false,
+            };
+            document.querySelectorAll('.form-select').forEach((el)=>{
+                new TomSelect(el,settings);
             });
 
             const submitCategory = async (type, params = null) => {
@@ -386,16 +386,7 @@
                 }
 
                 //initialize tom select
-                let select = new TomSelect(categoryBucket, {
-                    plugins: {
-                        remove_button: {
-                            title: 'Remove this item',
-                        }
-                    },
-                    hidePlaceholder: true,
-                    create: false,
-                    selectedItems: bucket,
-                });
+                new TomSelect(categoryBucket, settings);
 
                 let myModal = new bootstrap.Modal(editModal);
                 myModal.show()

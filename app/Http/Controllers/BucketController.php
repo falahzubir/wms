@@ -20,7 +20,7 @@ class BucketController extends Controller
     public function index(Request $request)
     {
         $categories = CategoryMain::all();
-        $buckets = Bucket::with(['categoryBuckets','processingOrders'])
+        $buckets = Bucket::with(['categoryBuckets','categoryBuckets.categoryMain','processingOrders'])
         ->where('status', IS_ACTIVE)
         ->where(function ($q) use ($request) {
             if (!empty($request->search)) {
@@ -60,16 +60,32 @@ class BucketController extends Controller
 
     public function store(Request $request)
     {
-        $bucket = $request->validate([
-            'name' => 'required',
+        $request->validate([
+            'name' => ['required', 'unique:buckets'],
             'description' => 'required',
+            'category_id' => 'required|array',
+        ], [
+            'name.required' => 'The Bucket Name field is required.',
+            'description.required' => 'The Bucket Description field is required.',
+            'category_id.required' => 'The Bucket Category field is required.',
         ]);
 
-        $bucket['created_by'] = 1;
+        $bucket = Bucket::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'created_by' => 1,
+        ]);
 
-        Bucket::create($bucket);
+        foreach ($request->category_id as $category_id) {
+            $bucket->categoryBuckets()->create([
+                'category_id' => $category_id,
+            ]);
+        }
 
-        return redirect()->route('buckets.index')->with('success', 'Bucket created successfully.');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket created successfully.'
+        ]);
     }
 
     /**
@@ -77,7 +93,7 @@ class BucketController extends Controller
      * @param Request $request, $id
      * @return view
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         $request->validate([
             'name' => 'required',
@@ -227,7 +243,8 @@ class BucketController extends Controller
     public function add_category(Request $request)
     {
         $request->validate([
-            'category_name' => 'required|string|max:255',
+            // 'category_name' => 'required|string|max:255',
+            'category_name' => ['required', 'unique:category_mains'],
             'category_status' => 'required|int',
             'category_bucket' => 'required|array',
         ]);
@@ -253,7 +270,7 @@ class BucketController extends Controller
     {
         $request->validate([
             'category_id' => 'required|int',
-            'category_name' => 'required|string|max:255',
+            'category_name' => ['required', 'unique:category_mains,category_name,' . $request->category_id  . ',id' ],
             'category_status' => 'required|int',
             'category_bucket' => 'required|array',
         ]);
