@@ -23,7 +23,7 @@
                                 <td valign="middle" class="text-center">{{ $loop->index + 1 }}</td>
                                 <td valign="middle">{{ $row->column_name }}</td>
                                 <td>
-                                    <input class="form-control" type="text" value="{{ $row->column_display_name }}" name="column_display_name[]">
+                                    <input class="form-control" type="text" value="{{ $row->column_display_name }}" name="column_display_name[]" required>
                                     <input type="hidden" name="column_id[]" value="{{ $row->id }}">
                                 </td>
                             </tr>
