@@ -39,8 +39,7 @@
 
 
                     <div class="card-title text-end">
-                        <button class="btn btn-primary" id="add-bucket-category" data-bs-toggle="modal"
-                            data-bs-target="#modal-add-bucket-category">
+                        <button class="btn btn-primary" id="add-bucket-category" onclick="addBucket()">
                             <i class="bi bi-xl bi-plus"></i> &nbsp;Add Bucket Category</button>
                     </div>
 
@@ -210,6 +209,19 @@
 
     <x-slot name="script">
         <script>
+
+            const resetAllFromModal = () =>{
+                let modal = document.getElementById('modal-add-bucket-category');
+                modal.querySelector('#category-name').value = '';
+                modal.querySelector('#category-status').checked = false;
+                modal.querySelector('#category-bucket').value = '';
+
+                let modalEdit = document.getElementById('modal-edit-bucket-category');
+                modalEdit.querySelector('#category-name').value = '';
+                modalEdit.querySelector('#category-status').checked = false;
+                modalEdit.querySelector('#category-bucket').value = '';
+            }
+
             let eventHandler = function(name) {
                 console.log('attaching event', name);
             };
@@ -306,6 +318,14 @@
                 })
             }
 
+            const addBucket = () =>
+            {
+                resetAllFromModal();
+                let addModal = document.getElementById('modal-add-bucket-category');
+                let myModal = new bootstrap.Modal(addModal);
+                myModal.show()
+            }
+
             const deleteBucket = (id) => {
                 Swal.fire({
                     title: "Delete Bucket Category?",
@@ -351,6 +371,7 @@
             }
 
             function editBucket(json) {
+                resetAllFromModal();
                 let editModal = document.getElementById('modal-edit-bucket-category');
                 let category = JSON.parse(JSON.stringify(json));
                 let bucket = category.category_buckets.map(function(bucket) {

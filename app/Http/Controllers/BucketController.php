@@ -295,7 +295,10 @@ class BucketController extends Controller
     {
         $request->validate([
             'category_id' => 'required|int',
-            'category_name' => ['required', 'unique:category_mains,category_name,' . $request->category_id  . ',id' ],
+            'category_name' => [
+                'required',
+                Rule::unique('category_mains')->ignore($request->category_id)->whereNull('deleted_at'),
+            ],
             'category_status' => 'required|int',
             'category_bucket' => 'required|array',
         ]);
