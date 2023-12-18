@@ -299,6 +299,21 @@
                         </a>
                     </li>
                     @endrole
+                    <li>
+                        <a class="nav-link collapsed" data-bs-target="#components-nav-report-shipment" data-bs-toggle="collapse" href="#">
+                            <i class="bi bi-circle"></i></i><span>Template</span><i class="bi bi-chevron-down ms-auto"></i>
+                        </a>
+                        <ul id="components-nav-report-shipment"
+                        class=" {{ Route::current()->getName() != 'template_setting.index' ? 'collapsed' : '' }} ">
+                            <li>
+                                <a href="{{ route('template_setting.index') }}"
+                                    {{ Route::current()->getName() == 'template_setting.index' ? 'class=active' : '' }}>
+                                    <i class="bi bi-circle"></i>
+                                    <span>Template Setting</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
             </li><!-- End Components Nav -->
         @endcan

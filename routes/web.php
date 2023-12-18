@@ -17,6 +17,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TemplateSettingController;
 use App\Models\Company;
 use Illuminate\Support\Facades\Route;
 
@@ -176,6 +177,11 @@ Route::middleware(['auth'])->group(function() {
 
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+
+    Route::prefix('template_setting')->group(function() {
+        Route::get('/', [TemplateSettingController::class, 'index'])->name('template_setting.index');
+        Route::post('update', [TemplateSettingController::class, 'update'])->name('template_setting.update');
+    });
 });
 
     // Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
