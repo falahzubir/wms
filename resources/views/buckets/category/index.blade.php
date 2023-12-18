@@ -214,7 +214,9 @@
                 let modal = document.getElementById('modal-add-bucket-category');
                 modal.querySelector('#category-name').value = '';
                 modal.querySelector('#category-status').checked = false;
-                modal.querySelector('#category-bucket').value = '';
+                let select = modal.querySelector('#category-bucket');
+                let control = select.tomselect;
+                control.clear();
 
                 let modalEdit = document.getElementById('modal-edit-bucket-category');
                 modalEdit.querySelector('#category-name').value = '';

@@ -48,7 +48,7 @@
             $title = ['Northen Region 1 (NR1)', 'Southen Region 2 (SR2)', 'Easten Region 3 (ER3)', 'Westen Region 4 (WR4)', 'Northen Region 5 (NR5)', 'Southen Region 6 (SR6)', 'Easten Region 7 (ER7)', 'Westen Region 8 (WR8)', 'Northen Region 9 (NR9)'];
             @endphp
             <div class="col-md-4">
-                <div class="card" style="height: 208px" role="button" data-bs-toggle="modal" data-bs-target="#add-new-bucket">
+                <div class="card" style="height: 208px" role="button" onclick="openBucket()">
                     <div class="card-body p-3 btn-ready-to-ship">
                         <div style="font-weight:bold">
                             <div class="text-center">
@@ -245,7 +245,7 @@
                         <div class="row mb-3">
                             <div class="col">
                                 <label for="bucket-name" class="form-label">Bucket Category</label>
-                                <select class="form-select" name="category_id[]" multiple>
+                                <select class="form-select" id="bucket-category" name="category_id[]" multiple>
                                     <option selected value="">All</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}">
@@ -375,6 +375,19 @@
         document.querySelectorAll('.form-select').forEach((el)=>{
             new TomSelect(el,settings);
         });
+
+            const openBucket = () => {
+                let modal = document.getElementById('add-new-bucket');
+                let myModal = new bootstrap.Modal(document.getElementById('add-new-bucket'));
+
+                //reset input
+                modal.querySelector('#bucket-name').value = '';
+                modal.querySelector('#bucket-description').value = '';
+                let select = modal.querySelector('#bucket-category');
+                let control = select.tomselect;
+                control.clear();
+                myModal.show()
+            }
 
             const editBucket = (el,json) =>
             {

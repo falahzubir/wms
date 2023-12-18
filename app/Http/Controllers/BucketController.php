@@ -62,7 +62,13 @@ class BucketController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'unique:buckets'],
+            'name' => [
+                'required',
+                Rule::unique('buckets')->where(function ($query) {
+                    // Fetch the category by name and exclude soft-deleted records
+                    $query->where('name', request('name'))->where('status', IS_ACTIVE);
+                }),
+            ],
             'description' => 'required',
             'category_id' => 'required|array',
         ], [
@@ -97,7 +103,12 @@ class BucketController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'unique:buckets,name,' . $request->bucket_id  . ',id' ],
+            'name' => ['required',
+                Rule::unique('buckets')->ignore($request->bucket_id)->where(function ($query) {
+                    // Fetch the category by name and exclude soft-deleted records
+                    $query->where('name', request('name'))->where('status', IS_ACTIVE);
+                }),
+            ],
             'description' => 'required',
             'category_id' => 'required|array',
         ], [
