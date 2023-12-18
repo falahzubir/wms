@@ -96,16 +96,32 @@ class BucketController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'name' => 'required',
+            'name' => ['required', 'unique:buckets,name,' . $request->bucket_id  . ',id' ],
             'description' => 'required',
+            'category_id' => 'required|array',
+        ], [
+            'name.required' => 'The Bucket Name field is required.',
+            'description.required' => 'The Bucket Description field is required.',
+            'category_id.required' => 'The Bucket Category field is required.',
         ]);
 
-        $bucket = Bucket::find($id);
+        $bucket = Bucket::find($request->bucket_id);
         $bucket->name = $request->name;
         $bucket->description = $request->description;
         $bucket->save();
 
-        return redirect()->route('buckets.index')->with('success', 'Bucket updated successfully.');
+        $bucket->categoryBuckets()->delete();
+
+        foreach ($request->category_id as $category_id) {
+            $bucket->categoryBuckets()->create([
+                'category_id' => $category_id,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket edited successfully.'
+        ]);
     }
 
     /**
@@ -210,6 +226,8 @@ class BucketController extends Controller
         $bucket = Bucket::find($request->bucket_id);
         $bucket->status = IS_INACTIVE;
         $bucket->save();
+
+        $bucket->categoryBuckets()->delete();
 
         return response()->json([
             'status' => 'success',

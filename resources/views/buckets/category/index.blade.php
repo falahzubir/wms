@@ -15,7 +15,7 @@
                         </div>
                         <div class="col-md-3">
                             <label for="input-status" class="form-label">Status</label>
-                            <select id="input-status" class="form-select" name="status">
+                            <select id="input-status" class="form-control" name="status">
                                 <option selected value="">All</option>
                                 @forelse ($statuses as $key => $status)
                                     <option value="{{ $key }}"

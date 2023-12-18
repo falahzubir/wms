@@ -48,7 +48,7 @@
             $title = ['Northen Region 1 (NR1)', 'Southen Region 2 (SR2)', 'Easten Region 3 (ER3)', 'Westen Region 4 (WR4)', 'Northen Region 5 (NR5)', 'Southen Region 6 (SR6)', 'Easten Region 7 (ER7)', 'Westen Region 8 (WR8)', 'Northen Region 9 (NR9)'];
             @endphp
             <div class="col-md-4">
-            <div class="card" style="height: 85%" role="button" data-bs-toggle="modal" data-bs-target="#add-new-bucket">
+                <div class="card" style="height: 208px" role="button" data-bs-toggle="modal" data-bs-target="#add-new-bucket">
                     <div class="card-body p-3 btn-ready-to-ship">
                         <div style="font-weight:bold">
                             <div class="text-center">
@@ -74,7 +74,7 @@
                                 <i onclick="openCategory(this)" class="bi bi-chevron-down float-end"></i>
                             </div>
                             <hr>
-                            <div class="bucket-one" style="height: 100px !important;">
+                            <div class="bucket-one" style="height: 120px !important;">
                                 <div class="mb-3 text-center">
                                     <div>Processing: <strong><span
                                         id="pending-count">{{ $bucket->processingOrders->count() }}</span></strong>
@@ -113,23 +113,21 @@
                                         <button class="btn btn-danger rounded-pill" title="Delete Bucket" onclick="deleteBucket({{ $bucket->id }})"><i class="bi bi-trash"></i></button>
                                 </div>
                             </div>
-                            <div class="bucket-two d-none" style="height: 100px !important;">
-                                <div class="mb-3 text-center">
-                                    <div class="fw-bold">Bucket Category</div>
-                                    <div class="row">
-                                        @foreach ($bucket->categoryBuckets as $index => $category)
-                                            <div class="col-md-6 text-center p-2">
-                                                <span class="text-start border p-1" style="border-radius: 10px;">
-                                                    <small>
-                                                        <i class="bi bi-tag-fill"></i> {{ $category->categoryMain->category_name }}
-                                                    </small>
-                                                </span>
-                                            </div>
-                                            @if(($index + 1) % 2 === 0)
+                            <div class="bucket-two d-none">
+                                <div class="mb-3">
+                                    <div class="fw-bold text-center">Bucket Category</div>
+                                    <div class="text-center">
+                                        <div class="row">
+                                            @foreach ($bucket->categoryBuckets as $index => $category)
+                                                <div class="col-md-6 p-3">
+                                                    <span class="border p-2" style="border-radius: 10px; border: 2px solid gray;">
+                                                        <small>
+                                                            <i class="bi bi-tag-fill" style="color: gray;"></i> {{ $category->categoryMain->category_name }}
+                                                        </small>
+                                                    </span>
                                                 </div>
-                                                <div class="row">
-                                            @endif
-                                        @endforeach
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -420,7 +418,30 @@
                 }).then((result) => {
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
-                        console.log(bucket_id);
+                        axios.post('/api/buckets/delete', {
+                            bucket_id: bucket_id
+                        }).then((response) => {
+                            if(response.data.status == 'success')
+                            {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: response.data.message,
+                                    allowOutsideClick: false,
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.reload();
+                                    }
+                                })
+                            }
+                        }).catch((error) => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: error.response.data.message,
+                                allowOutsideClick: false,
+                            })
+                        })
                     } else if (result.isDenied) {
                         return;
                     }
