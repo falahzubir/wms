@@ -48,9 +48,6 @@ class PosMalaysiaSettingSeeder extends Seeder
                     'key' => 'gen3pl_username',
                     'value' => 'EmziHoldings',
                 ], [
-                    'key' => 'genpreacceptedsingle_subscription_code',
-                    'value' => 'ECON001',
-                ], [
                     'key' => 'genpreacceptedsingle_require_to_pickup',
                     'value' => 'true',
                 ], [
