@@ -760,8 +760,8 @@
         let generate_cn_couriers = {
             'dhl-ecommerce' : 'DHL Ecommerce',
             'posmalaysia' : 'POS Malaysia',
-            'shopee' : 'Shopee',
-            'tiktok' : 'TikTok'
+            // 'shopee' : 'Shopee',
+            // 'tiktok' : 'TikTok'
         };
 
         document.querySelector('#filter-order').onclick = function() {

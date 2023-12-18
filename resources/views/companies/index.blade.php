@@ -31,7 +31,7 @@
                                             <th>Name</th>
                                             <th>Address</th>
                                             <th>Phone</th>
-                                            <th>Tindakan</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -45,13 +45,16 @@
                                                 <td>{{ $company->phone }}</td>
                                                 <td>
                                                     <a href="{{ route('companies.edit', $company->id) }}"
-                                                        class="btn btn-warning btn-sm">Kemaskini</a>
+                                                        class="btn btn-warning btn-sm p-2 py-1">
+                                                        <i class="bx bx-edit"></i>
+                                                    </a>
                                                     @can('permission.update')
                                                         <button class="btn btn-info btn-sm accessTokenModal "
                                                             data-bs-toggle="modal" data-bs-target="#accessTokenModal"
                                                             data-bs-id="{{ $company->id }}"
                                                             data-bs-name="{{ $company->name }}">
-                                                            Access Tokens</button>
+                                                            <i class="bx bx-key"></i>
+                                                        </button>
                                                     @endcan
                                                 </td>
                                             </tr>
@@ -112,7 +115,7 @@
                                     <div id="flush-collapseTwo" class="accordion-collapse collapse"
                                         aria-labelledby="flush-collapseTwo" data-bs-parent="#accordionFlushExample">
                                         <div class="accordion-body">
-                                            <div class="row">
+                                            {{-- <div class="row mb-1">
                                                 <div class="col-6">
                                                     <label for="">Client ID</label>
                                                     <input type="text" id="dhl-client-id" name="posmalaysia_client_id"
@@ -122,6 +125,13 @@
                                                     <label for="">Client Secret</label>
                                                     <input type="text" id="dhl-client-secret"
                                                         name="posmalaysia_client_secret" class="form-control">
+                                                </div>
+                                            </div> --}}
+                                            <div class="row mb-1">
+                                                <div class="col-12">
+                                                    <label for="">Subscribtion Code</label>
+                                                    <input type="text" id="dhl-client-secret"
+                                                        name="posmalaysia_subscribtion_code" class="form-control">
                                                 </div>
                                             </div>
                                         </div>
