@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ColumnMain;
+use Illuminate\Support\Carbon;
 
 class TemplateSettingController extends Controller
 {
@@ -29,6 +30,7 @@ class TemplateSettingController extends Controller
 
                 $record = ColumnMain::find($columnId);
                 $record->column_display_name = $displayNames[$index];
+                $record->updated_at = now()->timezone('Asia/Kuala_Lumpur');
                 $record->save();
             }
 

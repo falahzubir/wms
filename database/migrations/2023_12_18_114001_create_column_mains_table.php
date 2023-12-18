@@ -18,7 +18,8 @@ return new class extends Migration
             $table->id();
             $table->string('column_name');
             $table->string('column_display_name')->nullable();
-            $table->dateTimeTz('deleted_at', $precision = 0)->nullable();
+            $table->timestamps();
+            $table->dateTimeTz('deleted_at')->nullable();
         });
 
         // Add the following lines to insert data into the column_name column
