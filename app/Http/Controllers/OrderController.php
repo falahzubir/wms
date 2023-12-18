@@ -401,10 +401,7 @@ class OrderController extends Controller
         $data['is_active'] = IS_ACTIVE;
 
         $data_customer = $webhook['customer'];
-        // dump($data_customer['country'].'=> country');
-        // dump($data_customer['postcode'].'=>postcode length');
-        // dump(strlen($data_customer['postcode']).'=>postcode length');
-        // dump($data_customer['city'].'=>city');
+
         if($data_customer['country'] == 1 || $data_customer['country'] == 2){
             if(strlen($data_customer['postcode']) > 5 || strlen($data_customer['postcode']) < 5){
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
@@ -415,6 +412,9 @@ class OrderController extends Controller
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
                 return;
             }
+        }elseif($data_customer['country'] == 0){
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Country error ');
+            return;
         }
 
         if($data_customer['city'] == null){
@@ -429,7 +429,6 @@ class OrderController extends Controller
             $data_customer['postcode'] = $result->alternative_postcode;
         }
 
-        // $customer = Customer::updateorCreate($data_customer);
         $customer = Customer::updateOrCreate($data_customer);
         
         $data['customer_id'] = $customer->id;
@@ -450,7 +449,6 @@ class OrderController extends Controller
         }, array());
         OrderItem::where('order_id', $order->id)->update(['status' => 0]);
 
-        // dd($product_list);
         foreach ($product_list as $product) {
             $p_ids['product_id'] = $products[$product['code']];
             $product_data['price'] = $product['price'] * 100;
