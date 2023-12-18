@@ -113,7 +113,7 @@
                                         <button class="btn btn-danger rounded-pill" title="Delete Bucket" onclick="deleteBucket({{ $bucket->id }})"><i class="bi bi-trash"></i></button>
                                 </div>
                             </div>
-                            <div class="bucket-two d-none">
+                            <div class="bucket-two d-none" style="height: 120px !important; overflow-y:auto;overflow-x:hidden">
                                 <div class="mb-3">
                                     <div class="fw-bold text-center">Bucket Category</div>
                                     <div class="text-center">

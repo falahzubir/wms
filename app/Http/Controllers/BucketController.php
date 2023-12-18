@@ -10,6 +10,7 @@ use App\Models\OrderLog;
 use App\Models\CategoryMain;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rule;
 
 class BucketController extends Controller
 {
@@ -262,7 +263,13 @@ class BucketController extends Controller
     {
         $request->validate([
             // 'category_name' => 'required|string|max:255',
-            'category_name' => ['required', 'unique:category_mains'],
+            'category_name' => [
+                'required',
+                Rule::unique('category_mains')->where(function ($query) {
+                    // Fetch the category by name and exclude soft-deleted records
+                    $query->where('category_name', request('category_name'))->whereNull('deleted_at');
+                }),
+            ],
             'category_status' => 'required|int',
             'category_bucket' => 'required|array',
         ]);

@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
 use App\Models\AlternativePostcode;
+use App\Models\CategoryMain;
 
 class OrderController extends Controller
 {
@@ -166,11 +167,13 @@ class OrderController extends Controller
                 // ->whereRaw('(payment_type IS NULL OR payment_type <> 22)'); //shopee order excluded
 
         $orders = $this->filter_order($request, $orders);
+        $categories = CategoryMain::all();
 
         return view('orders.index', [
             'title' => 'Pending Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
+            'categories' => $categories,
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER,ACTION_ARRANGE_SHIPMENT],
         ]);
@@ -421,7 +424,7 @@ class OrderController extends Controller
             throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
             return;
         }
-        
+
         // Check for alternative postcode
         $result = AlternativePostcode::where('actual_postcode', $data_customer['postcode'])->first();
 
@@ -431,7 +434,7 @@ class OrderController extends Controller
 
         // $customer = Customer::updateorCreate($data_customer);
         $customer = Customer::updateOrCreate($data_customer);
-        
+
         $data['customer_id'] = $customer->id;
 
         $order = Order::updateOrCreate($ids, $data);

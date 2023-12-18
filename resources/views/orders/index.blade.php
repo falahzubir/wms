@@ -724,6 +724,40 @@
             </div>
         </div>
     </div>
+    {{-- Start Bucket Category Modal --}}
+    <div class="modal fade" id="modal-open-bucket-category" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <form action="" id="submit-open-bucket-category">
+            @csrf
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="category-title">Add to Bucket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="pt-3 pb-3">
+                            <p class="fw-bold" style="font-size: 20px;" for="category-id">Please select bucket Category!</p>
+                            <div style="display: flex ;justify-content: center;">
+                                <select class="form-select" id="category-id" name="category_id" style="width: 80%">
+                                    <option value="">Select a Category</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->category_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="submit-button-category" onclick="" type="button"
+                            class="btn btn-warning">Proceed</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {{-- End Bucket Category Modal --}}
 
 @include("orders.multiple_cn_modal")
 <x-slot name="script">
@@ -738,84 +772,37 @@
         @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
             document.querySelector('#add-to-bucket-btn').onclick = function() {
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                let checkedValue = inputElements.filter(chk => chk.checked).length;
 
-                // sweet alert
-                if (checkedValue == 0) {
+                let modalOne = new bootstrap.Modal(document.getElementById('modal-open-bucket-category'), {
+                    keyboard: false
+                });
+
+                let checkedOrder = [];
+                inputElements.forEach(input => {
+                    if (input.checked) {
+                        checkedOrder.push(input.value);
+                    }
+                });
+
+                if (checkedOrder.length == 0) {
                     Swal.fire({
                         title: 'No order selected!',
-                        text: "Please select at least one order to add to bucket.",
+                        text: "All order in the list will be added to bucket.",
                         icon: 'warning',
-                        confirmButtonText: 'OK'
+                        confirmButtonText: 'Yes, Select overall',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonText: 'Cancel',
+                        showCancelButton: true,
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            modalOne.show();
+                        }
                     })
                     return;
+                }else{
+                    modalOne.show();
                 }
-                //get bucket lists
-                axios.get('/api/buckets')
-                    .then(function(response) {
-                        // handle success
-                        let buckets = response.data;
-                        let bucketOptions = {};
-                        buckets.forEach(bucket => {
-                            bucketOptions[bucket.id] = bucket.name;
-                        });
-                        Swal.fire({
-                            title: 'Please select bucket!',
-                            input: 'select',
-                            inputOptions: bucketOptions,
-                            inputPlaceholder: 'Select a bucket',
-                            showCancelButton: true,
-                            inputValidator: (value) => {
-                                return new Promise((resolve) => {
-                                    if (value !== '') {
-                                        resolve()
-                                    } else {
-                                        resolve('You need to select a bucket!')
-                                    }
-                                })
-                            }
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                //get checked order
-                                let checkedOrder = [];
-                                inputElements.forEach(input => {
-                                    if (input.checked) {
-                                        checkedOrder.push(input.value);
-                                    }
-                                });
-                                //add to bucket
-                                axios.post('/api/add-to-bucket', {
-                                        bucket_id: result.value,
-                                        order_ids: checkedOrder,
-                                    })
-                                    .then(function(response) {
-                                        // handle success
-                                        Swal.fire({
-                                            title: 'Success!',
-                                            text: "Order added to bucket.",
-                                            icon: 'success',
-                                            confirmButtonText: 'OK'
-                                        }).then((result) => {
-                                            if (result.isConfirmed) {
-                                                location.reload();
-                                            }
-                                        });
-                                    })
-                                    .catch(function(error) {
-                                        // handle error
-                                        console.log(error);
-                                    })
-                                    .then(function() {
-                                        // always executed
-                                    });
-                            }
-                        })
-                    })
-                    .catch(function(error) {
-                        // handle error
-                        console.log(error);
-                    })
-
             }
         @endif
 
