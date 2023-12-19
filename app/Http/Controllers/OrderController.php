@@ -20,6 +20,7 @@ use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
 use App\Models\AlternativePostcode;
 use App\Models\CategoryMain;
+use Illuminate\Support\Facades\Http;
 
 class OrderController extends Controller
 {
@@ -377,7 +378,9 @@ class OrderController extends Controller
             $products["$value->code"] = $value->id;
         }
 
-        $company_id = Company::where('code', $webhook['company'])->first()->id;
+        $company = Company::where('code', $webhook['company'])->first();
+        $company_id = $company->id;
+        // $company_id = Company::where('code', $webhook['company'])->first()->id;
         // $operational_model = OperationalModel::where('id', $webhook['operation_model_id'])->first();
         // if ($operational_model->default_company_id != null) {
         //     $company_id = $operational_model->default_company_id;
@@ -404,10 +407,7 @@ class OrderController extends Controller
         $data['is_active'] = IS_ACTIVE;
 
         $data_customer = $webhook['customer'];
-        // dump($data_customer['country'].'=> country');
-        // dump($data_customer['postcode'].'=>postcode length');
-        // dump(strlen($data_customer['postcode']).'=>postcode length');
-        // dump($data_customer['city'].'=>city');
+
         if($data_customer['country'] == 1 || $data_customer['country'] == 2){
             if(strlen($data_customer['postcode']) > 5 || strlen($data_customer['postcode']) < 5){
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
@@ -418,6 +418,9 @@ class OrderController extends Controller
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
                 return;
             }
+        }elseif($data_customer['country'] == 0){
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Country error ');
+            return;
         }
 
         if($data_customer['city'] == null){
@@ -425,14 +428,41 @@ class OrderController extends Controller
             return;
         }
 
-        // Check for alternative postcode
-        $result = AlternativePostcode::where('actual_postcode', $data_customer['postcode'])->first();
+        // check and add product if not found
+        $product_code_list = array_column($webhook['product'], 'code');
+        $not_found = array_diff($product_code_list, array_keys($products));
+        if(count($not_found) > 0){
+            $import_prod = Http::post($company->url . '/api/get_products', [
+                'codes' => $not_found,
+            ])->json();
 
-        if ($result) {
-            $data_customer['postcode'] = $result->alternative_postcode;
+            if($import_prod['status'] != 'success'){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, $import_prod['message']);
+                return;
+            }
+
+            $products = $import_prod['products'];
+
+            foreach ($products as $key => $value) {
+                $product = Product::updateOrCreate(['code' => $value['product_code']], [
+                    'name' => $value['product_name'],
+                    'price' => $value['product_price'] * 100,
+                    'is_active' => IS_ACTIVE,
+                    'weight' => $value['product_weight'] * 1000,
+                    'is_foc' => $value['product_foc'],
+                    'max_box' => 40,
+                ]);
+                $products["$value[product_code]"] = $product->id;
+            }
         }
 
-        // $customer = Customer::updateorCreate($data_customer);
+         // Check for alternative postcode
+         $result = AlternativePostcode::where('actual_postcode', $data_customer['postcode'])->first();
+
+         if ($result) {
+             $data_customer['postcode'] = $result->alternative_postcode;
+         }
+         
         $customer = Customer::updateOrCreate($data_customer);
 
         $data['customer_id'] = $customer->id;
@@ -453,7 +483,6 @@ class OrderController extends Controller
         }, array());
         OrderItem::where('order_id', $order->id)->update(['status' => 0]);
 
-        // dd($product_list);
         foreach ($product_list as $product) {
             $p_ids['product_id'] = $products[$product['code']];
             $product_data['price'] = $product['price'] * 100;
