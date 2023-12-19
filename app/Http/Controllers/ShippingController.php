@@ -98,16 +98,16 @@ class ShippingController extends Controller
 
         switch($request->input('type')):
             case('dhl-ecommerce'):
-                $this->dhl_label($request->order_ids);
+                return $this->dhl_label($request->order_ids);
                 break;
             case('shopee'):
-                $this->shopee_cn($ordersShopee);
+                return $this->generateShopeeCN($ordersShopee);
                 break;
             case('posmalaysia'):
-                $this->posmalaysia_cn($request->order_ids);
+                return $this->posmalaysia_cn($request->order_ids);
                 break;
             case('ninjavan'):
-                $this->ninjavan_cn($request->order_ids);
+                return $this->ninjavan_cn($request->order_ids);
                 break;
             default:
                 return response()->json([
@@ -115,13 +115,6 @@ class ShippingController extends Controller
                     'message' => 'Invalid courier type',
                 ], 400);
         endswitch;
-
-        if(count($ordersShopee) > 0){
-            return $this->generateShopeeCN($ordersShopee);
-        }
-        else{
-            return $this->dhl_label($request->order_ids); // for dhl orders
-        }
     }
 
     /**

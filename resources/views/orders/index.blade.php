@@ -760,7 +760,7 @@
         let generate_cn_couriers = {
             'dhl-ecommerce' : 'DHL Ecommerce',
             'posmalaysia' : 'POS Malaysia',
-            // 'shopee' : 'Shopee',
+            'shopee' : 'Shopee',
             // 'tiktok' : 'TikTok'
         };
 
