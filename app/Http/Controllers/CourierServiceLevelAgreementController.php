@@ -142,6 +142,11 @@ class CourierServiceLevelAgreementController extends Controller
                 return response()->json([
                     'message' => 'Postcode must be 5 digit',
                     'postcode' => $value,
+                    'errors' => [
+                        'postcode' => [
+                            'Postcode must be 5 digit',
+                        ],
+                    ],
                 ], 400);
             }
         }
