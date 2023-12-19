@@ -52,6 +52,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view.return_list']);
         Permission::firstOrCreate(['name' => 'view.reject_list']);
         Permission::firstOrCreate(['name' => 'view.scan_parcel']);
+        Permission::firstOrCreate(['name' => 'view.scan_setting']);
         Permission::firstOrCreate(['name' => 'view.settings']);
         Permission::firstOrCreate(['name' => 'view.dashboard']);
 

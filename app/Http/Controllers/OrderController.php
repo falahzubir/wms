@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
 use App\Models\AlternativePostcode;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 
 class OrderController extends Controller
@@ -459,7 +460,7 @@ class OrderController extends Controller
          if ($result) {
              $data_customer['postcode'] = $result->alternative_postcode;
          }
-         
+
         $customer = Customer::updateOrCreate($data_customer);
 
         $data['customer_id'] = $customer->id;
@@ -788,9 +789,22 @@ class OrderController extends Controller
             $shipping->scanned_at = $data['scanned_at'] = Carbon::now();
             $shipping->scanned_by = $data['scanned_by'] = auth()->user()->id ?? 1;
 
-            Shipping::where('order_id', $shipping->order_id)->update($data);
-            set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
-
+            if(config('settings.scan_multiple') == IS_ACTIVE){
+                Shipping::where('tracking_number', $request->code)->update($data);
+                $other_parcel = Shipping::where('order_id', $shipping->order_id)
+                    ->where('status', IS_ACTIVE)
+                    ->whereNull('scanned_at')
+                    ->get();
+                if(count($other_parcel) == 0){
+                    set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
+                }
+                else{
+                    set_order_status($shipping->order, ORDER_STATUS_PACKING, "Item Scanned by " . auth()->user()->name);
+                }
+            } else {
+                Shipping::where('order_id', $shipping->order_id)->update($data);
+                set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
+            }
 
             return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
         } else {
@@ -927,5 +941,13 @@ class OrderController extends Controller
         $result['current_process'] = $current_process->current_process(true)->original['count'];
 
         return $result;
+    }
+
+    public function scan_setting(){
+        $settings = Setting::haveParent()->where('type', SETTING_TYPE_SCAN)->get();
+        return view('orders.scan_setting', [
+            'title' => 'Scan Setting',
+            'settings' => $settings,
+        ]);
     }
 }
