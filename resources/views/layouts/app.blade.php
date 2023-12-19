@@ -10,7 +10,11 @@
         <x-breadcrumb :title="$title" :crumbList="$crumbList" />
 
         <!-- ======= Notification Alert ======= -->
-        <x-notification-alert />
+        @if(request()->segment(1) === 'alternative_postcode')
+            <x-alternative-postcode-alert />
+        @else
+            <x-notification-alert />
+        @endif
 
 
         {{ $slot }}

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AlternativePostcodeController;
 use App\Http\Controllers\AccessTokenController;
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
@@ -174,12 +175,20 @@ Route::middleware(['auth'])->group(function() {
         Route::get('selected-coverage', [CourierController::class, 'selectedcoverage'])->name('couriers.selectedCoverage');
         Route::get('default-coverage', [CourierController::class, 'defaultcoverage'])->name('couriers.defaultCoverage');
     });
+    
+    Route::prefix('alternative_postcode')->group(function() {
+        Route::get('/', [AlternativePostcodeController::class, 'index'])->name('alternative_postcode.index');
+        Route::post('save', [AlternativePostcodeController::class, 'store'])->name('alternative_postcode.save');
+        Route::post('update', [AlternativePostcodeController::class, 'update'])->name('alternative_postcode.update');
+        Route::get('delete/{id}', [AlternativePostcodeController::class, 'destroy'])->name('alternative_postcode.delete');
+        Route::get('/search', [AlternativePostcodeController::class, 'handleSearch'])->name('search');
+    });
 
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
-Route::get('live', fn () => view('live'));
+    // Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
 
 Route::get('notifications', [NotificationController::class, 'list']);
 

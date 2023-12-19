@@ -7,12 +7,12 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
-trait ShopeeTrait 
+trait ShopeeTrait
 {
     public static function getAccessToken()
     {
         $date = date('Y-m-d H:i:s');
-        
+
         $accessToken = AccessToken::where('type', 'shopee')->first();
 
         if($accessToken){
@@ -46,7 +46,7 @@ trait ShopeeTrait
             'Signature' => hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
         ])
         ->post($url.'/api/get_tokenShopee', $json);
-        
+
         $response = json_decode($response, true);
         //update access token
         $access_token = AccessToken::where('type', 'shopee')->first();
@@ -71,438 +71,191 @@ trait ShopeeTrait
 
     public static function getOrderDetail($order_sn)
     {
-        $accessToken = self::getAccessToken();
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/order/get_order_detail";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $token = $accessToken['token'];
-        $shop_id = $accessToken['shop_id'];
-        $current_time = Carbon::now()->toDateTimeString();
-        $timestamp = strtotime($current_time);
+        $data = [
+            'order_sn_list' => $order_sn,
+            'response_optional_fields' => "buyer_user_id,buyer_username,recipient_address,item_list,total_amount,shipping_carrier,estimated_shipping_fee,pay_time,package_list,fulfillment_flag",
+        ];
 
-        $order_list = $order_sn;
-        $response_optional_field = "buyer_user_id,buyer_username,recipient_address,item_list,total_amount,shipping_carrier,estimated_shipping_fee,pay_time,package_list,fulfillment_flag";
-
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
-        $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp."&order_sn_list=".$order_list."&response_optional_fields=".$response_optional_field;
-
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-
-        $response = curl_exec($ch);
-
-        curl_close($ch);
-
-        return $response;
+        return self::sendRequest('get', '/api/v2/order/get_order_detail', $data);
     }
 
-    public static function getShippingParameter($order_sn) #info_needed for ship order such as pickup_time_id, address_id
+    public static function getShippingParameter($order_sn)
     {
-        $accessToken = self::getAccessToken();
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/logistics/get_shipping_parameter";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $token = $accessToken['token'];
-        $shop_id = $accessToken['shop_id'];
-        $current_time = Carbon::now()->toDateTimeString();
-        $timestamp = strtotime($current_time);
+        $data = [
+            'order_sn' => $order_sn,
+        ];
 
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
-        $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp."&order_sn=".$order_sn;
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'GET',
-        CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-        ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-        
-        return $response;
+        return self::sendRequest('get', '/api/v2/logistics/get_shipping_parameter', $data);
     }
 
-    public static function getTrackingNumber($order_sn) #get tracking number
+    public static function getTrackingNumber($order_sn)
     {
-        $accessToken = $accessToken = self::getAccessToken();
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/logistics/get_tracking_number";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $token = $accessToken['token'];
-        $shop_id = $accessToken['shop_id'];
-        $current_time = Carbon::now()->toDateTimeString();
-        $timestamp = strtotime($current_time);
+        $data = [
+            'order_sn' => $order_sn,
+            'package_number' => '-',
+        ];
 
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
-        $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp."&order_sn=".$order_sn."&package_number=-";
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'GET',
-        CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-        ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        return $response;
+        return self::sendRequest('get', '/api/v2/logistics/get_tracking_number', $data);
     }
 
-    public static function getTrackingInfo($order_sn) #somehow xleh guna
+    public static function getTrackingInfo($order_sn)
     {
-        $accessToken = $accessToken = self::getAccessToken();
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/logistics/get_tracking_info";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $token = $accessToken['token'];
-        $shop_id = $accessToken['shop_id'];
-        $current_time = Carbon::now()->toDateTimeString();
-        $timestamp = strtotime($current_time);
+        $data = [
+            'order_sn' => $order_sn,
+            'package_number' => '-',
+        ];
 
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
-        $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp."&order_sn=".$order_sn."&package_number=-";
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'GET',
-        CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-        ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-        
-        return $response;
+        return self::sendRequest('get', '/api/v2/logistics/get_tracking_info', $data);
     }
 
-    public static function shipOrder($order_sn,$pickup_time_id)
+    public static function shipOrder($order_sn, $pickup_time_id)
     {
-        $accessToken = $accessToken = self::getAccessToken();
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/logistics/ship_order";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $token = $accessToken['token'];
-        $shop_id = $accessToken['shop_id'];
-        $current_time = Carbon::now()->toDateTimeString();
-        $timestamp = strtotime($current_time);
+        $data = [
+            'order_sn' => $order_sn,
+            'pickup' => [
+                'address_id' => 200007694,
+                'pickup_time_id' => $pickup_time_id,
+                'tracking_number' => '',
+            ],
+        ];
 
-        $address_id = 200007694;
-        
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
-        $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $url,
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => '{
-            "order_sn": "'.$order_sn.'",
-            "pickup": {
-                "address_id": '.$address_id.',
-                "pickup_time_id": "'.$pickup_time_id.'",
-                "tracking_number": "-"
-            }
-        }',
-          CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-          ),
-        ));
-        
-        $response = curl_exec($curl);
-        
-        return $response;
+        return self::sendRequest('post', '/api/v2/logistics/ship_order', $data);
     }
 
-    ########### START GENERATE CN FUNCTION ############
-
-    public static function getShippingDocumentParameter($data) #get suggestion of shipping_document_type need for generate CN
+    public static function getShippingDocumentParameter($data)
     {
-        $accessToken = $accessToken = self::getAccessToken();
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/logistics/get_shipping_document_parameter";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $token = $accessToken['token'];
-        $shop_id = $accessToken['shop_id'];
-        $current_time = Carbon::now()->toDateTimeString();
-        $timestamp = strtotime($current_time);
-
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
-        $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => '{
-            "order_list": [
-                {
-                    "order_sn": "'.$data['ordersn'].'",
-                    "package_number": "'.$data['package_number'].'"
-                }
-            ]
-        }',
-        CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-        ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-        
-        return $response;
+        $orderList = [
+            [
+                'order_sn' => $data['ordersn'],
+                'package_number' => $data['package_number'],
+            ],
+        ];
+        return self::sendRequest('post', '/api/v2/logistics/get_shipping_document_parameter', ['order_list' => $orderList]);
     }
 
-    public static function createShippingDocument($data) 
+    public static function createShippingDocument($data)
     {
-        $accessToken = $accessToken = self::getAccessToken();
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/logistics/create_shipping_document";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $token = $accessToken['token'];
-        $shop_id = $accessToken['shop_id'];
-        $current_time = Carbon::now()->toDateTimeString();
-        $timestamp = strtotime($current_time);
+        $orderList = [
+            [
+                'order_sn' => $data['ordersn'],
+                'package_number' => $data['package_number'],
+                'shipping_document_type' => $data['shipping_document_type'],
+                'tracking_number' => $data['tracking_no'],
+            ],
+        ];
 
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
-        $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => '{
-            "order_list": [
-                {
-                    "order_sn": "'.$data['ordersn'].'",
-                    "package_number": "'.$data['package_number'].'",
-                    "shipping_document_type": "'.$data['shipping_document_type'].'",
-                    "tracking_number": "'.$data['tracking_no'].'"
-                }
-            ]
-        }',
-        CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-        ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        return $response;
+        return self::sendRequest('post', '/api/v2/logistics/create_shipping_document', ['order_list' => $orderList]);
     }
 
-    public static function getShippingDocumentResult($data) #to know if status READY then can download
+    public static function getShippingDocumentResult($data)
     {
-        $accessToken = $accessToken = self::getAccessToken();
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/logistics/get_shipping_document_result";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $token = $accessToken['token'];
-        $shop_id = $accessToken['shop_id'];
-        $current_time = Carbon::now()->toDateTimeString();
-        $timestamp = strtotime($current_time);
+        $orderList = [
+            [
+                'order_sn' => $data['ordersn'],
+                'package_number' => $data['package_number'],
+                'shipping_document_type' => $data['shipping_document_type'],
+            ],
+        ];
 
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
-        $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => '{
-            "order_list": [
-                {
-                    "order_sn": "'.$data['ordersn'].'",
-                    "package_number": "'.$data['package_number'].'",
-                    "shipping_document_type": "'.$data['shipping_document_type'].'"
-                }
-            ]
-        }',        
-        CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-        ),
-        ));
-
-        $response = curl_exec($curl);
-        curl_close($curl);
-
-        return $response;
+        return self::sendRequest('post', '/api/v2/logistics/get_shipping_document_result', ['order_list' => $orderList]);
     }
 
     public static function downloadShippingDocument($data)
     {
-        $accessToken = self::getAccessToken();
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/logistics/download_shipping_document";
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
-        $token = $accessToken['token'];
-        $shop_id = $accessToken['shop_id'];
-        $current_time = Carbon::now()->toDateTimeString();
-        $timestamp = strtotime($current_time);
-
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
-        
-        $url= $host.$path."?access_token=".$token."&partner_id=".$partner_id."&shop_id=".$shop_id."&sign=".$sign."&timestamp=".$timestamp;
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => '        {
-            "shipping_document_type": "'.$data['shipping_document_type'].'",
-            "order_list": [
-                {
-                    "order_sn": "'.$data['ordersn'].'",
-                    "package_number": "'.$data['package_number'].'"
-                }
-            ]
-        }',
-        CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-        ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
+        $fileContent = self::sendRequest('post', '/api/v2/logistics/download_shipping_document', [
+            'shipping_document_type' => $data['shipping_document_type'],
+            'order_list' => [
+                [
+                    'order_sn' => $data['ordersn'],
+                    'package_number' => $data['package_number'],
+                ],
+            ],
+        ]);
 
         try {
             //download file to storage
-            $file_name = 'shopee/'.Carbon::now()->format('YmdHis').'_'.$data['ordersn'].'.pdf';
+            $file_name = 'shopee/initial_'.Carbon::now()->format('YmdHis').'_'.$data['ordersn'].'.pdf';
             $file_path = storage_path('app/public/'.$file_name);
-            file_put_contents($file_path, $response);
+            file_put_contents($file_path, $fileContent);
 
-            return $file_name;
+            // * convert pdf version to 1.4 using ghostscript
+            $new_file_name = 'shopee/'.Carbon::now()->format('YmdHis').'_'.$data['ordersn'].'.pdf';
+            $new_file_path = storage_path('app/public/'.$new_file_name);
+            $exec = 'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile='.$new_file_path.' '.$file_path;
+            shell_exec($exec);
+            // ! delete initial file
+            unlink($file_path);
+
+            return $new_file_name;
         } catch (\Throwable $th) {
-            
+
             return false;
         }
-
-        return false;
     }
 
     public static function downloadPDF($data)
     {
-        $file['api_key'] = '1234567890';
-        $file['files'] = array_filter($data);
-        //add full link to file
+        $file = [
+            'api_key' => '1234567890',
+            'files' => array_filter($data),
+        ];
+
         foreach ($file['files'] as $key => $value) {
-            $file['files'][$key] = env('APP_URL').'/storage/'.$value;
+            $file['files'][$key] = env('APP_URL') . '/storage/' . $value;
         }
-        
-        $curl = curl_init();
 
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => 'https://pdf-merger.groobok.com/api/pdf-merger',
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => json_encode($file),
-          CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-          ),
-        ));
-        
-        $response = curl_exec($curl);
-        
-        curl_close($curl);
-        
-        $file = json_decode($response, true);
+        $response = Http::post('https://pdf-merger.groobok.com/api/pdf-merger', $file);
 
-        if(isset($file['message']) && $file['message'] == 'success')
-        {
-            $file_name = $file['data']['file'];
+        $result = $response->json();
 
-            return $file_name;
+        if (isset($result['message']) && $result['message'] == 'success') {
+            return $result['data']['file'];
         }
 
         return false;
     }
+
+    private static function sendRequest($method, $path, $data = [])
+    {
+        $accessToken = self::getAccessToken();
+        $partner_id = SHOPEE_LIVE_PARTNER_ID;
+        $token = $accessToken['token'];
+        $shop_id = $accessToken['shop_id'];
+        $host = "https://partner.shopeemobile.com";
+        $current_time = Carbon::now();
+        $timestamp = $current_time->timestamp;
+
+        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
+
+        $url = $host . $path . "?access_token=" . $token . "&partner_id=" . $partner_id . "&shop_id=" . $shop_id . "&sign=" . $sign . "&timestamp=" . $timestamp;
+
+        $headers = [
+            'Content-Type' => 'application/json',
+        ];
+
+        if($method == 'get') {
+            $url = $host . $path;
+
+            $headers = [
+                'Content-Type' => 'application/json',
+            ];
+
+            $response = Http::withHeaders($headers)
+                ->$method($url, array_merge([
+                    'access_token' => $token,
+                    'partner_id' => $partner_id,
+                    'shop_id' => $shop_id,
+                    'sign' => $sign,
+                    'timestamp' => $timestamp,
+                ], $data));
+
+            return $response->body();
+        }
+
+
+        $response = Http::withHeaders($headers)->$method($url, $data);
+
+        return $response->body();
+    }
+
 }
