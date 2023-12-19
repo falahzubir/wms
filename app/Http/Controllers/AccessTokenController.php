@@ -19,7 +19,8 @@ class AccessTokenController extends Controller
     {
         $tokens = AccessToken::where('company_id', $company_id)->get()->toArray();
         return response()->json([
-            'data' => $tokens
+            'data' => $tokens,
+            'company' => Company::find($company_id),
         ], 200);
     }
 

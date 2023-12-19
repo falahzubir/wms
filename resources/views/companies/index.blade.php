@@ -130,7 +130,7 @@
                                             <div class="row mb-1">
                                                 <div class="col-12">
                                                     <label for="">Subscribtion Code</label>
-                                                    <input type="text" id="dhl-client-secret"
+                                                    <input type="text" id="posmalaysia-subscribtion-code"
                                                         name="posmalaysia_subscribtion_code" class="form-control">
                                                 </div>
                                             </div>
@@ -191,9 +191,11 @@
                         .then(function(response) {
                             const data = response.data.data;
                             const dhl = data.filter(item => item.type === 'dhl');
+                            const company = response.data.company;
 
                             document.querySelector('#dhl-client-id').value = dhl[0].client_id;
                             document.querySelector('#dhl-client-secret').value = dhl[0].client_secret;
+                            document.querySelector('#posmalaysia-subscribtion-code').value = company.posmalaysia_subscribtion_code;
                         })
                         .catch(function(error) {
                             console.log(error);
@@ -212,6 +214,10 @@
                         icon: 'success',
                         title: 'Success',
                         text: response.data.message,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.reload();
+                        }
                     })
                 })
                 .catch(function(error) {
