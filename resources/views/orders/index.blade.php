@@ -1372,10 +1372,16 @@
                                 </small>
                             `;
                             document.querySelector('#generatePl9POS').classList.remove('d-none');
+                            Swal.fire({
+                                title: 'Error!',
+                                html: response.data.message.join('<br>'),
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+
                         }
                         resolve();
                     }).catch(function(error) {
-                        console.log(error);
                         Swal.fire({
                             title: 'Error!',
                             html: `Fail to generate CN, Please contact admin`,

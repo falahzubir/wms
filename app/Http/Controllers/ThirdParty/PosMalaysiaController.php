@@ -36,7 +36,7 @@ class PosMalaysiaController extends ShippingController
         if (count($orders_pos) == 0) {
             return response([
                 'status' => 'error',
-                'message' => ['No orders found'],
+                'message' => ['No orders found, please select correct courier'],
             ]);
         }
 
