@@ -67,13 +67,13 @@
                                             <i class="bi bi-card-text"></i>
                                         </button>
                                 @endcan
-                                @can('consignment_note.generate')
+                                {{-- @can('consignment_note.generate')
                                 <button class="btn btn-warning rounded-pill generate-cn" title="Generate CN"
                                             onclick="generate_cn({{ $bucket->id }}, {{ $bucket->orders->pluck('id') }})"
                                             data-bucketId="{{ $bucket->id }}">
                                             <i class="bi bi-truck"></i>
                                         </button>
-                                @endcan
+                                @endcan --}}
                                 <a href="/orders/processing?bucket_id={{ $bucket->id }}&status={{ ORDER_STATUS_PROCESSING }}"
                                         class="btn btn-info rounded-pill" title="Order List">
                                         <i class="bi bi-list"></i>
