@@ -52,6 +52,7 @@ Route::prefix('buckets')->group(function () {
     Route::post('delete-category', [BucketController::class, 'delete_category']);
     Route::post('store', [BucketController::class, 'store']);
     Route::post('update', [BucketController::class, 'update']);
+    Route::post('get-bucket-by-category', [BucketController::class, 'get_bucket_by_category']);
 });
 
 Route::prefix('orders')->group(function () {

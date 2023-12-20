@@ -8,6 +8,7 @@ use App\Models\Bucket;
 use App\Models\Company;
 use App\Models\OrderLog;
 use App\Models\CategoryMain;
+use App\Models\CategoryBucket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
@@ -347,6 +348,25 @@ class BucketController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Bucket Category deleted successfully.'
+        ]);
+    }
+
+    public function get_bucket_by_category(Request $request)
+    {
+        $totalOrder = 0;
+        $categoryBucket = CategoryBucket::with(['bucket'])->where('category_id', $request->category_id)->get();
+
+        $countOrder = !empty($request->order_ids) ? count($request->order_ids) : Order::where('is_active', 1)
+        ->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_SHIPMENT])
+        ->whereDate('dt_request_shipping', '<=', date('Y-m-d'))
+        ->count();
+
+        $totalOrder = $countOrder;
+
+        return response()->json([
+            'status' => 'success',
+            'categoryBucket' => $categoryBucket,
+            'totalOrder' => $totalOrder,
         ]);
     }
 }

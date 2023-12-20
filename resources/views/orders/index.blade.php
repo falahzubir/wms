@@ -786,7 +786,7 @@
         aria-hidden="true">
         <form action="" id="submit-proceed-bucket">
             @csrf
-            <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold" id="category-title">Add to Bucket</h5>
@@ -800,19 +800,19 @@
                                 <div class="col-12 col-md-4 text-center pb-2">
                                     <button type="button" class="btn btn-lg btn-outline-dark custom-btn-width" disabled>
                                         <span style="font-size: 16px;">
-                                            TOTAL ORDER: <span class="fw-bold text-dark">20</span>
+                                            TOTAL ORDER: <span id="totalOrderPending" class="fw-bold text-dark">0</span>
                                         </span>
                                     </button>
                                 </div>
                                 <div class="col-12 col-md-4 text-center pb-2">
                                     <button type="button" class="btn btn-lg btn-outline-dark custom-btn-width" disabled>
                                         <span style="font-size: 16px;">
-                                            REMAINING ORDER: <span class="fw-bold text-dark">10</span>
+                                            REMAINING ORDER: <span id="remainingOrderPending" class="fw-bold text-dark">0</span>
                                         </span>
                                     </button>
                                 </div>
                                 <div class="col-12 col-md-4 text-center pb-2">
-                                    <button class="btn btn-lg btn-teal custom-btn-width">
+                                    <button type="button" onclick="distribute()" class="btn btn-lg btn-teal custom-btn-width">
                                         <i class="ri-share-forward-fill"></i>
                                         <span style="font-size: 16px;">
                                             Redistribute
@@ -821,14 +821,14 @@
                                 </div>
                             </div>
 
-                            <div class="row pt-3" id="submit-proceed-bucket-modal-body">
+                            <div class="row m-0 w-100 pt-3" id="submit-proceed-bucket-modal-body">
                             </div>
                         </div>
                         {{-- Button --}}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button id="submit-proceed-bucket" type="button"
+                        <button id="submit-proceed-bucket" onclick="submitAddToBucket()" type="button"
                             class="btn btn-primary text-white">Submit</button>
                     </div>
                 </div>
@@ -841,6 +841,7 @@
 <x-slot name="script">
     <script>
         let checkedOrder = [];
+        let categoryBucket;
 
         document.querySelector('#filter-order').onclick = function() {
             document.querySelector('#order-table').style.display = 'block';
@@ -896,56 +897,64 @@
                 document.querySelector('#submit-bucket-category').disabled = true;
             }
 
+            categoryBucket = val;
+
         }
 
-        const proceedModal = () =>
+        const proceedModal = async () =>
         {
             let modal = new bootstrap.Modal(document.getElementById('modal-proceed-bucket'), {
                 keyboard: false
             });
 
-            let dummyData = [
-                {
-                    name : 'WMS 1',
-                },
-                {
-                    name : 'WMS 2',
-                },
-                {
-                    name : 'WMS 3',
-                },
-                {
-                    name : 'WMS 4',
-                },
-                {
-                    name : 'WMS 5',
-                }
-            ];
             let html = '';
 
-            for (let index = 0; index < dummyData.length; index++) {
-                const element = dummyData[index];
+            let response = await axios.post('/api/buckets/get-bucket-by-category',{
+                category_id : categoryBucket,
+                order_ids : checkedOrder
+            }).then(res => {
 
-                html += `
-                <div class="col-12 col-md-6 text-center pb-2">
-                    <div class="d-flex align-items-center">
-                        <input type="checkbox" class="form-check-input" id="check-all">
-                        <span class="d-inline-block mx-2"><i class="bi bi-basket"></i></span>
-                        <label class="form-check-label mx-2" for="check-all">
-                            ${element.name}:
-                        </label>
-                        <div class="d-flex align-items-center justify-content-center">
-                            <i onclick="minusNumber(this)" class="bi bi-dash-circle-fill text-primary fs-5"></i>
-                            <input oninput="constantNumber(this)" type="number" id="input-number" class="form-control form-control-sm mx-2" style="width: 30%;" value="0">
-                            <i onclick="plusNumber(this)" class="bi bi-plus-circle-fill text-primary fs-5"></i>
+                let totalOrder = res.data.totalOrder;
+                document.querySelector('#totalOrderPending').innerHTML = totalOrder;
+                // let remainingOrder = res.data.remainingOrder;
+                // document.querySelector('#remainingOrderPending').innerHTML = remainingOrder;
+
+
+                for (let index = 0; index < res.data.categoryBucket.length; index++) {
+                    const categoryBucket = res.data.categoryBucket[index];
+                    html += `
+                    <div class="col-12 col-md-6 text-center pb-2">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <input onclick="tickBucket(this)" type="checkbox" class="form-check-input" id="check-all-${categoryBucket.id}" checked>
+                                    <span class="d-inline-block mx-2"><i class="bi bi-basket"></i></span>
+                                    <label class="form-check-label mx-2" for="check-all">
+                                        ${categoryBucket.bucket.name}:
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex">
+                                <i onclick="minusNumber(this)" class="bi bi-dash-circle-fill text-primary fs-5"></i>
+                                <input name="bucket_id[${categoryBucket.id}][]" oninput="constantNumber(this)" type="number" id="input-number-${categoryBucket.id}" class="form-control form-control-sm mx-2" style="width: 5rem; text-align: center;" value="0">
+                                <i onclick="plusNumber(this)" class="bi bi-plus-circle-fill text-primary fs-5"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>`;
-            }
+                    `
+                }
 
-            document.querySelector('#submit-proceed-bucket-modal-body').innerHTML = html;
+                document.querySelector('#submit-proceed-bucket-modal-body').innerHTML = html;
 
-            modal.show();
+                modal.show();
+                distribute();
+
+            }).catch(err => {
+                console.log(err);
+            });
+
         }
 
         const constantNumber = (el) =>
@@ -962,21 +971,75 @@
 
         const minusNumber = (el) =>
         {
-            let val = el.parentElement.querySelector('#input-number').value;
+            let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+            let val = el.parentElement.querySelector('input[type="number"]').value;
 
             if(val == 0)
             {
-                el.parentElement.querySelector('#input-number').value = 0;
-            }else{
-                el.parentElement.querySelector('#input-number').value = parseInt(val) - 1;
+                el.parentElement.querySelector('input[type="number"]').value = 0;
+            }
+            else
+            {
+                el.parentElement.querySelector('input[type="number"]').value = parseInt(val) - 1; //set value
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + 1; //set remaining order
             }
         }
 
         const plusNumber = (el) =>
         {
-            let val = el.parentElement.querySelector('#input-number').value;
+            let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+            let val = el.parentElement.querySelector('input[type="number"]').value;
 
-            el.parentElement.querySelector('#input-number').value = parseInt(val) + 1;
+            if(remainingOrder != 0)
+            {
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) - 1; //set remaining order
+                el.parentElement.querySelector('input[type="number"]').value = parseInt(val) + 1; //set value
+            }
+            else
+            {
+                return; //stop function
+            }
+        }
+
+        const distribute = () =>
+        {
+            let totalOrder = document.querySelector('#totalOrderPending').innerHTML;
+            let bucketModal = document.querySelector('#submit-proceed-bucket-modal-body');
+
+            let buckets = bucketModal.querySelectorAll('input[type="number"]'); //all bucket
+            let bucketsActive = bucketModal.querySelectorAll('input[type="checkbox"]:checked'); //ticked bucket
+
+            let divide = Math.floor(totalOrder / bucketsActive.length); //take only ticked bucket
+            let remainder = totalOrder % bucketsActive.length; //take only ticked bucket
+
+            document.querySelector('#remainingOrderPending').innerHTML = remainder; //set remaining order
+
+            // set value for each bucket
+            buckets.forEach(bucket => {
+                if(bucket.parentElement.parentElement.parentElement.querySelector('input[type="checkbox"]').checked)
+                {
+                    bucket.value = divide;
+                }
+            });
+
+        }
+
+        const tickBucket = (el) =>
+        {
+            if(!el.checked)
+            {
+                //add old value to remaining order
+                let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+                // console.log(remainingOrder);
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + parseInt(el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value);
+                //reset value after untick
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value = 0;
+            }
+        }
+
+        const submitAddToBucket = () =>
+        {
+            console.log('submit');
         }
 
         // generate shipping label
