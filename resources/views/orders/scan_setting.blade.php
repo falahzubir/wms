@@ -13,13 +13,14 @@
                     @if($settings->count() > 0)
                         @foreach ($settings as $setting)
                         <tr>
-                            <td width="50%" class="p-1">
+                            <td width="50%" class="p-2 px-3">
                                 {{ ucwords(str_replace('_', ' ', $setting->key)) }}
-                                {{-- description --}}
+                                @if($setting->description != '')
                                 <i class="bi bi-question-circle-fill" data-bs-toggle="tooltip" data-bs-placement="top"
                                     title="{{ $setting->description }}"></i>
+                                @endif
                             </td>
-                            <td class="p-1 px-2">
+                            <td class="p-2 px-3">
                             @switch($setting->data_type)
                                 @case(SETTING_DATA_TYPE_BOOLEAN)
                                     <input type="radio" id="setting[{{$setting->key}}]-yes" name="setting[{{$setting->key}}]" value="1" {{ $setting->value == 1 ? 'checked' : '' }}><label for="setting[{{$setting->key}}]-yes" class="mx-2">Yes</label>
