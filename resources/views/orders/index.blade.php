@@ -796,13 +796,6 @@
             'tiktok' : 'TikTok'
         };
 
-        let generate_cn_couriers = {
-            'dhl-ecommerce' : 'DHL Ecommerce',
-            'posmalaysia' : 'POS Malaysia',
-            'shopee' : 'Shopee',
-            // 'tiktok' : 'TikTok'
-        };
-
         document.querySelector('#filter-order').onclick = function() {
             document.querySelector('#order-table').style.display = 'block';
         }
