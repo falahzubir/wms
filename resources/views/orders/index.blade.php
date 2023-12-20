@@ -68,6 +68,27 @@
             background-color: purple;
         }
 
+        .btn-teal {
+            background-color: #3B8C9E;
+            color: #fff;
+        }
+
+        .btn-teal:hover {
+            background-color: #2d6a75;
+            color: #fff;
+        }
+
+        .small-check-box {
+            margin: 4px 0 0;
+            line-height: normal;
+            width: 14px;
+            height: 14px;
+        }
+        .custom-btn-width {
+            width: 100%; /* Adjust this value as needed */
+        }
+
+
     </style>
 
     <section class="section">
@@ -724,6 +745,7 @@
             </div>
         </div>
     </div>
+
     {{-- Start Bucket Category Modal --}}
     <div class="modal fade" id="modal-open-bucket-category" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
@@ -739,7 +761,7 @@
                         <div class="pt-3 pb-3">
                             <p class="fw-bold" style="font-size: 20px;" for="category-id">Please select bucket Category!</p>
                             <div style="display: flex ;justify-content: center;">
-                                <select class="form-select" id="category-id" name="category_id" style="width: 80%">
+                                <select onchange="selectCategory(this)" class="form-select" id="category-id" name="category_id" style="width: 80%">
                                     <option value="">Select a Category</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->category_name }}</option>
@@ -750,8 +772,64 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button id="submit-button-category" onclick="" type="button"
-                            class="btn btn-warning">Proceed</button>
+                        <button id="submit-bucket-category" onclick="proceedModal()" type="button"
+                            class="btn btn-warning text-white" disabled>Proceed</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {{-- End Bucket Category Modal --}}
+
+    {{-- Start Proceed Modal --}}
+    <div class="modal fade" id="modal-proceed-bucket" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <form action="" id="submit-proceed-bucket">
+            @csrf
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="category-title">Add to Bucket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body pt-4 pb-4">
+
+                        {{-- Button --}}
+                        <div class="container">
+                            <div class="row justify-content-center">
+                                <div class="col-12 col-md-4 text-center pb-2">
+                                    <button type="button" class="btn btn-lg btn-outline-dark custom-btn-width" disabled>
+                                        <span style="font-size: 16px;">
+                                            TOTAL ORDER: <span class="fw-bold text-dark">20</span>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="col-12 col-md-4 text-center pb-2">
+                                    <button type="button" class="btn btn-lg btn-outline-dark custom-btn-width" disabled>
+                                        <span style="font-size: 16px;">
+                                            REMAINING ORDER: <span class="fw-bold text-dark">10</span>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="col-12 col-md-4 text-center pb-2">
+                                    <button class="btn btn-lg btn-teal custom-btn-width">
+                                        <i class="ri-share-forward-fill"></i>
+                                        <span style="font-size: 16px;">
+                                            Redistribute
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="row pt-3" id="submit-proceed-bucket-modal-body">
+                            </div>
+                        </div>
+                        {{-- Button --}}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="submit-proceed-bucket" type="button"
+                            class="btn btn-primary text-white">Submit</button>
                     </div>
                 </div>
             </div>
@@ -762,6 +840,7 @@
 @include("orders.multiple_cn_modal")
 <x-slot name="script">
     <script>
+        let checkedOrder = [];
 
         document.querySelector('#filter-order').onclick = function() {
             document.querySelector('#order-table').style.display = 'block';
@@ -777,13 +856,14 @@
                     keyboard: false
                 });
 
-                let checkedOrder = [];
                 inputElements.forEach(input => {
                     if (input.checked) {
                         checkedOrder.push(input.value);
                     }
                 });
 
+                document.querySelector('#category-id').value = "";
+                document.querySelector('#submit-bucket-category').disabled = true;
                 if (checkedOrder.length == 0) {
                     Swal.fire({
                         title: 'No order selected!',
@@ -805,6 +885,99 @@
                 }
             }
         @endif
+
+        const selectCategory = (el) =>
+        {
+            let val = el.value;
+
+            if(val != ""){
+                document.querySelector('#submit-bucket-category').disabled = false;
+            }else{
+                document.querySelector('#submit-bucket-category').disabled = true;
+            }
+
+        }
+
+        const proceedModal = () =>
+        {
+            let modal = new bootstrap.Modal(document.getElementById('modal-proceed-bucket'), {
+                keyboard: false
+            });
+
+            let dummyData = [
+                {
+                    name : 'WMS 1',
+                },
+                {
+                    name : 'WMS 2',
+                },
+                {
+                    name : 'WMS 3',
+                },
+                {
+                    name : 'WMS 4',
+                },
+                {
+                    name : 'WMS 5',
+                }
+            ];
+            let html = '';
+
+            for (let index = 0; index < dummyData.length; index++) {
+                const element = dummyData[index];
+
+                html += `
+                <div class="col-12 col-md-6 text-center pb-2">
+                    <div class="d-flex align-items-center">
+                        <input type="checkbox" class="form-check-input" id="check-all">
+                        <span class="d-inline-block mx-2"><i class="bi bi-basket"></i></span>
+                        <label class="form-check-label mx-2" for="check-all">
+                            ${element.name}:
+                        </label>
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i onclick="minusNumber(this)" class="bi bi-dash-circle-fill text-primary fs-5"></i>
+                            <input oninput="constantNumber(this)" type="number" id="input-number" class="form-control form-control-sm mx-2" style="width: 30%;" value="0">
+                            <i onclick="plusNumber(this)" class="bi bi-plus-circle-fill text-primary fs-5"></i>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            document.querySelector('#submit-proceed-bucket-modal-body').innerHTML = html;
+
+            modal.show();
+        }
+
+        const constantNumber = (el) =>
+        {
+            let val = el.value;
+
+            if(val == 0)
+            {
+                el.value = 0;
+            }else{
+                el.value = parseInt(val);
+            }
+        }
+
+        const minusNumber = (el) =>
+        {
+            let val = el.parentElement.querySelector('#input-number').value;
+
+            if(val == 0)
+            {
+                el.parentElement.querySelector('#input-number').value = 0;
+            }else{
+                el.parentElement.querySelector('#input-number').value = parseInt(val) - 1;
+            }
+        }
+
+        const plusNumber = (el) =>
+        {
+            let val = el.parentElement.querySelector('#input-number').value;
+
+            el.parentElement.querySelector('#input-number').value = parseInt(val) + 1;
+        }
 
         // generate shipping label
         @if (in_array(ACTION_GENERATE_CN, $actions))
