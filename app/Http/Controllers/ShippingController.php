@@ -1450,14 +1450,14 @@ class ShippingController extends Controller
 
         if(isset($CNS) && count($CNS) > 0)
         {
+            $message .= "Success: ".count($CNS)." generated.<br>";
+
             return response()->json([
                 'success' => true,
-                'message' => 'Success',
+                'message' => $message,
                 'data' => $CNS
             ], 200);
         }
-
-        $message .= "Success: ".count($CNS)." generated.<br>";
 
         if(isset($order) && count($order) > 0)
         {
