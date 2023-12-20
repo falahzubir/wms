@@ -29,6 +29,10 @@ class ShippingController extends Controller
     protected $dhl_label_url;
     protected $dhl_cancel_url;
     protected $dhl_reprint_url;
+    protected $posmalaysia_access;
+    protected $posmalaysia_generate_connote;
+    protected $posmalaysia_generate_pl9;
+    protected $posmalaysia_download_connote;
 
     /**
      * Constructor
@@ -39,16 +43,27 @@ class ShippingController extends Controller
         $dhl_label_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label';
         $dhl_cancel_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label/Delete';
         $dhl_reprint_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label/Reprint';
+        $posmalaysia_generate_connote_live = 'https://gateway-usc.pos.com.my/as01/gen-connote/v1/api/GConnote';
+        $posmalaysia_generate_pl9_live = 'https://gateway-usc.pos.com.my/staging/as01/generate-pl9-with-connote/v1/api/GPL9C';
+        $posmalaysia_download_connote_live = 'https://gateway-usc.pos.com.my/as2corporate/preacceptancessingle/v1/Tracking.PreAcceptance.WebApi/api/PreAcceptancesSingle';
 
         $dhl_access_test = "https://apitest.dhlecommerce.asia/rest/v1/OAuth/AccessToken";
         $dhl_label_url_test = "https://apitest.dhlecommerce.asia/rest/v2/Label";
         $dhl_cancel_url_test = "https://apitest.dhlecommerce.asia/rest/v2/Label/Delete";
         $dhl_reprint_url_test = "https://apitest.dhlecommerce.asia/rest/v2/Label/Reprint";
+        $posmalaysia_generate_connote_test = 'https://gateway-usc.pos.com.my/staging/as01/gen-connote/v1/api/GConnote';
+        $posmalaysia_generate_pl9_test = 'https://gateway-usc.pos.com.my/staging/as01/generate-pl9-with-connote/v1/api/GPL9C';
+        $posmalaysia_download_connote_test = 'https://gateway-usc.pos.com.my/staging/as2corporate/preacceptancessingle/v1/Tracking.PreAcceptance.WebApi/api/PreAcceptancesSingle';
 
         $this->dhl_access = config('app.env') == 'production' ? $dhl_access_live : $dhl_access_test;
         $this->dhl_label_url = config('app.env') == 'production' ? $dhl_label_url_live : $dhl_label_url_test;
         $this->dhl_cancel_url = config('app.env') == 'production' ? $dhl_cancel_url_live : $dhl_cancel_url_test;
         $this->dhl_reprint_url = config('app.env') == 'production' ? $dhl_reprint_url_live : $dhl_reprint_url_test;
+
+        $this->posmalaysia_access = 'https://gateway-usc.pos.com.my/security/connect/token'; // same for test and live
+        $this->posmalaysia_generate_connote = config('app.env') == 'production' ? $posmalaysia_generate_connote_live : $posmalaysia_generate_connote_test;
+        $this->posmalaysia_generate_pl9 = config('app.env') == 'production' ? $posmalaysia_generate_pl9_live : $posmalaysia_generate_pl9_test;
+        $this->posmalaysia_download_connote = config('app.env') == 'production' ? $posmalaysia_download_connote_live : $posmalaysia_download_connote_test;
     }
 
     /**
@@ -245,7 +260,8 @@ class ShippingController extends Controller
                     $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
                         'consigneeAddress' => [
                             'companyName' => get_shipping_remarks($order),
-                            'name' => $order->customer->name,
+                            // 'name' => $order->customer->name,
+                            'name' => substr($order->customer->name, 0, 30),
                             'address1' => $order->customer->address,
                             // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
                             'address2' => "-",
@@ -796,6 +812,7 @@ class ShippingController extends Controller
     {
         $order_id = $request->validate([
             'order_id' => 'required',
+            'courier_id' => 'required',
         ]);
 
         $array_data = ($request->input('cn_data'));
@@ -807,7 +824,19 @@ class ShippingController extends Controller
             }
         ])->whereIn('id', $order_id)->where('courier_id', DHL_ID)->get();
 
-        return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+        // for now support only dhl-ecommerce and posmalaysia
+        if($request->input('courier_id') == DHL_ID){
+            return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+        }
+        elseif($request->input('courier_id') == POSMALAYSIA_ID){
+            $posmalaysia = new \App\Http\Controllers\ThirdParty\PosMalaysiaController();
+            return $posmalaysia->generate_connote_multiple($order_id, $array_data); // for posmalaysia orders
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Courier not supported yet, please check with admin',
+        ], 400);
     }
 
     /**
@@ -1249,7 +1278,7 @@ class ShippingController extends Controller
         {
             $order[$key]['id'] = $value->id;
 
-            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings[0]->tracking_number))
+            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->first()->tracking_number))
             {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
                 $order[$key]['error']['message'][] = 'No Tracking Number Found';
@@ -1365,6 +1394,7 @@ class ShippingController extends Controller
         return response()->json([
             'success' => false,
             'message' => $message,
+            'all_fail' => ['message' => $message],
             'data' => $CNS ?? ''
         ], 200);
 

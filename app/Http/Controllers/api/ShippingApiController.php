@@ -7,6 +7,7 @@ use App\Models\AccessToken;
 use App\Models\Company;
 use App\Models\Order;
 use App\Models\Shipping;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -33,6 +34,40 @@ class ShippingApiController extends ShippingController
                 $data['token'] = $response['accessTokenResponse']['token'];
                 $data['expires_at'] = date('Y-m-d H:i:s', strtotime('+' . $response['accessTokenResponse']['expires_in_seconds'] . ' seconds'));
                 $token->update($data);
+            }
+        }
+    }
+
+    public function posmalaysia_generate_access_token($company = null)
+    {
+        $url = $this->posmalaysia_access;
+
+        $posmalaysia_tokens = AccessToken::where('type', 'posmalaysia');
+        if($company){
+            $posmalaysia_tokens = $posmalaysia_tokens->where('company_id', $company);
+        }
+        $posmalaysia_tokens = $posmalaysia_tokens->get();
+
+        foreach ($posmalaysia_tokens as $token) {
+            // <?phprequire_once 'HTTP/Request2.php'; $request = new HTTP_Request2();$request->setUrl('https://gateway-usc.pos.com.my/security/connect/token');$request->setMethod(HTTP_Request2::METHOD_POST);'follow_redirects' => TRUE));$request->setHeader(array('Content-Type' => 'application/x-www-form-urlencoded'));$request->addPostParameter(array('client_id' => '64dda61cfa1b1b000ed9fb30','client_secret' => 'cpy70tObJYUXa+67Wtw4+nQ44JCcCKkowXN5RV/sIgE=','grant_type' => 'client_credentials','scope' => 'as2corporate.v2trackntracewebapijson.all as2corporate.tracking-event-list.all as2corporate.tracking-office-list.all as2corporate.tracking-reason-list.all as2poslaju.poslaju-poscode-coverage.all as01.gen-connote.all as01.generate-pl9-with-connote.all as2corporate.preacceptancessingle.all'));try {$response = $request->send();if ($response->getStatus() == 200) {    echo $response->getBody();}else {    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .    $response->getReasonPhrase();}}catch(HTTP_Request2_Exception $e) {echo 'Error: ' . $e->getMessage();}
+            try {
+                $response = Http::asForm()
+                    ->post('https://gateway-usc.pos.com.my/security/connect/token', [
+                        'client_id' => '64dda61cfa1b1b000ed9fb30',
+                        'client_secret' => 'cpy70tObJYUXa+67Wtw4+nQ44JCcCKkowXN5RV/sIgE=',
+                        'grant_type' => 'client_credentials',
+                        'scope' => 'as2corporate.v2trackntracewebapijson.all as2corporate.tracking-event-list.all as2corporate.tracking-office-list.all as2corporate.tracking-reason-list.all as2poslaju.poslaju-poscode-coverage.all as01.gen-connote.all as01.generate-pl9-with-connote.all as2corporate.preacceptancessingle.all',
+                    ]);
+
+                if ($response->successful()) {
+                    $data['token'] = $response['access_token'];
+                    $data['expires_at'] = date('Y-m-d H:i:s', strtotime('+' . $response['expires_in'] . ' seconds'));
+                    $token->update($data);
+                } else {
+                    echo 'Unexpected HTTP status: ' . $response->status() . ' ' . $response->reason();
+                }
+            } catch (Exception $e) {
+                echo 'Error: ' . $e->getMessage();
             }
         }
     }

@@ -18,6 +18,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
+use App\Models\AlternativePostcode;
+use Illuminate\Support\Facades\Http;
 
 class OrderController extends Controller
 {
@@ -30,7 +32,7 @@ class OrderController extends Controller
     public function index()
     {
         return Order::with([
-            'customer', 'items', 'items.product', 'shippings',
+            'customer', 'items', 'items.product', 'shippings', 'paymentType',
             'bucket', 'batch', 'company', 'courier', 'operationalModel',
             'logs' => function ($query) {
                 $query->orderBy('id', 'desc');
@@ -373,8 +375,9 @@ class OrderController extends Controller
             $products["$value->code"] = $value->id;
         }
 
-        $company_id = Company::where('code', $webhook['company'])->first()->id;
-
+        $company = Company::where('code', $webhook['company'])->first();
+        $company_id = $company->id;
+        // $company_id = Company::where('code', $webhook['company'])->first()->id;
         // $operational_model = OperationalModel::where('id', $webhook['operation_model_id'])->first();
         // if ($operational_model->default_company_id != null) {
         //     $company_id = $operational_model->default_company_id;
@@ -400,7 +403,65 @@ class OrderController extends Controller
         $data['third_party_sn'] = $webhook['third_party_sn'] ?? null;
         $data['is_active'] = IS_ACTIVE;
 
-        $customer = Customer::updateorCreate($webhook['customer']);
+        $data_customer = $webhook['customer'];
+
+        if($data_customer['country'] == 1 || $data_customer['country'] == 2){
+            if(strlen($data_customer['postcode']) > 5 || strlen($data_customer['postcode']) < 5){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
+                return;
+            }
+        }elseif($data_customer['country'] == 3){
+            if(strlen($data_customer['postcode']) != 6 && strlen($data_customer['postcode']) != 4){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Postcode error ');
+                return;
+            }
+        }elseif($data_customer['country'] == 0){
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Country error ');
+            return;
+        }
+
+        if($data_customer['city'] == null){
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'City error');
+            return;
+        }
+
+        // check and add product if not found
+        $product_code_list = array_column($webhook['product'], 'code');
+        $not_found = array_diff($product_code_list, array_keys($products));
+        if(count($not_found) > 0){
+            $import_prod = Http::post($company->url . '/api/get_products', [
+                'codes' => $not_found,
+            ])->json();
+
+            if($import_prod['status'] != 'success'){
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, $import_prod['message']);
+                return;
+            }
+
+            $products = $import_prod['products'];
+
+            foreach ($products as $key => $value) {
+                $product = Product::updateOrCreate(['code' => $value['product_code']], [
+                    'name' => $value['product_name'],
+                    'price' => $value['product_price'] * 100,
+                    'is_active' => IS_ACTIVE,
+                    'weight' => $value['product_weight'] * 1000,
+                    'is_foc' => $value['product_foc'],
+                    'max_box' => 40,
+                ]);
+                $products["$value[product_code]"] = $product->id;
+            }
+        }
+
+         // Check for alternative postcode
+         $result = AlternativePostcode::where('actual_postcode', $data_customer['postcode'])->first();
+
+         if ($result) {
+             $data_customer['postcode'] = $result->alternative_postcode;
+         }
+         
+        $customer = Customer::updateOrCreate($data_customer);
+
         $data['customer_id'] = $customer->id;
 
         $order = Order::updateOrCreate($ids, $data);
@@ -432,6 +493,7 @@ class OrderController extends Controller
             return $result;
         }, array());
         OrderItem::where('order_id', $order->id)->update(['status' => 0]);
+
         foreach ($product_list as $product) {
             $p_ids['product_id'] = $products[$product['code']];
             $product_data['price'] = $product['price'] * 100;
@@ -442,6 +504,7 @@ class OrderController extends Controller
             OrderItem::updateOrCreate($p_ids, $product_data);
         }
             if ($order->wasRecentlyCreated) {
+                $this->check_duplicate($customer, $order);
                 set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
             } else {
                 if($order->status == ORDER_STATUS_REJECTED){
@@ -457,6 +520,129 @@ class OrderController extends Controller
     }
 
     /**
+     * Check possible duplicate order
+     * @param  object $cur_customer, object $cur_order
+     * @return boolean
+     */
+    public function check_duplicate($cur_customer, $cur_order)
+    {
+        //return if duplicate detection is off
+        if(config('settings.detect_by_phone') == 0 && config('settings.detect_by_address') == 0){
+            return false;
+        }
+
+        $orders = Order::with('customer')
+            ->where('processed_at', '>=', Carbon::now()->subSeconds(config('settings.detection_time')))
+            ->whereNot('id', $cur_order->id);
+
+        $duplicate_address = [];
+        $duplicate_phone = [];
+        $all_duplicate = [];
+
+        //check if duplicate by address
+        if(config('settings.detect_by_address') == 1){
+            $addresses = $orders->get();
+            if(count($addresses) > 0){
+                foreach($addresses as $order){
+                    similar_text(strtoupper($order->customer->address), strtoupper($cur_customer->address), $percent);
+                    if($percent >= config('settings.detect_by_address_percentage')){
+                        $duplicate_address[] = $order;
+                    }
+                }
+            }
+        }
+
+        //check if duplicate by phone
+        if(config('settings.detect_by_phone') == 1){
+            //get all addresses from orders with address id as array index
+            $phones = [];
+            if($cur_customer->phone != null){
+                $phones[] = $cur_customer->phone;
+            }
+            if($cur_customer->phone_2 != null){
+                $phones[] = $cur_customer->phone_2;
+            }
+            $phone = $orders->whereHas('customer', function ($q) use ($phones) {
+                $q->whereIn('phone', $phones)
+                    ->orWhereIn('phone_2', $phones);
+            })->get();
+            if(count($phone) > 0){
+                foreach($phone as $order){
+                    $duplicate_phone[] = $order;
+                }
+            }
+        }
+
+        //return if not duplicate
+        if(count($duplicate_address) == 0 && count($duplicate_phone) == 0){
+            return false;
+        }
+
+        if(config('settings.detect_by_phone') == 1 && config('settings.detect_by_address') == 0){
+            $array = collect($duplicate_phone)->pluck('id')->toArray();
+            if(count($duplicate_phone) > 0){
+                foreach($duplicate_phone as $order){
+                    $order->duplicate_orders = implode(',', $array);
+                    $order->save();
+                }
+                $cur_order->duplicate_orders = implode(',', $array);
+                $cur_order->save();
+                return true;
+            }
+            return false;
+        }
+
+        if(config('settings.detect_by_address') == 1 && config('settings.detect_by_phone') == 0){
+            $array = collect($duplicate_address)->pluck('id')->toArray();
+            if(count($duplicate_address) > 0){
+                foreach($duplicate_address as $order){
+                    $order->duplicate_orders = implode(',', $array);
+                    $order->save();
+                }
+                $cur_order->duplicate_orders = implode(',', $array);
+                $cur_order->save();
+                return true;
+            }
+            return false;
+        }
+
+        if(config('settings.detect_operation_type') == 'OR'){
+            if(config('settings.detect_by_address') == 1 || config('settings.detect_by_phone') == 1){
+                if(count($duplicate_address) > 0 || count($duplicate_phone) > 0){
+                    $all_duplicate = array_merge($duplicate_address, $duplicate_phone);
+                    $array = array_unique(collect($all_duplicate)->pluck('id')->toArray());
+                    foreach($all_duplicate as $order){
+                        $order->duplicate_orders = implode(',', $array);
+                        $order->save();
+                    }
+                    $cur_order->duplicate_orders = implode(',', $array);
+                    $cur_order->save();
+                    return true;
+                }
+                return false;
+            }
+        }
+        else {
+            if(config('settings.detect_by_address') == 1 && config('settings.detect_by_phone') == 1){
+                if(count($duplicate_address) > 0 && count($duplicate_phone) > 0){
+                    $all_duplicate = array_intersect($duplicate_address, $duplicate_phone);
+                    $array = collect($all_duplicate)->pluck('id')->toArray();
+                    foreach($all_duplicate as $order){
+                        $order->duplicate_orders = implode(',', $array);
+                        $order->save();
+                    }
+                    $cur_order->duplicate_orders = implode(',', $array);
+                    $cur_order->save();
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * filter order by request
      *
      * @param  Request $request
@@ -464,6 +650,9 @@ class OrderController extends Controller
      */
     public function filter_order($request, $orders)
     {
+        $orders->when($request->filled('ids'), function ($query) use ($request) {
+            $query->whereIn('id', explode(',', $request->ids));
+        });
         $orders->when($request->filled('bucket_id'), function ($query) use ($request) {
             $query->where('bucket_id', $request->bucket_id);
         });
@@ -513,9 +702,20 @@ class OrderController extends Controller
             $query->whereIn('purchase_type', $request->purchase_types);
         });
         $orders->when($request->filled('products'), function ($query) use ($request) {
-            $query->whereHas('items', function ($q) use ($request) {
-                $q->whereIn('product_id', $request->products);
-            });
+            if(count($request->products) == 1){
+                $query->whereHas('items', function ($q) use ($request) {
+                    $q->whereIn('product_id', $request->products);
+                });
+            }
+            else {
+                $query->whereHas('items', function ($q) use ($request) {
+                    $q->whereIn('product_id', $request->products);
+                }, '=', count($request->products));
+
+                $query->whereDoesntHave('items', function ($q) use ($request) {
+                    $q->whereNotIn('product_id', $request->products);
+                });
+            }
         });
         $orders->when($request->filled('not_products'), function ($query) use ($request) {
             $query->whereDoesntHave('items', function ($q) use ($request) {

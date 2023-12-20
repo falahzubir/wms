@@ -92,6 +92,38 @@
             color: #fff;
         }
 
+        .swal2-styled.swal2-custom {
+            border: 0;
+            border-radius: .25em;
+            /* background: initial; */
+            font-size: 1em;
+            border: 1px solid #cecece;
+            box-shadow: 1px 1px 0px 0px #cecece;
+        }
+        .swal2-dhl-ecommerce {
+            background-color: #FFCC00;
+            color: #D40510;
+        }
+
+        .swal2-posmalaysia {
+            background-color: #fff;
+            color: #FF0000;
+        }
+
+        .swal2-tiktok {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .swal2-shopee {
+            background-color: #E74A2B;
+            color: #fff;
+        }
+
+        .bg-purple {
+            background-color: purple;
+        }
+
     </style>
 
     <section class="section">
@@ -293,6 +325,11 @@
                                             </div>
                                     </td>
                                     <td class="text-center">
+                                        @unless($order->duplicate_orders == null)
+                                            <div class="badge bg-purple text-wrap" onclick="duplicateModal('{{ $order->duplicate_orders }}')" style="cursor: pointer;">
+                                                Possible Duplicate
+                                            </div>
+                                        @endunless
                                         <div>
                                             <span role="button" class="order-num text-primary" data-sales-id="{{ $order->sales_id }}" data-order-num="{{ order_num_format($order) }}"
                                                 title="Double Click to Copy">
@@ -328,11 +365,18 @@
                                         </div> --}}
                                     </td>
                                     <td class="text-start">
-
-                                        @if ($order->courier_id = DHL_ID && !is_digit_count($order->customer->postcode, 5))
-                                            <div class="badge bg-danger text-wrap">
-                                                Postcode Error
-                                            </div>
+                                        @if($order->courier_id == DHL_ID && ($order->customer->country == 1 || $order->customer->country == 2))
+                                            @if ($order->courier_id == DHL_ID && !is_digit_count($order->customer->postcode, 5))
+                                                <div class="badge bg-danger text-wrap">
+                                                    Postcode Error
+                                                </div>
+                                            @endif
+                                        @elseif($order->courier_id == DHL_ID && $order->customer->country == 3)
+                                            @if ($order->courier_id == DHL_ID && !is_digit_count($order->customer->postcode, 6))
+                                                <div class="badge bg-danger text-wrap">
+                                                    Postcode Error
+                                                </div>
+                                            @endif
                                         @endif
                                         @if (!last_two_digits_zero($order->customer->postcode))
                                             <a href="{{ route('orders.change_postcode_view') }}?sales={{ $order->sales_id }}&company={{ $order->company_id}}&current_postcode={{ $order->customer->postcode }}&redirect_to={{ urlencode(url()->full()) }}" class="badge bg-warning text-wrap text-dark">
@@ -752,6 +796,13 @@
             'tiktok' : 'TikTok'
         };
 
+        let generate_cn_couriers = {
+            'dhl-ecommerce' : 'DHL Ecommerce',
+            'posmalaysia' : 'POS Malaysia',
+            'shopee' : 'Shopee',
+            // 'tiktok' : 'TikTok'
+        };
+
         document.querySelector('#filter-order').onclick = function() {
             document.querySelector('#order-table').style.display = 'block';
         }
@@ -817,10 +868,15 @@
                                             title: 'Success!',
                                             text: "Order added to bucket.",
                                             icon: 'success',
-                                            confirmButtonText: 'OK'
-                                        }).then((result) => {
-                                            if (result.isConfirmed) {
+                                            confirmButtonText: 'OK',
+                                            showCancelButton: true,
+                                            cancelButtonText: 'Go to Bucket'
+                                        }).then((result2) => {
+                                            if (result2.isConfirmed) {
                                                 location.reload();
+                                            }
+                                            if(result2.dismiss === Swal.DismissReason.cancel){
+                                                window.location.href = `/orders/processing?bucket_id=${result.value}&status=2`;
                                             }
                                         });
                                     })
@@ -880,6 +936,7 @@
                 })
                 return;
             }
+
 
             //sweetalert courier options
             Swal.fire({
@@ -1124,7 +1181,15 @@
 
         @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
             document.querySelector('#arrange-shipment-btn').onclick = function() {
-
+                //add loading to button
+                Swal.fire({
+                    title: 'Arranging shipment...',
+                    html: 'Please wait while we are arranging shipment for your order(s).',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    },
+                });
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
 
@@ -1193,59 +1258,71 @@
 
             let sameCompany = await check_same_company(checkedOrder);
 
+            if(type == 'posmalaysia'){
+               requestCNPOS(type, checkedOrder);
+               return;
+            }
+
+            requestCN(type, checkedOrder);
+
+        } //end of generateCN
+
+        // request CN
+        const requestCN = (type, checkedOrder) => {
             axios.post('/api/request-cn', {
-                    order_ids: checkedOrder,
-                    type: type,
-                })
-                .then(function(response) {
-                    let text = "Shipping label generated."
-                    if (response.data == 0) {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: "Selected order already has CN.",
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        })
-                        return;
+                order_ids: checkedOrder,
+                type: type,
+            })
+            .then(function(response) {
+
+                let text = "Shipping label generated."
+                if (response.data == 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: "Selected order already has CN.",
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
+                    return;
+                }
+
+                if (!response.data.success)
+                {
+                    Swal.fire({
+                        title: 'Error!',
+                        html: `${response.data.all_fail.message}` ?? "Fail to generate CN",
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
+                    return;
+                }
+
+                // handle success, close or download
+                if(response.data != null ){
+                    if(response.data.error != null){
+                        text = "Shipping label generated.However has "+response.data.error;
                     }
 
-                    if (!response.data.success)
-                    {
-                        Swal.fire({
-                            title: 'Error!',
-                            html: `${response.data.message}` ?? "Fail to generate CN",
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        })
-                        return;
-                    }
-
-                    // handle success, close or download
-                    if(response.data != null ){
-                        if(response.data.error != null){
-                            text = "Shipping label generated.However has "+response.data.error;
+                    if(response.data.all_fail){
+                        if(typeof response.data.all_fail == "boolean"){
+                            Swal.fire({
+                                title: 'Error!',
+                                text: "Fail to generate CN",
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            })
+                        }else{
+                            Swal.fire({
+                                title: 'Error!',
+                                text: "Fail to generate CN "+response.data.all_fail,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            })
                         }
 
-                        if(response.data.all_fail){
-                            if(typeof response.data.all_fail == "boolean"){
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: "Fail to generate CN",
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                })
-                            }else{
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: "Fail to generate CN "+response.data.all_fail,
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                })
-                            }
-
-                            return;
-                        }
+                        return;
                     }
+                }
 
                 Swal.fire({
                     title: 'Success!',
@@ -1263,13 +1340,232 @@
                 });
             })
             .catch(function(error) {
-                // handle error
-                console.log(error);
+                Swal.fire({
+                    title: 'Error!',
+                    html: `Fail to generate CN, Please contact admin`,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                })
             })
-            .then(function() {
-                // always executed
+        }
+
+        async function requestCNPOS(type, checkedOrder) {
+            // sweet alert
+            Swal.fire({
+                title: 'Generating shipping label...',
+                html: `<div id="generateConnoteModalPOS">
+                        <div id="generateConnotePOS">
+                            Generate Consignment Notes
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="generatePl9POS" class="d-none">
+                            Generate PL9
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="generateCnPOS" class="d-none">
+                            Generate Consignment Notes
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="mergeCnPOS" class="d-none">
+                            Merging Consignment Notes
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="downloadCnPOS" class="d-none">
+                            <div class="mt-3">Download Request CN Successful.</div>
+                        </div>
+                    </div>`,
+                allowOutsideClick: false,
+                showConfirmButton: false,
             });
-        } //end of generateCN
+
+
+            function generateConnote(item) {
+                return new Promise((resolve) => {
+                    axios.post('/api/pos/generate-connote', {
+                        order_ids: item,
+                        type: type,
+                    }).then(function(response){
+                        if(response.data.status && response.data.status == 'success'){
+                            document.querySelector('#generateConnotePOS').innerHTML = `
+                                Generate Consignment Notes
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            `;
+                            document.querySelector('#generatePl9POS').classList.remove('d-none');
+                        }
+                        if(response.data.status && response.data.status == 'error'){
+                            document.querySelector('#generateConnotePOS').innerHTML = `
+                                Generate Consignment Notes
+                                <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                <br>
+                                <small class="text-danger">
+                                ${response.data.message.join('<br>')}
+                                </small>
+                            `;
+                            document.querySelector('#generatePl9POS').classList.remove('d-none');
+                            Swal.fire({
+                                title: 'Error!',
+                                html: response.data.message.join('<br>'),
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+
+                        }
+                        resolve();
+                    }).catch(function(error) {
+                        Swal.fire({
+                            title: 'Error!',
+                            html: `Fail to generate CN, Please contact admin`,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                        resolve();
+                    });
+                });
+            }
+
+            function generatePl9(item) {
+                return new Promise((resolve) => {
+                    axios.post('/api/pos/generate-pl9', {
+                        order_ids: item,
+                        type: type,
+                    }).then(function(response){
+                        if(response.data.status && response.data.status == 'success'){
+                            document.querySelector('#generatePl9POS').innerHTML = `
+                                Generate PL9
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            `;
+                            document.querySelector('#generateCnPOS').classList.remove('d-none');
+                        }
+                        if(response.data.status && response.data.status == 'error'){
+                            document.querySelector('#generatePl9POS').innerHTML = `
+                                Generate PL9
+                                <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                <br>
+                                <small class="text-danger">
+                                ${response.data.message.join('<br>')}
+                                </small>
+                            `;
+                            document.querySelector('#generateCnPOS').classList.remove('d-none');
+                        }
+                        resolve();
+                    });
+                });
+            }
+
+            function generateCn(item) {
+                return new Promise((resolve) => {
+                    axios.post('/api/pos/download-connote', {
+                        order_ids: item,
+                        type: type,
+                    }).then(function(response){
+                        if(response.data.status && response.data.status == 'success'){
+                            document.querySelector('#generateCnPOS').innerHTML = `
+                                Generate Consignment Notes
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            `;
+                            document.querySelector('#mergeCnPOS').classList.remove('d-none');
+                        }
+                        if(response.data.status && response.data.status == 'error'){
+                            document.querySelector('#generateCnPOS').innerHTML = `
+                                Generate Consignment Notes
+                                <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                <br>
+                                <small class="text-danger">
+                                ${response.data.message.join('<br>')}
+                                </small>
+                            `;
+                            document.querySelector('#mergeCnPOS').classList.remove('d-none');
+                        }
+                        resolve();
+                    });
+                });
+            }
+
+            function downloadCn(item) {
+                return new Promise((resolve) => {
+                    axios({
+                    url: '/api/download-consignment-note',
+                        method: 'POST',
+                        responseType: 'json', // important
+                        data: {
+                            order_ids: item,
+                        }
+                    })
+                    .then(function(res) {
+                        if(!res.data.status && res.data.download_url == false){
+                            Swal.fire({
+                                title: 'Error!',
+                                html: res.data.error ?? "Fail to generate CN",
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            })
+                            return;
+                        }
+
+                        const fileName = String(res.data.download_url).split("/").pop();
+                        let a = document.createElement('a');
+                        a.download = fileName;
+                        a.target = '_blank';
+                        a.download = fileName;
+                        a.href = res.data.download_url;
+                        a.click();
+                        document.querySelector('#mergeCnPOS').innerHTML = `
+                                Merging Consignment Notes
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            `;
+                            document.querySelector('#downloadCnPOS').classList.remove('d-none');
+                            document.querySelector('#downloadCnPOS').innerHTML = `
+                            <div class="mt-3">Download Request CN Successful.</div>
+                            <div>Click <a href="${a.href}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>
+                        `;
+                        resolve(res.data);
+                    })
+                    .catch(function(error) {
+                        // handle error
+                        console.log(error);
+                        Swal.fire({
+                            title: 'Success!',
+                            html: `Failed to generate pdf`,
+                            allowOutsideClick: false,
+                            icon: 'error',
+                        });
+                        resolve();
+                    });
+                });
+            }
+
+            // generate connote
+            await generateConnote(checkedOrder);
+            // generate pl9
+            await generatePl9(checkedOrder);
+            // generate cn
+            await generateCn(checkedOrder);
+            // download cn
+            await downloadCn(checkedOrder)
+            .then(function(download){
+                Swal.update({
+                    title: 'Success!',
+                    html: document.querySelector('#generateConnoteModalPOS').innerHTML,
+                    footer: '<small class="text-danger">Please enable popup if required</small>',
+                    allowOutsideClick: false,
+                    icon: 'success',
+                    showConfirmButton: true,
+                })
+                // if confirm button clicked reload
+                Swal.getConfirmButton().onclick = function(){
+                    location.reload();
+                }
+            })
+
+        }
 
         function approveAsShipped(checkedOrders) {
             axios({
@@ -1910,6 +2206,22 @@
                             confirmButtonText: 'OK'
                         })
                     })
+
+                }
+            });
+        }
+        const duplicateModal = (ids) => {
+            ids = ids.split(',');
+            let count = ids.length;
+            Swal.fire({
+                title: `Possible ${count-1} duplicate order(s) found`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: `View`,
+            })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/orders/overall?ids=${ids}`;
                 }
             })
         }
