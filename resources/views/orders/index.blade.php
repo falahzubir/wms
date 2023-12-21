@@ -968,13 +968,20 @@
             if(newVal > remainingOrder)
             {
                 console.log('more');
+
+                //set remaining order
+                // document.querySelector('#remainingOrderPending').innerHTML = 0;
             }
             else if(newVal < remainingOrder)
             {
                 console.log('less');
+                // el.value = newVal;
+
+                //set remaining order
+                // document.querySelector('#remainingOrderPending').innerHTML = remainingOrder - newVal;
             }
             else{
-                console.log('same');
+                el.value = newVal;
             }
 
             // if(val == 0)
