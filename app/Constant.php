@@ -204,3 +204,6 @@ if(!defined('SETTING_DATA_TYPE_INTEGER')) define('SETTING_DATA_TYPE_INTEGER', 'i
 if(!defined('SETTING_DATA_TYPE_BOOLEAN')) define('SETTING_DATA_TYPE_BOOLEAN', 'boolean');
 if(!defined('SETTING_DATA_TYPE_ARRAY')) define('SETTING_DATA_TYPE_ARRAY', 'array');
 if(!defined('SETTING_DATA_TYPE_JSON')) define('SETTING_DATA_TYPE_JSON', 'json');
+
+if(!defined('TIKTOK_APP_KEY')) define('TIKTOK_APP_KEY', '68r1ubo74bujf');
+if(!defined('TIKTOK_APP_SECRET')) define('TIKTOK_APP_SECRET', 'f0e77dbfcdce30efe2b144dc0ebc99c1b35499e5');

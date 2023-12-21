@@ -63,6 +63,34 @@
         .bg-susu {
             background-color: #FF8244;
         }
+        .swal2-styled.swal2-custom {
+            border: 0;
+            border-radius: .25em;
+            /* background: initial; */
+            font-size: 1em;
+            border: 1px solid #cecece;
+            box-shadow: 1px 1px 0px 0px #cecece;
+        }
+
+        .swal2-dhl-ecommerce {
+            background-color: #FFCC00;
+            color: #D40510;
+        }
+
+        .swal2-posmalaysia {
+            background-color: #fff;
+            color: #FF0000;
+        }
+
+        .swal2-tiktok {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .swal2-shopee {
+            background-color: #E74A2B;
+            color: #fff;
+        }
 
         .swal2-styled.swal2-custom {
             border: 0;
@@ -756,12 +784,16 @@
 @include("orders.multiple_cn_modal")
 <x-slot name="script">
     <script>
+        let arrange_shipment_platform = {
+            'shopee' : 'Shopee',
+            'tiktok' : 'TikTok'
+        };
 
         let generate_cn_couriers = {
             'dhl-ecommerce' : 'DHL Ecommerce',
             'posmalaysia' : 'POS Malaysia',
             'shopee' : 'Shopee',
-            // 'tiktok' : 'TikTok'
+            'tiktok' : 'TikTok'
         };
 
         document.querySelector('#filter-order').onclick = function() {
@@ -1153,15 +1185,9 @@
                 });
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
-                //get checked order
-                let checkedOrder = [];
-                inputElements.forEach(input => {
-                    if (input.checked) {
-                        checkedOrder.push(input.value);
-                    }
-                });
+
                 //check if checked order is empty return and remove Swal.showLoading()
-                if(checkedOrder.length == 0){
+                if(checkedValue.length == 0){
                     Swal.fire({
                         title: 'Error!',
                         text: "Please select at least one order to arrange shipment.",
@@ -1172,28 +1198,33 @@
                     return;
                 }
 
-                let response = axios.post('/api/arrange-shipment', {
-                    order_ids: checkedOrder,
-                })
-                .then(function(response) {
-                    Swal.fire({
-                        title: 'Success!',
-                        html: `${response.data.message}`,
-                        icon: 'success',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            location.reload();
-                        }
-                    });
-                }).catch(function(error) {
-                    // handle error
-                    Swal.fire({
-                        title: 'Error!',
-                        html: 'Something went wrong Please contact admin',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    })
-                })
+                //get checked order
+                let checkedOrder = [];
+                inputElements.forEach(input => {
+                    if (input.checked) {
+                        checkedOrder.push(input.value);
+                    }
+                });
+
+                //sweetalert platform options
+                Swal.fire({
+                    title: 'Please select platform!',
+                    html: `
+                    <div class="swal2-actins" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="swal2-loader"></div>
+                        ${Object.keys(arrange_shipment_platform).map((key) => {
+                            return `<button type="button" class="swal2-custom swal2-${key} swal2-styled" style="display: inline-block;"
+                                aria-label="" onclick="confirmationArrange('${key}', '${checkedOrder}')" >
+                                ${arrange_shipment_platform[key]}
+                                </button>`;
+                        }).join('')}
+                        </div>
+                    </div>
+                    `,
+                    showCancelButton: true,
+                    showConfirmButton: false,
+
+                });
             }
         @endif
 
@@ -1250,9 +1281,10 @@
 
                 if (!response.data.success)
                 {
+                    let message = response.data.error ?? response.data.message;
                     Swal.fire({
                         title: 'Error!',
-                        html: `${response.data.all_fail.message}` ?? "Fail to generate CN",
+                        html: `${message}` ?? "Fail to generate CN",
                         icon: 'error',
                         confirmButtonText: 'OK'
                     })
@@ -2116,6 +2148,62 @@
             }
         }
 
+        const confirmationArrange = (type,checkedValue) => {
+            //change checkedValue to array
+
+            if(typeof checkedValue == "string"){
+                checkedValue = checkedValue.split(',');
+            }
+
+            Swal.fire({
+                title: `Are you sure to arrange shipment for ${checkedValue} order(s)?`,
+                html: `You are about to arrange shipment for ${checkedValue} order(s) on ${arrange_shipment_platform[type]}.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, arrange it!',
+                footer: '<small>Note: Order status will be changed to "Pending Shipment".</small>',
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    // add loading to button
+                    Swal.fire({
+                        title: 'Arranging shipment...',
+                        html: 'Please wait while we are arranging shipment for your order(s).',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        },
+                    });
+
+                    let response = axios.post('/api/arrange-shipment', {
+                        order_ids: checkedValue,
+                        platform: type,
+                    })
+                    .then(function(response) {
+                        Swal.fire({
+                            title: 'Success!',
+                            html: `${response.data.message}`,
+                            icon: 'success',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                location.reload();
+                            }
+                        });
+                    }).catch(function(error) {
+                        // handle error
+                        Swal.fire({
+                            title: 'Error!',
+                            html: 'Something went wrong Please contact admin',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                    })
+
+                }
+            });
+        }
         const duplicateModal = (ids) => {
             ids = ids.split(',');
             let count = ids.length;
