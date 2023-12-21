@@ -1281,9 +1281,10 @@
 
                 if (!response.data.success)
                 {
+                    let message = response.data.all_fail?.message ?? response.data.message;
                     Swal.fire({
                         title: 'Error!',
-                        html: `${response.data.all_fail.message}` ?? "Fail to generate CN",
+                        html: `${message}` ?? "Fail to generate CN",
                         icon: 'error',
                         confirmButtonText: 'OK'
                     })
