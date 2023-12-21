@@ -40,6 +40,7 @@ class ShippingApiController extends ShippingController
 
     public function posmalaysia_generate_access_token($company = null)
     {
+        return false; // disable pos malaysia
         $url = $this->posmalaysia_access;
 
         $posmalaysia_tokens = AccessToken::where('type', 'posmalaysia');
