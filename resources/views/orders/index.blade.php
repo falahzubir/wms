@@ -959,14 +959,36 @@
 
         const constantNumber = (el) =>
         {
-            let val = el.value;
+            let remainingOrder = parseInt(document.querySelector('#remainingOrderPending').innerHTML);
 
-            if(val == 0)
+            let newVal = el.value;
+
+            console.log('remainingOrder', remainingOrder);
+            console.log('newVal', newVal);
+            if(newVal > remainingOrder)
             {
-                el.value = 0;
-            }else{
-                el.value = parseInt(val);
+                console.log('more');
             }
+            else if(newVal < remainingOrder)
+            {
+                console.log('less');
+            }
+            else{
+                console.log('same');
+            }
+
+            // if(val == 0)
+            // {
+            //     console.log(val);
+            //     document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + parseInt(val);
+            //     el.value = 0;
+            // }
+            // else
+            // {
+            //     //add old value to remaining order
+            //     document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + parseInt(val);
+            //     el.value = parseInt(val);
+            // }
         }
 
         const minusNumber = (el) =>
