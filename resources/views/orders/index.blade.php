@@ -828,7 +828,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button id="submit-proceed-bucket" onclick="submitAddToBucket()" type="button"
+                        <button id="submit-proceed-bucket-button" onclick="submitAddToBucket()" type="button"
                             class="btn btn-primary text-white">Submit</button>
                     </div>
                 </div>
@@ -960,42 +960,43 @@
         const constantNumber = (el) =>
         {
             let remainingOrder = parseInt(document.querySelector('#remainingOrderPending').innerHTML);
-
             let newVal = el.value;
+            let oldValue = el.getAttribute('data-value');
 
-            console.log('remainingOrder', remainingOrder);
-            console.log('newVal', newVal);
+            //only on ticked bucket
+            let tickedBucket = el.parentElement.parentElement.parentElement.querySelector('input[type="checkbox"]:checked');
+            if(tickedBucket == null)
+            {
+                return; //stop function
+            }
+
             if(newVal > remainingOrder)
             {
                 console.log('more');
-
-                //set remaining order
-                // document.querySelector('#remainingOrderPending').innerHTML = 0;
+                el.value = newVal;
+                let currentNewVal = oldValue - newVal + remainingOrder;
+                document.querySelector('#remainingOrderPending').innerHTML = currentNewVal; //set remaining order
+                el.setAttribute('data-value', newVal); //set data attribute
+                validationInputBucket(el);
             }
             else if(newVal < remainingOrder)
             {
                 console.log('less');
-                // el.value = newVal;
-
-                //set remaining order
-                // document.querySelector('#remainingOrderPending').innerHTML = remainingOrder - newVal;
-            }
-            else{
                 el.value = newVal;
+                let currentNewVal = oldValue - newVal + remainingOrder;
+                document.querySelector('#remainingOrderPending').innerHTML = currentNewVal; //set remaining order
+                el.setAttribute('data-value', newVal); //set data attribute
+                validationInputBucket(el);
             }
-
-            // if(val == 0)
-            // {
-            //     console.log(val);
-            //     document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + parseInt(val);
-            //     el.value = 0;
-            // }
-            // else
-            // {
-            //     //add old value to remaining order
-            //     document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + parseInt(val);
-            //     el.value = parseInt(val);
-            // }
+            else
+            {
+                console.log('equal');
+                el.value = newVal;
+                let currentNewVal = oldValue - newVal + remainingOrder;
+                document.querySelector('#remainingOrderPending').innerHTML = currentNewVal; //set remaining order
+                el.setAttribute('data-value', newVal); //set data attribute
+                validationInputBucket(el);
+            }
         }
 
         const minusNumber = (el) =>
@@ -1011,6 +1012,7 @@
             {
                 el.parentElement.querySelector('input[type="number"]').value = parseInt(val) - 1; //set value
                 document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + 1; //set remaining order
+                el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) - 1); //set data attribute
             }
         }
 
@@ -1023,6 +1025,7 @@
             {
                 document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) - 1; //set remaining order
                 el.parentElement.querySelector('input[type="number"]').value = parseInt(val) + 1; //set value
+                el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) + 1); //set data attribute
             }
             else
             {
@@ -1047,10 +1050,28 @@
             buckets.forEach(bucket => {
                 if(bucket.parentElement.parentElement.parentElement.querySelector('input[type="checkbox"]').checked)
                 {
-                    bucket.value = divide;
+                    bucket.value = divide; //divide value equally
+                    bucket.setAttribute('data-value', divide); //set data attribute
                 }
             });
 
+        }
+
+        const validationInputBucket = (el) =>
+        {
+            let remainingOrder = parseInt(document.querySelector('#remainingOrderPending').innerHTML);
+            console.log(remainingOrder);
+            console.log(el);
+            if(remainingOrder < 0)
+            {
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').style.borderColor = 'red'; //set border color red
+                document.querySelector('#submit-proceed-bucket-button').disabled = true; //disable submit button
+            }
+            else
+            {
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').style.borderColor = '#ced4da'; // reset border color
+                document.querySelector('#submit-proceed-bucket-button').disabled = false; //enable submit button
+            }
         }
 
         const tickBucket = (el) =>
@@ -1059,11 +1080,22 @@
             {
                 //add old value to remaining order
                 let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
-                // console.log(remainingOrder);
                 document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + parseInt(el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value);
                 //reset value after untick
                 el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value = 0;
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').setAttribute('data-value', 0);
             }
+            else
+            {
+                //remove old value from remaining order
+                let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) - parseInt(el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value);
+
+                let newVal = el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value;
+                //set attribute value
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').setAttribute('data-value', newVal);
+            }
+            validationInputBucket(el);
         }
 
         const submitAddToBucket = () =>
