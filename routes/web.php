@@ -18,6 +18,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TemplateSettingController;
+use App\Http\Controllers\CustomTemplateController;
 use App\Models\Company;
 use Illuminate\Support\Facades\Route;
 
@@ -181,6 +182,11 @@ Route::middleware(['auth'])->group(function() {
     Route::prefix('template_setting')->group(function() {
         Route::get('/', [TemplateSettingController::class, 'index'])->name('template_setting.index');
         Route::post('update', [TemplateSettingController::class, 'update'])->name('template_setting.update');
+    });
+
+    Route::prefix('custom_template_setting')->group(function() {
+        Route::get('/', [CustomTemplateController::class, 'index'])->name('custom_template_setting.index');
+        Route::post('save_template', [CustomTemplateController::class, 'saveTemplate'])->name('template_setting.save_template');
     });
 });
 
