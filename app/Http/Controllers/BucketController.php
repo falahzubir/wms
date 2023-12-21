@@ -213,6 +213,91 @@ class BucketController extends Controller
         return response()->json(['message' => 'Order added to bucket successfully.']);
     }
 
+    public function add_to_bucket(Request $request)
+    {
+        $error = [];
+        $successOrderIds = [];
+        $request->validate([
+            'bucket_id' => 'required|array',
+            'order_ids' => 'required|string',
+        ]);
+
+        $bucketIds = $request->bucket_id;
+        $orderIds = explode(',', $request->order_ids);
+
+        foreach($bucketIds as $bucket_id => $value)
+        {
+            $orderIdsBucket[$bucket_id] = array_slice($orderIds, 0, $value);
+            $orderIds = array_slice($orderIds, $value);
+
+            $upd = Order::whereIn('id', $orderIdsBucket[$bucket_id])
+            ->update([
+                'bucket_batch_id' => null,
+                'bucket_id' => $bucket_id,
+                'bucket_added_at' => Carbon::now(),
+                'status' => ORDER_STATUS_PROCESSING,
+            ]);
+
+            if(!$upd)
+            {
+                $error['status'] = 'error';
+                $error['message'] = 'Failed to add order to bucket on bucket id '.$bucket_id .'<br> Order Ids: '.implode(',', $orderIdsBucket[$bucket_id]);
+            }
+            else
+            {
+                $successOrderIds = array_merge($successOrderIds, $orderIdsBucket[$bucket_id]);
+            }
+        }
+
+        // get orders
+        $orders = Order::with(['company'])->whereIn('id', $successOrderIds)->get();
+
+        //foreach company
+        $orders_company = [];
+        foreach ($orders as $order) {
+            $orders_company[$order->company->id][] = $order;
+        }
+
+        //send api to company
+        foreach ($orders_company as $orders) {
+            $company_url = $orders[0]->company->url;
+
+            if(!$company_url) continue;
+
+            // get sales ids from orders array
+            $orders = array_map(function ($order) {
+                return $order->sales_id;
+            }, $orders);
+
+            $data = [
+                'sales_ids' => $orders,
+            ];
+
+            Http::post($company_url . '/api/processed_order', $data);
+
+        }
+
+        foreach ($request->order_ids as $order_id) {
+            OrderLog::create([
+                'order_id' => $order_id,
+                'order_status_id' => ORDER_STATUS_PROCESSING,
+                'remarks' => 'Order added to bucket',
+                'created_by' => 1,
+            ]);
+        }
+
+        // return response()->json(['message' => 'Order added to bucket successfully.']);
+        if(!empty($error))
+        {
+            $message = $error['message'];
+        }
+
+        return response()->json([
+            'status' => !empty($error) ? $error['status'] : 'success',
+            'message' => !empty($error) ? $message : 'Order added to bucket successfully.',
+        ]);
+    }
+
     public function download_cn(Request $request)
     {
         $bucket = Bucket::find($request->bucket_id);
@@ -356,10 +441,14 @@ class BucketController extends Controller
         $totalOrder = 0;
         $categoryBucket = CategoryBucket::with(['bucket'])->where('category_id', $request->category_id)->get();
 
-        $countOrder = !empty($request->order_ids) ? count($request->order_ids) : Order::where('is_active', 1)
+        $orderes = Order::where('is_active', 1)
         ->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_SHIPMENT])
         ->whereDate('dt_request_shipping', '<=', date('Y-m-d'))
-        ->count();
+        ->get();
+
+        $orders_ids = !empty($request->order_ids) ? $request->order_ids : $orderes->pluck('id')->toArray();
+
+        $countOrder = !empty($request->order_ids) ? count($request->order_ids) : $orderes->count();
 
         $totalOrder = $countOrder;
 
@@ -367,6 +456,7 @@ class BucketController extends Controller
             'status' => 'success',
             'categoryBucket' => $categoryBucket,
             'totalOrder' => $totalOrder,
+            'order_ids' => $orders_ids,
         ]);
     }
 }

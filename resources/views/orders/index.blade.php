@@ -823,6 +823,7 @@
 
                             <div class="row m-0 w-100 pt-3" id="submit-proceed-bucket-modal-body">
                             </div>
+                            <input type="hidden" id="order_ids" name="order_ids">
                         </div>
                         {{-- Button --}}
                     </div>
@@ -916,6 +917,7 @@
 
                 let totalOrder = res.data.totalOrder;
                 document.querySelector('#totalOrderPending').innerHTML = totalOrder;
+                document.querySelector('#order_ids').value = res.data.order_ids;
                 // let remainingOrder = res.data.remainingOrder;
                 // document.querySelector('#remainingOrderPending').innerHTML = remainingOrder;
 
@@ -937,7 +939,7 @@
                             <div>
                                 <div class="d-flex">
                                 <i onclick="minusNumber(this)" class="bi bi-dash-circle-fill text-primary fs-5"></i>
-                                <input name="bucket_id[${categoryBucket.id}][]" oninput="constantNumber(this)" type="number" id="input-number-${categoryBucket.id}" class="form-control form-control-sm mx-2" style="width: 5rem; text-align: center;" value="0">
+                                <input name="bucket_id[${categoryBucket.id}]" oninput="constantNumber(this)" type="number" id="input-number-${categoryBucket.id}" class="form-control form-control-sm mx-2" style="width: 5rem; text-align: center;" value="0">
                                 <i onclick="plusNumber(this)" class="bi bi-plus-circle-fill text-primary fs-5"></i>
                                 </div>
                             </div>
@@ -1098,9 +1100,16 @@
             validationInputBucket(el);
         }
 
-        const submitAddToBucket = () =>
+        const submitAddToBucket = async() =>
         {
-            console.log('submit');
+            let form = document.querySelector('#submit-proceed-bucket');
+            let formData = new FormData(form);
+
+            let response = await axios.post('/api/buckets/add-to-bucket', formData).then(res => {
+                console.log(res);
+            }).catch(err => {
+                console.log(err);
+            });
         }
 
         // generate shipping label

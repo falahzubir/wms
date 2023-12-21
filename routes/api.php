@@ -53,6 +53,7 @@ Route::prefix('buckets')->group(function () {
     Route::post('store', [BucketController::class, 'store']);
     Route::post('update', [BucketController::class, 'update']);
     Route::post('get-bucket-by-category', [BucketController::class, 'get_bucket_by_category']);
+    Route::post('add-to-bucket', [BucketController::class, 'add_to_bucket']);
 });
 
 Route::prefix('orders')->group(function () {
