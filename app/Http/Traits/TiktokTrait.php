@@ -46,8 +46,8 @@ Trait TiktokTrait
 
     public static function refreshToken($shop_id)
     {
-        // $url = app()->environment() == 'production' ? 'https://aa.bosemzi.com' : 'https://qastg.groobok.com';
-        $url = 'https://aa.bosemzi.com'; # FOR TESTING
+        $url = app()->environment() == 'production' ? 'https://aa.bosemzi.com' : 'https://qastg.groobok.com';
+        // $url = 'https://aa.bosemzi.com'; # FOR TESTING
         $json['from'] = 'wms';
         $json['shop_id'] = $shop_id;
         $response = Http::withHeaders([
