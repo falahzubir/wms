@@ -258,6 +258,7 @@ class BucketController extends Controller
             $orders_company[$order->company->id][] = $order;
         }
 
+
         //send api to company
         foreach ($orders_company as $orders) {
             $company_url = $orders[0]->company->url;
@@ -277,7 +278,7 @@ class BucketController extends Controller
 
         }
 
-        foreach ($request->order_ids as $order_id) {
+        foreach ($successOrderIds as $order_id) {
             OrderLog::create([
                 'order_id' => $order_id,
                 'order_status_id' => ORDER_STATUS_PROCESSING,
@@ -286,15 +287,14 @@ class BucketController extends Controller
             ]);
         }
 
-        // return response()->json(['message' => 'Order added to bucket successfully.']);
         if(!empty($error))
         {
             $message = $error['message'];
         }
 
         return response()->json([
-            'status' => !empty($error) ? $error['status'] : 'success',
-            'message' => !empty($error) ? $message : 'Order added to bucket successfully.',
+            'status' => 'success',
+            'message' => !empty($error) ? 'Order added to bucket successfully. <br> '.$message : 'Order added to bucket successfully.',
         ]);
     }
 

@@ -1062,8 +1062,6 @@
         const validationInputBucket = (el) =>
         {
             let remainingOrder = parseInt(document.querySelector('#remainingOrderPending').innerHTML);
-            console.log(remainingOrder);
-            console.log(el);
             if(remainingOrder < 0)
             {
                 el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').style.borderColor = 'red'; //set border color red
@@ -1106,9 +1104,23 @@
             let formData = new FormData(form);
 
             let response = await axios.post('/api/buckets/add-to-bucket', formData).then(res => {
-                console.log(res);
+                Swal.fire({
+                    title: 'Success!',
+                    html: res.data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                })
             }).catch(err => {
-                console.log(err);
+                Swal.fire({
+                    title: 'Error!',
+                    html: err.response.data.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                })
             });
         }
 
