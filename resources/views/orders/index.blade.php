@@ -240,7 +240,7 @@
                                 @foreach ($orders as $key => $order)
                                     <tr style="font-size: 0.8rem;">
                                         <th scope="row">{{ $key + $orders->firstItem() }}</th>
-                                        <td><input type="checkbox" name="check_order[]" class="check-order"
+                                        <td><input onclick="removeOldTicked()" type="checkbox" name="check_order[]" class="check-order"
                                                 id="" value="{{ $order->id }}">
                                         </td>
                                         <td>
@@ -887,6 +887,11 @@
                 }
             }
         @endif
+
+        const removeOldTicked = () =>
+        {
+            checkedOrder = []; //reset array
+        }
 
         const selectCategory = (el) =>
         {
