@@ -312,7 +312,7 @@
                     <li>
                         <a href="{{ route('settings.index') }}"
                             {{ Route::current()->getName() == 'settings.index' ? 'class=active' : '' }}>
-                            <i class="bi bi-circle"></i><span>Settings</span>
+                            <i class="bi bi-circle"></i><span>General Settings</span>
                         </a>
                     </li>
                     @endrole
