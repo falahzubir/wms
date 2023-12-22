@@ -196,5 +196,14 @@ if(!defined('CLAIM_STATUS_COMPLETED')) define('CLAIM_STATUS_COMPLETED', 1);
 if(!defined('SHOPEE_LIVE_PARTNER_ID')) define('SHOPEE_LIVE_PARTNER_ID', '2004184');
 if(!defined('SHOPEE_LIVE_PARTNER_KEY')) define('SHOPEE_LIVE_PARTNER_KEY', 'e9b00cc3924edee9d1675f60116adc56bbc5e9f3bfd241d463e84bc695b86e03');
 
+if(!defined('SETTING_TYPE_GENERAL')) define('SETTING_TYPE_GENERAL', 1);
+if(!defined('SETTING_TYPE_SCAN')) define('SETTING_TYPE_SCAN', 2);
+
+if(!defined('SETTING_DATA_TYPE_STRING')) define('SETTING_DATA_TYPE_STRING', 'string');
+if(!defined('SETTING_DATA_TYPE_INTEGER')) define('SETTING_DATA_TYPE_INTEGER', 'integer');
+if(!defined('SETTING_DATA_TYPE_BOOLEAN')) define('SETTING_DATA_TYPE_BOOLEAN', 'boolean');
+if(!defined('SETTING_DATA_TYPE_ARRAY')) define('SETTING_DATA_TYPE_ARRAY', 'array');
+if(!defined('SETTING_DATA_TYPE_JSON')) define('SETTING_DATA_TYPE_JSON', 'json');
+
 if(!defined('TIKTOK_APP_KEY')) define('TIKTOK_APP_KEY', '68r1ubo74bujf');
 if(!defined('TIKTOK_APP_SECRET')) define('TIKTOK_APP_SECRET', 'f0e77dbfcdce30efe2b144dc0ebc99c1b35499e5');
