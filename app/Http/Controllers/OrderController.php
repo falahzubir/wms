@@ -95,6 +95,10 @@ class OrderController extends Controller
             ];
         }
 
+        if(!in_array(ORDER_FILTER_BUCKET_CATEGORY, $exclude)){
+            $filter_data['bucket_categories'] = CategoryMain::all();
+        }
+
         if(!in_array(ORDER_FILTER_STATUS, $exclude)){
 
             //check if route is pending, then show only pending status
@@ -168,13 +172,11 @@ class OrderController extends Controller
                 // ->whereRaw('(payment_type IS NULL OR payment_type <> 22)'); //shopee order excluded
 
         $orders = $this->filter_order($request, $orders);
-        $categories = CategoryMain::all();
 
         return view('orders.index', [
             'title' => 'Pending Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'categories' => $categories,
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER,ACTION_ARRANGE_SHIPMENT],
         ]);
@@ -462,7 +464,7 @@ class OrderController extends Controller
          if ($result) {
              $data_customer['postcode'] = $result->alternative_postcode;
          }
-         
+
         $customer = Customer::updateOrCreate($data_customer);
 
         $data['customer_id'] = $customer->id;

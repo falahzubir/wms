@@ -124,6 +124,7 @@ if(!defined('ORDER_FILTER_COMPANY')) define('ORDER_FILTER_COMPANY', 8);
 if(!defined('ORDER_FILTER_STATE')) define('ORDER_FILTER_STATE', 9);
 if(!defined('ORDER_FILTER_PLATFORM')) define('ORDER_FILTER_PLATFORM', 10);
 if(!defined('ORDER_FILTER_STATUS')) define('ORDER_FILTER_STATUS', 11);
+if(!defined('ORDER_FILTER_BUCKET_CATEGORY')) define('ORDER_FILTER_BUCKET_CATEGORY', 12);
 
 // date types
 if(!defined('ORDER_DATE_TYPES')) define('ORDER_DATE_TYPES', [

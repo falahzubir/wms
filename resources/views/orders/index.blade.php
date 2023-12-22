@@ -763,7 +763,7 @@
                             <div style="display: flex ;justify-content: center;">
                                 <select onchange="selectCategory(this)" class="form-select" id="category-id" name="category_id" style="width: 80%">
                                     <option value="">Select a Category</option>
-                                    @foreach ($categories as $category)
+                                    @foreach ($filter_data->bucket_categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->category_name }}</option>
                                     @endforeach
                                 </select>
@@ -929,7 +929,7 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
                                 <div class="d-flex align-items-center">
-                                    <input onclick="tickBucket(this)" type="checkbox" class="form-check-input" id="check-all-${categoryBucket.id}" checked>
+                                    <input onclick="tickBucket(this)" type="checkbox" class="form-check-input" id="check-all-${categoryBucket.bucket_id}" checked>
                                     <span class="d-inline-block mx-2"><i class="bi bi-basket"></i></span>
                                     <label class="form-check-label mx-2" for="check-all">
                                         ${categoryBucket.bucket.name}:
@@ -939,7 +939,7 @@
                             <div>
                                 <div class="d-flex">
                                 <i onclick="minusNumber(this)" class="bi bi-dash-circle-fill text-primary fs-5"></i>
-                                <input name="bucket_id[${categoryBucket.id}]" oninput="constantNumber(this)" type="number" id="input-number-${categoryBucket.id}" class="form-control form-control-sm mx-2" style="width: 5rem; text-align: center;" value="0">
+                                <input name="bucket_id[${categoryBucket.bucket_id}]" oninput="constantNumber(this)" type="number" id="input-number-${categoryBucket.bucket_id}" class="form-control form-control-sm mx-2" style="width: 5rem; text-align: center;" value="0">
                                 <i onclick="plusNumber(this)" class="bi bi-plus-circle-fill text-primary fs-5"></i>
                                 </div>
                             </div>
