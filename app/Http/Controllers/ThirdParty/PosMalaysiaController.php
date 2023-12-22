@@ -66,6 +66,7 @@ class PosMalaysiaController extends ShippingController
                         'shipment_number' => shipment_num_format($order),
                         'courier' => 'posmalaysia',
                         'created_by' => auth()->user()->id ?? 1,
+                        'created_at' => Carbon::now(),
                     ];
                     break;
                 case '02':

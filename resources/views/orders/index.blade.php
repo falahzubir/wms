@@ -1174,20 +1174,11 @@
 
         @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
             document.querySelector('#arrange-shipment-btn').onclick = function() {
-                //add loading to button
-                Swal.fire({
-                    title: 'Arranging shipment...',
-                    html: 'Please wait while we are arranging shipment for your order(s).',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading()
-                    },
-                });
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
 
                 //check if checked order is empty return and remove Swal.showLoading()
-                if(checkedValue.length == 0){
+                if(checkedValue == 0){
                     Swal.fire({
                         title: 'Error!',
                         text: "Please select at least one order to arrange shipment.",
@@ -2156,8 +2147,8 @@
             }
 
             Swal.fire({
-                title: `Are you sure to arrange shipment for ${checkedValue} order(s)?`,
-                html: `You are about to arrange shipment for ${checkedValue} order(s) on ${arrange_shipment_platform[type]}.`,
+                title: `Are you sure to arrange shipment for ${checkedValue.length} order(s)?`,
+                html: `You are about to arrange shipment for ${checkedValue.length} order(s) on ${arrange_shipment_platform[type]}.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
