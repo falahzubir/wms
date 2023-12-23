@@ -30,10 +30,12 @@ class ShippingApiController extends ShippingController
 
             $response = Http::get($url . "?clientId=" . $token->client_id . "&password=" . $token->client_secret)->json();
 
-            if ($response['accessTokenResponse']['responseStatus']['code'] == 100000) {
-                $data['token'] = $response['accessTokenResponse']['token'];
-                $data['expires_at'] = date('Y-m-d H:i:s', strtotime('+' . $response['accessTokenResponse']['expires_in_seconds'] . ' seconds'));
-                $token->update($data);
+            if($response != null){
+                if ($response['accessTokenResponse']['responseStatus']['code'] == 100000) {
+                    $data['token'] = $response['accessTokenResponse']['token'];
+                    $data['expires_at'] = date('Y-m-d H:i:s', strtotime('+' . $response['accessTokenResponse']['expires_in_seconds'] . ' seconds'));
+                    $token->update($data);
+                }
             }
         }
     }
