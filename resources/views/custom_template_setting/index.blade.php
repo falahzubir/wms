@@ -8,13 +8,14 @@
 
         .form-select {
             width: 40%;
-        }
-
-        #btn {
             font-size: 10pt;
         }
 
-        #btnSave {
+        .customBtn, .form-control {
+            font-size: 10pt;
+        }
+
+        .customBtnSave {
             font-size: 10pt;
             background-color: #7166e0;
         }
@@ -47,7 +48,7 @@
             align-items: center;
         }
 
-        #leftBox, #rightBox {
+        .leftBox, .rightBox {
             width: 300px;
             height: 600px;
             margin: 20px;
@@ -75,40 +76,86 @@
             margin: 0 10px 0 0;
         }
 
-        #columnList {
+        .columnList {
             margin: 10px 0 0 20px;
             font-size: 10pt;
             font-weight: bold;
-        }        
+        }
     </style>
 
     <section class="section">
 
         <div class="card p-4">
-                <div class="d-flex justify-content-start mb-3">
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTemplate"><i class='bx bx-plus-medical'></i></button>
-                </div>
-                <table class="table table-striped is-fullwidth border mb-2 text-center">
-                    <thead>
+            <div class="d-flex justify-content-start mb-3">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTemplate"><i class='bx bx-plus-medical'></i></button>
+            </div>
+            <table class="table table-striped is-fullwidth border mb-2 text-center">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Template Name</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $rowNumber = ($templateMain->currentPage() - 1) * $templateMain->perPage() + 1;
+                    @endphp
+                    @foreach ($templateMain as $row)
                         <tr>
-                            <th>#</th>
-                            <th>Template Name</th>
-                            <th>Type</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>J&T</td>
-                            <td>Pending List</td>
+                            <td>{{ $rowNumber++ }}</td>
+                            <td>{{ $row->template_name }}</td>
                             <td>
-                                <a href="" class="btn btn-warning text-white"><i class='bx bx-pencil'></i></a>
-                                <a href="" class="btn btn-danger"><i class='bx bxs-trash'></i></a>
+                                @switch($row->template_type)
+                                    @case(1)
+                                        Pending List
+                                        @break
+                                    @case(2)
+                                        Bucket List
+                                        @break
+                                    @case(3)
+                                        Packing List
+                                        @break
+                                    @case(4)
+                                        Pending Shipping List
+                                        @break
+                                    @case(5)
+                                        In Transit List
+                                        @break
+                                    @case(6)
+                                        Delivered List
+                                        @break
+                                    @case(7)
+                                        Return List
+                                        @break
+                                    @case(8)
+                                        Claim List
+                                        @break
+                                    @case(9)
+                                        Reject List
+                                        @break
+                                    @default
+                                @endswitch
+                            </td>
+                            <td>
+                                <button class="btn btn-warning text-white"
+                                        data-bs-toggle="modal" data-bs-target="#editTemplate"
+                                        data-template-id="{{ $row->id }}"
+                                        data-template-name="{{ $row->template_name }}"
+                                        data-template-type="{{ $row->template_type }}"
+                                        data-template-header="{{ $row->template_header }}">
+                                    <i class='bx bx-pencil'></i>
+                                </button>
+                                <a href="#" class="btn btn-danger delete-template" data-template-id="{{ $row->id }}"><i class='bx bxs-trash'></i></a>
                             </td>
                         </tr>
-                    </tbody>
-                </table>
+                    @endforeach
+                </tbody>
+            </table>
+            <div class="d-flex justify-content-end">                       
+                {{ $templateMain->links() }}
+            </div>
         </div>
 
     </section>
@@ -133,6 +180,7 @@
                     <div class="mb-3">
                         <label class="mb-2">Template Type: </label>
                         <select name="template_type" class="form-select">
+                            <option selected disabled></option>
                             <option value="1">Pending List</option>
                             <option value="2">Bucket List</option>
                             <option value="3">Packing List</option>
@@ -155,37 +203,108 @@
                         <label class="mb-2">Template Column</label>
 
                         <div class="container">
-                            <div id="leftBox">
-                                <p id="columnList">Column List</p>
-                                @foreach($dataFromDB as $item)
-                                <div class="list" draggable="true" data-column-id="{{ $item->column_id }}">{{ $item->column_display_name }}</div>
+                            <div id="leftBox" class="leftBox">
+                                <p class="columnList">Column List</p>
+                                @foreach($columnMain as $item)
+                                <div class="list" draggable="true" data-column-id="{{ $item->id }}">{{ $item->column_display_name }}</div>
                                 @endforeach
                             </div>
 
                             <i class='bx bxs-right-arrow-alt arrow-icon'></i>
 
-                            <div id="rightBox">
-                                <p id="columnList">Column List</p>
+                            <div id="rightBox" class="rightBox">
+                                <p class="columnList">Column List</p>
                             </div>
                         </div>
+
+                        <input type="hidden" name="column_order" value="">
                     </div>
                 </div>
             
                     <!-- Modal footer -->
                 <div class="modal-footer d-flex justify-content-center">
-                    <button id="btnSave" type="submit" class="btn btn-primary">Save</button>
-                    <button id="btn" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button id="btnSave" type="submit" class="btn btn-primary customBtnSave">Save</button>
+                    <button type="button" class="btn btn-secondary customBtn" data-bs-dismiss="modal">Cancel</button>
                 </div>
         
             </div>
         </div>
     </div>
 
+    <!-- The Edit Modal -->
+    <div class="modal fade" id="editTemplate">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header text-center">
+                    <h5 class="modal-title mx-auto"><strong>Edit Custom Template</strong></h5>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body p-4">
+
+                    <input type="hidden" id="edit_template_id">
+
+                    <div class="mb-3">
+                        <label class="mb-2">Template Name: </label>
+                        <input type="text" id="edit_template_name" class="form-control" name="template_name">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="mb-2">Template Type: </label>
+                        <select id="edit_template_type" name="template_type" class="form-select">
+                            <option selected disabled></option>
+                            <option value="1">Pending List</option>
+                            <option value="2">Bucket List</option>
+                            <option value="3">Packing List</option>
+                            <option value="4">Pending Shipping List</option>
+                            <option value="5">In Transit List</option>
+                            <option value="6">Delivered List</option>
+                            <option value="7">Return List</option>
+                            <option value="8">Claim List</option>
+                            <option value="9">Reject List</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="mb-2">Template Header </label>
+                        <br>
+                        <textarea id="edit_template_header" class="form-control" name="template_header" rows="5"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="mb-2">Template Column</label>
+                        <div class="container">
+                            <div id="leftBoxEdit" class="leftBox">
+                                <p class="columnList">Column List</p>
+                                @foreach($columnMain as $item)
+                                    <div class="list" draggable="true" data-column-id="{{ $item->id }}">{{ $item->column_display_name }}</div>
+                                @endforeach
+                            </div>
+
+                            <i class='bx bxs-right-arrow-alt arrow-icon'></i>
+
+                            <div id="rightBoxEdit" class="rightBox">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer d-flex justify-content-center">
+                    <button id="btnUpdate" type="submit" class="btn btn-primary customBtnSave">Update</button>
+                    <button type="button" class="btn btn-secondary customBtn" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <x-slot name="script">
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
         <script>
             document.addEventListener("DOMContentLoaded", function () {
+
+                // ================ Drag & Drop Function ================== //
                 let lists = document.getElementsByClassName("list");
                 let rightBox = document.getElementById("rightBox");
                 let leftBox = document.getElementById("leftBox");
@@ -226,9 +345,25 @@
 
                     // Append dragged item to right box
                     rightBox.appendChild(draggedItem);
+
+                    // Update the order of column IDs
+                    updateColumnOrder();
                 });
 
-                // Submit Modal
+                function updateColumnOrder() {
+                    let columnOrder = [];
+                    let draggedItems = document.querySelectorAll("#rightBox .list");
+
+                    for (let draggedItem of draggedItems) {
+                        let columnId = draggedItem.getAttribute("data-column-id");
+                        columnOrder.push(columnId);
+                    }
+
+                    // Store the order in a hidden input field or send it directly to the server
+                    document.querySelector("input[name='column_order']").value = JSON.stringify(columnOrder);
+                }
+
+                // ================ Add Function ================== //
                 $("#btnSave").on("click", function (e) {
                     e.preventDefault();
 
@@ -240,19 +375,26 @@
 
                     // Collect data from the rightBox (dragged items)
                     let draggedItems = document.querySelectorAll("#rightBox .list");
-                    let columnData = Array.from(draggedItems).map(item => item.innerText);
+
+                    let columnIds = [];
+
+                    for (let draggedItem of draggedItems) {
+                        let columnId = draggedItem.getAttribute("data-column-id");
+                        columnIds.push(columnId);
+                    }
 
                     // Prepare the data to be sent to the server
                     let data = {
                         template_name: templateName,
                         template_type: templateType,
                         template_header: templateHeader,
-                        columns: columnData,
+                        columns: columnIds,
+                        column_order: JSON.parse(document.querySelector("input[name='column_order']").value),
                     };
 
                     // Use AJAX to send the data to a Laravel route
                     $.ajax({
-                        url: '{{ route("template_setting.save_template") }}',
+                        url: '{{ route("custom_template_setting.save") }}',
                         method: 'POST',
                         data: data,
                         headers: {
@@ -264,6 +406,215 @@
                                 icon: 'success',
                                 title: 'Success!',
                                 text: 'Your template has been saved.',
+                            }).then(function () {
+                                // Close the modal
+                                $("#addTemplate").modal('hide');
+
+                                // Refresh the page
+                                location.reload();
+                            });
+                        },
+                        error: function (error) {
+                            console.error(error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: error.responseJSON.message || 'Something went wrong.',
+                            }).then(function () {
+                                // Close the modal
+                                $("#addTemplate").modal('hide');
+
+                                // Refresh the page
+                                location.reload();
+                            });
+                        }
+                    });
+                });
+
+
+                // ================ Edit Function ================== //
+                $("#editTemplate").on("show.bs.modal", function (e) {
+                    console.log("Edit Modal Show"); // Check if this line is executed
+
+                    let templateId = $(e.relatedTarget).data("template-id");
+                    let templateName = $(e.relatedTarget).data("template-name");
+                    let templateType = $(e.relatedTarget).data("template-type");
+                    let templateHeader = $(e.relatedTarget).data("template-header");
+
+                    console.log("Template ID:", templateId); // Check if values are correct
+
+                    // Populate the editTemplate modal with data
+                    $("#edit_template_id").val(templateId);
+                    $("#edit_template_name").val(templateName);
+                    $("#edit_template_type").val(templateType);
+                    $("#edit_template_header").val(templateHeader);
+
+                    // Load the columns in the right box for the specific template
+                    loadColumnsForTemplate(templateId);
+                });
+
+                $("#btnUpdate").on("click", function (e) {
+                    e.preventDefault();
+
+                    // Collect data from the modal fields
+                    let templateId = $("#edit_template_id").val();
+                    let templateName = $("#edit_template_name").val();
+                    let templateType = $("#edit_template_type").val();
+                    let templateHeader = $("#edit_template_header").val();
+                    let csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+                    // Collect data from the rightBoxEdit (dragged items)
+                    let draggedItems = $("#rightBoxEdit .list");
+                    let columnIds = [];
+
+                    draggedItems.each(function () {
+                        let columnId = $(this).attr("data-column-id");
+                        columnIds.push(columnId);
+                    });
+
+                    // Prepare the data to be sent to the server
+                    let data = {
+                        template_id: templateId,
+                        template_name: templateName,
+                        template_type: templateType,
+                        template_header: templateHeader,
+                        columns: columnIds,
+                        column_order: JSON.parse($("input[name='column_order']").val()),
+                    };
+
+                    // Use AJAX to send the data to a Laravel route
+                    $.ajax({
+                        url: '{{ route("custom_template_setting.update") }}',
+                        method: 'POST',
+                        data: data,
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        success: function (response) {
+                            console.log(response);
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Your template has been updated.',
+                            }).then(function () {
+                                // Close the modal
+                                $("#editTemplate").modal('hide');
+
+                                // Refresh the page
+                                location.reload();
+                            });
+                        },
+                        error: function (error) {
+                            console.error(error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: error.responseJSON.message || 'Something went wrong.',
+                            }).then(function () {
+                                // Close the modal
+                                $("#editTemplate").modal('hide');
+
+                                // Refresh the page
+                                location.reload();
+                            });
+                        }
+                    });
+                });
+
+                function loadColumnsForTemplate(templateId) {
+                    // Use AJAX to fetch the columns for the specified template
+                    $.ajax({
+                        url: '{{ url("custom_template_setting/get_columns") }}/' + templateId,
+                        method: 'GET',
+                        success: function (response) {
+                            console.log("Columns received:", response.columns);
+                            displayColumnsInRightBox(response.columns);
+                        },
+                        error: function (error) {
+                            console.error(error);
+                        }
+                    });
+                }
+
+                function displayColumnsInRightBox(columns) {
+                    let rightBoxEdit = document.getElementById("rightBoxEdit");
+                    rightBoxEdit.innerHTML = ''; // Clear existing columns
+
+                    // Append the columnList element
+                    let columnListElement = document.createElement("p");
+                    columnListElement.className = "columnList";
+                    columnListElement.innerText = "Column List";
+                    rightBoxEdit.appendChild(columnListElement);
+
+                    // Display columns in the right box
+                    columns.forEach(function (column) {
+                        let columnElement = document.createElement("div");
+                        columnElement.className = "list";
+                        columnElement.draggable = true;
+                        columnElement.setAttribute("data-column-id", column.id);
+                        columnElement.innerText = column.column_display_name;
+
+                        // Add remove button
+                        let removeButton = document.createElement("i");
+                        removeButton.className = "bx bx-x-circle remove-btn";
+                        removeButton.addEventListener("click", function () {
+                            rightBoxEdit.removeChild(columnElement);
+                        });
+
+                        // Append remove button to column element
+                        columnElement.appendChild(removeButton);
+
+                        // Append column element to right box
+                        rightBoxEdit.appendChild(columnElement);
+                    });
+
+                    // Update the order of column IDs
+                    updateColumnOrder();
+                }
+
+
+                // ================ Delete Function ================== //
+                $(".delete-template").on("click", function (e) {
+                    e.preventDefault();
+
+                    let templateId = $(this).data("template-id");
+
+                    // Use SweetAlert for confirmation
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: 'You won\'t be able to revert this!',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // User confirmed, proceed with delete
+                            deleteTemplate(templateId);
+                        }
+                    });
+                });
+
+                function deleteTemplate(templateId) {
+                    let csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+                    // Use AJAX to send the data to a Laravel route
+                    $.ajax({
+                        url: '{{ route("custom_template_setting.delete") }}',
+                        method: 'DELETE',
+                        data: { template_id: templateId },
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        success: function (response) {
+                            console.log(response);
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Your template has been deleted.',
+                            }).then(function () {
+                                // Refresh the page or update the table data
+                                location.reload();
                             });
                         },
                         error: function (error) {
@@ -275,7 +626,8 @@
                             });
                         }
                     });
-                });
+                }
+
             });
         </script>
     </x-slot>

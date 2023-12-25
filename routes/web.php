@@ -186,7 +186,10 @@ Route::middleware(['auth'])->group(function() {
 
     Route::prefix('custom_template_setting')->group(function() {
         Route::get('/', [CustomTemplateController::class, 'index'])->name('custom_template_setting.index');
-        Route::post('save_template', [CustomTemplateController::class, 'saveTemplate'])->name('template_setting.save_template');
+        Route::post('save_template', [CustomTemplateController::class, 'saveTemplate'])->name('custom_template_setting.save');
+        Route::get('/get_columns/{id}', [CustomTemplateController::class, 'getColumns']);
+        Route::post('update_template', [CustomTemplateController::class, 'updateTemplate'])->name('custom_template_setting.update');
+        Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
     });
 });
 
