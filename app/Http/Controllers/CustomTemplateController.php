@@ -76,33 +76,33 @@ class CustomTemplateController extends Controller
 
     public function updateTemplate(Request $request)
     {
-        // Validate the incoming request data
+        // Step 1: Validate the input
         $request->validate([
-            'template_id' => 'required',
-            'template_name' => 'required|string',
-            'template_type' => 'required|numeric',
+            'template_id' => 'required|exists:template_mains,id',
+            'template_name' => 'required|string|max:255',
+            'template_type' => 'required|string|max:255',
             'template_header' => 'required|string',
-            'columns' => 'required|array',
         ]);
 
-        // Retrieve the template by ID
+        // Step 2: Process the data
         $template = TemplateMain::findOrFail($request->input('template_id'));
         $template->template_name = $request->input('template_name');
         $template->template_type = $request->input('template_type');
         $template->template_header = $request->input('template_header');
         $template->updated_at = now()->timezone('Asia/Kuala_Lumpur');
+        $template->save();
 
-        // Save the template to get an ID
-        $template->update();
+        $columnOrder = $request->input('column_order');
 
-        // Save the new columns to the template_columns table
-        if ($request->has('column_order') && is_array($request->input('column_order'))) {
-            foreach ($request->input('column_order') as $order => $columnId) {
-                $templateColumn = TemplateColumn::where('template_main_id', $template->id)->first();
+        if ($columnOrder && is_array($columnOrder)) {
+            // Remove existing columns associated with the template
+            TemplateColumn::where('template_main_id', $template->id)->delete();
+
+            foreach ($columnOrder as $order => $columnId) {
+                $templateColumn = new TemplateColumn();
                 $templateColumn->template_main_id = $template->id;
                 $templateColumn->column_main_id = $columnId;
                 $templateColumn->column_position = $order + 1;
-                $templateColumn->created_at = now()->timezone('Asia/Kuala_Lumpur');
                 $templateColumn->updated_at = now()->timezone('Asia/Kuala_Lumpur');
                 $templateColumn->save();
             }
@@ -111,6 +111,7 @@ class CustomTemplateController extends Controller
         // Step 3: Return a response
         return response()->json(['message' => 'Template updated successfully']);
     }
+
 
     public function deleteTemplate(Request $request)
     {

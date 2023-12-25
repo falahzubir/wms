@@ -242,16 +242,16 @@
                 <!-- Modal body -->
                 <div class="modal-body p-4">
 
-                    <input type="hidden" id="edit_template_id">
+                    <input type="hidden" id="edit_template_id" name="template_id">
 
                     <div class="mb-3">
                         <label class="mb-2">Template Name: </label>
-                        <input type="text" id="edit_template_name" class="form-control" name="template_name">
+                        <input type="text" id="edit_template_name" class="form-control" name="edit_template_name">
                     </div>
 
                     <div class="mb-3">
                         <label class="mb-2">Template Type: </label>
-                        <select id="edit_template_type" name="template_type" class="form-select">
+                        <select id="edit_template_type" name="edit_template_type" class="form-select">
                             <option selected disabled></option>
                             <option value="1">Pending List</option>
                             <option value="2">Bucket List</option>
@@ -268,7 +268,7 @@
                     <div class="mb-3">
                         <label class="mb-2">Template Header </label>
                         <br>
-                        <textarea id="edit_template_header" class="form-control" name="template_header" rows="5"></textarea>
+                        <textarea id="edit_template_header" class="form-control" name="edit_template_header" rows="5"></textarea>
                     </div>
 
                     <div class="mb-3">
@@ -376,6 +376,15 @@
                     // Collect data from the rightBox (dragged items)
                     let draggedItems = document.querySelectorAll("#rightBox .list");
 
+                    if (!templateName || !templateType || !templateHeader || !draggedItems) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error!',
+                            text: 'Please fill in all required fields.',
+                        });
+                        return; // Stop further processing
+                    }
+
                     let columnIds = [];
 
                     for (let draggedItem of draggedItems) {
@@ -457,18 +466,28 @@
                     e.preventDefault();
 
                     // Collect data from the modal fields
-                    let templateId = $("#edit_template_id").val();
-                    let templateName = $("#edit_template_name").val();
-                    let templateType = $("#edit_template_type").val();
-                    let templateHeader = $("#edit_template_header").val();
-                    let csrfToken = $('meta[name="csrf-token"]').attr('content');
+                    let templateId = document.querySelector("input[name='template_id']").value;
+                    let templateName = document.querySelector("input[name='edit_template_name']").value;
+                    let templateType = document.querySelector("select[name='edit_template_type']").value;
+                    let templateHeader = document.querySelector("textarea[name='edit_template_header']").value;
+                    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                    // Collect data from the rightBoxEdit (dragged items)
+                    // Collect data from the rightBox (dragged items)
                     let draggedItems = $("#rightBoxEdit .list");
+
+                    if (!templateName || !templateType || !templateHeader || draggedItems.length === 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error!',
+                            text: 'Please fill in all required fields and select at least one column.',
+                        });
+                        return; // Stop further processing
+                    }
+
                     let columnIds = [];
 
                     draggedItems.each(function () {
-                        let columnId = $(this).attr("data-column-id");
+                        let columnId = $(this).data("column-id");
                         columnIds.push(columnId);
                     });
 
@@ -479,7 +498,7 @@
                         template_type: templateType,
                         template_header: templateHeader,
                         columns: columnIds,
-                        column_order: JSON.parse($("input[name='column_order']").val()),
+                        column_order: JSON.parse(document.querySelector("input[name='column_order']").value),
                     };
 
                     // Use AJAX to send the data to a Laravel route
@@ -528,7 +547,7 @@
                         method: 'GET',
                         success: function (response) {
                             console.log("Columns received:", response.columns);
-                            displayColumnsInRightBox(response.columns);
+                            displayColumnsInRightBoxEdit(response.columns);
                         },
                         error: function (error) {
                             console.error(error);
@@ -536,7 +555,7 @@
                     });
                 }
 
-                function displayColumnsInRightBox(columns) {
+                function displayColumnsInRightBoxEdit(columns) {
                     let rightBoxEdit = document.getElementById("rightBoxEdit");
                     rightBoxEdit.innerHTML = ''; // Clear existing columns
 
