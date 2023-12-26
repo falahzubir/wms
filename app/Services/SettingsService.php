@@ -9,7 +9,7 @@ class SettingsService
 
     public function getAllSettings()
     {
-        return Setting::whereNull('parent_id')->with('children')->get();
+        return Setting::whereNull('parent_id')->where('type', SETTING_TYPE_GENERAL)->with('children')->get();
     }
 
     public function getSetting($key, $default = null)
