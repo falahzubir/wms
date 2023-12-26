@@ -293,7 +293,7 @@
                                                 {{-- add shipping number modal --}}
                                                 @if (Route::is('orders.processing'))
                                                    {{-- @if($order->is_multiple_carton) --}}
-                                                        <button class="btn btn-warning p-0 px-1 m-1" onclick="multiple_cn({order:'{{ $order }}',ref_no:'{{ order_num_format($order) }}'})"></>
+                                                        <button class="btn btn-warning p-0 px-1 m-1" onclick="multiple_cn({order:`{{ $order }}`,ref_no:`{{ order_num_format($order) }}`})"></>
                                                             <i class="bi bi-file-earmark-ruled"></i>
                                                         </button>
                                                     {{-- @endif --}}
