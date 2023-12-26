@@ -96,7 +96,7 @@ class OrderController extends Controller
         }
 
         if(!in_array(ORDER_FILTER_BUCKET_CATEGORY, $exclude)){
-            $filter_data['bucket_categories'] = CategoryMain::all();
+            $filter_data['bucket_categories'] = CategoryMain::where('status', IS_ACTIVE)->get();
         }
 
         if(!in_array(ORDER_FILTER_STATUS, $exclude)){
