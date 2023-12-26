@@ -443,7 +443,6 @@ class BucketController extends Controller
 
     public function get_bucket_by_category(Request $request)
     {
-
         $category_id_request = $request->category_id;
         $order_ids_request = $request->order_ids;
         //strip order ids and category ids from request ? why? because want to use filter function from order controller
@@ -463,7 +462,7 @@ class BucketController extends Controller
 
         $orders_ids = !empty($order_ids_request) ? $order_ids_request : $orderes->pluck('id')->toArray();
 
-        $countOrder = !empty($order_ids_request) ? count($order_ids_request) : $orderes->count();
+        $countOrder = !empty($order_ids_request) ? count(explode(',', $order_ids_request)) : count($orderes);
 
         $totalOrder = $countOrder;
 
