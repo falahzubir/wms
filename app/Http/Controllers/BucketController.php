@@ -218,8 +218,10 @@ class BucketController extends Controller
         $error = [];
         $successOrderIds = [];
         $request->validate([
-            'bucket_id' => 'required|array',
+            'bucket_id' => 'required|array|not_in:0',
             'order_ids' => 'required|string',
+        ], [
+            'bucket_id.not_in' => 'The Bucket field is required.',
         ]);
 
         $bucketIds = $request->bucket_id;
@@ -238,14 +240,14 @@ class BucketController extends Controller
                 'status' => ORDER_STATUS_PROCESSING,
             ]);
 
-            if(!$upd)
+            if($upd > 0)
             {
-                $error['status'] = 'error';
-                $error['message'] = 'Failed to add order to bucket on bucket id '.$bucket_id .'<br> Order Ids: '.implode(',', $orderIdsBucket[$bucket_id]);
+                $successOrderIds = array_merge($successOrderIds, $orderIdsBucket[$bucket_id]);
             }
             else
             {
-                $successOrderIds = array_merge($successOrderIds, $orderIdsBucket[$bucket_id]);
+                $error['status'] = 'error';
+                $error['message'] = 'Failed to add order to bucket on bucket id '.$bucket_id .'<br> Order Ids: '.implode(',', $orderIdsBucket[$bucket_id]);
             }
         }
 

@@ -761,7 +761,7 @@
                         <div class="pt-3 pb-3">
                             <p class="fw-bold" style="font-size: 20px;" for="category-id">Please select bucket Category!</p>
                             <div style="display: flex ;justify-content: center;">
-                                <select onchange="selectCategory(this)" class="form-select" id="category-id" name="category_id" style="width: 80%">
+                                <select onchange="selectCategory(this)" class="form-select" id="category-id" name="category_id" style="width: 80%" data-live-search="true">
                                     <option value="">Select a Category</option>
                                     @foreach ($filter_data->bucket_categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->category_name }}</option>
@@ -1105,6 +1105,15 @@
 
         const submitAddToBucket = async() =>
         {
+            Swal.fire({
+                title: 'Please wait!',
+                html: 'Adding to bucket...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+            });
+
             let form = document.querySelector('#submit-proceed-bucket');
             let formData = new FormData(form);
 
