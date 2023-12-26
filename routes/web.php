@@ -52,6 +52,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('return-completed', [OrderController::class, 'return_completed'])->name('orders.return_completed');
         Route::get('scan', [OrderController::class, 'scan'])->name('orders.scan');
         Route::post('scan', [OrderController::class, 'scan_barcode'])->name('orders.scanned');
+        Route::get('scan-setting', [OrderController::class, 'scan_setting'])->name('orders.scan_setting');
         Route::get('rejected', [OrderController::class, 'rejected'])->name('orders.rejected');
         Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
         Route::get('{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');

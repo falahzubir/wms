@@ -143,16 +143,33 @@
             </li><!-- End return List Nav -->
         @endcan
 
-        @can('view.scan_parcel')
-            <!-- Scan Parcel link -->
-            <li class="nav-item">
-                <a class="nav-link {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.scan') }}">
-                    <i class="bx bx-barcode-reader"></i>
-                    <span>Scan Parcel</span>
-                </a>
-            </li><!-- End Scan Parcel Nav -->
-        @endcan
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#components-nav-scan" data-bs-toggle="collapse" href="#">
+                <i class="bx bx-barcode-reader"></i><span>Scan Parcel</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="components-nav-scan"
+                class="nav-content {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }} "
+                data-bs-parent="#sidebar-nav">
+                @can('view.scan_parcel')
+                    <li>
+                        <a class="nav-link {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }}"
+                            href="{{ route('orders.scan') }}">
+                            <i class="bx bx-barcode-reader"></i>
+                            <span>Scan</span>
+                        </a>
+                    </li>
+                @endcan
+                @can('view.scan_setting')
+                    <li>
+                        <a class="nav-link {{ Route::current()->getName() != 'orders.scan_setting' ? 'collapsed' : '' }}"
+                            href="{{ route('orders.scan_setting') }}">
+                            <i class="bx bx-barcode-reader"></i>
+                            <span>Setting</span>
+                        </a>
+                    </li>
+                @endcan
+            </ul>
+        </li><!-- End Components Nav -->
 
         @can('product.list')
             <li class="nav-item">
@@ -301,7 +318,7 @@
                     <li>
                         <a href="{{ route('settings.index') }}"
                             {{ Route::current()->getName() == 'settings.index' ? 'class=active' : '' }}>
-                            <i class="bi bi-circle"></i><span>Settings</span>
+                            <i class="bi bi-circle"></i><span>General Settings</span>
                         </a>
                     </li>
                     @endrole

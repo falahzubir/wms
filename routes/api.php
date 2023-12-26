@@ -11,6 +11,7 @@ use App\Http\Controllers\api\WebhookController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\ThirdParty\PosMalaysiaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
@@ -92,6 +93,12 @@ Route::prefix('reports')->group(function() {
     Route::get('order-matrix/comparison', [ReportController::class, 'get_order_matrix']);
     Route::get('pending-report', [ReportController::class, 'get_pending_report']);
     // Route::get('shipment', [ReportController::class, 'shipment']);
+});
+
+Route::prefix('pos')->group(function(){
+    Route::post('generate-connote', [PosMalaysiaController::class, 'generate_connote']);
+    Route::post('generate-pl9', [PosMalaysiaController::class, 'generate_pl9']);
+    Route::post('download-connote', [PosMalaysiaController::class, 'download_connote']);
 });
 
 Route::get('scanned-parcel/{year}/{month}/{day?}', [OrderController::class, 'scanned_parcel']);

@@ -20,6 +20,7 @@ use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
 use App\Models\AlternativePostcode;
 use App\Models\CategoryMain;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 
 class OrderController extends Controller
@@ -33,7 +34,7 @@ class OrderController extends Controller
     public function index()
     {
         return Order::with([
-            'customer', 'items', 'items.product', 'shippings',
+            'customer', 'items', 'items.product', 'shippings', 'paymentType',
             'bucket', 'batch', 'company', 'courier', 'operationalModel',
             'logs' => function ($query) {
                 $query->orderBy('id', 'desc');
@@ -472,6 +473,20 @@ class OrderController extends Controller
         $order = Order::updateOrCreate($ids, $data);
         $p_ids['order_id'] = $order->id;
 
+        //create shipping for shopee and tiktok
+        $sosMed = [22,23];
+        if(in_array($order->payment_type, $sosMed))
+        {
+            Shipping::updateOrCreate(
+            [
+                'order_id' => $order->id,
+            ],
+            [
+                'created_by' => auth()->user()->id ?? 1,
+                'additional_data' => $webhook['additional_data'] ?? null,
+            ]);
+        }
+
         // create order item
         // group product by code
         $product_list = array_reduce($webhook['product'], function ($result, $item) {
@@ -793,9 +808,22 @@ class OrderController extends Controller
             $shipping->scanned_at = $data['scanned_at'] = Carbon::now();
             $shipping->scanned_by = $data['scanned_by'] = auth()->user()->id ?? 1;
 
-            Shipping::where('order_id', $shipping->order_id)->update($data);
-            set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
-
+            if(config('settings.scan_multiple') == IS_ACTIVE){
+                Shipping::where('tracking_number', $request->code)->update($data);
+                $other_parcel = Shipping::where('order_id', $shipping->order_id)
+                    ->where('status', IS_ACTIVE)
+                    ->whereNull('scanned_at')
+                    ->get();
+                if(count($other_parcel) == 0){
+                    set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
+                }
+                else{
+                    set_order_status($shipping->order, ORDER_STATUS_PACKING, "Item Scanned by " . auth()->user()->name);
+                }
+            } else {
+                Shipping::where('order_id', $shipping->order_id)->update($data);
+                set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
+            }
 
             return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
         } else {
@@ -932,5 +960,13 @@ class OrderController extends Controller
         $result['current_process'] = $current_process->current_process(true)->original['count'];
 
         return $result;
+    }
+
+    public function scan_setting(){
+        $settings = Setting::haveParent()->where('type', SETTING_TYPE_SCAN)->get();
+        return view('orders.scan_setting', [
+            'title' => 'Scan Setting',
+            'settings' => $settings,
+        ]);
     }
 }
