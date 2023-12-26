@@ -100,7 +100,7 @@
                     <h5 class="card-title">Filters..</h5>
 
                     <!-- No Labels Form -->
-                    <form class="row g-3" action="{{ url()->current() }}">
+                    <form id="search-form" class="row g-3" action="{{ url()->current() }}">
                         <div class="col-md-12">
                             <input type="text" class="form-control" placeholder="Search" name="search"
                                 value="{{ old('search', Request::get('search')) }}">
@@ -915,10 +915,10 @@
 
             let html = '';
 
-            let response = await axios.post('/api/buckets/get-bucket-by-category',{
-                category_id : categoryBucket,
-                order_ids : checkedOrder
-            }).then(res => {
+            let formData = new FormData(document.querySelector('#search-form'));
+            formData.append('category_id', categoryBucket);
+            formData.append('order_ids', checkedOrder);
+            let response = await axios.post('/api/buckets/get-bucket-by-category',formData).then(res => {
 
                 let totalOrder = res.data.totalOrder;
                 document.querySelector('#totalOrderPending').innerHTML = totalOrder;

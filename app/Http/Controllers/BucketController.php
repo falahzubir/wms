@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\OrderLog;
 use App\Models\CategoryMain;
 use App\Models\CategoryBucket;
+use App\Http\Controllers\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
@@ -440,17 +441,27 @@ class BucketController extends Controller
 
     public function get_bucket_by_category(Request $request)
     {
+
+        $category_id_request = $request->category_id;
+        $order_ids_request = $request->order_ids;
+        //strip order ids and category ids from request ? why? because want to use filter function from order controller
+        unset($request['category_id']);
+        unset($request['order_ids']);
+
         $totalOrder = 0;
-        $categoryBucket = CategoryBucket::with(['bucket'])->where('category_id', $request->category_id)->get();
+        $categoryBucket = CategoryBucket::with(['bucket'])->where('category_id', $category_id_request)->get();
 
         $orderes = Order::where('is_active', 1)
         ->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_SHIPMENT])
-        ->whereDate('dt_request_shipping', '<=', date('Y-m-d'))
-        ->get();
+        ->whereDate('dt_request_shipping', '<=', date('Y-m-d'));
 
-        $orders_ids = !empty($request->order_ids) ? $request->order_ids : $orderes->pluck('id')->toArray();
+        $orderController = new OrderController();
+        $orderes = $orderController->filter_order($request, $orderes);
+        $orderes = $orderes->get();
 
-        $countOrder = !empty($request->order_ids) ? count($request->order_ids) : $orderes->count();
+        $orders_ids = !empty($order_ids_request) ? $order_ids_request : $orderes->pluck('id')->toArray();
+
+        $countOrder = !empty($order_ids_request) ? count($order_ids_request) : $orderes->count();
 
         $totalOrder = $countOrder;
 
