@@ -226,6 +226,8 @@ class BucketController extends Controller
         ]);
 
         $bucketIds = $request->bucket_id;
+        //strip bucket ids which is 0
+        $bucketIds = array_filter($bucketIds);
         $orderIds = explode(',', $request->order_ids);
 
         foreach($bucketIds as $bucket_id => $value)
