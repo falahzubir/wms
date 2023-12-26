@@ -286,6 +286,8 @@
                             <div id="rightBoxEdit" class="rightBox">
                             </div>
                         </div>
+
+                        <input type="hidden" name="edit_column_order" value="">
                     </div>
                 </div>
                 <!-- Modal footer -->
@@ -486,10 +488,12 @@
 
                     let columnIds = [];
 
-                    draggedItems.each(function () {
-                        let columnId = $(this).data("column-id");
-                        columnIds.push(columnId);
-                    });
+                    for (let draggedItem of draggedItems) {
+                        let columnId = parseInt(draggedItem.getAttribute("data-column-id"), 10);
+                        if (columnId) {
+                            columnIds.push(columnId);
+                        }
+                    }
 
                     // Prepare the data to be sent to the server
                     let data = {
@@ -498,7 +502,7 @@
                         template_type: templateType,
                         template_header: templateHeader,
                         columns: columnIds,
-                        column_order: JSON.parse(document.querySelector("input[name='column_order']").value),
+                        column_order: JSON.parse(document.querySelector("input[name='edit_column_order']").value),
                     };
 
                     // Use AJAX to send the data to a Laravel route
@@ -588,7 +592,20 @@
                     });
 
                     // Update the order of column IDs
-                    updateColumnOrder();
+                    updateColumnOrderEdit();
+                }
+
+                function updateColumnOrderEdit() {
+                    let columnOrder = [];
+                    let draggedItems = document.querySelectorAll("#rightBoxEdit .list");
+
+                    for (let draggedItem of draggedItems) {
+                        let columnId = draggedItem.getAttribute("data-column-id");
+                        columnOrder.push(columnId);
+                    }
+
+                    // Store the order in a hidden input field or send it directly to the server
+                    document.querySelector("input[name='edit_column_order']").value = JSON.stringify(columnOrder);
                 }
 
 

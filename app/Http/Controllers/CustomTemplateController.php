@@ -69,7 +69,7 @@ class CustomTemplateController extends Controller
         $columnMainIds = $data->pluck('column_main_id');
 
         // Fetch corresponding data from column_mains table
-        $columnsData = ColumnMain::whereIn('id', $columnMainIds)->select('column_display_name')->get();
+        $columnsData = ColumnMain::whereIn('id', $columnMainIds)->select('id', 'column_display_name')->get();
 
         return response()->json(['columns' => $columnsData]);
     }
