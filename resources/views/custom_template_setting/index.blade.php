@@ -81,6 +81,11 @@
             font-size: 10pt;
             font-weight: bold;
         }
+
+        .error-message {
+            font-size: 10pt;
+            color: red;
+        }
     </style>
 
     <section class="section">
@@ -102,7 +107,7 @@
                     @php
                         $rowNumber = ($templateMain->currentPage() - 1) * $templateMain->perPage() + 1;
                     @endphp
-                    @foreach ($templateMain as $row)
+                    @forelse ($templateMain as $row)
                         <tr>
                             <td>{{ $rowNumber++ }}</td>
                             <td>{{ $row->template_name }}</td>
@@ -150,7 +155,11 @@
                                 <a href="#" class="btn btn-danger delete-template" data-template-id="{{ $row->id }}"><i class='bx bxs-trash'></i></a>
                             </td>
                         </tr>
-                    @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="4" class="text-center">No template</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
             <div class="d-flex justify-content-end">                       
@@ -179,8 +188,7 @@
 
                     <div class="mb-3">
                         <label class="mb-2">Template Type: </label>
-                        <select name="template_type" class="form-select">
-                            <option selected disabled></option>
+                        <select name="template_type" class="form-select" multiple>
                             <option value="1">Pending List</option>
                             <option value="2">Bucket List</option>
                             <option value="3">Packing List</option>
@@ -252,7 +260,6 @@
                     <div class="mb-3">
                         <label class="mb-2">Template Type: </label>
                         <select id="edit_template_type" name="edit_template_type" class="form-select">
-                            <option selected disabled></option>
                             <option value="1">Pending List</option>
                             <option value="2">Bucket List</option>
                             <option value="3">Packing List</option>
@@ -370,21 +377,38 @@
                     e.preventDefault();
 
                     // Collect data from the modal fields
-                    let templateName = document.querySelector("input[name='template_name']").value;
-                    let templateType = document.querySelector("select[name='template_type']").value;
-                    let templateHeader = document.querySelector("textarea[name='template_header']").value;
-                    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    let templateName = $("input[name='template_name']");
+                    let templateType = $("select[name='template_type']");
+                    let templateHeader = $("textarea[name='template_header']");
+                    let csrfToken = $("meta[name='csrf-token']").attr("content");
 
                     // Collect data from the rightBox (dragged items)
                     let draggedItems = document.querySelectorAll("#rightBox .list");
 
-                    if (!templateName || !templateType || !templateHeader || !draggedItems) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Validation Error!',
-                            text: 'Please fill in all required fields.',
-                        });
-                        return; // Stop further processing
+                    // This are use to check input validation
+                    templateName.removeClass("is-invalid");
+                    templateType.removeClass("is-invalid");
+                    templateHeader.removeClass("is-invalid");
+
+                    $(".error-message").remove();
+
+                    if (!templateName.val() || !templateType.val() || !templateHeader.val() || !draggedItems.length) {
+                        // Add error styles to the input fields
+                        if (!templateName.val()) {
+                            templateName.addClass("is-invalid");
+                            templateName.after('<div class="error-message">*required</div>');
+                        }
+
+                        if (!templateType.val()) {
+                            templateType.addClass("is-invalid");
+                            templateType.after('<div class="error-message">*required</div>');
+                        }
+
+                        if (!templateHeader.val()) {
+                            templateHeader.addClass("is-invalid");
+                            templateHeader.after('<div class="error-message">*required</div>');
+                        }
+                        return;
                     }
 
                     let columnIds = [];
@@ -396,9 +420,9 @@
 
                     // Prepare the data to be sent to the server
                     let data = {
-                        template_name: templateName,
-                        template_type: templateType,
-                        template_header: templateHeader,
+                        template_name: templateName.val(),
+                        template_type: templateType.val(),
+                        template_header: templateHeader.val(),
                         columns: columnIds,
                         column_order: JSON.parse(document.querySelector("input[name='column_order']").value),
                     };
@@ -579,23 +603,40 @@
                 $("#btnUpdate").on("click", function (e) {
                     e.preventDefault();
 
-                    // Collect data from the modal fields
-                    let templateId = document.querySelector("input[name='edit_template_id']").value;
-                    let templateName = document.querySelector("input[name='edit_template_name']").value;
-                    let templateType = document.querySelector("select[name='edit_template_type']").value;
-                    let templateHeader = document.querySelector("textarea[name='edit_template_header']").value;
-                    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    let templateId = $("#edit_template_id");
+                    let templateNameInput = $("#edit_template_name");
+                    let templateTypeInput = $("#edit_template_type");
+                    let templateHeaderInput = $("#edit_template_header");
+                    let csrfToken = $("meta[name='csrf-token']").attr("content");
 
-                    // Collect data from the rightBox (dragged items)
+                    // Collect data from the rightBoxEdit (dragged items)
                     let draggedItems = $("#rightBoxEdit .list");
 
-                    if (!templateName || !templateType || !templateHeader || draggedItems.length === 0) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Validation Error!',
-                            text: 'Please fill in all required fields and select at least one column.',
-                        });
-                        return; // Stop further processing
+                    // Reset previous error styles and messages
+                    templateNameInput.removeClass("is-invalid");
+                    templateTypeInput.removeClass("is-invalid");
+                    templateHeaderInput.removeClass("is-invalid");
+
+                    $(".error-message").remove();
+
+                    if (!templateNameInput.val() || !templateTypeInput.val() || !templateHeaderInput.val() || draggedItems.length === 0) {
+                        // Add error styles to the input fields
+                        if (!templateNameInput.val()) {
+                            templateNameInput.addClass("is-invalid");
+                            templateNameInput.after('<div class="error-message">*required</div>');
+                        }
+
+                        if (!templateTypeInput.val()) {
+                            templateTypeInput.addClass("is-invalid");
+                            templateTypeInput.after('<div class="error-message">*required</div>');
+                        }
+
+                        if (!templateHeaderInput.val()) {
+                            templateHeaderInput.addClass("is-invalid");
+                            templateHeaderInput.after('<div class="error-message">*required</div>');
+                        }
+
+                        return;
                     }
 
                     let columnIds = [];
@@ -609,10 +650,10 @@
 
                     // Prepare the data to be sent to the server
                     let data = {
-                        template_id: templateId,
-                        template_name: templateName,
-                        template_type: templateType,
-                        template_header: templateHeader,
+                        template_id: templateId.val(),
+                        template_name: templateNameInput.val(),
+                        template_type: templateTypeInput.val(),
+                        template_header: templateHeaderInput.val(),
                         columns: columnIds,
                         column_order: JSON.parse(document.querySelector("input[name='edit_column_order']").value),
                     };
