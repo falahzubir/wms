@@ -188,7 +188,7 @@
 
                     <div class="mb-3">
                         <label class="mb-2">Template Type: </label>
-                        <select name="template_type" class="form-select" multiple>
+                        <select name="template_type" class="form-select">
                             <option value="1">Pending List</option>
                             <option value="2">Bucket List</option>
                             <option value="3">Packing List</option>
