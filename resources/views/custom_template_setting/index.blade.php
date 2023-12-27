@@ -242,7 +242,7 @@
                 <!-- Modal body -->
                 <div class="modal-body p-4">
 
-                    <input type="hidden" id="edit_template_id" name="template_id">
+                    <input type="hidden" id="edit_template_id" name="edit_template_id">
 
                     <div class="mb-3">
                         <label class="mb-2">Template Name: </label>
@@ -461,14 +461,126 @@
                     $("#edit_template_header").val(templateHeader);
 
                     // Load the columns in the right box for the specific template
-                    loadColumnsForTemplate(templateId);
+                    loadAndDisplayColumnsForTemplate(templateId);
+
+                    // Initialize drag-and-drop for the right box in the edit modal
+                    initializeDragAndDropEdit();
                 });
+
+                function initializeDragAndDropEdit() {
+                    let listsEdit = document.getElementsByClassName("list");
+                    let rightBoxEdit = document.getElementById("rightBoxEdit");
+
+                    for (let listEdit of listsEdit) {
+                        listEdit.addEventListener("dragstart", function (e) {
+                            e.dataTransfer.setData("text/plain", listEdit.innerText);
+                            e.dataTransfer.setData("column-id", listEdit.getAttribute("data-column-id"));
+                        });
+                    }
+
+                    rightBoxEdit.addEventListener("dragover", function (e) {
+                        e.preventDefault();
+                    });
+
+                    rightBoxEdit.addEventListener("drop", function (e) {
+                        e.preventDefault();
+
+                        let dataEdit = e.dataTransfer.getData("text/plain");
+                        let columnIdEdit = e.dataTransfer.getData("column-id");
+                        let draggedItemEdit = document.createElement("div");
+
+                        draggedItemEdit.className = "list";
+                        draggedItemEdit.innerText = dataEdit;
+
+                        // Add remove button
+                        let removeButtonEdit = document.createElement("i");
+                        removeButtonEdit.className = "bx bx-x-circle remove-btn";
+                        removeButtonEdit.addEventListener("click", function () {
+                            rightBoxEdit.removeChild(draggedItemEdit);
+                            updateColumnOrderEdit(); // Update the order when an item is removed
+                        });
+
+                        // Append remove button to dragged item
+                        draggedItemEdit.appendChild(removeButtonEdit);
+
+                        // Append column_id as data attribute
+                        draggedItemEdit.setAttribute("data-column-id", columnIdEdit);
+
+                        // Append dragged item to right box
+                        rightBoxEdit.appendChild(draggedItemEdit);
+
+                        // Update the order of column IDs
+                        updateColumnOrderEdit();
+                    });
+                }
+
+                function loadAndDisplayColumnsForTemplate(templateId) {
+                    // Use AJAX to fetch the columns for the specified template
+                    $.ajax({
+                        url: '{{ url("custom_template_setting/get_columns") }}/' + templateId,
+                        method: 'GET',
+                        success: function (response) {
+                            console.log("Columns received:", response.columns);
+
+                            let rightBoxEdit = document.getElementById("rightBoxEdit");
+                            rightBoxEdit.innerHTML = ''; // Clear existing columns
+
+                            // Append the columnList element
+                            let columnListElement = document.createElement("p");
+                            columnListElement.className = "columnList";
+                            columnListElement.innerText = "Column List";
+                            rightBoxEdit.appendChild(columnListElement);
+
+                            // Display columns in the right box
+                            response.columns.forEach(function (column) {
+                                let columnElement = document.createElement("div");
+                                columnElement.className = "list";
+                                columnElement.draggable = true;
+                                columnElement.setAttribute("data-column-id", column.id);
+                                columnElement.innerText = column.column_display_name;
+
+                                // Add remove button
+                                let removeButton = document.createElement("i");
+                                removeButton.className = "bx bx-x-circle remove-btn";
+                                removeButton.addEventListener("click", function () {
+                                    rightBoxEdit.removeChild(columnElement);
+                                    updateColumnOrderEdit();
+                                });
+
+                                // Append remove button to column element
+                                columnElement.appendChild(removeButton);
+
+                                // Append column element to right box
+                                rightBoxEdit.appendChild(columnElement);
+                            });
+
+                            // Update the order of column IDs
+                            updateColumnOrderEdit();
+                        },
+                        error: function (error) {
+                            console.error(error);
+                        }
+                    });
+                }
+
+                function updateColumnOrderEdit() {
+                    let columnOrder = [];
+                    let draggedItems = document.querySelectorAll("#rightBoxEdit .list");
+
+                    for (let draggedItem of draggedItems) {
+                        let columnId = draggedItem.getAttribute("data-column-id");
+                        columnOrder.push(columnId);
+                    }
+
+                    // Store the order in a hidden input field or send it directly to the server
+                    document.querySelector("input[name='edit_column_order']").value = JSON.stringify(columnOrder);
+                }
 
                 $("#btnUpdate").on("click", function (e) {
                     e.preventDefault();
 
                     // Collect data from the modal fields
-                    let templateId = document.querySelector("input[name='template_id']").value;
+                    let templateId = document.querySelector("input[name='edit_template_id']").value;
                     let templateName = document.querySelector("input[name='edit_template_name']").value;
                     let templateType = document.querySelector("select[name='edit_template_type']").value;
                     let templateHeader = document.querySelector("textarea[name='edit_template_header']").value;
@@ -505,6 +617,8 @@
                         column_order: JSON.parse(document.querySelector("input[name='edit_column_order']").value),
                     };
 
+                    console.log('templateId before AJAX call:', templateId);
+
                     // Use AJAX to send the data to a Laravel route
                     $.ajax({
                         url: '{{ route("custom_template_setting.update") }}',
@@ -529,6 +643,7 @@
                         },
                         error: function (error) {
                             console.error(error);
+                            console.error(data);
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error!',
@@ -543,70 +658,6 @@
                         }
                     });
                 });
-
-                function loadColumnsForTemplate(templateId) {
-                    // Use AJAX to fetch the columns for the specified template
-                    $.ajax({
-                        url: '{{ url("custom_template_setting/get_columns") }}/' + templateId,
-                        method: 'GET',
-                        success: function (response) {
-                            console.log("Columns received:", response.columns);
-                            displayColumnsInRightBoxEdit(response.columns);
-                        },
-                        error: function (error) {
-                            console.error(error);
-                        }
-                    });
-                }
-
-                function displayColumnsInRightBoxEdit(columns) {
-                    let rightBoxEdit = document.getElementById("rightBoxEdit");
-                    rightBoxEdit.innerHTML = ''; // Clear existing columns
-
-                    // Append the columnList element
-                    let columnListElement = document.createElement("p");
-                    columnListElement.className = "columnList";
-                    columnListElement.innerText = "Column List";
-                    rightBoxEdit.appendChild(columnListElement);
-
-                    // Display columns in the right box
-                    columns.forEach(function (column) {
-                        let columnElement = document.createElement("div");
-                        columnElement.className = "list";
-                        columnElement.draggable = true;
-                        columnElement.setAttribute("data-column-id", column.id);
-                        columnElement.innerText = column.column_display_name;
-
-                        // Add remove button
-                        let removeButton = document.createElement("i");
-                        removeButton.className = "bx bx-x-circle remove-btn";
-                        removeButton.addEventListener("click", function () {
-                            rightBoxEdit.removeChild(columnElement);
-                        });
-
-                        // Append remove button to column element
-                        columnElement.appendChild(removeButton);
-
-                        // Append column element to right box
-                        rightBoxEdit.appendChild(columnElement);
-                    });
-
-                    // Update the order of column IDs
-                    updateColumnOrderEdit();
-                }
-
-                function updateColumnOrderEdit() {
-                    let columnOrder = [];
-                    let draggedItems = document.querySelectorAll("#rightBoxEdit .list");
-
-                    for (let draggedItem of draggedItems) {
-                        let columnId = draggedItem.getAttribute("data-column-id");
-                        columnOrder.push(columnId);
-                    }
-
-                    // Store the order in a hidden input field or send it directly to the server
-                    document.querySelector("input[name='edit_column_order']").value = JSON.stringify(columnOrder);
-                }
 
 
                 // ================ Delete Function ================== //

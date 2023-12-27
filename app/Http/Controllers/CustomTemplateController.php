@@ -6,6 +6,7 @@ use App\Models\ColumnMain;
 use App\Models\TemplateMain;
 use App\Models\TemplateColumn;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomTemplateController extends Controller
 {
@@ -82,34 +83,51 @@ class CustomTemplateController extends Controller
             'template_name' => 'required|string|max:255',
             'template_type' => 'required|string|max:255',
             'template_header' => 'required|string',
+            'column_order' => 'array', // Assuming column_order is an array
         ]);
 
-        // Step 2: Process the data
-        $template = TemplateMain::findOrFail($request->input('template_id'));
-        $template->template_name = $request->input('template_name');
-        $template->template_type = $request->input('template_type');
-        $template->template_header = $request->input('template_header');
-        $template->updated_at = now()->timezone('Asia/Kuala_Lumpur');
-        $template->save();
+        $templateId = $request->input('template_id');
 
-        $columnOrder = $request->input('column_order');
-
-        if ($columnOrder && is_array($columnOrder)) {
-            // Remove existing columns associated with the template
-            TemplateColumn::where('template_main_id', $template->id)->delete();
-
-            foreach ($columnOrder as $order => $columnId) {
-                $templateColumn = new TemplateColumn();
-                $templateColumn->template_main_id = $template->id;
-                $templateColumn->column_main_id = $columnId;
-                $templateColumn->column_position = $order + 1;
-                $templateColumn->updated_at = now()->timezone('Asia/Kuala_Lumpur');
-                $templateColumn->save();
-            }
+        if (!$templateId) {
+            throw new \Exception('Template ID is null or empty');
         }
 
-        // Step 3: Return a response
-        return response()->json(['message' => 'Template updated successfully']);
+        // Step 2: Process the data within a transaction
+        return DB::transaction(function () use ($request, $templateId) {
+            // Delete existing columns for the specified template
+            TemplateColumn::where('template_main_id', $templateId)->delete();
+
+            // Update template information
+            $template = TemplateMain::findOrFail($templateId);
+            $template->update([
+                'template_name' => $request->input('template_name'),
+                'template_type' => $request->input('template_type'),
+                'template_header' => $request->input('template_header'),
+                'updated_at' => now()->timezone('Asia/Kuala_Lumpur'),
+            ]);
+
+            // Insert new columns based on the provided order
+            $columnOrder = $request->input('column_order');
+
+            if (!$templateId) {
+                throw new \Exception('Template ID is null or empty');
+            }
+
+            if ($columnOrder && is_array($columnOrder)) {
+                foreach ($columnOrder as $order => $columnId) {
+                    $templateColumn = TemplateColumn::updateOrCreate(
+                        ['template_main_id' => $templateId, 'column_main_id' => $columnId],
+                        [
+                            'column_position' => $order + 1,
+                            'updated_at' => now()->timezone('Asia/Kuala_Lumpur'),
+                        ]
+                    );
+                }
+            }
+
+            // Step 3: Return a response
+            return response()->json(['message' => 'Template updated successfully']);
+        });
     }
 
 
