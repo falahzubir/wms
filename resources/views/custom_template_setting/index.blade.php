@@ -188,7 +188,7 @@
 
                     <div class="mb-3">
                         <label class="mb-2">Template Type: </label>
-                        <select name="template_type" class="form-select">
+                        <select id="template_type" name="template_type" class="form-select">
                             <option value="1">Pending List</option>
                             <option value="2">Bucket List</option>
                             <option value="3">Packing List</option>
@@ -401,7 +401,7 @@
 
                         if (!templateType.val()) {
                             templateType.addClass("is-invalid");
-                            templateType.after('<div class="error-message">*required</div>');
+                            templateType.after('<div class="error-message">*select template type</div>');
                         }
 
                         if (!templateHeader.val()) {
@@ -439,8 +439,8 @@
                             console.log(response);
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Success!',
-                                text: 'Your template has been saved.',
+                                title: 'Done!',
+                                text: 'Custom Template Created',
                             }).then(function () {
                                 // Close the modal
                                 $("#addTemplate").modal('hide');
@@ -628,7 +628,7 @@
 
                         if (!templateTypeInput.val()) {
                             templateTypeInput.addClass("is-invalid");
-                            templateTypeInput.after('<div class="error-message">*required</div>');
+                            templateTypeInput.after('<div class="error-message">*select template type</div>');
                         }
 
                         if (!templateHeaderInput.val()) {
@@ -672,8 +672,8 @@
                             console.log(response);
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Success!',
-                                text: 'Your template has been updated.',
+                                title: 'Done!',
+                                text: 'Custom Template Edited',
                             }).then(function () {
                                 // Close the modal
                                 $("#editTemplate").modal('hide');
@@ -709,8 +709,7 @@
 
                     // Use SweetAlert for confirmation
                     Swal.fire({
-                        title: 'Are you sure?',
-                        text: 'You won\'t be able to revert this!',
+                        text: 'Delete Custom Template',
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#d33',
@@ -738,8 +737,7 @@
                             console.log(response);
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Success!',
-                                text: 'Your template has been deleted.',
+                                text: 'Custom Template Deleted.',
                             }).then(function () {
                                 // Refresh the page or update the table data
                                 location.reload();
