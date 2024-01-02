@@ -179,7 +179,7 @@ Route::middleware(['auth'])->group(function() {
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
-    // Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
+    Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
 
     Route::get('notifications', [NotificationController::class, 'list']);
 
