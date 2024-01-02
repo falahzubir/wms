@@ -71,6 +71,15 @@
 
     function multiple_cn(data) {
         _order = JSON.parse(data.order);
+        if(_order.bucket_batch_id == null){
+            Swal.fire({
+                title: 'Error!',
+                text: 'Please assign bucket batch first',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            })
+            return;
+        }
         const myModal = new bootstrap.Modal('#multiple-cn-modal', {
             backdrop: 'static',
             keyboard: false
@@ -126,7 +135,7 @@
 
     function cn(allowDelete = false) {
         const id = Math.random().toString(36).replace(/[^a-z]+/g, '');
-        let html = `<div class="card mb-3 multiple-cn-card" id="row-${id}" data-order-id="${_order.id}">
+        let html = `<div class="card mb-3 multiple-cn-card" id="row-${id}" data-order-id="${_order.id}" data-courier-id="${_order.courier_id}">
             <div class="card-header">
                 <div class="row">
                     <div class="col-6">
@@ -236,11 +245,13 @@
         const errors = [];
         var arr_data = []; //for all CN
         var order_id = 0;
+        var courier_id = 0;
 
         for (const [i,card] of document.querySelectorAll(".multiple-cn-card").entries()) {
             let total = 0;
             var arr_item = []; //for each CN
             order_id = card.getAttribute('data-order-id');
+            courier_id = card.getAttribute('data-courier-id');
 
             for (const input of card.querySelectorAll(".multiple-cn-input")) {
                 const val = parseInt(input.value);
@@ -311,7 +322,9 @@
                         Swal.showLoading()
                     },
                 });
-                axios.post(`{{ route('shipping.generate_cn_multiple') }}`, { order_id : order_id,
+                axios.post(`{{ route('shipping.generate_cn_multiple') }}`, {
+                    order_id : order_id,
+                    courier_id : courier_id,
                     cn_data : arr_data
                 })
                 .then(response => {
@@ -374,7 +387,12 @@
                     }
                 })
                 .catch(error => {
-                    // console.log(error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
                 });
             }
         }
