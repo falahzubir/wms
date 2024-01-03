@@ -14,7 +14,6 @@ class CustomTemplateController extends Controller
     public function index()
     {
         $columnMain = ColumnMain::all();
-        // $templateMain = TemplateMain::paginate(10);
 
         $templateMain = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
             ->where('template_mains.delete_status', '!=', 1)

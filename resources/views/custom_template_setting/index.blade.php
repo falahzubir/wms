@@ -88,6 +88,8 @@
         }
     </style>
 
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+
     <section class="section">
 
         <div class="card p-4">
@@ -112,37 +114,46 @@
                             <td>{{ $rowNumber++ }}</td>
                             <td>{{ $row->template_name }}</td>
                             <td>
-                                @switch($row->template_type)
-                                    @case(1)
-                                        Pending List
-                                        @break
-                                    @case(2)
-                                        Bucket List
-                                        @break
-                                    @case(3)
-                                        Packing List
-                                        @break
-                                    @case(4)
-                                        Pending Shipping List
-                                        @break
-                                    @case(5)
-                                        In Transit List
-                                        @break
-                                    @case(6)
-                                        Delivered List
-                                        @break
-                                    @case(7)
-                                        Return List
-                                        @break
-                                    @case(8)
-                                        Claim List
-                                        @break
-                                    @case(9)
-                                        Reject List
-                                        @break
-                                    @default
-                                @endswitch
-                            </td>
+                                @php
+                                    $templateTypeArray = explode(',', $row->template_type);
+                                    $templateTypeLabels = [];
+                            
+                                    foreach ($templateTypeArray as $type) {
+                                        switch ($type) {
+                                            case 1:
+                                                $templateTypeLabels[] = 'Pending List';
+                                                break;
+                                            case 2:
+                                                $templateTypeLabels[] = 'Bucket List';
+                                                break;
+                                            case 3:
+                                                $templateTypeLabels[] = 'Packing List';
+                                                break;
+                                            case 4:
+                                                $templateTypeLabels[] = 'Pending Shipping List';
+                                                break;
+                                            case 5:
+                                                $templateTypeLabels[] = 'In Transit List';
+                                                break;
+                                            case 6:
+                                                $templateTypeLabels[] = 'Delivered List';
+                                                break;
+                                            case 7:
+                                                $templateTypeLabels[] = 'Return List';
+                                                break;
+                                            case 8:
+                                                $templateTypeLabels[] = 'Claim List';
+                                                break;
+                                            case 9:
+                                                $templateTypeLabels[] = 'Reject List';
+                                                break;
+                                            // Add more cases if needed
+                                        }
+                                    }
+                            
+                                    echo implode(', ', $templateTypeLabels);
+                                @endphp
+                            </td>                            
                             <td>
                                 <button class="btn btn-warning text-white"
                                         data-bs-toggle="modal" data-bs-target="#editTemplate"
@@ -188,7 +199,7 @@
 
                     <div class="mb-3">
                         <label class="mb-2">Template Type: </label>
-                        <select id="template_type" name="template_type" class="form-select">
+                        <select id="template_type" name="template_type" class="form-select" multiple>
                             <option value="1">Pending List</option>
                             <option value="2">Bucket List</option>
                             <option value="3">Packing List</option>
@@ -259,7 +270,7 @@
 
                     <div class="mb-3">
                         <label class="mb-2">Template Type: </label>
-                        <select id="edit_template_type" name="edit_template_type" class="form-select">
+                        <select id="edit_template_type" name="edit_template_type[]" class="form-select" multiple>
                             <option value="1">Pending List</option>
                             <option value="2">Bucket List</option>
                             <option value="3">Packing List</option>
@@ -310,8 +321,14 @@
     <x-slot name="script">
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
         <script>
             document.addEventListener("DOMContentLoaded", function () {
+
+                // Tom Select Plugin
+                new TomSelect("#template_type", {
+                    plugins: ['remove_button'],
+                });
 
                 // ================ Drag & Drop Function ================== //
                 let lists = document.getElementsByClassName("list");
@@ -421,7 +438,7 @@
                     // Prepare the data to be sent to the server
                     let data = {
                         template_name: templateName.val(),
-                        template_type: templateType.val(),
+                        template_type: templateType.val().join(','),
                         template_header: templateHeader.val(),
                         columns: columnIds,
                         column_order: JSON.parse(document.querySelector("input[name='column_order']").value),
@@ -469,19 +486,17 @@
 
                 // ================ Edit Function ================== //
                 $("#editTemplate").on("show.bs.modal", function (e) {
-                    console.log("Edit Modal Show"); // Check if this line is executed
-
                     let templateId = $(e.relatedTarget).data("template-id");
                     let templateName = $(e.relatedTarget).data("template-name");
                     let templateType = $(e.relatedTarget).data("template-type");
                     let templateHeader = $(e.relatedTarget).data("template-header");
 
-                    console.log("Template ID:", templateId); // Check if values are correct
+                    console.log(templateType);
 
                     // Populate the editTemplate modal with data
                     $("#edit_template_id").val(templateId);
                     $("#edit_template_name").val(templateName);
-                    $("#edit_template_type").val(templateType);
+                    $("#edit_template_type").val(templateType); // Set the string value
                     $("#edit_template_header").val(templateHeader);
 
                     // Load the columns in the right box for the specific template
@@ -489,6 +504,48 @@
 
                     // Initialize drag-and-drop for the right box in the edit modal
                     initializeDragAndDropEdit();
+
+                    // Set the selected option in the template_type dropdown
+                    setTemplateTypeSelection(templateType);
+                });
+
+                function setTemplateTypeSelection(selectedTemplateType) {
+                    // Get the element for the template_type dropdown
+                    let templateTypeSelectElement = document.getElementById("edit_template_type");
+
+                    // Check if TomSelect is already initialized on this element
+                    if (templateTypeSelectElement && templateTypeSelectElement.tagName !== 'SELECT') {
+                        // If TomSelect is initialized, destroy the existing instance
+                        let templateTypeSelect = new TomSelect("#edit_template_type", {
+                            plugins: ['remove_button'],
+                        });
+                        templateTypeSelect.destroy();
+                    }
+
+                    // Convert selectedTemplateType to a string
+                    let templateTypeString = String(selectedTemplateType);
+
+                    let selectedValues;
+
+                    // Check if templateTypeString is a single string or a comma-separated list
+                    if (templateTypeString.indexOf(',') !== -1) {
+                        // Convert the comma-separated string to an array
+                        selectedValues = templateTypeString.split(',');
+                    } else {
+                        // It's a single string, create an array with that value
+                        selectedValues = [templateTypeString];
+                    }
+
+                    // Create a new TomSelect instance
+                    let templateTypeSelect = new TomSelect("#edit_template_type", {
+                        plugins: ['remove_button'],
+                        items: selectedValues,
+                    });
+                }
+
+                $("#editTemplate").on("hidden.bs.modal", function () {
+                    // Reload the page
+                    location.reload();
                 });
 
                 function initializeDragAndDropEdit() {
@@ -652,7 +709,7 @@
                     let data = {
                         template_id: templateId.val(),
                         template_name: templateNameInput.val(),
-                        template_type: templateTypeInput.val(),
+                        template_type: templateTypeInput.val().join(','),
                         template_header: templateHeaderInput.val(),
                         columns: columnIds,
                         column_order: JSON.parse(document.querySelector("input[name='edit_column_order']").value),
