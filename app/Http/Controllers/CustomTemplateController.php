@@ -70,7 +70,7 @@ class CustomTemplateController extends Controller
 
     public function getColumns($id)
     {
-        $data = TemplateColumn::where('template_main_id', $id)->get();
+        $data = TemplateColumn::where('template_main_id', $id)->where('deleted_at', null)->get();
     
         // Extract column_main_id from each record in the collection
         $columnMainIds = $data->pluck('column_main_id');
@@ -107,8 +107,8 @@ class CustomTemplateController extends Controller
 
         // Process the data within a transaction
         return DB::transaction(function () use ($request, $templateId) {
-            // Delete existing columns for the specified template
-            TemplateColumn::where('template_main_id', $templateId)->delete();
+            // Retrieve existing columns before updating the template
+            $existingColumns = TemplateColumn::where('template_main_id', $templateId)->get()->pluck('column_main_id')->toArray();
 
             // Update template information
             $template = TemplateMain::findOrFail($templateId);
@@ -122,10 +122,6 @@ class CustomTemplateController extends Controller
             // Insert new columns based on the provided order
             $columnOrder = $request->input('column_order');
 
-            if (!$templateId) {
-                throw new \Exception('Template ID is null or empty');
-            }
-
             if ($columnOrder && is_array($columnOrder)) {
                 foreach ($columnOrder as $order => $columnId) {
                     $templateColumn = TemplateColumn::updateOrCreate(
@@ -136,6 +132,15 @@ class CustomTemplateController extends Controller
                         ]
                     );
                 }
+            }
+
+            // Identify removed columns and update deleted_at in template_columns table
+            $removedColumns = array_diff($existingColumns, $columnOrder);
+
+            if (!empty($removedColumns)) {
+                TemplateColumn::where('template_main_id', $templateId)
+                    ->whereIn('column_main_id', $removedColumns)
+                    ->update(['deleted_at' => now()->timezone('Asia/Kuala_Lumpur')]);
             }
 
             // Return a response
