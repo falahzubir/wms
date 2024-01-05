@@ -318,7 +318,7 @@ Trait TiktokTrait
             'timestamp' => $timestamp,
             'shop_id' => $shop_id,
             'order_id' => $params['ordersn'],
-            'document_type' => 'PICK_LIST'
+            'document_type' => 'SHIPPING_LABEL'
             // Include all the necessary parameters for signing
         ];
 
