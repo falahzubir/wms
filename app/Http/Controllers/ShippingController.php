@@ -1441,7 +1441,7 @@ class ShippingController extends Controller
             $order[$key]['additional_data'] = json_decode($value->shippings[0]->additional_data, true);
 
             ###### download shipping document ######
-            $generateCN = TiktokTrait::generateCN($order[$key]['additional_data']);
+            $generateCN = TiktokTrait::generateCNJugak($order[$key]['additional_data']);
             $generateCN = json_decode($generateCN, true);
 
             if($generateCN['code'] != 0)
