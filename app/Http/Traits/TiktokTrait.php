@@ -318,7 +318,7 @@ Trait TiktokTrait
             'timestamp' => $timestamp,
             'shop_id' => $shop_id,
             'order_id' => $params['ordersn'],
-            'document_type' => 'SL+PL'
+            'document_type' => 'SL_PL'
             // Include all the necessary parameters for signing
         ];
 
