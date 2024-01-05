@@ -356,7 +356,7 @@ Trait TiktokTrait
             $exec = 'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile='.$new_file_path.' '.$file_path;
             shell_exec($exec);
             // ! delete initial file
-            unlink($file_path);
+            // unlink($file_path);
 
             return json_encode([
                 'code' => 0,
