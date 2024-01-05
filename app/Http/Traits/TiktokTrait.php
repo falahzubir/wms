@@ -5,6 +5,7 @@ namespace App\Http\Traits;
 use App\Models\AccessToken;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 ### Tiktok Order Status
 // - UNPAID = 100;
@@ -346,7 +347,8 @@ Trait TiktokTrait
             $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['ordersn'] . '.pdf';
             $file_path = storage_path('app/public/' . $file_name);
 
-            file_put_contents($file_path, $fileContent);
+            // file_put_contents($file_path, $fileContent);
+            Storage::put('public/'.$file_name, $fileContent);
 
             // * convert pdf version to 1.4 using ghostscript
             $new_file_name = 'tiktok/'.Carbon::now()->format('YmdHis').'_'.$params['ordersn'].'.pdf';
