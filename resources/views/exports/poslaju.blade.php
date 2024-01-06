@@ -48,8 +48,8 @@
                     @elseif ($column->column_name == "payment_type_name")
                         <td>="{{ $order->paymentType->payment_type_name }}"</td>
 
-                    @elseif ($column->column_name == "operational_models_name")
-                        <td>{{ $order->operationalModel->name }}</td>
+                    {{-- @elseif ($column->column_name == "operational_models_name")
+                        <td>{{ $order->operationalModel->name }}</td> --}}
 
                     @elseif ($column->column_name == "couriers_name")
                         <td>{{ $order->courier->name }}</td>
@@ -60,17 +60,17 @@
                     @elseif ($column->column_name == "total_price")
                         <td>{{ $order->purchase_type == PURCHASE_TYPE_COD ? $order->total_price/100 : 0 }}</td>
 
-                    @elseif ($column->column_name == "products_name")
-                        <td>{{ $order->items->name }}</td>
+                    {{-- @elseif ($column->column_name == "products_name")
+                        <td>{{ $order->items->name }}</td> --}}
 
                     {{-- @elseif ($column->column_name == "quantity")
                         <td>{{ $order->items->name }}</td> --}}
 
-                    @elseif ($column->column_name == "weight")
+                    {{-- @elseif ($column->column_name == "weight")
                         <td>{{ $order->items->weight }}</td>
 
                     @elseif ($column->column_name == "item_description")
-                        <td>{{ $order->items->description }}</td>
+                        <td>{{ $order->items->description }}</td> --}}
 
                     @else
                         <td>{{ $order->{$column->column_name} ?? '' }}</td>
