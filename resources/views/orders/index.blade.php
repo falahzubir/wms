@@ -1058,40 +1058,71 @@
 
         // download csv
         @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
-            document.querySelector('#download-order-btn').onclick = function() {
-                const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                let checkedValue = inputElements.filter(chk => chk.checked).length;
-
-                if (checkedValue == 0) {
+        document.querySelector('#download-order-btn').onclick = function () {
+            fetch('/orders/get_template_main')
+                .then(response => response.json())
+                .then(options => {
                     Swal.fire({
-                        title: 'No order selected!',
-                        html: `<div>Are you sure to download {{ isset($orders) ? $orders->total() : 0 }} order(s).</div>
-                            <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
-                        icon: 'warning',
-                        confirmButtonText: 'Download',
+                        title: 'Download CSV',
+                        html: `
+                            <div class="row">
+                                <div class="col-4 mt-2">
+                                    <label>Choose Template</label>
+                                </div>
+                                <div class="col-8">
+                                    <select id="template-select" class="form-select">
+                                        ${options.map(option => `<option value="${option.value}">${option.label}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                        `,
+                        width: '50%',
                         showCancelButton: true,
                         cancelButtonText: 'Cancel',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            let checkedOrder = [];
-                            inputElements.forEach(input => {
-                                if (input.checked) {
-                                    checkedOrder.push(input.value);
-                                }
-                            });
-                            download_csv(checkedOrder);
-                        }
-                    })
-                } else {
-                    let checkedOrder = [];
-                    inputElements.forEach(input => {
-                        if (input.checked) {
-                            checkedOrder.push(input.value);
-                        }
+                        confirmButtonText: 'Download',
+                        preConfirm: () => {
+                            const templateSelect = document.getElementById('template-select');
+                            const chosenTemplate = templateSelect.value;
+
+                            const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                            let checkedValue = inputElements.filter(chk => chk.checked).length;
+
+                            if (checkedValue == 0) {
+                                Swal.fire({
+                                    title: 'No order selected!',
+                                    html: `<div>Are you sure to download {{ isset($orders) ? $orders->total() : 0 }} order(s).</div>
+                                            <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
+                                    icon: 'warning',
+                                    confirmButtonText: 'Download',
+                                    showCancelButton: true,
+                                    cancelButtonText: 'Cancel',
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        let checkedOrder = [];
+                                        inputElements.forEach(input => {
+                                            if (input.checked) {
+                                                checkedOrder.push(input.value);
+                                            }
+                                        });
+                                        download_csv(checkedOrder, chosenTemplate);
+                                    }
+                                });
+                            } else {
+                                let checkedOrder = [];
+                                inputElements.forEach(input => {
+                                    if (input.checked) {
+                                        checkedOrder.push(input.value);
+                                    }
+                                });
+                                download_csv(checkedOrder, chosenTemplate);
+                            }
+                        },
                     });
-                    download_csv(checkedOrder);
-                }
-            }
+                })
+                .catch(error => {
+                    console.error('Error fetching template options:', error);
+                });
+        };
         @endif
 
         document.querySelectorAll('.add-shipping-number').forEach(btn => {
