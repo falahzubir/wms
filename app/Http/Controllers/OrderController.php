@@ -836,24 +836,67 @@ class OrderController extends Controller
      * @param  Request $request
      * @return json
      */
+    // public function download_order_csv(Request $request)
+    // {
+    //     // return $request;
+    //     $fileName = date('Ymdhis') . '_list_of_orders.csv';
+    //     $orders = $this->index();
+
+    //     $orders->whereIn('id', $request->order_ids);
+
+    //     $orders = $this->filter_order($request, $orders);
+
+    //     $orders = $orders->get();
+
+    //     Excel::store(new OrderExport($orders),"public/".$fileName);
+    //     // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
+
+    //     return response([
+    //         "file_name"=> $fileName
+    //     ]);
+    // }
+
     public function download_order_csv(Request $request)
     {
-        // return $request;
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
         $orders = $this->index();
-
         $orders->whereIn('id', $request->order_ids);
-
         $orders = $this->filter_order($request, $orders);
-
         $orders = $orders->get();
 
-        Excel::store(new OrderExport($orders),"public/".$fileName);
-        // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
+        // Get headers from 
+        $headers = $this->getHeader($request->template_id);
+
+        $columnName = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
+            ->join('column_mains', 'template_columns.column_main_id', '=', 'column_mains.id')
+            ->select(
+                'template_mains.*',
+                'template_columns.*',
+                'column_mains.*'
+            )
+            ->where('template_mains.delete_status', '!=', 1)
+            ->whereIn('template_columns.template_main_id', function($query) use ($request) {
+                $query->select('id')
+                    ->from('template_mains')
+                    ->where('id', $request->template_id);
+            })
+            ->get();
+
+        Excel::store(new OrderExport($orders, $headers, $columnName), "public/" . $fileName);
 
         return response([
-            "file_name"=> $fileName
+            "file_name" => $fileName,
         ]);
+    }
+
+    private function getHeader($templateId)
+    {
+        $template = TemplateMain::with('columns')->find($templateId);
+
+        // Split the template_header string into an array
+        $headers = explode(', ', $template->template_header);
+
+        return $headers;
     }
 
     /** Change Postcode view
