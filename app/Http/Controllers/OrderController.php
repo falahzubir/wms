@@ -1008,4 +1008,20 @@ class OrderController extends Controller
             'settings' => $settings,
         ]);
     }
+
+    public function get_template_main()
+    {
+        $data = TemplateMain::all();
+
+        $templateMain = [];
+
+        foreach ($data as $row) {
+            $templateMain[] = [
+                'value' => $row->id, 
+                'label' => $row->template_name
+            ];
+        }
+
+        return response()->json($templateMain);
+    }
 }
