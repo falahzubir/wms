@@ -1011,7 +1011,7 @@ class OrderController extends Controller
 
     public function get_template_main()
     {
-        $data = TemplateMain::all();
+        $data = TemplateMain::where('delete_status', 0)->get();
 
         $templateMain = [];
 
