@@ -1780,7 +1780,7 @@
             return dateTime;
         }
 
-        function download_csv(checkedOrder) {
+        function download_csv(checkedOrder, chosenTemplate) {
             // const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
             // const param_obj = queryStringToJSON(params);
             if (checkedOrder.length == 0) {
@@ -1788,6 +1788,7 @@
             }
             axios.post('/api/download-order-csv', {
                     order_ids: checkedOrder,
+                    template_id: chosenTemplate,
                 })
                 .then(function(response) {
                     // handle success, close or download
