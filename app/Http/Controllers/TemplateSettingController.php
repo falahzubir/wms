@@ -10,7 +10,7 @@ class TemplateSettingController extends Controller
 {
     public function index()
     {
-        $data = ColumnMain::all();
+        $data = ColumnMain::where('deleted_at', null)->get();
 
         return view('template_setting/index', [
             'title' => 'CSV Template Setting',
