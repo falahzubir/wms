@@ -14,7 +14,7 @@
                         <td>{{ $key + 1 }}</td>
 
                     @elseif ($column->column_name == "companies_name")
-                        <td>{{ $order->company->name }}</td>
+                        <td>{{ optional($order->company)->name }}</td>
                      @elseif ($column->column_name == "companies_phone")
                         <td>{{ $order->company->phone }}</td>
                     @elseif ($column->column_name == "companies_address")
@@ -41,36 +41,61 @@
                     @elseif ($column->column_name == "customers_city")
                         <td>="{{ $order->customer->city }}"</td>
                     @elseif ($column->column_name == "customers_state")
-                        <td>="{{ $order->customer->state }}"</td>
+                        <td>{{ get_state($order->customer->state)}}</td> 
                     @elseif ($column->column_name == "customers_country")
-                        <td>="{{ $order->customer->country }}"</td>
+                        <td>
+                            @switch($order->customer->country)
+                                @case('1')
+                                    MY
+                                    @break
+
+                                @case('2')
+                                    ID
+                                    @break
+
+                                @case('3')
+                                    SG
+                                    @break
+                            @endswitch
+                        </td>
+
+                    @elseif ($column->column_name == "purchase_type")
+                        <td>
+                            @switch($order->purchase_type)
+                                @case('1')
+                                    COD
+                                    @break
+
+                                @case('2')
+                                    Paid
+                                    @break
+
+                                @case('3')
+                                    Installment
+                                    @break
+                            @endswitch
+                        </td>
+
+                    @elseif ($column->column_name == "operational_models_name")
+                        <td>{{ get_operational_details($order->operational_model_id) }}</td>
 
                     @elseif ($column->column_name == "payment_type_name")
-                        <td>="{{ $order->paymentType->payment_type_name }}"</td>
-
-                    {{-- @elseif ($column->column_name == "operational_models_name")
-                        <td>{{ $order->operationalModel->name }}</td> --}}
+                        <td>{{ get_payment_name($order->payment_type) }}</td>
 
                     @elseif ($column->column_name == "couriers_name")
                         <td>{{ $order->courier->name }}</td>
 
-                    @elseif ($column->column_name == "shipping_remarks")
-                        <td>{{ get_shipping_remarks($order)}}</td>
-
                     @elseif ($column->column_name == "total_price")
-                        <td>{{ $order->purchase_type == PURCHASE_TYPE_COD ? $order->total_price/100 : 0 }}</td>
+                        <td>{{ $order->total_price/100 }}</td>
 
-                    {{-- @elseif ($column->column_name == "products_name")
-                        <td>{{ $order->items->name }}</td> --}}
-
-                    {{-- @elseif ($column->column_name == "quantity")
-                        <td>{{ $order->items->name }}</td> --}}
-
-                    {{-- @elseif ($column->column_name == "weight")
-                        <td>{{ $order->items->weight }}</td>
+                    @elseif ($column->column_name == "quantity")
+                        <td>{{ get_order_items($order->id)['sumQuantity'] }}</td>
+                    
+                    @elseif ($column->column_name == "weight")
+                        <td>{{ get_order_items($order->id)['sumWeight'] }}g</td>
 
                     @elseif ($column->column_name == "item_description")
-                        <td>{{ $order->items->description }}</td> --}}
+                        <td>{{ get_shipping_remarks($order)}}</td> 
 
                     @else
                         <td>{{ $order->{$column->column_name} ?? '' }}</td>
