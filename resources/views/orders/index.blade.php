@@ -1059,7 +1059,12 @@
         // download csv
         @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
         document.querySelector('#download-order-btn').onclick = function () {
-            fetch('/orders/get_template_main')
+
+            // Get url segment
+            const urlSegments = window.location.pathname.split('/');
+            const status = urlSegments[2];
+
+            fetch(`/orders/get_template_main?status=${status}`)
                 .then(response => response.json())
                 .then(options => {
                     Swal.fire({
