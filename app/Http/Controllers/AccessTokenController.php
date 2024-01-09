@@ -6,6 +6,7 @@ use App\Models\AccessToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\api\ShippingApiController;
+use App\Models\Company;
 
 class AccessTokenController extends Controller
 {
@@ -18,7 +19,8 @@ class AccessTokenController extends Controller
     {
         $tokens = AccessToken::where('company_id', $company_id)->get()->toArray();
         return response()->json([
-            'data' => $tokens
+            'data' => $tokens,
+            'company' => Company::find($company_id),
         ], 200);
     }
 
@@ -29,8 +31,9 @@ class AccessTokenController extends Controller
     public function update(Request $request, $company_id)
     {
         $request->validate([
-            'dhl_client_id' => 'required',
-            'dhl_client_secret' => 'required'
+            'dhl_client_id' => 'nullable',
+            'dhl_client_secret' => 'nullable',
+            'posmalaysia_subscribtion_code' => 'regex:/^\S*$/u',
         ]);
 
         $data = [
@@ -45,8 +48,12 @@ class AccessTokenController extends Controller
             $shipping_controller->dhl_generate_access_token($company_id);
         }
 
+        if($request->posmalaysia_subscribtion_code != ""){
+           Company::where('id', $company_id)->update(['posmalaysia_subscribtion_code' => $request->posmalaysia_subscribtion_code]);
+        }
+
         return response()->json([
-            'message' => 'Access Token updated successfully'
+            'message' => 'Courier setting for company updated successfully.'
         ], 200);
     }
 

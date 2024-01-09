@@ -77,6 +77,7 @@ class ProductController extends Controller
         $product->code = $request->input('code');
         $product->description = $request->input('description');
         $product->max_box = $request->input('unit_carton');
+        $product->weight = $request->input('product_weight') * 1000;
         $product->save();
 
         $product_details = ProductDetail::where('product_id', $product->id)->first();
@@ -209,6 +210,7 @@ class ProductController extends Controller
             'description' => $request->input('description'),
             'price' => 0,
             'max_box' => $request->input('unit_carton'),
+            'weight' => $request->input('product_weight') * 1000,
         ]);
 
         $product_details = ProductDetail::create([

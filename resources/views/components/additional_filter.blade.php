@@ -80,9 +80,12 @@
                         @endforeach
                     </x-filter_select>
                 @endisset
+
                 @isset($filter_data->operational_models)
-                    <x-filter_select name="op_models" label="Operational Model(s)" id="operational-model-filter"
-                        class="col-4 mt-2">
+                    <x-filter_select name="op_models" label="Operational Model(s)" id="operational-model-filter" class="col-4 mt-2">
+                        @foreach($filter_data->operational_models as $opm)
+                            <option value="{{$opm->id}}" {{ request('op_models') != null ? (in_array($opm->id, request('op_models')) ? 'selected' : '') : '' }}>{{$opm->name}}</option>
+                        @endforeach
                     </x-filter_select>
                 @endisset
                 @isset($filter_data->sale_events)
