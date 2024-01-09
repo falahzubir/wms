@@ -207,7 +207,6 @@
                             <option value="5">In Transit List</option>
                             <option value="6">Delivered List</option>
                             <option value="7">Return List</option>
-                            <option value="8">Claim List</option>
                             <option value="9">Reject List</option>
                         </select>
                     </div>
@@ -278,7 +277,6 @@
                             <option value="5">In Transit List</option>
                             <option value="6">Delivered List</option>
                             <option value="7">Return List</option>
-                            <option value="8">Claim List</option>
                             <option value="9">Reject List</option>
                         </select>
                     </div>
