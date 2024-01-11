@@ -23,6 +23,7 @@
                     </div>
                     <div class="col-4 text-center">
                         <span style="font-weight:bold;" id="monthly-id">0</span>
+                        <br>
                         <small class="text-muted" style="font-size:10px;">
                             Orders
                         </small>
@@ -41,6 +42,7 @@
                     </div>
                     <div class="col-4 text-center">
                         <span style="font-weight:bold;" id="daily-id">0</span>
+                        <br>
                         <small class="text-muted" style="font-size:10px;">
                             Orders
                         </small>
