@@ -15,6 +15,7 @@ use App\Http\Controllers\ThirdParty\PosMalaysiaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,7 @@ Route::prefix('orders')->group(function () {
     Route::post('set-order-completed', [OrderApiController::class, 'set_order_completed']);
     Route::match(array('GET','POST'),'getStatusWMS', [OrderApiController::class, 'getStatusWMS']);
     Route::match(array('GET','POST'),'getStatusWMSFilter', [OrderApiController::class, 'getStatusWMSFilter']);
+    Route::match(array('GET','POST'),'parcels', [OrderApiController::class, 'scanParcelRanking']);
 });
 
 Route::prefix('shippings')->group(function () {
