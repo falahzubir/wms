@@ -1700,7 +1700,7 @@
                             `;
                             document.querySelector('#generatePl9POS').classList.remove('d-none');
                         }
-                        if(response.data.status && response.data.status == 'error'){
+                        else {
                             document.querySelector('#generateConnotePOS').innerHTML = `
                                 Generate Consignment Notes
                                 <i class="bi bi-exclamation-circle-fill text-warning"></i>
@@ -1710,12 +1710,12 @@
                                 </small>
                             `;
                             document.querySelector('#generatePl9POS').classList.remove('d-none');
-                            Swal.fire({
-                                title: 'Error!',
-                                html: response.data.message.join('<br>'),
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
+                            // Swal.fire({
+                            //     title: 'Error!',
+                            //     html: response.data.message.join('<br>'),
+                            //     icon: 'error',
+                            //     confirmButtonText: 'OK'
+                            // });
 
                         }
                         resolve();
@@ -1744,13 +1744,12 @@
                             `;
                             document.querySelector('#generateCnPOS').classList.remove('d-none');
                         }
-                        if(response.data.status && response.data.status == 'error'){
+                        else{
                             document.querySelector('#generatePl9POS').innerHTML = `
                                 Generate PL9
                                 <i class="bi bi-exclamation-circle-fill text-warning"></i>
                                 <br>
                                 <small class="text-danger">
-                                ${response.data.message.join('<br>')}
                                 </small>
                             `;
                             document.querySelector('#generateCnPOS').classList.remove('d-none');
