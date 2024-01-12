@@ -483,7 +483,7 @@
             const parcelsDaily = async(typeR) =>
             {
                 let tbodyDaily = document.querySelector('#tbody-daily');
-                tbodyDaily.innerHTML = '<tr><td colspan="3" class="text-center">Loading...</td></tr>';
+                tbodyDaily.innerHTML = '<tr><td colspan="3" class="text-center"><i class="bx bx-loader bx-spin"></i></td></tr>';
 
                 let response = await axios.post('/api/orders/parcels',{
                     type: typeR
@@ -524,7 +524,7 @@
             const parcelsMonthly = async(typeR) =>
             {
                 let tbodyMonthly = document.querySelector('#tbody-monthly');
-                tbodyMonthly.innerHTML = '<tr><td colspan="3" class="text-center">Loading...</td></tr>';
+                tbodyMonthly.innerHTML = '<tr><td colspan="3" class="text-center"><i class="bx bx-loader bx-spin"></i></td></tr>';
 
                 let response = await axios.post('/api/orders/parcels',{
                     type: typeR

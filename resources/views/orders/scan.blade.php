@@ -146,6 +146,9 @@
             {
                 let monthlyId = document.querySelector('#monthly-id');
                 let dailyId = document.querySelector('#daily-id');
+                //add loading
+                monthlyId.innerHTML = '<i class="bx bx-loader bx-spin"></i>';
+                dailyId.innerHTML = '<i class="bx bx-loader bx-spin"></i>';
 
                 let response = await axios.post('/api/orders/parcels',{
                     type: type,
@@ -159,7 +162,8 @@
                     }
                 })
                 .catch(function(error) {
-                    console.log(error);
+                    monthlyId.innerHTML = '0';
+                    dailyId.innerHTML = '0';
                 });
             }
 
