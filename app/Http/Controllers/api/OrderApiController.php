@@ -250,7 +250,7 @@ class OrderApiController extends Controller
         if($request->type == 'individual')
         {
             $parcels = Shipping::select(
-                DB::raw('IFNULL(count(*),0) as total'),
+                DB::raw('IFNULL(count(DISTINCT(order_id)),0) as total'),
                 DB::raw('IFNULL(SUM(CASE WHEN DATE(scanned_at) = CURDATE() THEN 1 ELSE 0 END),0) AS daily')
             )
             // ->where('scanned_by', 6) // Assuming '6' is the scanned_by value
@@ -261,7 +261,7 @@ class OrderApiController extends Controller
         }
         else
         {
-            $parcels = Shipping::select('scanned_by', DB::raw('count(*) as total'))
+            $parcels = Shipping::select('scanned_by', DB::raw('count(DISTINCT(order_id)) as total'))
             ->with(['scannedBy'])
             ->where('status',IS_ACTIVE);
         }
