@@ -176,7 +176,7 @@ class ShippingApiController extends ShippingController
             }
         }
 
-        $new_dhl_tokens = AccessToken::where('type', 'dhl')->whereIn('company_id', $companies)->get();
+        $new_dhl_tokens = AccessToken::where('type', 'dhl')->whereIn('company_id', $companies)->first();
 
         return $new_dhl_tokens;
 
