@@ -21,7 +21,7 @@ use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 use App\Http\Traits\ShopeeTrait;
 use App\Http\Traits\TiktokTrait;
 use Illuminate\Support\Carbon;
-use App\Http\Controllers\Api\ShippingApiController;
+use App\Http\Controllers\api\ShippingApiController;
 
 class ShippingController extends Controller
 {
