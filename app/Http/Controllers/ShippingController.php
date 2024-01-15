@@ -184,7 +184,7 @@ class ShippingController extends Controller
 
         //check first token expiry date
         $shipingApiController = new ShippingApiController();
-        $access_tokens = $shipingApiController->checkExpiryTokenDHL($companies);
+        $access_tokens = $shipingApiController->checkExpiryTokenDHL($companies, true);
         // $access_tokens = AccessToken::with(['company'])->whereIn('company_id', $companies)->where('type', 'dhl')->get(); // DHL API access token, expires every 24 hours, could be refreshed every 12 hours
         $count = 0;
         foreach ($access_tokens as $access_token) {

@@ -160,7 +160,7 @@ class ShippingApiController extends ShippingController
         ], 200);
     }
 
-    public function checkExpiryTokenDHL($companies)
+    public function checkExpiryTokenDHL($companies, $arr = false)
     {
         $dhl_tokens = AccessToken::where('type', 'dhl')->whereIn('company_id', $companies)->get();
         foreach ($dhl_tokens as $token) {
@@ -174,6 +174,11 @@ class ShippingApiController extends ShippingController
                 $updatedToken = AccessToken::find($token->id);
                 Log::info("Token updated - Company ID: {$updatedToken->company_id}, Expires At: {$updatedToken->expires_at}");
             }
+        }
+
+        if($arr)
+        {
+            return AccessToken::where('type', 'dhl')->whereIn('company_id', $companies)->get();
         }
 
         $new_dhl_tokens = AccessToken::where('type', 'dhl')->whereIn('company_id', $companies)->first();
