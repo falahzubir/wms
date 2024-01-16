@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
 use App\Models\AlternativePostcode;
+use App\Models\CategoryMain;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 
@@ -82,7 +83,8 @@ class OrderController extends Controller
             $filter_data['teams'] = true; //http request
         }
         if (!in_array(ORDER_FILTER_OP_MODEL, $exclude)) {
-            $filter_data['operational_models'] = true; //http request
+            // $filter_data['operational_models'] = true; //http request
+            $filter_data['operational_models'] = OperationalModel::get();
         }
         if (!in_array(ORDER_FILTER_STATE, $exclude)) {
             $filter_data['states'] = MY_STATES; //http request
@@ -93,6 +95,10 @@ class OrderController extends Controller
                 22 => 'Shopee',
                 23 => 'TikTok',
             ];
+        }
+
+        if(!in_array(ORDER_FILTER_BUCKET_CATEGORY, $exclude)){
+            $filter_data['bucket_categories'] = CategoryMain::where('category_status', IS_ACTIVE)->get();
         }
 
         if(!in_array(ORDER_FILTER_STATUS, $exclude)){
@@ -138,7 +144,7 @@ class OrderController extends Controller
             'title' => 'List Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -173,7 +179,7 @@ class OrderController extends Controller
             'title' => 'Pending Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER,ACTION_ARRANGE_SHIPMENT],
         ]);
     }
@@ -192,7 +198,7 @@ class OrderController extends Controller
             'title' => 'Processing Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
         ]);
     }
@@ -212,7 +218,7 @@ class OrderController extends Controller
             'title' => 'Ready To Ship Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_APPROVE_AS_SHIPPED, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -232,7 +238,7 @@ class OrderController extends Controller
             'title' => 'Packing Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER, ACTION_DOWNLOAD_CN],
         ]);
     }
@@ -254,7 +260,7 @@ class OrderController extends Controller
             'title' => 'Shipping Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -274,7 +280,7 @@ class OrderController extends Controller
             'title' => 'Delivered Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -295,7 +301,7 @@ class OrderController extends Controller
             'title' => 'Returned Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -311,7 +317,7 @@ class OrderController extends Controller
             'title' => 'Return Completed Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL, ORDER_FILTER_STATE]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_STATE]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
 
@@ -332,7 +338,7 @@ class OrderController extends Controller
             'title' => 'Rejected Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -352,7 +358,7 @@ class OrderController extends Controller
             'title' => 'Orders in Bucket Batch ' . get_picking_batch($orders->first()->bucket_batch_id),
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER, ACTION_DOWNLOAD_CN],
         ]);
     }
@@ -462,7 +468,6 @@ class OrderController extends Controller
          }
 
         $customer = Customer::updateOrCreate($data_customer);
-
         $data['customer_id'] = $customer->id;
 
         $order = Order::updateOrCreate($ids, $data);

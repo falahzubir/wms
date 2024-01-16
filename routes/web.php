@@ -192,9 +192,14 @@ Route::middleware(['auth'])->group(function() {
         Route::post('update_template', [CustomTemplateController::class, 'updateTemplate'])->name('custom_template_setting.update');
         Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
     });
+    
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/bucket-category', [BucketController::class, 'bucket_category'])->name('bucket_category');
+    });
+
 });
 
-    // Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
+    Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
 
     Route::get('notifications', [NotificationController::class, 'list']);
 

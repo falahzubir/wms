@@ -5,6 +5,7 @@ namespace App\Http\Traits;
 use App\Models\AccessToken;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 ### Tiktok Order Status
 // - UNPAID = 100;
@@ -287,7 +288,7 @@ Trait TiktokTrait
             'timestamp' => $timestamp,
             'shop_id' => $shop_id,
             'package_id' => $params['package_id'],
-            'document_type' => 1,
+            'document_type' => 3,
             'document_size' => 0,
             // Include all the necessary parameters for signing
         ];
@@ -298,7 +299,56 @@ Trait TiktokTrait
 
         $response = Http::get("$curl_url");
 
-        return $response->body();
+        $response = json_decode($response->body(),true);
+
+        try {
+
+            if ($response['code'] != 0) {
+                return json_encode([
+                    'code' => $response['code'],
+                    'message' => $response['message']
+                ]);
+            }
+
+            // Download file from the provided URL
+            $fileUrl = $response['data']['doc_url'];
+            $fileContent = Http::get($fileUrl)->body();
+
+            // Save the file to storage
+            $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['ordersn'] . '.pdf';
+            $file_path = storage_path('app/public/' . $file_name);
+
+            // file_put_contents($file_path, $fileContent);
+            Storage::put('public/'.$file_name, $fileContent);
+
+            // * convert pdf version to 1.4 using ghostscript
+            $new_file_name = 'tiktok/'.Carbon::now()->format('YmdHis').'_'.$params['ordersn'].'.pdf';
+            $new_file_path = storage_path('app/public/'.$new_file_name);
+            $exec = 'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile='.$new_file_path.' '.$file_path;
+            shell_exec($exec);
+            // ! delete initial file
+            // unlink($file_path);
+
+            return json_encode([
+                'code' => 0,
+                'message' => 'Success',
+                'data' => [
+                    'file_name' => $new_file_name
+                ]
+            ]);
+
+        } catch (\Throwable $th) {
+
+            return json_encode([
+                'code' => 500,
+                'message' => 'Failed to download file (2)'
+            ]);
+        }
+
+        return json_encode([
+            'code' => 500,
+            'message' => 'Failed to download file (3)'
+        ]);
     }
 
     public static function generateCN($params)
@@ -331,42 +381,37 @@ Trait TiktokTrait
 
         try {
 
-            if($response['code'] != 0)
-            {
+            if ($response['code'] != 0) {
                 return json_encode([
                     'code' => $response['code'],
                     'message' => $response['message']
                 ]);
             }
 
-            //download file to storage
-            $file_name = 'tiktok/'.Carbon::now()->format('YmdHis').'_'.$params['ordersn'].'.pdf';
-            $file_path = storage_path('app/public/'.$file_name);
+            // Download file from the provided URL
+            $fileUrl = $response['data']['doc_url'];
+            $fileContent = Http::get($fileUrl)->body();
 
-            $ch = curl_init($response['data']['doc_url']);
+            // Save the file to storage
+            $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['ordersn'] . '.pdf';
+            $file_path = storage_path('app/public/' . $file_name);
 
-            // Set cURL options
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            // file_put_contents($file_path, $fileContent);
+            Storage::put('public/'.$file_name, $fileContent);
 
-            // Execute cURL session and get the content
-            $fileContent = curl_exec($ch);
-
-            // Check for cURL errors
-            if (curl_errno($ch)) {
-                return json_encode([
-                    'code' => 500,
-                    'message' => 'Failed to download file (1)'
-                ]);
-            }
-            curl_close($ch);
-
-            file_put_contents($file_path, $fileContent);
+            // * convert pdf version to 1.4 using ghostscript
+            $new_file_name = 'tiktok/'.Carbon::now()->format('YmdHis').'_'.$params['ordersn'].'.pdf';
+            $new_file_path = storage_path('app/public/'.$new_file_name);
+            $exec = 'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile='.$new_file_path.' '.$file_path;
+            shell_exec($exec);
+            // ! delete initial file
+            // unlink($file_path);
 
             return json_encode([
                 'code' => 0,
                 'message' => 'Success',
                 'data' => [
-                    'file_name' => $file_name
+                    'file_name' => $new_file_name
                 ]
             ]);
 
