@@ -1018,37 +1018,41 @@ class OrderController extends Controller
     {
         $status = $request->input('status');
 
-        // Define a mapping of status to template type
+        // Define a mapping of status to template_type
         $statusMapping = [
-            'pending' => [1],
-            'processing' => [2],
-            'packing' => [3],
-            'ready-to-ship' => [4],
-            'shipping' => [5],
-            'delivered' => [6],
-            'returned' => [7],
-            'return-completed' => [7],
-            'rejected' => [9],
+            'pending' => 1,
+            'processing' => 2,
+            'packing' => 3,
+            'ready-to-ship' => 4,
+            'shipping' => 5,
+            'delivered' => 6,
+            'returned' => 7,
+            'return-completed' => 7, // Assuming the same template_type for 'returned' and 'return-completed'
+            'rejected' => 9,
         ];
 
-        // Check if the status is mapped
-        if (isset($statusMapping[$status])) {
+        // Check if the status is a valid key in the mapping
+        if (array_key_exists($status, $statusMapping)) {
+            $templateType = $statusMapping[$status];
+
             $data = TemplateMain::where('delete_status', 0)
-                ->whereIn('template_type', $statusMapping[$status])
+                ->where('template_type', 'LIKE', "%$templateType%")
                 ->get();
+
+            $templateMain = [];
+
+            foreach ($data as $row) {
+                $templateMain[] = [
+                    'value' => $row->id,
+                    'label' => $row->template_name
+                ];
+            }
+
+            return response()->json($templateMain);
         } else {
-            // Handle the case when $status is not mapped
-            $data = collect(); // An empty collection
+            // Handle the case where the status is not recognized
+            return response()->json(['error' => 'Invalid status'], 400);
         }
-
-        $templateMain = $data->map(function ($row) {
-            return [
-                'value' => $row->id,
-                'label' => $row->template_name
-            ];
-        });
-
-        return response()->json($templateMain);
     }
 
 }
