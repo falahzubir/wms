@@ -1036,7 +1036,7 @@ class OrderController extends Controller
             $templateType = $statusMapping[$status];
 
             $data = TemplateMain::where('delete_status', 0)
-                ->where('template_type', 'LIKE', "%$templateType%")
+                ->where('template_type', 'LIKE', "%$templateType%") // So it can check multiple values with comma.
                 ->get();
 
             $templateMain = [];
