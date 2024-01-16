@@ -123,7 +123,7 @@ class CustomTemplateController extends Controller
 
             if ($columnOrder && is_array($columnOrder)) {
                 foreach ($columnOrder as $order => $columnId) {
-                    $templateColumn = TemplateColumn::updateOrCreate(
+                    $templateColumn = TemplateColumn::whereNull('deleted_at')->updateOrCreate(
                         ['template_main_id' => $templateId, 'column_main_id' => $columnId],
                         [
                             'column_position' => $order + 1,

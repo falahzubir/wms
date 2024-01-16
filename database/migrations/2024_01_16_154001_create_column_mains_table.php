@@ -28,7 +28,7 @@ return new class extends Migration
             'companies_city', 'companies_state', 'companies_country', 'customers_name', 'customers_phone',
             'customers_phone_2', 'customers_address', 'customers_postcode', 'customers_city', 'customers_state',
             'customers_country', 'purchase_type', 'payment_type_name', 'operational_models_name', 'couriers_name',
-            'shipping_number', 'shipping_remarks', 'total_price', 'sales_remark', 'payment_refund', 'products_name',
+            'shipping_number', 'shipping_remarks', 'total_price', 'sales_remark', 'payment_refund',
             'quantity', 'weight', 'item_description'
         ];
 

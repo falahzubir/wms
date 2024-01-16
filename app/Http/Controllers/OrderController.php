@@ -1018,52 +1018,37 @@ class OrderController extends Controller
     {
         $status = $request->input('status');
 
-        // Check if the status is 'pending'
-        if ($status == 'pending') {
+        // Define a mapping of status to template type
+        $statusMapping = [
+            'pending' => [1],
+            'processing' => [2],
+            'packing' => [3],
+            'ready-to-ship' => [4],
+            'shipping' => [5],
+            'delivered' => [6],
+            'returned' => [7],
+            'return-completed' => [7],
+            'rejected' => [9],
+        ];
+
+        // Check if the status is mapped
+        if (isset($statusMapping[$status])) {
             $data = TemplateMain::where('delete_status', 0)
-                ->where('template_type', 1)
+                ->whereIn('template_type', $statusMapping[$status])
                 ->get();
-        }elseif ($status == 'processing') {
-            $data = TemplateMain::where('delete_status', 0)
-                ->where('template_type', 2)
-                ->get();
-        }elseif ($status == 'packing') {
-            $data = TemplateMain::where('delete_status', 0)
-                ->where('template_type', 3)
-                ->get();
-        }elseif ($status == 'ready-to-ship') {
-            $data = TemplateMain::where('delete_status', 0)
-                ->where('template_type', 4)
-                ->get();
-        }elseif ($status == 'shipping') {
-            $data = TemplateMain::where('delete_status', 0)
-                ->where('template_type', 5)
-                ->get();
-        }elseif ($status == 'delivered') {
-            $data = TemplateMain::where('delete_status', 0)
-                ->where('template_type', 6)
-                ->get();
-        }elseif ($status == 'returned' || $status == 'return-completed') {
-            $data = TemplateMain::where('delete_status', 0)
-                ->where('template_type', 7)
-                ->get();
-        }elseif ($status == 'rejected') {
-            $data = TemplateMain::where('delete_status', 0)
-                ->where('template_type', 9)
-                ->get();
-        }else {
-            
+        } else {
+            // Handle the case when $status is not mapped
+            $data = collect(); // An empty collection
         }
 
-        $templateMain = [];
-
-        foreach ($data as $row) {
-            $templateMain[] = [
+        $templateMain = $data->map(function ($row) {
+            return [
                 'value' => $row->id,
                 'label' => $row->template_name
             ];
-        }
+        });
 
         return response()->json($templateMain);
     }
+
 }
