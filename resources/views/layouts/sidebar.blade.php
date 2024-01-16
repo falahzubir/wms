@@ -267,6 +267,14 @@
                 <ul id="components-nav"
                     class="nav-content {{ Route::current()->getName() != 'companies.index' ? 'collapsed' : '' }} "
                     data-bs-parent="#sidebar-nav">
+                    @can('view.bucket_category_list')
+                    <li>
+                        <a href="{{ route('settings.bucket_category') }}"
+                            {{ Route::current()->getName() == 'settings.bucket_category' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Bucket Category</span>
+                        </a>
+                    </li>
+                    @endcan
                     <li>
                         <a href="{{ route('alternative_postcode.index') }}"
                             {{ Route::current()->getName() == 'alternative_postcode.index' ? 'class=active' : '' }}>

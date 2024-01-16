@@ -48,6 +48,13 @@ Route::prefix('buckets')->group(function () {
     Route::get('show/{id}', [BucketController::class, 'show']);
     Route::post('check-empty-batch', [BucketController::class, 'check_empty_batch']);
     Route::post('delete', [BucketController::class, 'delete']);
+    Route::post('add-category', [BucketController::class, 'add_category']);
+    Route::post('edit-category', [BucketController::class, 'edit_category']);
+    Route::post('delete-category', [BucketController::class, 'delete_category']);
+    Route::post('store', [BucketController::class, 'store']);
+    Route::post('update', [BucketController::class, 'update']);
+    Route::post('get-bucket-by-category', [BucketController::class, 'get_bucket_by_category']);
+    Route::post('add-to-bucket', [BucketController::class, 'add_to_bucket']);
 });
 
 Route::prefix('orders')->group(function () {

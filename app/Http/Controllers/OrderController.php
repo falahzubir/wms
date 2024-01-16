@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
 use App\Models\AlternativePostcode;
+use App\Models\CategoryMain;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 
@@ -94,6 +95,10 @@ class OrderController extends Controller
                 22 => 'Shopee',
                 23 => 'TikTok',
             ];
+        }
+
+        if(!in_array(ORDER_FILTER_BUCKET_CATEGORY, $exclude)){
+            $filter_data['bucket_categories'] = CategoryMain::where('category_status', IS_ACTIVE)->get();
         }
 
         if(!in_array(ORDER_FILTER_STATUS, $exclude)){

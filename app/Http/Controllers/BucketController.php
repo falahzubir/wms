@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
+use App\Models\Order;
 use App\Models\Bucket;
 use App\Models\Company;
-use App\Models\Order;
 use App\Models\OrderLog;
-use Carbon\Carbon;
+use App\Models\CategoryMain;
+use App\Models\CategoryBucket;
+use App\Http\Controllers\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rule;
 
 class BucketController extends Controller
 {
@@ -16,14 +20,27 @@ class BucketController extends Controller
      * List all buckets
      * @return view
      */
-    public function index()
+    public function index(Request $request)
     {
-        $buckets = Bucket::with(['orders' => function($query){
-            $query->where('status', ORDER_STATUS_PROCESSING);
-        }])->where('status', IS_ACTIVE)->get();
+        $categories = CategoryMain::all();
+        $buckets = Bucket::with(['categoryBuckets','categoryBuckets.categoryMain','processingOrders'])
+        ->where('status', IS_ACTIVE)
+        ->where(function ($q) use ($request) {
+            if (!empty($request->search)) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            }
+            if (!empty($request->category_id)) {
+                $q->whereHas('categoryBuckets', function ($q) use ($request) {
+                    $q->whereIn('category_id', $request->category_id);
+                });
+            }
+        })
+        ->get();
+
         return view('buckets.index', [
             'title' => 'List Buckets',
             'buckets' => $buckets,
+            'categories' => $categories,
         ]);
     }
 
@@ -46,16 +63,38 @@ class BucketController extends Controller
 
     public function store(Request $request)
     {
-        $bucket = $request->validate([
-            'name' => 'required',
+        $request->validate([
+            'name' => [
+                'required',
+                Rule::unique('buckets')->where(function ($query) {
+                    // Fetch the category by name and exclude soft-deleted records
+                    $query->where('name', request('name'))->where('status', IS_ACTIVE);
+                }),
+            ],
             'description' => 'required',
+            'category_id' => 'required|array',
+        ], [
+            'name.required' => 'The Bucket Name field is required.',
+            'description.required' => 'The Bucket Description field is required.',
+            'category_id.required' => 'The Bucket Category field is required.',
         ]);
 
-        $bucket['created_by'] = 1;
+        $bucket = Bucket::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'created_by' => 1,
+        ]);
 
-        Bucket::create($bucket);
+        foreach ($request->category_id as $category_id) {
+            $bucket->categoryBuckets()->create([
+                'category_id' => $category_id,
+            ]);
+        }
 
-        return redirect()->route('buckets.index')->with('success', 'Bucket created successfully.');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket created successfully.'
+        ]);
     }
 
     /**
@@ -63,19 +102,40 @@ class BucketController extends Controller
      * @param Request $request, $id
      * @return view
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         $request->validate([
-            'name' => 'required',
+            'name' => ['required',
+                Rule::unique('buckets')->ignore($request->bucket_id)->where(function ($query) {
+                    // Fetch the category by name and exclude soft-deleted records
+                    $query->where('name', request('name'))->where('status', IS_ACTIVE);
+                }),
+            ],
             'description' => 'required',
+            'category_id' => 'required|array',
+        ], [
+            'name.required' => 'The Bucket Name field is required.',
+            'description.required' => 'The Bucket Description field is required.',
+            'category_id.required' => 'The Bucket Category field is required.',
         ]);
 
-        $bucket = Bucket::find($id);
+        $bucket = Bucket::find($request->bucket_id);
         $bucket->name = $request->name;
         $bucket->description = $request->description;
         $bucket->save();
 
-        return redirect()->route('buckets.index')->with('success', 'Bucket updated successfully.');
+        $bucket->categoryBuckets()->delete();
+
+        foreach ($request->category_id as $category_id) {
+            $bucket->categoryBuckets()->create([
+                'category_id' => $category_id,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket edited successfully.'
+        ]);
     }
 
     /**
@@ -154,6 +214,95 @@ class BucketController extends Controller
         return response()->json(['message' => 'Order added to bucket successfully.']);
     }
 
+    public function add_to_bucket(Request $request)
+    {
+        $error = [];
+        $successOrderIds = [];
+        $request->validate([
+            'bucket_id' => 'required|array|not_in:0',
+            'order_ids' => 'required|string',
+        ], [
+            'bucket_id.not_in' => 'The Bucket field is required.',
+        ]);
+
+        $bucketIds = $request->bucket_id;
+        //strip bucket ids which is 0
+        $bucketIds = array_filter($bucketIds);
+        $orderIds = explode(',', $request->order_ids);
+
+        foreach($bucketIds as $bucket_id => $value)
+        {
+            $orderIdsBucket[$bucket_id] = array_slice($orderIds, 0, $value);
+            $orderIds = array_slice($orderIds, $value);
+
+            $upd = Order::whereIn('id', $orderIdsBucket[$bucket_id])
+            ->update([
+                'bucket_batch_id' => null,
+                'bucket_id' => $bucket_id,
+                'bucket_added_at' => Carbon::now(),
+                'status' => ORDER_STATUS_PROCESSING,
+            ]);
+
+            if($upd > 0)
+            {
+                $successOrderIds = array_merge($successOrderIds, $orderIdsBucket[$bucket_id]);
+            }
+            else
+            {
+                $error['status'] = 'error';
+                $error['message'] = 'Failed to add order to bucket on bucket id '.$bucket_id .'<br> Order Ids: '.implode(',', $orderIdsBucket[$bucket_id]);
+            }
+        }
+
+        // get orders
+        $orders = Order::with(['company'])->whereIn('id', $successOrderIds)->get();
+
+        //foreach company
+        $orders_company = [];
+        foreach ($orders as $order) {
+            $orders_company[$order->company->id][] = $order;
+        }
+
+
+        //send api to company
+        foreach ($orders_company as $orders) {
+            $company_url = $orders[0]->company->url;
+
+            if(!$company_url) continue;
+
+            // get sales ids from orders array
+            $orders = array_map(function ($order) {
+                return $order->sales_id;
+            }, $orders);
+
+            $data = [
+                'sales_ids' => $orders,
+            ];
+
+            Http::post($company_url . '/api/processed_order', $data);
+
+        }
+
+        foreach ($successOrderIds as $order_id) {
+            OrderLog::create([
+                'order_id' => $order_id,
+                'order_status_id' => ORDER_STATUS_PROCESSING,
+                'remarks' => 'Order added to bucket',
+                'created_by' => 1,
+            ]);
+        }
+
+        if(!empty($error))
+        {
+            $message = $error['message'];
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => !empty($error) ? 'Order added to bucket successfully. <br> '.$message : 'Order added to bucket successfully.',
+        ]);
+    }
+
     public function download_cn(Request $request)
     {
         $bucket = Bucket::find($request->bucket_id);
@@ -181,9 +330,147 @@ class BucketController extends Controller
         $bucket->status = IS_INACTIVE;
         $bucket->save();
 
+        $bucket->categoryBuckets()->delete();
+
         return response()->json([
             'status' => 'success',
             'message' => 'Bucket deleted successfully.'
+        ]);
+    }
+
+    public function bucket_category(Request $request)
+    {
+        $title = 'List of Bucket Category';
+        $statuses = [
+            '1' => 'Active',
+            '2' => 'Inactive',
+        ];
+        $buckets = Bucket::where('status', IS_ACTIVE)->get();
+
+        $categories = CategoryMain::with(['categoryBuckets', 'categoryBuckets.bucket'])
+            ->where(function ($q) use ($request) {
+                if (!empty($request->search)) {
+                    $q->where('category_name', 'like', '%' . $request->search . '%');
+                }
+                if (!empty($request->status)) {
+                    $q->where('category_status', $request->status);
+                }
+            })
+            ->paginate(10);
+
+        return view('buckets.category.index', compact('title', 'statuses', 'categories', 'buckets'));
+    }
+
+    public function add_category(Request $request)
+    {
+        $request->validate([
+            // 'category_name' => 'required|string|max:255',
+            'category_name' => [
+                'required',
+                Rule::unique('category_mains')->where(function ($query) {
+                    // Fetch the category by name and exclude soft-deleted records
+                    $query->where('category_name', request('category_name'))->whereNull('deleted_at');
+                }),
+            ],
+            'category_status' => 'required|int',
+            'category_bucket' => 'required|array',
+        ]);
+
+        $categoryMain = CategoryMain::create([
+            'category_name' => $request->category_name,
+            'category_status' => $request->category_status,
+        ]);
+
+        foreach ($request->category_bucket as $bucket_id) {
+            $categoryMain->categoryBuckets()->create([
+                'bucket_id' => $bucket_id,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket Category added successfully.'
+        ]);
+    }
+
+    public function edit_category(Request $request)
+    {
+        $request->validate([
+            'category_id' => 'required|int',
+            'category_name' => [
+                'required',
+                Rule::unique('category_mains')->ignore($request->category_id)->whereNull('deleted_at'),
+            ],
+            'category_status' => 'required|int',
+            'category_bucket' => 'required|array',
+        ]);
+
+        $categoryMain = CategoryMain::find($request->category_id);
+        $categoryMain->category_name = $request->category_name;
+        $categoryMain->category_status = $request->category_status;
+        $categoryMain->save();
+
+        $categoryMain->categoryBuckets()->delete();
+
+        foreach ($request->category_bucket as $bucket_id) {
+            $categoryMain->categoryBuckets()->create([
+                'bucket_id' => $bucket_id,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket Category edited successfully.'
+        ]);
+    }
+
+    public function delete_category(Request $request)
+    {
+        $request->validate([
+            'category_id' => 'required|int',
+        ]);
+
+        $categoryMain = CategoryMain::find($request->category_id);
+        $categoryMain->delete();
+
+        $categoryMain->categoryBuckets()->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bucket Category deleted successfully.'
+        ]);
+    }
+
+    public function get_bucket_by_category(Request $request)
+    {
+        $category_id_request = $request->category_id;
+        $order_ids_request = $request->order_ids;
+        //strip order ids and category ids from request ? why? because want to use filter function from order controller
+        unset($request['category_id']);
+        unset($request['order_ids']);
+
+        $totalOrder = 0;
+        $categoryBucket = CategoryBucket::with(['bucket'])->where('category_id', $category_id_request)->get();
+
+        $orderes = Order::where('is_active', 1)
+        ->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PENDING_SHIPMENT])
+        ->whereDate('dt_request_shipping', '<=', date('Y-m-d'));
+
+        $orderController = new OrderController();
+        $orderes = $orderController->filter_order($request, $orderes);
+        $orderes = $orderes->get();
+
+        $orders_ids = !empty($order_ids_request) ? $order_ids_request : $orderes->pluck('id')->toArray();
+
+        $countOrder = !empty($order_ids_request) ? count(explode(',', $order_ids_request)) : count($orderes);
+
+        $totalOrder = $countOrder;
+
+        return response()->json([
+            'status' => 'success',
+            'categoryBucket' => $categoryBucket,
+            'totalOrder' => $totalOrder,
+            'order_ids' => $orders_ids,
         ]);
     }
 }

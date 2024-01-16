@@ -124,6 +124,27 @@
             background-color: purple;
         }
 
+        .btn-teal {
+            background-color: #3B8C9E;
+            color: #fff;
+        }
+
+        .btn-teal:hover {
+            background-color: #2d6a75;
+            color: #fff;
+        }
+
+        .small-check-box {
+            margin: 4px 0 0;
+            line-height: normal;
+            width: 14px;
+            height: 14px;
+        }
+        .custom-btn-width {
+            width: 100%; /* Adjust this value as needed */
+        }
+
+
     </style>
 
     <section class="section">
@@ -135,7 +156,7 @@
                     <h5 class="card-title">Filters..</h5>
 
                     <!-- No Labels Form -->
-                    <form class="row g-3" action="{{ url()->current() }}">
+                    <form id="search-form" class="row g-3" action="{{ url()->current() }}">
                         <div class="col-md-12">
                             <input type="text" class="form-control" placeholder="Search" name="search"
                                 value="{{ old('search', Request::get('search')) }}">
@@ -275,7 +296,7 @@
                                 @foreach ($orders as $key => $order)
                                     <tr style="font-size: 0.8rem;">
                                         <th scope="row">{{ $key + $orders->firstItem() }}</th>
-                                        <td><input type="checkbox" name="check_order[]" class="check-order"
+                                        <td><input onclick="removeOldTicked()" type="checkbox" name="check_order[]" class="check-order"
                                                 id="" value="{{ $order->id }}">
                                         </td>
                                         <td>
@@ -781,9 +802,103 @@
         </div>
     </div>
 
+    {{-- Start Bucket Category Modal --}}
+    <div class="modal fade" id="modal-open-bucket-category" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <form action="" id="submit-open-bucket-category">
+            @csrf
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="category-title">Add to Bucket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="pt-3 pb-3">
+                            <p class="fw-bold" style="font-size: 20px;" for="category-id">Please select bucket Category!</p>
+                            <div style="display: flex ;justify-content: center;">
+                                <select onchange="selectCategory(this)" class="form-select" id="category-id" name="category_id" style="width: 80%" data-live-search="true">
+                                    <option value="">Select a Category</option>
+                                    @foreach ($filter_data->bucket_categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->category_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="submit-bucket-category" onclick="proceedModal()" type="button"
+                            class="btn btn-warning text-white" disabled>Proceed</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {{-- End Bucket Category Modal --}}
+
+    {{-- Start Proceed Modal --}}
+    <div class="modal fade" id="modal-proceed-bucket" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <form action="" id="submit-proceed-bucket">
+            @csrf
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="category-title">Add to Bucket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body pt-4 pb-4">
+
+                        {{-- Button --}}
+                        <div class="container">
+                            <div class="row justify-content-center">
+                                <div class="col-12 col-md-4 text-center pb-2">
+                                    <button type="button" class="btn btn-lg btn-outline-dark custom-btn-width" disabled>
+                                        <span style="font-size: 16px;">
+                                            TOTAL ORDER: <span id="totalOrderPending" class="fw-bold text-dark">0</span>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="col-12 col-md-4 text-center pb-2">
+                                    <button type="button" class="btn btn-lg btn-outline-dark custom-btn-width" disabled>
+                                        <span style="font-size: 16px;">
+                                            REMAINING ORDER: <span id="remainingOrderPending" class="fw-bold text-dark">0</span>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="col-12 col-md-4 text-center pb-2">
+                                    <button type="button" onclick="distribute()" class="btn btn-lg btn-teal custom-btn-width">
+                                        <i class="ri-share-forward-fill"></i>
+                                        <span style="font-size: 16px;">
+                                            Redistribute
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="row m-0 w-100 pt-3" id="submit-proceed-bucket-modal-body">
+                            </div>
+                            <input type="hidden" id="order_ids" name="order_ids">
+                        </div>
+                        {{-- Button --}}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="submit-proceed-bucket-button" onclick="submitAddToBucket()" type="button"
+                            class="btn btn-primary text-white">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {{-- End Bucket Category Modal --}}
+
 @include("orders.multiple_cn_modal")
 <x-slot name="script">
     <script>
+        let checkedOrder = [];
+        let categoryBucket;
         let arrange_shipment_platform = {
             'shopee' : 'Shopee',
             'tiktok' : 'TikTok'
@@ -805,91 +920,290 @@
         @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
             document.querySelector('#add-to-bucket-btn').onclick = function() {
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                let checkedValue = inputElements.filter(chk => chk.checked).length;
 
-                // sweet alert
-                if (checkedValue == 0) {
+                let modalOne = new bootstrap.Modal(document.getElementById('modal-open-bucket-category'), {
+                    keyboard: false
+                });
+
+                inputElements.forEach(input => {
+                    if (input.checked) {
+                        checkedOrder.push(input.value);
+                    }
+                });
+
+                document.querySelector('#category-id').value = "";
+                document.querySelector('#submit-bucket-category').disabled = true;
+                if (checkedOrder.length == 0) {
                     Swal.fire({
                         title: 'No order selected!',
-                        text: "Please select at least one order to add to bucket.",
+                        text: "All order in the list will be added to bucket.",
                         icon: 'warning',
-                        confirmButtonText: 'OK'
+                        confirmButtonText: 'Yes, Select overall',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonText: 'Cancel',
+                        showCancelButton: true,
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            modalOne.show();
+                        }
                     })
                     return;
+                }else{
+                    modalOne.show();
                 }
-                //get bucket lists
-                axios.get('/api/buckets')
-                    .then(function(response) {
-                        // handle success
-                        let buckets = response.data;
-                        let bucketOptions = {};
-                        buckets.forEach(bucket => {
-                            bucketOptions[bucket.id] = bucket.name;
-                        });
-                        Swal.fire({
-                            title: 'Please select bucket!',
-                            input: 'select',
-                            inputOptions: bucketOptions,
-                            inputPlaceholder: 'Select a bucket',
-                            showCancelButton: true,
-                            inputValidator: (value) => {
-                                return new Promise((resolve) => {
-                                    if (value !== '') {
-                                        resolve()
-                                    } else {
-                                        resolve('You need to select a bucket!')
-                                    }
-                                })
-                            }
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                //get checked order
-                                let checkedOrder = [];
-                                inputElements.forEach(input => {
-                                    if (input.checked) {
-                                        checkedOrder.push(input.value);
-                                    }
-                                });
-                                //add to bucket
-                                axios.post('/api/add-to-bucket', {
-                                        bucket_id: result.value,
-                                        order_ids: checkedOrder,
-                                    })
-                                    .then(function(response) {
-                                        // handle success
-                                        Swal.fire({
-                                            title: 'Success!',
-                                            text: "Order added to bucket.",
-                                            icon: 'success',
-                                            confirmButtonText: 'OK',
-                                            showCancelButton: true,
-                                            cancelButtonText: 'Go to Bucket'
-                                        }).then((result2) => {
-                                            if (result2.isConfirmed) {
-                                                location.reload();
-                                            }
-                                            if(result2.dismiss === Swal.DismissReason.cancel){
-                                                window.location.href = `/orders/processing?bucket_id=${result.value}&status=2`;
-                                            }
-                                        });
-                                    })
-                                    .catch(function(error) {
-                                        // handle error
-                                        console.log(error);
-                                    })
-                                    .then(function() {
-                                        // always executed
-                                    });
-                            }
-                        })
-                    })
-                    .catch(function(error) {
-                        // handle error
-                        console.log(error);
-                    })
-
             }
         @endif
+
+        const removeOldTicked = () =>
+        {
+            checkedOrder = []; //reset array
+        }
+
+        const selectCategory = (el) =>
+        {
+            let val = el.value;
+
+            if(val != ""){
+                document.querySelector('#submit-bucket-category').disabled = false;
+            }else{
+                document.querySelector('#submit-bucket-category').disabled = true;
+            }
+
+            categoryBucket = val;
+
+        }
+
+        const proceedModal = async () =>
+        {
+            let modal = new bootstrap.Modal(document.getElementById('modal-proceed-bucket'), {
+                keyboard: false
+            });
+
+            let html = '';
+
+            let formData = new FormData(document.querySelector('#search-form'));
+            formData.append('category_id', categoryBucket);
+            formData.append('order_ids', checkedOrder);
+            let response = await axios.post('/api/buckets/get-bucket-by-category',formData).then(res => {
+
+                let totalOrder = res.data.totalOrder;
+                document.querySelector('#totalOrderPending').innerHTML = totalOrder;
+                document.querySelector('#order_ids').value = res.data.order_ids;
+                // let remainingOrder = res.data.remainingOrder;
+                // document.querySelector('#remainingOrderPending').innerHTML = remainingOrder;
+
+
+                for (let index = 0; index < res.data.categoryBucket.length; index++) {
+                    const categoryBucket = res.data.categoryBucket[index];
+                    html += `
+                    <div class="col-12 col-md-6 text-center pb-2">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <input onclick="tickBucket(this)" type="checkbox" class="form-check-input" id="check-all-${categoryBucket.bucket_id}" checked>
+                                    <span class="d-inline-block mx-2"><i class="bi bi-basket"></i></span>
+                                    <label class="form-check-label mx-2" for="check-all">
+                                        ${categoryBucket.bucket.name}:
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex">
+                                <i onclick="minusNumber(this)" class="bi bi-dash-circle-fill text-primary fs-5"></i>
+                                <input name="bucket_id[${categoryBucket.bucket_id}]" oninput="constantNumber(this)" type="number" id="input-number-${categoryBucket.bucket_id}" class="form-control form-control-sm mx-2" style="width: 5rem; text-align: center;" value="0">
+                                <i onclick="plusNumber(this)" class="bi bi-plus-circle-fill text-primary fs-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                }
+
+                document.querySelector('#submit-proceed-bucket-modal-body').innerHTML = html;
+
+                modal.show();
+                distribute();
+
+            }).catch(err => {
+                console.log(err);
+            });
+
+        }
+
+        const constantNumber = (el) =>
+        {
+            let remainingOrder = parseInt(document.querySelector('#remainingOrderPending').innerHTML);
+            let newVal = el.value;
+            let oldValue = el.getAttribute('data-value');
+
+            //only on ticked bucket
+            let tickedBucket = el.parentElement.parentElement.parentElement.querySelector('input[type="checkbox"]:checked');
+            if(tickedBucket == null)
+            {
+                return; //stop function
+            }
+
+            if(newVal > remainingOrder)
+            {
+                console.log('more');
+                el.value = newVal;
+                let currentNewVal = oldValue - newVal + remainingOrder;
+                document.querySelector('#remainingOrderPending').innerHTML = currentNewVal; //set remaining order
+                el.setAttribute('data-value', newVal); //set data attribute
+                validationInputBucket(el);
+            }
+            else if(newVal < remainingOrder)
+            {
+                console.log('less');
+                el.value = newVal;
+                let currentNewVal = oldValue - newVal + remainingOrder;
+                document.querySelector('#remainingOrderPending').innerHTML = currentNewVal; //set remaining order
+                el.setAttribute('data-value', newVal); //set data attribute
+                validationInputBucket(el);
+            }
+            else
+            {
+                console.log('equal');
+                el.value = newVal;
+                let currentNewVal = oldValue - newVal + remainingOrder;
+                document.querySelector('#remainingOrderPending').innerHTML = currentNewVal; //set remaining order
+                el.setAttribute('data-value', newVal); //set data attribute
+                validationInputBucket(el);
+            }
+        }
+
+        const minusNumber = (el) =>
+        {
+            let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+            let val = el.parentElement.querySelector('input[type="number"]').value;
+
+            if(val == 0)
+            {
+                el.parentElement.querySelector('input[type="number"]').value = 0;
+            }
+            else
+            {
+                el.parentElement.querySelector('input[type="number"]').value = parseInt(val) - 1; //set value
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + 1; //set remaining order
+                el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) - 1); //set data attribute
+            }
+        }
+
+        const plusNumber = (el) =>
+        {
+            let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+            let val = el.parentElement.querySelector('input[type="number"]').value;
+
+            if(remainingOrder != 0)
+            {
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) - 1; //set remaining order
+                el.parentElement.querySelector('input[type="number"]').value = parseInt(val) + 1; //set value
+                el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) + 1); //set data attribute
+            }
+            else
+            {
+                return; //stop function
+            }
+        }
+
+        const distribute = () =>
+        {
+            let totalOrder = document.querySelector('#totalOrderPending').innerHTML;
+            let bucketModal = document.querySelector('#submit-proceed-bucket-modal-body');
+
+            let buckets = bucketModal.querySelectorAll('input[type="number"]'); //all bucket
+            let bucketsActive = bucketModal.querySelectorAll('input[type="checkbox"]:checked'); //ticked bucket
+
+            let divide = Math.floor(totalOrder / bucketsActive.length); //take only ticked bucket
+            let remainder = totalOrder % bucketsActive.length; //take only ticked bucket
+
+            document.querySelector('#remainingOrderPending').innerHTML = remainder; //set remaining order
+
+            // set value for each bucket
+            buckets.forEach(bucket => {
+                if(bucket.parentElement.parentElement.parentElement.querySelector('input[type="checkbox"]').checked)
+                {
+                    bucket.value = divide; //divide value equally
+                    bucket.setAttribute('data-value', divide); //set data attribute
+                }
+            });
+
+        }
+
+        const validationInputBucket = (el) =>
+        {
+            let remainingOrder = parseInt(document.querySelector('#remainingOrderPending').innerHTML);
+            if(remainingOrder < 0)
+            {
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').style.borderColor = 'red'; //set border color red
+                document.querySelector('#submit-proceed-bucket-button').disabled = true; //disable submit button
+            }
+            else
+            {
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').style.borderColor = '#ced4da'; // reset border color
+                document.querySelector('#submit-proceed-bucket-button').disabled = false; //enable submit button
+            }
+        }
+
+        const tickBucket = (el) =>
+        {
+            if(!el.checked)
+            {
+                //add old value to remaining order
+                let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + parseInt(el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value);
+                //reset value after untick
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value = 0;
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').setAttribute('data-value', 0);
+            }
+            else
+            {
+                //remove old value from remaining order
+                let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) - parseInt(el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value);
+
+                let newVal = el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value;
+                //set attribute value
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').setAttribute('data-value', newVal);
+            }
+            validationInputBucket(el);
+        }
+
+        const submitAddToBucket = async() =>
+        {
+            Swal.fire({
+                title: 'Please wait!',
+                html: 'Adding to bucket...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+            });
+
+            let form = document.querySelector('#submit-proceed-bucket');
+            let formData = new FormData(form);
+
+            let response = await axios.post('/api/buckets/add-to-bucket', formData).then(res => {
+                Swal.fire({
+                    title: 'Success!',
+                    html: res.data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                })
+            }).catch(err => {
+                Swal.fire({
+                    title: 'Error!',
+                    html: err.response.data.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                })
+            });
+        }
 
         // generate shipping label
         @if (in_array(ACTION_GENERATE_CN, $actions))
