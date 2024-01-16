@@ -881,6 +881,7 @@ class OrderController extends Controller
                 'column_mains.*'
             )
             ->where('template_mains.delete_status', '!=', 1)
+            ->where('template_columns.deleted_at', null)
             ->whereIn('template_columns.template_main_id', function($query) use ($request) {
                 $query->select('id')
                     ->from('template_mains')
