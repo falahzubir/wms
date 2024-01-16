@@ -12,10 +12,14 @@ class OrderExport implements FromView
     use Exportable;
 
     protected $orders;
+    protected $headers;
+    protected $columnName;
 
-    public function __construct($orders)
+    public function __construct($orders, $headers, $columnName)
     {
         $this->orders = $orders;
+        $this->headers = $headers;
+        $this->columnName = $columnName;
     }
 
     /**
@@ -25,6 +29,8 @@ class OrderExport implements FromView
     {
         return view('exports.poslaju', [
             'orders' => $this->orders,
+            'headers' => $this->headers,
+            'columnName' => $this->columnName,
         ]);
     }
 }

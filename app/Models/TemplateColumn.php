@@ -15,4 +15,9 @@ class TemplateColumn extends Model
         'column_position', 
         'updated_at'
     ];
+
+    public function template()
+    {
+        return $this->belongsTo(TemplateMain::class, 'id', 'template_main_id');
+    }
 }
