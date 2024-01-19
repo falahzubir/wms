@@ -236,6 +236,7 @@
                                     <th>Bucket</th>
                                     <th>Status</th>
                                     <th>Action</th>
+                                    <th>Sort</th>
                                 </tr>
                             </thead>
                             <tbody class="sort">
@@ -296,31 +297,32 @@
 
             $(function() {
                 $("#table tbody").sortable({
-                        helper: fixHelperModified,
-                        update: function(event, ui) {
-                            sortArray = updateSort('#table');
-                            axios.post(`{{ route('settings.bucket_automation_setting.update_priority') }}`, {
-                                    sort: sortArray
-                                })
-                                .then(response => {
+                    handle: ".sortable",
+                    helper: fixHelperModified,
+                    update: function(event, ui) {
+                        sortArray = updateSort('#table');
+                        axios.post(`{{ route('settings.bucket_automation_setting.update_priority') }}`, {
+                                sort: sortArray
+                            })
+                            .then(response => {
 
-                                    document.querySelectorAll('#table tbody tr').forEach((tr, index) => {
-                                        tr.querySelector('.priority').innerHTML = index + 1;
-                                    });
-                                    Swal.fire({
-                                        text: 'Priority updated successfully',
-                                        timer: 1000,
-                                        timerProgressBar: true,
-                                        showConfirmButton: false,
-                                    });
+                                document.querySelectorAll('#table tbody tr').forEach((tr, index) => {
+                                    tr.querySelector('.priority').innerHTML = index + 1;
+                                });
+                                Swal.fire({
+                                    text: 'Priority updated successfully',
+                                    timer: 1000,
+                                    timerProgressBar: true,
+                                    showConfirmButton: false,
+                                });
 
-                                })
-                                .catch(error => {
-                                    console.log(error);
-                                })
-                        }
-                    })
-                    .disableSelection();
+                            })
+                            .catch(error => {
+                                console.log(error);
+                            })
+                    }
+                })
+                .disableSelection();
             });
 
 
@@ -381,6 +383,7 @@
                                             <button class="btn btn-danger p-1 px-2" type="button"><i class="bx bx-trash"
                                                     onclick="deleteRow(${data[index].id})"></i></button>
                                         </td>
+                                        <td class="sortable"><i class="bx bx-menu"></i></td>
                                     </tr>`;
                         }
                         document.querySelector('#table tbody').innerHTML = list;
