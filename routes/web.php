@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AlternativePostcodeController;
 use App\Http\Controllers\AccessTokenController;
+use App\Http\Controllers\BucketAutomationController;
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\ClaimController;
@@ -175,11 +176,18 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/search', [AlternativePostcodeController::class, 'handleSearch'])->name('search');
     });
 
-    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 
     Route::prefix('settings')->name('settings.')->group(function () {
-        Route::get('/bucket-category', [BucketController::class, 'bucket_category'])->name('bucket_category');
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::put('/', [SettingsController::class, 'update'])->name('update');
+        Route::get('bucket-category', [BucketController::class, 'bucket_category'])->name('bucket_category');
+        Route::get('bucket-automation', [BucketAutomationController::class, 'automation'])->name('bucket_automation_setting');
+        Route::post('bucket-automation', [BucketAutomationController::class, 'create'])->name('bucket_automation_setting.create');
+        Route::get('bucket-automation-list', [BucketAutomationController::class, 'list'])->name('bucket_automation_setting.get');
+        Route::delete('bucket-automation', [BucketAutomationController::class, 'delete'])->name('bucket_automation_setting.delete');
+        Route::post('bucket-automation-update', [BucketAutomationController::class, 'update'])->name('bucket_automation_setting.update');
+        Route::put('bucket-automation-status', [BucketAutomationController::class, 'update_status'])->name('bucket_automation_setting.update_status');
+        Route::post('bucket-automation-update-priority', [BucketAutomationController::class, 'update_priority'])->name('bucket_automation_setting.update_priority');
     });
 
 });

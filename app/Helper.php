@@ -306,3 +306,16 @@ if(!function_exists('is_digit_count')){
         return strlen((string)$number) == $count;
     }
 }
+
+if(!function_exists('check_order_status')){
+    /**
+     * Check order status
+     *
+     * @param  int $order_id, int $status
+     * @return bool
+     */
+    function check_order_status($order_id)
+    {
+        return \App\Models\Order::where('id', $order_id)->first()->status;
+    }
+}

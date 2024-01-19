@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
+use App\Http\Traits\BucketTrait;
 use App\Models\OrderEvent;
 use App\Models\AlternativePostcode;
 use App\Models\CategoryMain;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Http;
 
 class OrderController extends Controller
 {
-
+    use BucketTrait;
     /**
      * Initiate orders list
      * @param  null
@@ -402,6 +403,7 @@ class OrderController extends Controller
         $data['customer_type'] = $webhook['customer_type'];
         $data['operational_model_id'] = $webhook['operation_model_id'];
         $data['team_id'] = $webhook['team_id'];
+        $data['shipment_type'] = $webhook['shipment_type'] ?? null;
         $data['payment_refund'] = isset($webhook['payment_refund']) ? $webhook['payment_refund'] * 100 : 0;
         $data['sales_remarks'] = str_replace(array("\r", "\n"), '', $webhook['sales_remark'] ?? '');
         $data['dt_request_shipping'] = $webhook['dt_request_shipping'] ?? '';
@@ -409,6 +411,8 @@ class OrderController extends Controller
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
         $data['third_party_sn'] = $webhook['third_party_sn'] ?? null;
         $data['is_active'] = IS_ACTIVE;
+
+        $assigned_bucket = $this->assignBucket($data);
 
         $data_customer = $webhook['customer'];
 
@@ -518,6 +522,14 @@ class OrderController extends Controller
                     Shipping::where('order_id', $order->id)->update(['status' => 0]);
                 } else{
                     set_order_status($order, $order->status, 'Order updated from webhook');
+                }
+            }
+
+            if($assigned_bucket != null){
+                if(check_order_status($order->id) == ORDER_STATUS_PENDING){
+                    $order->bucket_id = $assigned_bucket;
+                    $order->save();
+                    set_order_status($order, ORDER_STATUS_PROCESSING, 'Order assigned to bucket ' . $assigned_bucket);
                 }
             }
 

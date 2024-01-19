@@ -275,6 +275,14 @@
                         </a>
                     </li>
                     @endcan
+                    @can('view.setting_bucket_automation')
+                    <li>
+                        <a href="{{ route('settings.bucket_automation_setting') }}"
+                            {{ Route::current()->getName() == 'settings.bucket_automation_setting' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Bucket Automation Setting</span>
+                        </a>
+                    </li>
+                    @endcan
                     <li>
                         <a href="{{ route('alternative_postcode.index') }}"
                             {{ Route::current()->getName() == 'alternative_postcode.index' ? 'class=active' : '' }}>
