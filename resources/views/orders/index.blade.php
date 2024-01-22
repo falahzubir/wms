@@ -1364,6 +1364,14 @@
                     confirmButtonText: 'Yes, download it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Please wait!',
+                            html: 'Downloading...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading()
+                            },
+                        });
                         download_cn(checkedOrder);
                     }
                 })
