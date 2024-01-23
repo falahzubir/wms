@@ -37,6 +37,18 @@ class BucketController extends Controller
         })
         ->get();
 
+        //add necessary data to buckets edit
+        foreach($buckets as $bucket)
+        {
+            $necessaryData = [
+                'id' => $bucket->id,
+                'name' => $bucket->name,
+                'description' => $bucket->description,
+                'category_buckets' => $bucket->categoryBuckets,
+            ];
+
+            $bucket->necessaryData = $necessaryData;
+        }
         return view('buckets.index', [
             'title' => 'List Buckets',
             'buckets' => $buckets,
