@@ -236,6 +236,7 @@ class BucketController extends Controller
             $orderIds = array_slice($orderIds, $value);
 
             $upd = Order::whereIn('id', $orderIdsBucket[$bucket_id])
+            ->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PROCESSING])
             ->update([
                 'bucket_batch_id' => null,
                 'bucket_id' => $bucket_id,
