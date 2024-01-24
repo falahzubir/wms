@@ -37,6 +37,18 @@ class BucketController extends Controller
         })
         ->get();
 
+        //add necessary data to buckets edit
+        foreach($buckets as $bucket)
+        {
+            $necessaryData = [
+                'id' => $bucket->id,
+                'name' => $bucket->name,
+                'description' => $bucket->description,
+                'category_buckets' => $bucket->categoryBuckets,
+            ];
+
+            $bucket->necessaryData = $necessaryData;
+        }
         return view('buckets.index', [
             'title' => 'List Buckets',
             'buckets' => $buckets,
@@ -236,6 +248,7 @@ class BucketController extends Controller
             $orderIds = array_slice($orderIds, $value);
 
             $upd = Order::whereIn('id', $orderIdsBucket[$bucket_id])
+            ->whereIn('status', [ORDER_STATUS_PENDING, ORDER_STATUS_PROCESSING])
             ->update([
                 'bucket_batch_id' => null,
                 'bucket_id' => $bucket_id,
