@@ -17,6 +17,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TemplateSettingController;
+use App\Http\Controllers\CustomTemplateController;
 use App\Models\Company;
 use Illuminate\Support\Facades\Route;
 
@@ -59,6 +61,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('change-postcode', [OrderController::class, 'change_postcode_view'])->name('orders.change_postcode_view');
         Route::post('change-postcode', [OrderController::class, 'change_postcode'])->name('orders.change_postcode');
         Route::get('bucket-batch/{batch}', [OrderController::class, 'bucket_batch'])->name('orders.bucket_batch');
+        Route::get('/get_template_main', [OrderController::class, 'get_template_main']);
     });
 
     // group routes for buckets
@@ -178,6 +181,19 @@ Route::middleware(['auth'])->group(function() {
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 
+    Route::prefix('template_setting')->group(function() {
+        Route::get('/', [TemplateSettingController::class, 'index'])->name('template_setting.index');
+        Route::post('update', [TemplateSettingController::class, 'update'])->name('template_setting.update');
+    });
+
+    Route::prefix('custom_template_setting')->group(function() {
+        Route::get('/', [CustomTemplateController::class, 'index'])->name('custom_template_setting.index');
+        Route::post('save_template', [CustomTemplateController::class, 'saveTemplate'])->name('custom_template_setting.save');
+        Route::get('/get_columns/{id}', [CustomTemplateController::class, 'getColumns']);
+        Route::post('update_template', [CustomTemplateController::class, 'updateTemplate'])->name('custom_template_setting.update');
+        Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
+    });
+    
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/bucket-category', [BucketController::class, 'bucket_category'])->name('bucket_category');
     });
