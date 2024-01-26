@@ -152,7 +152,7 @@ class OrderApiController extends Controller
 
         $orders = Order::whereIn('id', $request->order_ids)->get();
 
-        if (set_order_status_bulk($orders, ORDER_STATUS_SHIPPING, "Approved manually by {$request->user_id}")) {
+        if (set_order_status_bulk($orders, ORDER_STATUS_DELIVERED, "Approved manually by {$request->user_id}")) {
             return response()->json(['success' => 'ok']);
         } else {
             return response()->json(['error' => 'error']);

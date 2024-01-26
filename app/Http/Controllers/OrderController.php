@@ -19,8 +19,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
 use App\Models\OrderEvent;
 use App\Models\AlternativePostcode;
+use App\Models\CategoryMain;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
+use App\Models\TemplateMain;
 
 class OrderController extends Controller
 {
@@ -94,6 +96,10 @@ class OrderController extends Controller
                 22 => 'Shopee',
                 23 => 'TikTok',
             ];
+        }
+
+        if(!in_array(ORDER_FILTER_BUCKET_CATEGORY, $exclude)){
+            $filter_data['bucket_categories'] = CategoryMain::where('category_status', IS_ACTIVE)->get();
         }
 
         if(!in_array(ORDER_FILTER_STATUS, $exclude)){
@@ -836,24 +842,68 @@ class OrderController extends Controller
      * @param  Request $request
      * @return json
      */
+    // public function download_order_csv(Request $request)
+    // {
+    //     // return $request;
+    //     $fileName = date('Ymdhis') . '_list_of_orders.csv';
+    //     $orders = $this->index();
+
+    //     $orders->whereIn('id', $request->order_ids);
+
+    //     $orders = $this->filter_order($request, $orders);
+
+    //     $orders = $orders->get();
+
+    //     Excel::store(new OrderExport($orders),"public/".$fileName);
+    //     // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
+
+    //     return response([
+    //         "file_name"=> $fileName
+    //     ]);
+    // }
+
     public function download_order_csv(Request $request)
     {
-        // return $request;
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
         $orders = $this->index();
-
         $orders->whereIn('id', $request->order_ids);
-
         $orders = $this->filter_order($request, $orders);
-
         $orders = $orders->get();
 
-        Excel::store(new OrderExport($orders),"public/".$fileName);
-        // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
+        // Get headers from 
+        $headers = $this->getHeader($request->template_id);
+
+        $columnName = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
+            ->join('column_mains', 'template_columns.column_main_id', '=', 'column_mains.id')
+            ->select(
+                'template_mains.*',
+                'template_columns.*',
+                'column_mains.*'
+            )
+            ->where('template_mains.delete_status', '!=', 1)
+            ->where('template_columns.deleted_at', null)
+            ->whereIn('template_columns.template_main_id', function($query) use ($request) {
+                $query->select('id')
+                    ->from('template_mains')
+                    ->where('id', $request->template_id);
+            })
+            ->get();
+
+        Excel::store(new OrderExport($orders, $headers, $columnName), "public/" . $fileName);
 
         return response([
-            "file_name"=> $fileName
+            "file_name" => $fileName,
         ]);
+    }
+
+    private function getHeader($templateId)
+    {
+        $template = TemplateMain::with('columns')->find($templateId);
+
+        // Split the template_header string into an array
+        $headers = explode(', ', $template->template_header);
+
+        return $headers;
     }
 
     /** Change Postcode view
@@ -964,4 +1014,46 @@ class OrderController extends Controller
             'settings' => $settings,
         ]);
     }
+
+    public function get_template_main(Request $request)
+    {
+        $status = $request->input('status');
+
+        // Define a mapping of status to template_type
+        $statusMapping = [
+            'pending' => 1,
+            'processing' => 2,
+            'packing' => 3,
+            'ready-to-ship' => 4,
+            'shipping' => 5,
+            'delivered' => 6,
+            'returned' => 7,
+            'return-completed' => 7, // Assuming the same template_type for 'returned' and 'return-completed'
+            'rejected' => 9,
+        ];
+
+        // Check if the status is a valid key in the mapping
+        if (array_key_exists($status, $statusMapping)) {
+            $templateType = $statusMapping[$status];
+
+            $data = TemplateMain::where('delete_status', 0)
+                ->where('template_type', 'LIKE', "%$templateType%") // So it can check multiple values with comma.
+                ->get();
+
+            $templateMain = [];
+
+            foreach ($data as $row) {
+                $templateMain[] = [
+                    'value' => $row->id,
+                    'label' => $row->template_name
+                ];
+            }
+
+            return response()->json($templateMain);
+        } else {
+            // Handle the case where the status is not recognized
+            return response()->json(['error' => 'Invalid status'], 400);
+        }
+    }
+
 }

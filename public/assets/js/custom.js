@@ -30,6 +30,7 @@ function toggleCheckboxes(source, cls) {
     for (var i = 0, n = checkboxes.length; i < n; i++) {
         checkboxes[i].checked = source.checked;
     }
+    checkedOrder = []; //reset array
 }
 
 function linkTrack(num) {
