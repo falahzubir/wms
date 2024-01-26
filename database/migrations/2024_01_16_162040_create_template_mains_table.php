@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('template_mains', function (Blueprint $table) {
             $table->id();
             $table->string('template_name', 100);
-            $table->unsignedBigInteger('template_type');
+            $table->text('template_type');
             $table->text('template_header');
             $table->timestamps();
             $table->datetime('deleted_at')->nullable();
