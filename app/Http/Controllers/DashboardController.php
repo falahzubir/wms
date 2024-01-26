@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BucketBatch;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\OrderLog;
-use App\Models\User;
+use App\Models\BucketBatch;
+use App\Models\Shipping;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -37,7 +39,7 @@ class DashboardController extends Controller
      */
     public function current_process($live = false)
     {
-        $status = [ORDER_STATUS_PENDING, ORDER_STATUS_PROCESSING, ORDER_STATUS_PACKING, ORDER_STATUS_READY_TO_SHIP, ORDER_STATUS_SHIPPING];
+        $status = [ORDER_STATUS_PENDING, ORDER_STATUS_PROCESSING, ORDER_STATUS_PACKING, ORDER_STATUS_READY_TO_SHIP, ORDER_STATUS_SHIPPING , ORDER_STATUS_READY_TO_SHIP];
         $orders = Order::where('is_active', IS_ACTIVE)->whereIn('status', $status)->groupBy('status')->get([
             'status',
             DB::raw('count(*) as total')
