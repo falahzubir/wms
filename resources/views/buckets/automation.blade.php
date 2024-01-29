@@ -33,8 +33,8 @@
                                 <form id="formAdd">
                                     @csrf
                                     <div class="row" id="ruleList">
-                                        <div class="col-6 mb-2">
-                                            <label class="">Company</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Company</label>
                                             <select class="form-control" name="company" id="formAddCompany"
                                                 onchange="retrieveEvent()">
                                                 <option value="">Not Related</option>
@@ -44,8 +44,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Shipment Type</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Shipment Type</label>
                                             <select class="form-control" name="shipment_type" id="formAddShipmentType">
                                                 <option value="">Not Related</option>
                                                 @foreach ($shipment_types as $id => $shipment_type)
@@ -54,8 +54,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Operational Model</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Operational Model</label>
                                             <select class="form-control" name="operational_model"
                                                 id="formAddOperationalModel">
                                                 <option value="">Not Related</option>
@@ -65,8 +65,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Platform</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Platform</label>
                                             <select class="form-control" name="platform" id="formAddPlatform">
                                                 <option value="">Not Related</option>
                                                 @foreach ($platforms as $id => $platform)
@@ -74,8 +74,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Courier</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Courier</label>
                                             <select class="form-control" name="courier" id="formAddCourier">
                                                 <option value="">Not Related</option>
                                                 @foreach ($couriers as $courier)
@@ -84,8 +84,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Event</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Event</label>
                                             <select class="form-control" name="event" id="formAddEvent">
                                                 <option value="">Select Company First</option>
                                                 <!-- will be filled by retrieveEvent() js function -->
@@ -133,8 +133,8 @@
                                     {{-- @csrf --}}
                                     <input type="hidden" name="id" id="formUpdateId">
                                     <div class="row" id="ruleList">
-                                        <div class="col-6 mb-2">
-                                            <label class="">Company</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Company</label>
                                             <select class="form-control" name="company" id="formUpdateCompany"
                                                 onchange="retrieveEvent()">
                                                 <option value="">Not Related</option>
@@ -144,8 +144,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Shipment Type</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Shipment Type</label>
                                             <select class="form-control" name="shipment_type"
                                                 id="formUpdateShipmentType">
                                                 <option value="">Not Related</option>
@@ -155,8 +155,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Operational Model</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Operational Model</label>
                                             <select class="form-control" name="operational_model"
                                                 id="formUpdateOperationalModel">
                                                 <option value="">Not Related</option>
@@ -166,8 +166,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Platform</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Platform</label>
                                             <select class="form-control" name="platform" id="formUpdatePlatform">
                                                 <option value="">Not Related</option>
                                                 @foreach ($platforms as $id => $platform)
@@ -175,8 +175,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Courier</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Courier</label>
                                             <select class="form-control" name="courier" id="formUpdateCourier">
                                                 <option value="">Not Related</option>
                                                 @foreach ($couriers as $courier)
@@ -185,8 +185,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-6 mb-2">
-                                            <label class="">Event</label>
+                                        <div class="col-6 mb-3">
+                                            <label class="mb-1">Event</label>
                                             <select class="form-control" name="event" id="formUpdateEvent">
                                                 <option value="">Select Company First</option>
                                                 <!-- will be filled by retrieveEvent() js function -->
