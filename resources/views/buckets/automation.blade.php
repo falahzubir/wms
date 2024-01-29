@@ -136,7 +136,7 @@
                                         <div class="col-6 mb-3">
                                             <label class="mb-1">Company</label>
                                             <select class="form-control" name="company" id="formUpdateCompany"
-                                                onchange="retrieveEvent()">
+                                                onchange="retrieveEvent('update')">
                                                 <option value="">Not Related</option>
                                                 @foreach ($companies as $company)
                                                     <option value="{{ $company->id }}">{{ $company->name }}
@@ -485,30 +485,54 @@
 
             }
 
-            const retrieveEvent = () => {
+            const retrieveEvent = (form='add') => {
                 const company = document.querySelector('#formAddCompany').value;
+                const company_edit = document.querySelector('#formUpdateCompany').value;
                 const event = document.querySelector('#formAddEvent');
-
-                if (company == '') {
-                    event.innerHTML = '<option value="">Select Company First</option>';
-                    return;
-                }
-
+                const event_edit = document.querySelector('#formUpdateEvent');
                 $list_events = '';
-                events.forEach(event => {
-                    if (event.company_id == company) {
-                        $list_events += `<option value="${event.id}">${event.event_name}</option>`;
+
+
+                if(form == 'add'){
+                    if (company == '') {
+                        event.innerHTML = '<option value="">Select Company First</option>';
+                        return;
                     }
-                });
-                event.innerHTML = '<option value="">Not Related</option>';
-                event.innerHTML += $list_events;
+                    events.forEach(event => {
+                        if (event.company_id == company) {
+                            $list_events += `<option value="${event.id}">${event.event_name}</option>`;
+                        }
+                    });
+                    event.innerHTML = '<option value="">Not Related</option>';
+                    event.innerHTML += $list_events;
+                }
+                else {
+                    if (company_edit == '') {
+                        event_edit.innerHTML = '<option value="">Select Company First</option>';
+                        return;
+                    }
+                    events.forEach(event => {
+                        if (event.company_id == company_edit) {
+                            $list_events += `<option value="${event.id}">${event.event_name}</option>`;
+                        }
+                    });
+                    event_edit.innerHTML = '<option value="">Not Related</option>';
+                    event_edit.innerHTML += $list_events;
+                }
             }
 
             const editRow = (id) => {
+                //clear all error and data
+                document.querySelectorAll('#formUpdate select').forEach(select => {
+                    select.classList.remove('is-invalid');
+                });
+                document.querySelector('#formUpdateBucket').classList.remove('is-invalid');
+                document.querySelector('#formUpdate').reset();
+
                 const data = automation_data.find(automation => automation.id == id);
                 document.querySelector('#formUpdateId').value = data.id;
                 document.querySelector('#formUpdateCompany').value = data.company_id ?? '';
-                retrieveEvent();
+                retrieveEvent('update');
                 document.querySelector('#formUpdateShipmentType').value = data.shipment_type ?? '';
                 document.querySelector('#formUpdateOperationalModel').value = data.operational_model_id ?? '';
                 document.querySelector('#formUpdatePlatform').value = data.payment_type_id ?? '';
