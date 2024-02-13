@@ -311,6 +311,19 @@ if(!function_exists('is_digit_count')){
     }
 }
 
+if(!function_exists('check_order_status')){
+    /**
+     * Check order status
+     *
+     * @param  int $order_id, int $status
+     * @return bool
+     */
+    function check_order_status($order_id)
+    {
+        return \App\Models\Order::where('id', $order_id)->first()->status;
+    }
+}
+
 if (!function_exists('get_state')) {
     function get_state($state_id)
     {

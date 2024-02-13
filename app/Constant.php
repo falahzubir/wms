@@ -171,6 +171,7 @@ if(!defined('COURIER_OTHERS')) define('COURIER_OTHERS', 99);
 
 // Payment Type
 if(!defined('PAYMENT_TYPE_SHOPEE')) define('PAYMENT_TYPE_SHOPEE', 22);
+if(!defined('PAYMENT_TYPE_TIKTOK')) define('PAYMENT_TYPE_TIKTOK', 23);
 
 // auto reject dhl option
 if(!defined('AUTO_REJECT_DHL')) define('AUTO_REJECT_DHL', true);
