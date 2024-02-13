@@ -4,7 +4,7 @@
         <div class="row">
 
             <!-- Left side columns -->
-            <div class="col-lg-8">
+            <div class="col-lg-12">
                 <div class="row">
 
                     <x-dashboard_infocard label="Pending" id="current-pending" icon="bi bi-clock-history" class="sales-card"
@@ -21,6 +21,9 @@
 
                     <x-dashboard_infocard label="In Transit" id="current-shipping" icon="bi bi-truck" class="orders-card"
                         :url="route('orders.shipping')" />
+
+                    <x-dashboard_infocard label="Total Scan Order" id="current-scan-order" icon="bi-upc-scan" class="orders-card"
+                    :url="route('orders.readyToShip')" />
 
 
 
@@ -250,7 +253,7 @@
             </div><!-- End Left side columns -->
 
             <!-- Right side columns -->
-            <div class="col-lg-4">
+            {{-- <div class="col-lg-4"> --}}
 
                 <!-- Website Traffic -->
                 {{-- <div class="card">
@@ -372,9 +375,64 @@
 
 
 
-            </div><!-- End Right side columns -->
+            {{-- </div><!-- End Right side columns --> --}}
 
         </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card info-card">
+                    <div class="pt-3 ps-3 pb-3">
+                        <h4 style="color:#33538c; font-weight:bold;">
+                        <i style="color: black;" class="bi bi-calendar3"></i>&nbsp;Montly Ranking Performance</h4>
+                        <span class="ms-4"><small>{{ date('F Y') }}</small></span>
+                    </div>
+                    <table class="table">
+                        <thead class="text-center">
+                            <tr>
+                                <th>
+                                    Ranking
+                                   <span style="color: #FFD700;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 640 512"><path fill="currentColor" d="M528 448H112c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16zm64-320c-26.5 0-48 21.5-48 48c0 7.1 1.6 13.7 4.4 19.8L476 239.2c-15.4 9.2-35.3 4-44.2-11.6L350.3 85C361 76.2 368 63 368 48c0-26.5-21.5-48-48-48s-48 21.5-48 48c0 15 7 28.2 17.7 37l-81.5 142.6c-8.9 15.6-28.9 20.8-44.2 11.6l-72.3-43.4c2.7-6 4.4-12.7 4.4-19.8c0-26.5-21.5-48-48-48S0 149.5 0 176s21.5 48 48 48c2.6 0 5.2-.4 7.7-.8L128 416h384l72.3-192.8c2.5.4 5.1.8 7.7.8c26.5 0 48-21.5 48-48s-21.5-48-48-48z"></path></svg>
+                                   </span>
+                                </th>
+                                <th class="text-start">Name</th>
+                                <th>Scanned Order</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-monthly">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card info-card">
+                    <div class="pt-3 ps-3 pb-3">
+                        <h4 style="color:#33538c; font-weight:bold;">
+                        <i style="color: black;" class="i bi-box-arrow-right"></i>&nbsp;Daily Ranking Performance</h4>
+                        <span class="ms-4"><small>{{ date('F Y') }}</small></span>
+                    </div>
+                    <table class="table">
+                        <thead class="text-center">
+                            <tr>
+                                <th>
+                                    Ranking
+                                   <span style="color: #FFD700;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 640 512"><path fill="currentColor" d="M528 448H112c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16zm64-320c-26.5 0-48 21.5-48 48c0 7.1 1.6 13.7 4.4 19.8L476 239.2c-15.4 9.2-35.3 4-44.2-11.6L350.3 85C361 76.2 368 63 368 48c0-26.5-21.5-48-48-48s-48 21.5-48 48c0 15 7 28.2 17.7 37l-81.5 142.6c-8.9 15.6-28.9 20.8-44.2 11.6l-72.3-43.4c2.7-6 4.4-12.7 4.4-19.8c0-26.5-21.5-48-48-48S0 149.5 0 176s21.5 48 48 48c2.6 0 5.2-.4 7.7-.8L128 416h384l72.3-192.8c2.5.4 5.1.8 7.7.8c26.5 0 48-21.5 48-48s-21.5-48-48-48z"></path></svg>
+                                   </span>
+                                </th>
+                                <th class="text-start">Name</th>
+                                <th>Scanned Order</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-daily">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </section>
     @endcan
     <x-slot name="script">
@@ -393,66 +451,14 @@
                             {{ ORDER_STATUS_READY_TO_SHIP }}].toLocaleString('en-US');
                         document.querySelector('#current-shipping').innerHTML = response.data.count[
                             {{ ORDER_STATUS_SHIPPING }}].toLocaleString('en-US');
-
-                        // echarts.init(document.querySelector("#trafficChart")).setOption({
-                        //     tooltip: {
-                        //         trigger: 'item'
-                        //     },
-                        //     legend: {
-                        //         top: '5%',
-                        //         left: 'center'
-                        //     },
-                        //     series: [{
-                        //         name: 'Access From',
-                        //         type: 'pie',
-                        //         radius: ['40%', '70%'],
-                        //         avoidLabelOverlap: false,
-                        //         label: {
-                        //             show: false,
-                        //             position: 'center'
-                        //         },
-                        //         emphasis: {
-                        //             label: {
-                        //                 show: true,
-                        //                 fontSize: '18',
-                        //                 fontWeight: 'bold'
-                        //             }
-                        //         },
-                        //         labelLine: {
-                        //             show: false
-                        //         },
-                        //         data: [{
-                        //                 value: response.data.count[
-                        //                     {{ ORDER_STATUS_PENDING }}].toLocaleString('en-US') ?? 0,
-                        //                 name: 'Pending'
-                        //             },
-                        //             {
-                        //                 value: response.data.count[
-                        //                     {{ ORDER_STATUS_PROCESSING }}].toLocaleString('en-US') ?? 0,
-                        //                 name: 'Processing'
-                        //             },
-                        //             {
-                        //                 value: response.data.count[
-                        //                     {{ ORDER_STATUS_PACKING }}].toLocaleString('en-US') ?? 0,
-                        //                 name: 'Packing'
-                        //             },
-                        //             {
-                        //                 value: response.data.count[
-                        //                     {{ ORDER_STATUS_READY_TO_SHIP }}].toLocaleString('en-US') ?? 0,
-                        //                 name: 'Pending Shipment'
-                        //             },
-                        //             {
-                        //                 value: response.data.count[
-                        //                     {{ ORDER_STATUS_SHIPPING }}].toLocaleString('en-US') ?? 0,
-                        //                 name: 'Shipping'
-                        //             }
-                        //         ]
-                        //     }]
-                        // });
+                        document.querySelector('#current-scan-order').innerHTML = response.data.count[
+                            {{ ORDER_STATUS_READY_TO_SHIP }}].toLocaleString('en-US');
                     })
                     .catch(function(error) {
                         console.log(error);
                     });
+                parcelsMonthly('monthly');
+                parcelsDaily('daily');
                 // axios.post(`api/dashboard/statistics`, {
                 //         start: '{{ Carbon::now()->startOfDay()->startOfDay() }}',
                 //         end: '{{ Carbon::now()->endOfDay()->endOfDay() }}'
@@ -473,6 +479,87 @@
                 //         console.log(error);
                 //     });
             });
+
+            const parcelsDaily = async(typeR) =>
+            {
+                let tbodyDaily = document.querySelector('#tbody-daily');
+                tbodyDaily.innerHTML = '<tr><td colspan="3" class="text-center"><i class="bx bx-loader bx-spin"></i></td></tr>';
+
+                let response = await axios.post('/api/orders/parcels',{
+                    type: typeR
+                })
+                .then(function(response) {
+
+                    if( response.data.data != '' ){
+                        let html = '';
+                        let tbodyData = response.data.data;
+
+                        for (let i = 0; i < tbodyData.length; i++) {
+                            html += '<tr>';
+                            html += `<td class="text-center">${i + 1}</td>`;
+                            html += `<td class="text-start">${ tbodyData[i].scanned_by !== null ? tbodyData[i].scanned_by.name : 'Unknown' }</td>`;
+                            html += '<td class="text-center">'+tbodyData[i].total+'</td>';
+                            html += '</tr>';
+                            tbodyDaily.innerHTML = html;
+                        }
+                    }
+                    else{
+                        let html = '<tr>';
+                        html += '<td colspan="3" class="text-center">No Data Found</td>';
+                        html += '</tr>';
+
+                        tbodyDaily.innerHTML = html;
+                    }
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    let html = '<tr>';
+                    html += '<td colspan="3" class="text-center">Error Happened!</td>';
+                    html += '</tr>';
+
+                    tbodyDaily.innerHTML = html;
+                });
+            }
+
+            const parcelsMonthly = async(typeR) =>
+            {
+                let tbodyMonthly = document.querySelector('#tbody-monthly');
+                tbodyMonthly.innerHTML = '<tr><td colspan="3" class="text-center"><i class="bx bx-loader bx-spin"></i></td></tr>';
+
+                let response = await axios.post('/api/orders/parcels',{
+                    type: typeR
+                })
+                .then(function(response) {
+
+                    if( response.data.data != '' ){
+                        let html = '';
+                        let tbodyData = response.data.data;
+
+                        for (let i = 0; i < tbodyData.length; i++) {
+                            html += '<tr>';
+                            html += `<td class="text-center">${i + 1}</td>`;
+                            html += '<td class="text-start">'+tbodyData[i].scanned_by.name+'</td>';
+                            html += '<td class="text-center">'+tbodyData[i].total+'</td>';
+                            html += '</tr>';
+                            tbodyMonthly.innerHTML = html;
+                        }
+                    }
+                    else{
+                        let html = '<tr>';
+                        html += '<td colspan="3" class="text-center">No Data Found</td>';
+                        html += '</tr>';
+
+                        tbodyMonthly.innerHTML = html;
+                    }
+                })
+                .catch(function(error) {
+                    let html = '<tr>';
+                    html += '<td colspan="3" class="text-center">Error Happened!</td>';
+                    html += '</tr>';
+
+                    tbodyMonthly.innerHTML = html;
+                });
+            }
 
             // let stats_time = document.querySelector('#stats-time');
             // document.querySelectorAll('.stats-time').forEach((time) => {

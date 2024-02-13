@@ -96,19 +96,12 @@
                                                 <i class="bi bi-card-text"></i>
                                             </button>
                                     @endcan
-                                    @can('consignment_note.generate')
-                                    <button class="btn btn-warning rounded-pill generate-cn" title="Generate CN"
-                                                onclick="generate_cn({{ $bucket->id }}, {{ $bucket->processingOrders->pluck('id') }})"
-                                                data-bucketId="{{ $bucket->id }}">
-                                                <i class="bi bi-truck"></i>
-                                            </button>
-                                    @endcan
                                     <a href="/orders/processing?bucket_id={{ $bucket->id }}&status={{ ORDER_STATUS_PROCESSING }}"
                                             class="btn btn-info rounded-pill" title="Order List">
                                             <i class="bi bi-list"></i>
                                         </a>
                                         <button class="btn btn-warning rounded-pill" class="edit-bucket"
-                                            title="Edit/Delete Bucket" onclick="editBucket(this,{{ json_encode($bucket) }})">
+                                            title="Edit/Delete Bucket" onclick="editBucket(this,{{ json_encode($bucket->necessaryData) }})">
                                             <i class="bi bi-pencil"></i></button>
                                         <button class="btn btn-danger rounded-pill" title="Delete Bucket" onclick="deleteBucket({{ $bucket->id }})"><i class="bi bi-trash"></i></button>
                                 </div>
@@ -118,11 +111,11 @@
                                     <div class="fw-bold text-center">Bucket Category</div>
                                     <div class="text-center">
                                         <div class="row">
-                                            @foreach ($bucket->categoryBuckets as $index => $category)
+                                            @foreach ($bucket->categoryBuckets as $index => $cat)
                                                 <div class="col-md-6 p-3">
                                                     <span class="border p-2" style="border-radius: 10px; border: 2px solid gray;">
                                                         <small>
-                                                            <i class="bi bi-tag-fill" style="color: gray;"></i> {{ $category->categoryMain->category_name }}
+                                                            <i class="bi bi-tag-fill" style="color: gray;"></i> {{ $cat->categoryMain->category_name }}
                                                         </small>
                                                     </span>
                                                 </div>

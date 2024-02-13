@@ -332,6 +332,33 @@
                         </a>
                     </li>
                     @endrole
+                    <li>
+                        <a class="nav-link collapsed" data-bs-target="#components-nav-report-shipment" data-bs-toggle="collapse" href="#">
+                            <i class="bi bi-circle"></i></i><span>Template</span><i class="bi bi-chevron-down ms-auto"></i>
+                        </a>
+                        @can('view.template_setting')
+                            <ul class=" {{ Route::current()->getName() != 'template_setting.index' ? 'collapsed' : '' }} ">
+                                <li>
+                                    <a href="{{ route('template_setting.index') }}"
+                                        {{ Route::current()->getName() == 'template_setting.index' ? 'class=active' : '' }}>
+                                        <i class="bi bi-circle"></i>
+                                        <span>Template Setting</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        @endcan
+                        @can('view.custom_template_setting')
+                            <ul class=" {{ Route::current()->getName() != 'custom_template_setting.index' ? 'collapsed' : '' }} ">
+                                <li>
+                                    <a href="{{ route('custom_template_setting.index') }}"
+                                        {{ Route::current()->getName() == 'template_setting.index' ? 'class=active' : '' }}>
+                                        <i class="bi bi-circle"></i>
+                                        <span>Custom Template Setting</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        @endcan
+                    </li>
                 </ul>
             </li><!-- End Components Nav -->
         @endcan

@@ -1248,9 +1248,6 @@ class ShippingController extends Controller
         $orders = OrderItem::with(['order', 'product'])
             ->whereIn('order_id', $order_ids)->where('status', IS_ACTIVE)
             ->where('is_foc', IS_INACTIVE)
-            ->whereHas('order', function ($query) {
-                $query->where('courier_id', DHL_ID);
-            })
             ->get();
 
         // [x] GROUPING BY SINGLE OR MARRIED (IGNORE FOC)

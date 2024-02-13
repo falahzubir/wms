@@ -1,5 +1,5 @@
 @props(['label', 'count', 'icon', 'id', 'class' => '', 'url' => '#', 'type' => 'parent'])
-<div class="col-xxl-4 col-md-6">
+<div class="col-md-3">
     <div class="card info-card {{ $class }}" role="button" data-url="{{ $url }}">
         <div class="card-body">
             <h5 class="card-title" {{ $type == 'child' ? 'style=font-size:15px' : '' }}>{{ $label }}</h5>
