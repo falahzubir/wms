@@ -598,8 +598,9 @@ class OrderController extends Controller
         }
 
         if(config('settings.detect_by_phone') == 1 && config('settings.detect_by_address') == 0){
-            $array = collect($duplicate_phone)->pluck('id')->toArray();
             if(count($duplicate_phone) > 0){
+                $array = collect($duplicate_phone)->pluck('id')->toArray();
+                $array[] = $cur_order->id;
                 foreach($duplicate_phone as $order){
                     $order->duplicate_orders = implode(',', $array);
                     $order->save();
@@ -612,8 +613,9 @@ class OrderController extends Controller
         }
 
         if(config('settings.detect_by_address') == 1 && config('settings.detect_by_phone') == 0){
-            $array = collect($duplicate_address)->pluck('id')->toArray();
             if(count($duplicate_address) > 0){
+                $array = collect($duplicate_address)->pluck('id')->toArray();
+                $array[] = $cur_order->id;
                 foreach($duplicate_address as $order){
                     $order->duplicate_orders = implode(',', $array);
                     $order->save();
@@ -630,6 +632,7 @@ class OrderController extends Controller
                 if(count($duplicate_address) > 0 || count($duplicate_phone) > 0){
                     $all_duplicate = array_merge($duplicate_address, $duplicate_phone);
                     $array = array_unique(collect($all_duplicate)->pluck('id')->toArray());
+                    $array[] = $cur_order->id;
                     foreach($all_duplicate as $order){
                         $order->duplicate_orders = implode(',', $array);
                         $order->save();
@@ -646,6 +649,7 @@ class OrderController extends Controller
                 if(count($duplicate_address) > 0 && count($duplicate_phone) > 0){
                     $all_duplicate = array_intersect($duplicate_address, $duplicate_phone);
                     $array = collect($all_duplicate)->pluck('id')->toArray();
+                    $array[] = $cur_order->id;
                     foreach($all_duplicate as $order){
                         $order->duplicate_orders = implode(',', $array);
                         $order->save();
@@ -882,7 +886,7 @@ class OrderController extends Controller
         $orders = $this->filter_order($request, $orders);
         $orders = $orders->get();
 
-        // Get headers from 
+        // Get headers from
         $headers = $this->getHeader($request->template_id);
 
         $columnName = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
