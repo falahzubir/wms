@@ -45,7 +45,7 @@ class ShippingController extends Controller
         $dhl_cancel_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label/Delete';
         $dhl_reprint_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label/Reprint';
         $posmalaysia_generate_connote_live = 'https://gateway-usc.pos.com.my/as01/gen-connote/v1/api/GConnote';
-        $posmalaysia_generate_pl9_live = 'https://gateway-usc.pos.com.my/staging/as01/generate-pl9-with-connote/v1/api/GPL9C';
+        $posmalaysia_generate_pl9_live = 'https://gateway-usc.pos.com.my/as01/generate-pl9-with-connote/v1/api/GPL9C';
         $posmalaysia_download_connote_live = 'https://gateway-usc.pos.com.my/as2corporate/preacceptancessingle/v1/Tracking.PreAcceptance.WebApi/api/PreAcceptancesSingle';
 
         $dhl_access_test = "https://apitest.dhlecommerce.asia/rest/v1/OAuth/AccessToken";
