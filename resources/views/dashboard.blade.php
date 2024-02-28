@@ -464,7 +464,7 @@
                         console.log(error);
                     });
                 parcelsMonthly('monthly', '{{ date('Y-m-d') }}');
-                parcelsDaily('monthly', '{{ date('Y-m-d') }}');
+                parcelsDaily('daily', '{{ date('Y-m-d') }}');
                 // axios.post(`api/dashboard/statistics`, {
                 //         start: '{{ Carbon::now()->startOfDay()->startOfDay() }}',
                 //         end: '{{ Carbon::now()->endOfDay()->endOfDay() }}'
