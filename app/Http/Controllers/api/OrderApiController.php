@@ -243,9 +243,9 @@ class OrderApiController extends Controller
             'type' => 'required|string',
         ]);
 
-        $today = Carbon::today()->toDateString();
-        $startMonth = Carbon::now()->startOfMonth()->toDateString();
-        $endMonth = Carbon::now()->endOfMonth()->toDateString();
+        $today = $request->filled('date') ? Carbon::parse($request->date)->toDateString() :  Carbon::today()->toDateString();
+        $startMonth = $request->filled('date') ? Carbon::parse($request->date)->startOfMonth()->toDateString() : Carbon::now()->startOfMonth()->toDateString();
+        $endMonth = $request->filled('date') ? Carbon::parse($request->date)->endOfMonth()->toDateString() : Carbon::now()->endOfMonth()->toDateString();
 
         if($request->type == 'individual')
         {
@@ -287,12 +287,13 @@ class OrderApiController extends Controller
             ->orderBy('total', 'DESC')
             ->get();
         }
-
+        $month_name = Carbon::parse($today)->format('F Y');
 
         return response()->json([
             'success' => true,
             'message' => 'Parcel found',
-            'data' => $parcels
+            'data' => $parcels,
+            'month_name'=> $month_name
         ], 200);
     }
 }

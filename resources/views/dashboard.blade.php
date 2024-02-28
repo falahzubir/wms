@@ -378,13 +378,18 @@
             {{-- </div><!-- End Right side columns --> --}}
 
         </div>
+        <div class="row pb-3">
+            <div class="col-lg-3">
+                <input type="date" class="form-control" id="monthly">
+            </div>
+        </div>
         <div class="row">
             <div class="col-lg-6">
                 <div class="card info-card">
                     <div class="pt-3 ps-3 pb-3">
                         <h4 style="color:#33538c; font-weight:bold;">
                         <i style="color: black;" class="bi bi-calendar3"></i>&nbsp;Montly Ranking Performance</h4>
-                        <span class="ms-4"><small>{{ date('F Y') }}</small></span>
+                        <span class="ms-4"><small class="month-name">{{ date('F Y') }}</small></span>
                     </div>
                     <table class="table">
                         <thead class="text-center">
@@ -410,7 +415,7 @@
                     <div class="pt-3 ps-3 pb-3">
                         <h4 style="color:#33538c; font-weight:bold;">
                         <i style="color: black;" class="i bi-box-arrow-right"></i>&nbsp;Daily Ranking Performance</h4>
-                        <span class="ms-4"><small>{{ date('F Y') }}</small></span>
+                        <span class="ms-4"><small class="month-name">{{ date('F Y') }}</small></span>
                     </div>
                     <table class="table">
                         <thead class="text-center">
@@ -439,6 +444,7 @@
         <script>
             // DOM on load
             document.addEventListener("DOMContentLoaded", () => {
+                document.getElementById('monthly').value = `{{ date('Y-m-d') }}`;
                 axios.get('/api/dashboard/current-process')
                     .then(function(response) {
                         document.querySelector('#current-pending').innerHTML = response.data.count[
@@ -457,8 +463,8 @@
                     .catch(function(error) {
                         console.log(error);
                     });
-                parcelsMonthly('monthly');
-                parcelsDaily('daily');
+                parcelsMonthly('monthly', '{{ date('Y-m-d') }}');
+                parcelsDaily('monthly', '{{ date('Y-m-d') }}');
                 // axios.post(`api/dashboard/statistics`, {
                 //         start: '{{ Carbon::now()->startOfDay()->startOfDay() }}',
                 //         end: '{{ Carbon::now()->endOfDay()->endOfDay() }}'
@@ -480,18 +486,31 @@
                 //     });
             });
 
-            const parcelsDaily = async(typeR) =>
+            document.getElementById('monthly').addEventListener('change', function() {
+                bothParcels(this.value);
+            });
+
+            const bothParcels = (date) => {
+                document.querySelector('.month-name').innerHTML = '<i class="bx bx-loader bx-spin"></i>';
+                parcelsMonthly('monthly', date);
+                parcelsDaily('daily', date);
+            }
+
+            const parcelsDaily = async(typeR,date) =>
             {
                 let tbodyDaily = document.querySelector('#tbody-daily');
                 tbodyDaily.innerHTML = '<tr><td colspan="3" class="text-center"><i class="bx bx-loader bx-spin"></i></td></tr>';
 
                 let response = await axios.post('/api/orders/parcels',{
-                    type: typeR
+                    type: typeR,
+                    date: date
                 })
                 .then(function(response) {
 
                     if( response.data.data != '' ){
                         let html = '';
+                        let month_name = response.data.month_name;
+                        document.querySelector('.month-name').innerHTML = month_name;
                         let tbodyData = response.data.data;
 
                         for (let i = 0; i < tbodyData.length; i++) {
@@ -521,18 +540,21 @@
                 });
             }
 
-            const parcelsMonthly = async(typeR) =>
+            const parcelsMonthly = async(typeR,date) =>
             {
                 let tbodyMonthly = document.querySelector('#tbody-monthly');
                 tbodyMonthly.innerHTML = '<tr><td colspan="3" class="text-center"><i class="bx bx-loader bx-spin"></i></td></tr>';
 
                 let response = await axios.post('/api/orders/parcels',{
-                    type: typeR
+                    type: typeR,
+                    date: date
                 })
                 .then(function(response) {
 
                     if( response.data.data != '' ){
                         let html = '';
+                        let month_name = response.data.month_name;
+                        document.querySelector('.month-name').innerHTML = month_name;
                         let tbodyData = response.data.data;
 
                         for (let i = 0; i < tbodyData.length; i++) {
