@@ -388,8 +388,8 @@
                 <div class="card info-card">
                     <div class="pt-3 ps-3 pb-3">
                         <h4 style="color:#33538c; font-weight:bold;">
-                        <i style="color: black;" class="bi bi-calendar3"></i>&nbsp;Montly Ranking Performance</h4>
-                        <span class="ms-4"><small class="month-name">{{ date('F Y') }}</small></span>
+                        <i style="color: black;" class="bi bi-calendar3"></i>&nbsp;Monthly Ranking Performance</h4>
+                        <span class="ms-4"><small id="month-name" class="month-name">{{ date('F Y') }}</small></span>
                     </div>
                     <table class="table">
                         <thead class="text-center">
@@ -415,7 +415,7 @@
                     <div class="pt-3 ps-3 pb-3">
                         <h4 style="color:#33538c; font-weight:bold;">
                         <i style="color: black;" class="i bi-box-arrow-right"></i>&nbsp;Daily Ranking Performance</h4>
-                        <span class="ms-4"><small class="month-name">{{ date('F Y') }}</small></span>
+                        <span class="ms-4"><small id="daily-name" class="month-name">{{ date('F Y') }}</small></span>
                     </div>
                     <table class="table">
                         <thead class="text-center">
@@ -491,7 +491,8 @@
             });
 
             const bothParcels = (date) => {
-                document.querySelector('.month-name').innerHTML = '<i class="bx bx-loader bx-spin"></i>';
+                document.getElementById('month-name').innerHTML = '<i class="bx bx-loader bx-spin"></i>';
+                document.getElementById('daily-name').innerHTML = '<i class="bx bx-loader bx-spin"></i>';
                 parcelsMonthly('monthly', date);
                 parcelsDaily('daily', date);
             }
@@ -510,7 +511,7 @@
                     if( response.data.data != '' ){
                         let html = '';
                         let month_name = response.data.month_name;
-                        document.querySelector('.month-name').innerHTML = month_name;
+                        document.getElementById('daily-name').innerHTML = month_name;
                         let tbodyData = response.data.data;
 
                         for (let i = 0; i < tbodyData.length; i++) {
@@ -554,7 +555,7 @@
                     if( response.data.data != '' ){
                         let html = '';
                         let month_name = response.data.month_name;
-                        document.querySelector('.month-name').innerHTML = month_name;
+                        document.getElementById('month-name').innerHTML = month_name;
                         let tbodyData = response.data.data;
 
                         for (let i = 0; i < tbodyData.length; i++) {
