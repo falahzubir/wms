@@ -378,13 +378,13 @@
             {{-- </div><!-- End Right side columns --> --}}
 
         </div>
-        <div class="row pb-3">
-            <div class="col-lg-3">
-                <input type="date" class="form-control" id="monthly">
-            </div>
-        </div>
         <div class="row">
             <div class="col-lg-6">
+                <div class="row pb-3">
+                    <div class="col-lg-6">
+                        <input type="month" class="form-control" id="monthly">
+                    </div>
+                </div>
                 <div class="card info-card">
                     <div class="pt-3 ps-3 pb-3">
                         <h4 style="color:#33538c; font-weight:bold;">
@@ -411,6 +411,11 @@
                 </div>
             </div>
             <div class="col-lg-6">
+                <div class="row pb-3">
+                    <div class="col-lg-6">
+                        <input type="date" class="form-control" id="daily">
+                    </div>
+                </div>
                 <div class="card info-card">
                     <div class="pt-3 ps-3 pb-3">
                         <h4 style="color:#33538c; font-weight:bold;">
@@ -444,7 +449,8 @@
         <script>
             // DOM on load
             document.addEventListener("DOMContentLoaded", () => {
-                document.getElementById('monthly').value = `{{ date('Y-m-d') }}`;
+                document.getElementById('monthly').value = `{{ date('Y-m') }}`;
+                document.getElementById('daily').value = `{{ date('Y-m-d') }}`;
                 axios.get('/api/dashboard/current-process')
                     .then(function(response) {
                         document.querySelector('#current-pending').innerHTML = response.data.count[
@@ -463,7 +469,7 @@
                     .catch(function(error) {
                         console.log(error);
                     });
-                parcelsMonthly('monthly', '{{ date('Y-m-d') }}');
+                parcelsMonthly('monthly', '{{ date('Y-m') }}');
                 parcelsDaily('daily', '{{ date('Y-m-d') }}');
                 // axios.post(`api/dashboard/statistics`, {
                 //         start: '{{ Carbon::now()->startOfDay()->startOfDay() }}',
@@ -487,15 +493,14 @@
             });
 
             document.getElementById('monthly').addEventListener('change', function() {
-                bothParcels(this.value);
+                document.getElementById('month-name').innerHTML = '<i class="bx bx-loader bx-spin"></i>';
+                parcelsMonthly('monthly', this.value);
             });
 
-            const bothParcels = (date) => {
-                document.getElementById('month-name').innerHTML = '<i class="bx bx-loader bx-spin"></i>';
+            document.getElementById('daily').addEventListener('change', function() {
                 document.getElementById('daily-name').innerHTML = '<i class="bx bx-loader bx-spin"></i>';
-                parcelsMonthly('monthly', date);
-                parcelsDaily('daily', date);
-            }
+                parcelsDaily('daily', this.value);
+            });
 
             const parcelsDaily = async(typeR,date) =>
             {

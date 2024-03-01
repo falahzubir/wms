@@ -39,11 +39,32 @@ class DashboardController extends Controller
      */
     public function current_process($live = false)
     {
-        $status = [ORDER_STATUS_PENDING, ORDER_STATUS_PROCESSING, ORDER_STATUS_PACKING, ORDER_STATUS_READY_TO_SHIP, ORDER_STATUS_SHIPPING , ORDER_STATUS_READY_TO_SHIP];
-        $orders = Order::where('is_active', IS_ACTIVE)->whereIn('status', $status)->groupBy('status')->get([
+        $status = [
+            ORDER_STATUS_PENDING,
+            ORDER_STATUS_PROCESSING,
+            ORDER_STATUS_PACKING,
+            ORDER_STATUS_READY_TO_SHIP,
+            ORDER_STATUS_SHIPPING,
+            ORDER_STATUS_READY_TO_SHIP,
+            ORDER_STATUS_PENDING_SHIPMENT,
+            ORDER_STATUS_RETURN_PENDING,
+            ORDER_STATUS_RETURN_SHIPPING
+        ];
+        $orders = Order::where('is_active', IS_ACTIVE)
+        ->whereIn('status', $status)
+        ->groupBy('status')
+        ->when(
+            in_array(ORDER_STATUS_PENDING, $status) || in_array(ORDER_STATUS_PENDING_SHIPMENT, $status),
+            function ($query) {
+                return $query->where('dt_request_shipping', '<=', Carbon::now());
+            }
+        )
+        ->get([
             'status',
             DB::raw('count(*) as total')
-        ])->pluck('total', 'status')->all();
+        ])
+        ->pluck('total', 'status')
+        ->all();
 
         foreach ($status as $s) {
             if (!isset($orderCounts[$s])) {
@@ -52,7 +73,14 @@ class DashboardController extends Controller
         }
 
         foreach ($orders as $status => $count) {
-            $orderCounts[$status] = $count;
+            //sum status ORDER_STATUS_PENDING and ORDER_STATUS_PENDING_SHIPMENT
+            if($status == ORDER_STATUS_PENDING_SHIPMENT){
+                $orderCounts[ORDER_STATUS_PENDING] += $count;
+            }else if(in_array($status, [ORDER_STATUS_SHIPPING, ORDER_STATUS_RETURN_PENDING, ORDER_STATUS_RETURN_SHIPPING])){
+                $orderCounts[ORDER_STATUS_SHIPPING] += $count;
+            }else{
+                $orderCounts[$status] = $count;
+            }
         }
 
         if($live){
