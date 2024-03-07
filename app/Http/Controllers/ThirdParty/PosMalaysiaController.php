@@ -331,62 +331,67 @@ class PosMalaysiaController extends ShippingController
             Artisan::call('posmalaysia-token:cron');
         }
 
-        //TODO generate connote
-       $gen_connote = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_connote, [
-            'numberOfItem' => count($data),
-            'Prefix' => config('settings.genconnote_prefix'),
-            'ApplicationCode' => config('settings.genconnote_application_code'),
-            'Secretid' => config('settings.genconnote_secret_id'),
-            'Orderid' => shipment_num_format($order),
-            'username' => config('settings.genconnote_username'),
-        ])->json();
+        // if shipping data not exist
+        if($order->shippings->count() == 0){
+            $gen_connote = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_connote, [
+                    'numberOfItem' => count($data),
+                    'Prefix' => $order->purchase_type == PURCHASE_TYPE_COD ? config('settings.genconnote_prefix_cod') : config('settings.genconnote_prefix_paid'),
+                    'ApplicationCode' => config('settings.genconnote_application_code'),
+                    'Secretid' => config('settings.genconnote_secret_id'),
+                    'Orderid' => shipment_num_format($order),
+                    'username' => config('settings.genconnote_username'),
+                ])->json();
 
-        if($gen_connote['StatusCode'] != '01'){
-            return response()->json([
-                'status' => 'error',
-                'message' => $gen_connote['Message'],
-            ], 400);
+                if($gen_connote['StatusCode'] != '01'){
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => $gen_connote['Message'],
+                    ], 400);
+                }
+
+                //split to array
+                $shippings = [];
+                $connote_array = explode('|', $gen_connote['ConnoteNo']);
+                foreach($data as $key => $value){
+                    $shippings[] = [
+                        'order_id' => $order->id,
+                        'tracking_number' => $connote_array[$key],
+                        'shipment_number' => shipment_num_format_mult($order, $key),
+                        'courier' => 'posmalaysia',
+                        'created_by' => auth()->user()->id ?? 1,
+                    ];
+                }
+
+                Shipping::insert($shippings);
+            }
+
+            else{
+                $connote_array = $order->shippings->pluck('tracking_number')->toArray();
+            }
+        //if additional reference not exist
+        if($order->shippings->whereNull('additional_reference')->count() > 0){
+            $pl9_generate = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_pl9, [
+                'AccountNo' => config('settings.gen3pl_account_no'),
+                'Secretid' => config('settings.gen3pl_secret_id'),
+                'Orderid' => shipment_num_format($order),
+                'username' => config('settings.gen3pl_username'),
+                'ConnoteList' => implode('|', $connote_array),
+            ])->json();
+
+            if($pl9_generate['StatusCode'] != '01'){
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $pl9_generate['Message'],
+                ], 400);
+            }
+
+            Shipping::whereIn('tracking_number', $connote_array)->update(['additional_reference' => $pl9_generate['PL9No']]);
         }
 
-        //split to array
-        $shippings = [];
-        $connote_array = explode('|', $gen_connote['ConnoteNo']);
-        foreach($data as $key => $value){
-            $shippings[] = [
-                'order_id' => $order->id,
-                'tracking_number' => $connote_array[$key],
-                'shipment_number' => shipment_num_format_mult($order, $key),
-                'courier' => 'posmalaysia',
-                'created_by' => auth()->user()->id ?? 1,
-            ];
-        }
-
-        Shipping::insert($shippings);
-
-        //TODO generate PL9
-
-        $pl9_generate = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_pl9, [
-            'AccountNo' => config('settings.gen3pl_account_no'),
-            'Secretid' => config('settings.gen3pl_secret_id'),
-            'Orderid' => shipment_num_format($order),
-            'username' => config('settings.gen3pl_username'),
-            'ConnoteList' => implode('|', $connote_array),
-        ])->json();
-
-        if($pl9_generate['StatusCode'] != '01'){
-            return response()->json([
-                'status' => 'error',
-                'message' => $pl9_generate['Message'],
-            ], 400);
-        }
-
-        Shipping::whereIn('tracking_number', $connote_array)->update(['additional_reference' => $pl9_generate['PL9No']]);
-
-        //TODO download connote
         foreach($data as $key => $cn){
             $shipping = Shipping::where('tracking_number', $connote_array[$key])->first();
             $json_data = [
-                'subscriptionCode' => config('settings.genpreacceptedsingle_subscription_code'),
+                'subscriptionCode' => $order->company->posmalaysia_subscribtion_code,
                 'requireToPickup' => config('settings.genpreacceptedsingle_require_to_pickup'),
                 'requireWebHook' => config('settings.genpreacceptedsingle_require_web_hook'),
                 'accountNo' => config('settings.genpreacceptedsingle_account_no'),
@@ -404,12 +409,12 @@ class PosMalaysiaController extends ShippingController
                 'pickupEmail' => config('settings.genpreacceptedsingle_pickup_email'),
                 'postCode' => config('settings.genpreacceptedsingle_post_code'),
                 'ItemType' => config('settings.genpreacceptedsingle_item_type'),
-                'totalQuantityToPickup' => 1, //to be confirmed
+                'totalQuantityToPickup' => count($data), //to be confirmed
                 'totalWeight' => get_order_weight($order, $cn)/1000, // KG
                 'ConsignmentNoteNumber' => $connote_array[$key],
-                'PaymentType' => $order->purchase_type == 1 ? 1 : 2, //to be confirmed
+                'PaymentType' => $order->purchase_type == PURCHASE_TYPE_COD ? 0 : 2,
                 'Amount' => $order->total_price/100,
-                'readyToCollectAt' => '11:30 AM', //to be confirmed
+                'readyToCollectAt' => date('h:i A', strtotime('+1 hour')),
                 'closeAt' => config('settings.genpreacceptedsingle_close_at'),
                 'receiverName' => $order->customer->name,
                 'receiverFname' => $order->customer->name,
@@ -435,7 +440,7 @@ class PosMalaysiaController extends ShippingController
                 'packWidth' => '',
                 'packHeight' => '',
                 'packTotalitem' => '',
-                'orderDate' => '', //to be confirmed
+                'orderDate' => date('Y-m-d'),
                 'packDeliveryType' => '',
                 'ShipmentName' => 'PosLaju',
                 'pickupProv' => '',
@@ -443,7 +448,7 @@ class PosMalaysiaController extends ShippingController
                 'postalCode' => '',
                 'currency' => 'MYR',
                 'countryCode' => 'MY',
-                'pickupDate' => date('Y-m-d'), //to be confirmed
+                'pickupDate' => ''
             ];
 
             $request = Http::withToken($bearer->token, 'Bearer')->post($this->posmalaysia_download_connote, $json_data)->json();
@@ -452,7 +457,6 @@ class PosMalaysiaController extends ShippingController
 
             if($save !== true){
                 $error[] = $save;
-                set_order_status($order, ORDER_STATUS_PACKING, 'Connote downloaded successfully', auth()->user()->id ?? 1);
             }
 
         }
@@ -463,6 +467,7 @@ class PosMalaysiaController extends ShippingController
             ], 400);
         }
 
+        set_order_status($order, ORDER_STATUS_PACKING, 'Connote downloaded successfully', auth()->user()->id ?? 1);
 
         return response()->json([
             'status' => 'success',
