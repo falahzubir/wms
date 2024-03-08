@@ -1,138 +1,138 @@
 <!-- ====================== Use this template for new page ====================== -->
 <!-- ================== Delete This comment after done copying ================== -->
 <x-layout :title="$title">
-    <div>
-        <small class="small text-muted">
-            {{ date('l') }},{{ date('d F Y') }}
-        </small>
-        <br>
-        <small class="small text-muted">
-            Last Update: {{ date('H:i:s A') }}
-        </small>
-    </div>
-
-    <div class="row pt-3">
+    <div class="row">
         <div class="col-md-3">
-            <div class="card p-2 pb-4 pt-4">
-               <div class="row">
-                    <div class="col-2">
-                        <i style="color: #86b6ff; font-size:34px;" class="bi bi-calendar3"></i>
+            <div class="card p-4" style="min-height: 80vh">
+                <div class="text-center barcode-big"><i class="bx bx-barcode-reader pulse"></i></div>
+        
+                <div class="container border rounded p-3 pb-4 pt-4 text-center mb-3">
+                    <div class="row">
+                        <div class="col-1">
+                            <i style="color: #86b6ff; font-size:34px;" class="bi bi-calendar3"></i>
+                        </div>
+                        <div class="col-10 mt-3" style="font-weight:bold; color:#012970;">
+                            Monthly Scan
+                        </div>
                     </div>
-                    <div class="col-6" style="font-weight:bold; color:#012970;">
-                        Monthly <br> Scan
-                    </div>
-                    <div class="col-4 text-center">
+                    <div class="text-center">
                         <span style="font-weight:bold;" id="monthly-id">0</span>
                         <br>
                         <small class="text-muted" style="font-size:10px;">
                             Orders
                         </small>
                     </div>
-               </div>
+                </div>
+        
+                <div class="container border rounded p-3 pb-4 pt-4 text-center my-3">
+                    <div class="row">
+                        <div class="col-1">
+                            <i style="color: #86b6ff; font-size:34px;" class="bi bi-box-arrow-right"></i>
+                        </div>
+                        <div class="col-10 mt-3" style="font-weight:bold; color:#012970;">
+                            Daily Scan
+                        </div>
+                        <div class="text-center">
+                            <span style="font-weight:bold;" id="daily-id">0</span>
+                            <br>
+                            <small class="text-muted" style="font-size:10px;">
+                                Orders
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <small class="small text-muted">
+                        {{ date('l') }},{{ date('d F Y') }}
+                    </small>
+                    <br>
+                    <small class="small text-muted">
+                        Last Update: {{ date('H:i:s A') }}
+                    </small>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card p-2 pb-4 pt-4">
-               <div class="row">
-                    <div class="col-2">
-                        <i style="color: #86b6ff; font-size:34px;" class="bi bi-box-arrow-right"></i>
+    
+        <div class="col-md-9">
+            <section class="section">
+                <div class="row">
+                    <div class="card card-lg col-md-12 p-3" style="min-height: 80vh">
+                        <div class="mb-2 mt-2 p-4">
+                            <form action="{{ route('orders.scan') }}" method="POST" class="d-flex">
+                                @csrf
+                                <input value="" type="text" name="code" class="form-control" style="margin-right: 8px; font-size: 11pt;"
+                                    placeholder="Scan Barcode or Enter Tracking Number" aria-label="Scan Barcode"
+                                    aria-describedby="button-addon2" autofocus>
+                                <button class="btn btn-primary" type="submit" id="button-addon2" style="font-size: 11pt;">Scan</button>
+                            </form>
+                            <div>
+                        </div>
                     </div>
-                    <div class="col-6" style="font-weight:bold; color:#012970;">
-                        Daily <br> Scan
+                    @if (session('shipping'))
+                    <div class="mx-auto">
+                        <div id="shipping-info">
+                            <div id="shipping-info">
+                                @if (session('error'))
+                                    <div class="text-danger text-start mb-3">
+                                        <strong>{{ session('error') }}</strong>
+                                    </div>
+                                @endif
+                                <div class="row text-start">
+                                    <div class="col-4">Order ID</div>
+                                    <div class="col-1">:</div>
+                                    <div class="col-7"><strong>{{ order_num_format(session('shipping')->order_id) }}</strong></div>
+                                </div>
+                                <div class="row text-start">
+                                    <div class="col-4">Tracking No</div>
+                                    <div class="col-1">:</div>
+                                    <div class="col-7"><strong>{{ session('shipping')->tracking_number }}</strong></div>
+                                </div>
+                                <div class="row text-start">
+                                    <div class="col-4">Product(s)</div>
+                                    <div class="col-1">:</div>
+                                    <div class="col-7"><strong>
+                                            @foreach (session('shipping')->order->items as $items)
+                                                {{ $items->product->name }} [{{ $items->quantity }}]{{ $loop->last ? '' : ', ' }}
+                                            @endforeach
+                                        </strong></div>
+                                </div>
+                                <div class="row text-start">
+                                    <div class="col-4">Price</div>
+                                    <div class="col-1">:</div>
+                                    <div class="col-7">
+                                        <strong>{{ currency(session('shipping')->order->total_price, true) }}</strong>
+                                    </div>
+                                </div>
+                                <div class="row text-start text-danger">
+                                    <div class="col-4">Refund</div>
+                                    <div class="col-1">:</div>
+                                    <div class="col-7">
+                                        <strong>{{ currency(session('shipping')->order->payment_refund, true) }}</strong>
+                                    </div>
+                                </div>
+                                @isset(session('shipping')->scannedBy->name)
+                                    <div class="row text-start">
+                                        <div class="col-4">Scanned By</div>
+                                        <div class="col-1">:</div>
+                                        <div class="col-7"><strong>{{ session('shipping')->scannedBy->name ?? '' }}</strong></div>
+                                    </div>
+                                @endisset
+                                <div class="row text-start">
+                                    <div class="col-4">Scanned At</div>
+                                    <div class="col-1">:</div>
+                                    <div class="col-7">
+                                        <strong>{{ date('D d/m/Y H:i A', strtotime(session('shipping')->scanned_at)) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-4 text-center">
-                        <span style="font-weight:bold;" id="daily-id">0</span>
-                        <br>
-                        <small class="text-muted" style="font-size:10px;">
-                            Orders
-                        </small>
-                    </div>
-               </div>
-            </div>
+                    @endif
+                </div>
+            </section>
         </div>
     </div>
-
-    <section class="section pt-3">
-
-        <div class="row">
-
-            <div class="card card-lg col-md-12 p-3" style="min-height: 60vh">
-
-                <div class="text-center barcode-big my-3"><i class="bx bx-barcode-reader pulse"></i></div>
-
-                <div class="mb-2 p-4">
-                    <form action="{{ route('orders.scan') }}" method="POST" class="d-flex">
-                        @csrf
-                        <input value="" type="text" name="code" class="form-control" style="margin-right: 8px;"
-                            placeholder="Scan Barcode or Enter Tracking Number" aria-label="Scan Barcode"
-                            aria-describedby="button-addon2" autofocus>
-                        <button class="btn btn-primary" type="submit" id="button-addon2">Scan</button>
-                    </form>
-                    <div>
-                </div>
-            </div>
-            @if (session('shipping'))
-            <div class="mx-auto">
-                <div id="shipping-info">
-                    <div id="shipping-info">
-                        @if (session('error'))
-                            <div class="text-danger text-start mb-3">
-                                <strong>{{ session('error') }}</strong>
-                            </div>
-                        @endif
-                        <div class="row text-start">
-                            <div class="col-4">Order ID</div>
-                            <div class="col-1">:</div>
-                            <div class="col-7"><strong>{{ order_num_format(session('shipping')->order_id) }}</strong></div>
-                        </div>
-                        <div class="row text-start">
-                            <div class="col-4">Tracking No</div>
-                            <div class="col-1">:</div>
-                            <div class="col-7"><strong>{{ session('shipping')->tracking_number }}</strong></div>
-                        </div>
-                        <div class="row text-start">
-                            <div class="col-4">Product(s)</div>
-                            <div class="col-1">:</div>
-                            <div class="col-7"><strong>
-                                    @foreach (session('shipping')->order->items as $items)
-                                        {{ $items->product->name }} [{{ $items->quantity }}]{{ $loop->last ? '' : ', ' }}
-                                    @endforeach
-                                </strong></div>
-                        </div>
-                        <div class="row text-start">
-                            <div class="col-4">Price</div>
-                            <div class="col-1">:</div>
-                            <div class="col-7">
-                                <strong>{{ currency(session('shipping')->order->total_price, true) }}</strong>
-                            </div>
-                        </div>
-                        <div class="row text-start text-danger">
-                            <div class="col-4">Refund</div>
-                            <div class="col-1">:</div>
-                            <div class="col-7">
-                                <strong>{{ currency(session('shipping')->order->payment_refund, true) }}</strong>
-                            </div>
-                        </div>
-                        @isset(session('shipping')->scannedBy->name)
-                            <div class="row text-start">
-                                <div class="col-4">Scanned By</div>
-                                <div class="col-1">:</div>
-                                <div class="col-7"><strong>{{ session('shipping')->scannedBy->name ?? '' }}</strong></div>
-                            </div>
-                        @endisset
-                        <div class="row text-start">
-                            <div class="col-4">Scanned At</div>
-                            <div class="col-1">:</div>
-                            <div class="col-7">
-                                <strong>{{ date('D d/m/Y H:i A', strtotime(session('shipping')->scanned_at)) }}</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
-        </div>
-    </section>
 
     <x-slot name="script">
         <script>
