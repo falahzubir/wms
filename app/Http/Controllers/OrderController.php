@@ -842,7 +842,7 @@ class OrderController extends Controller
                 set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
             }
 
-            return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
+            return back()->with('success', 'Successfully Scanned')->with('shipping', $shipping);
         } else {
             //check if order return
             if($shipping->order->status == ORDER_STATUS_RETURN_SHIPPING){

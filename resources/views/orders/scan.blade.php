@@ -75,27 +75,27 @@
                             <div id="shipping-info">
                                 {{-- If success --}}
                                 @if (session('success') && session('shipping')->order->payment_refund == 0)
-                                    <div class="text-muted text-start mb-3">
-                                        <strong>{{ session('success') }}</strong>
+                                    <div class="text-success text-start mb-3">
+                                        <i class='bx bx-check-circle'></i> {{ session('success') }}
                                     </div>
                                 @elseif (session('success') && session('shipping')->order->payment_refund != 0)
                                     <div class="text-danger text-start mb-3">
                                         <i class='bx bx-error-circle'></i> This parcel was eligible for a <strong>REFUND</strong>
                                     </div>
-                                    <div class="text-muted text-start small mb-3">
-                                        <strong>{{ session('success') }}</strong>
+                                    <div class="text-success text-start small mb-3">
+                                        <i class='bx bx-check-circle'></i> {{ session('success') }}
                                     </div>
                                 {{-- If error --}}
                                 @elseif (session('error') && session('shipping')->order->payment_refund == 0)
                                     <div class="text-muted text-start mb-3">
-                                        <strong>{{ session('error') }}</strong>
+                                        {{ session('error') }}
                                     </div>
                                 @else
                                     <div class="text-danger text-start mb-3">
                                         <i class='bx bx-error-circle'></i> This parcel was eligible for a <strong>REFUND</strong>
                                     </div>
                                     <div class="text-muted text-start small mb-3">
-                                        <strong>{{ session('error') }}</strong>
+                                        {{ session('error') }}
                                     </div>
                                 @endif
 
