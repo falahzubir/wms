@@ -73,11 +73,34 @@
                     <div class="mx-auto">
                         <div id="shipping-info">
                             <div id="shipping-info">
-                                @if (session('error'))
+                                {{-- If success --}}
+                                @if (session('success') && session('shipping')->order->payment_refund == 0)
+                                    <div class="text-muted text-start mb-3">
+                                        <strong>{{ session('success') }}</strong>
+                                    </div>
+                                @else
                                     <div class="text-danger text-start mb-3">
+                                        <i class='bx bx-error-circle'></i> This parcel was eligible for a <strong>REFUND</strong>
+                                    </div>
+                                    <div class="text-muted text-start small mb-3">
+                                        <strong>{{ session('success') }}</strong>
+                                    </div>
+                                @endif
+
+                                {{-- If error --}}
+                                @if (session('error') && session('shipping')->order->payment_refund == 0)
+                                    <div class="text-muted text-start mb-3">
+                                        <strong>{{ session('error') }}</strong>
+                                    </div>
+                                @else
+                                    <div class="text-danger text-start mb-3">
+                                        <i class='bx bx-error-circle'></i> This parcel was eligible for a <strong>REFUND</strong>
+                                    </div>
+                                    <div class="text-muted text-start small mb-3">
                                         <strong>{{ session('error') }}</strong>
                                     </div>
                                 @endif
+
                                 <div class="row text-start">
                                     <div class="col-4">Order ID</div>
                                     <div class="col-1">:</div>
@@ -104,11 +127,15 @@
                                         <strong>{{ currency(session('shipping')->order->total_price, true) }}</strong>
                                     </div>
                                 </div>
-                                <div class="row text-start text-danger">
+                                <div class="row text-start @if (session('shipping')->order->payment_refund != 0) text-danger @endif">
                                     <div class="col-4">Refund</div>
                                     <div class="col-1">:</div>
                                     <div class="col-7">
-                                        <strong>{{ currency(session('shipping')->order->payment_refund, true) }}</strong>
+                                        @if (session('shipping')->order->payment_refund == 0)
+                                            <strong>-</strong>
+                                        @else
+                                            <strong>{{ currency(session('shipping')->order->payment_refund, true) }}</strong>
+                                        @endif
                                     </div>
                                 </div>
                                 @isset(session('shipping')->scannedBy->name)
