@@ -72,7 +72,7 @@
                     @if (session('shipping'))
                     <div class="mx-auto">
                         <div id="shipping-info">
-                            <div id="shipping-info">
+                            <div id="shipping-info" style="font-size: 11pt;">
                                 {{-- If success --}}
                                 @if (session('success') && session('shipping')->order->payment_refund == 0)
                                     <div class="text-success text-start mb-3">
@@ -99,17 +99,17 @@
                                     </div>
                                 @endif
 
-                                <div class="row text-start">
+                                <div class="row text-start mb-1">
                                     <div class="col-4">Order ID</div>
                                     <div class="col-1">:</div>
                                     <div class="col-7"><strong>{{ order_num_format(session('shipping')->order_id) }}</strong></div>
                                 </div>
-                                <div class="row text-start">
+                                <div class="row text-start mb-1">
                                     <div class="col-4">Tracking No</div>
                                     <div class="col-1">:</div>
                                     <div class="col-7"><strong>{{ session('shipping')->tracking_number }}</strong></div>
                                 </div>
-                                <div class="row text-start">
+                                <div class="row text-start mb-1">
                                     <div class="col-4">Product(s)</div>
                                     <div class="col-1">:</div>
                                     <div class="col-7"><strong>
@@ -118,14 +118,14 @@
                                             @endforeach
                                         </strong></div>
                                 </div>
-                                <div class="row text-start">
+                                <div class="row text-start mb-1">
                                     <div class="col-4">Price</div>
                                     <div class="col-1">:</div>
                                     <div class="col-7">
                                         <strong>{{ currency(session('shipping')->order->total_price, true) }}</strong>
                                     </div>
                                 </div>
-                                <div class="row text-start @if (session('shipping')->order->payment_refund != 0) text-danger @endif">
+                                <div class="row text-start mb-1 @if (session('shipping')->order->payment_refund != 0) text-danger @endif">
                                     <div class="col-4">Refund</div>
                                     <div class="col-1">:</div>
                                     <div class="col-7">
@@ -137,16 +137,16 @@
                                     </div>
                                 </div>
                                 @isset(session('shipping')->scannedBy->name)
-                                    <div class="row text-start">
+                                    <div class="row text-start mb-1">
                                         <div class="col-4">Scanned By</div>
                                         <div class="col-1">:</div>
                                         <div class="col-7"><strong>{{ session('shipping')->scannedBy->name ?? '' }}</strong></div>
                                     </div>
                                 @endisset
-                                <div class="row text-start">
+                                <div class="row text-start mb-1">
                                     <div class="col-4">Scanned At</div>
                                     <div class="col-1">:</div>
-                                    <div class="col-7">
+                                    <div class="col-7" style="white-space: nowrap;">
                                         <strong>{{ date('D d/m/Y H:i A', strtotime(session('shipping')->scanned_at)) }}</strong>
                                     </div>
                                 </div>
