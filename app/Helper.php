@@ -1,10 +1,11 @@
 <?php
 
-use App\Models\OrderLog;
+use App\Models\User;
 use App\Models\State;
-use App\Models\OperationalModel;
+use App\Models\OrderLog;
 use App\Models\OrderItem;
 use App\Models\PaymentType;
+use App\Models\OperationalModel;
 
 if (!function_exists('currency')) {
     /**
@@ -380,6 +381,19 @@ if (!function_exists('get_payment_name')) {
 
         if ($result) {
             return $result->payment_type_name;
+        } else {
+            return null;
+        }
+    }
+}
+
+if (!function_exists('get_pic')) {
+    function get_pic($id)
+    {
+        $result = User::find($id);
+
+        if ($result) {
+            return $result->name;
         } else {
             return null;
         }
