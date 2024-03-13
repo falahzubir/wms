@@ -78,17 +78,15 @@
                                     <div class="text-muted text-start mb-3">
                                         <strong>{{ session('success') }}</strong>
                                     </div>
-                                @else
+                                @elseif (session('success') && session('shipping')->order->payment_refund != 0)
                                     <div class="text-danger text-start mb-3">
                                         <i class='bx bx-error-circle'></i> This parcel was eligible for a <strong>REFUND</strong>
                                     </div>
                                     <div class="text-muted text-start small mb-3">
                                         <strong>{{ session('success') }}</strong>
                                     </div>
-                                @endif
-
                                 {{-- If error --}}
-                                @if (session('error') && session('shipping')->order->payment_refund == 0)
+                                @elseif (session('error') && session('shipping')->order->payment_refund == 0)
                                     <div class="text-muted text-start mb-3">
                                         <strong>{{ session('error') }}</strong>
                                     </div>
