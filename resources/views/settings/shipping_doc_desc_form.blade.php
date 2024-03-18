@@ -774,7 +774,7 @@
                             url: `/api/settings/shipping_doc_desc/form/update/${form_id}`, // Use the update route
                             data: serializedFormData
                         }).then(function(response) {
-                            window.location.replace(`${baseURL}settings/ship_doc_desc`);
+                            success_alert();
                             // console.log(response);
                         }).catch(function(error) {
                             console.log(error);
@@ -788,15 +788,31 @@
                             url: '/api/settings/shipping_doc_desc/form/add',
                             data: serializedFormData
                         }).then(function(response) {
-                            window.location.replace(`${baseURL}settings/ship_doc_desc`);
+                            success_alert();
                             // console.log(response);
                         }).catch(function(error) {
                             console.log(error)
                         });
                     }
+                    
+                function success_alert(){
+                    Swal.fire({
+                        title: "Success?",
+                        text: "Promotion & Information Saved!",
+                        icon: "success",
+                        showCancelButton: false,
+                        confirmButtonColor: "#7066E0",
+                        confirmButtonText: "Okay"
+                        }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.replace(`${baseURL}settings/ship_doc_desc`);
+                        }
+                    });
+                }
                 }
 
             }
+
 
             function triggerUpload() {
                 document.getElementById('fileInput').click();
