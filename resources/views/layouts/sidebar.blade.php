@@ -267,6 +267,12 @@
                 <ul id="components-nav"
                     class="nav-content {{ Route::current()->getName() != 'companies.index' ? 'collapsed' : '' }} "
                     data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="{{ route('settings.view_shipping_doc_desc') }}"
+                            {{ Route::current()->getName() == 'settings.view_shipping_doc_desc' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Shipping Doc Information</span>
+                        </a>
+                    </li>
                     @can('view.bucket_category_list')
                     <li>
                         <a href="{{ route('settings.bucket_category') }}"

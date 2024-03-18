@@ -204,6 +204,13 @@ Route::middleware(['auth'])->group(function() {
         Route::post('bucket-automation-update', [BucketAutomationController::class, 'update'])->name('bucket_automation_setting.update');
         Route::put('bucket-automation-status', [BucketAutomationController::class, 'update_status'])->name('bucket_automation_setting.update_status');
         Route::post('bucket-automation-update-priority', [BucketAutomationController::class, 'update_priority'])->name('bucket_automation_setting.update_priority');
+
+        Route::get('/ship_doc_desc',[SettingsController::class,'view_shipping_doc_desc'])->name('view_shipping_doc_desc');
+        Route::get('/ship_doc_desc/form',[SettingsController::class,'sdd_form'])->name('sdd_form');
+        Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
+
+
+        
     });
 
 });
