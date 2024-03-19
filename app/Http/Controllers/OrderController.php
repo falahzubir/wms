@@ -1045,6 +1045,7 @@ class OrderController extends Controller
             'delivered' => 6,
             'returned' => 7,
             'return-completed' => 7, // Assuming the same template_type for 'returned' and 'return-completed'
+            'overall' => 8,
             'rejected' => 9,
         ];
 

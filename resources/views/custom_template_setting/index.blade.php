@@ -142,7 +142,7 @@
                                                 $templateTypeLabels[] = 'Return List';
                                                 break;
                                             case 8:
-                                                $templateTypeLabels[] = 'Claim List';
+                                                $templateTypeLabels[] = 'Overall List';
                                                 break;
                                             case 9:
                                                 $templateTypeLabels[] = 'Reject List';
@@ -208,6 +208,7 @@
                             <option value="6">Delivered List</option>
                             <option value="7">Return List</option>
                             <option value="9">Reject List</option>
+                            <option value="8">Overall List</option>
                         </select>
                     </div>
 
