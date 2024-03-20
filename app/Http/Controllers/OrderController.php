@@ -903,6 +903,7 @@ class OrderController extends Controller
                     ->from('template_mains')
                     ->where('id', $request->template_id);
             })
+            ->orderBy('template_columns.column_position')
             ->get();
 
         Excel::store(new OrderExport($orders, $headers, $columnName), "public/" . $fileName);
