@@ -858,26 +858,6 @@ class OrderController extends Controller
      * @param  Request $request
      * @return json
      */
-    // public function download_order_csv(Request $request)
-    // {
-    //     // return $request;
-    //     $fileName = date('Ymdhis') . '_list_of_orders.csv';
-    //     $orders = $this->index();
-
-    //     $orders->whereIn('id', $request->order_ids);
-
-    //     $orders = $this->filter_order($request, $orders);
-
-    //     $orders = $orders->get();
-
-    //     Excel::store(new OrderExport($orders),"public/".$fileName);
-    //     // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
-
-    //     return response([
-    //         "file_name"=> $fileName
-    //     ]);
-    // }
-
     public function download_order_csv(Request $request)
     {
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
