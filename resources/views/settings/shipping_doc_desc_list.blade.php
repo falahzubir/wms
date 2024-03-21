@@ -11,7 +11,7 @@
 
             <div class="card" style="font-size:0.8rem" id="sdd-table">
                 <div class="card-body">
-                    <div class="card-title text-end">
+                    <div class="card-title text-start">
                         <a type="button" class="btn btn-primary" href="{{ route('settings.sdd_form') }}"><i
                                 class="bi bi-plus"></i></a>
                     </div>
@@ -91,6 +91,11 @@
                         axios.delete(`/api/settings/init_sdd_table/${id}`)
                             .then(response => {
                                 console.log(response.data);
+                                Swal.fire({
+                                    title: "Success",
+                                    text: "Data Deleted",
+                                    icon: "success"
+                                });
                                 init_page();
                             })
                             .catch(error => {
@@ -110,22 +115,26 @@
                         const current_index = start_index + index + 1;
 
                         const current_date = new Date();
+                        
                         const start_date = new Date(table_data.start_date);
+                        start_date.setHours(0,0,0,0);
                         const end_date = new Date(table_data.end_date);
-
+                        end_date.setHours(23, 59, 0, 0);
+                        const localized_start_date = start_date.toLocaleDateString('de-AU', {year: 'numeric',month: '2-digit',day: 'numeric',}).replace(/\./g, '/');
+                        const localized_end_date = end_date.toLocaleDateString('de-AU', {year: 'numeric',month: '2-digit',day: 'numeric',}).replace(/\./g, '/');
                         let status = '';
                         if (current_date >= start_date && current_date <= end_date) {
-                            status = `<span class="badge bg-success px-3 py-1 rounded-pill">Active</span>`
+                            status = `<span style="background-color:#ABF5AA;color:#247B23" class="badge px-4 py-2 rounded-pill">Active</span>`
                         } else {
-                            status = `<span class="badge bg-secondary px-3 py-1 rounded-pill">Inactive</span>`
+                            status = `<span style="background-color:#BBBCBA;color:#3B3B3B" class="badge px-4 py-2 rounded-pill">Inactive</span>`
                         }
 
                         const template = `<tr>
                             <td>${current_index}</td>
                             <td>${table_data.promotional_title}</td>
                             <td>${status}</td>
-                            <td>${table_data.start_date}</td>
-                            <td>${table_data.end_date}</td>
+                            <td>${localized_start_date}</td>
+                            <td>${localized_end_date}</td>
                             <td>
                                 <button type="button" class="btn btn-warning btn-sm m-1 edit-sdd" onclick="execute_editing(${table_data.id})">
                                     <i class="bi bi-pencil"></i>

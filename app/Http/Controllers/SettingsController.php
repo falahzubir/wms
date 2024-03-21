@@ -109,7 +109,7 @@ class SettingsController extends Controller
     }
     public function add_sdd(Request $request)
     {
-
+        dd($request['promotional_attachment_type']);
         $file = [];
         if ($request->hasFile('promotional_link_upload_file') && $request['promotional_attachment_type'] == 'photo') {
             $filePath = Storage::put('/public/img', $request->promotional_link_upload_file);
@@ -127,11 +127,11 @@ class SettingsController extends Controller
         
         $ShippingDocumentTemplate = ShippingDocumentTemplate::create([
             'promotional_title' => $request->input('promotional_title_field'),
-            'start_date' => $request->input('start_date_field'). ' 00:00:00',
-            'end_date' => $request->input('end_date_field'). ' 23:59:59',
+            'start_date' => $request->input('start_date_field'),
+            'end_date' => $request->input('end_date_field'),
             'operational_model_id' => $request->input('operational_model_field') != null ? implode(', ', $request->input('operational_model_field')) : null,
             'platform' => $request->input('platform_field') != null ? implode(', ', $request->input('platform_field')) : null,
-            'link_type' => $request->input('promotional_attachment_type') == 'photo'? 1:2,
+            'link_type' => $request->input('promotional_attachment_type') == 'photo'? 2:1,
             'promotion_header' => $request->input('at_qr_code_promo_header_field') ?? null,
             'description' => $request->input('text_editor_description') ?? null,
             ...$file
@@ -174,8 +174,8 @@ class SettingsController extends Controller
     
         $ShippingDocumentTemplate->update([
             'promotional_title' => $request->input('promotional_title_field'),
-            'start_date' => $request->input('start_date_field') . ' 00:00:00',
-            'end_date' => $request->input('end_date_field') . ' 23:59:59',
+            'start_date' => $request->input('start_date_field'),
+            'end_date' => $request->input('end_date_field'),
             'operational_model_id' => $request->input('operational_model_field') != null ? implode(', ', $request->input('operational_model_field')) : null,
             'platform' => $request->input('platform_field') != null ? implode(', ', $request->input('platform_field')) : null,
             'link_type' => $request->input('promotional_attachment_type') == 'photo' ? 1 : 2,

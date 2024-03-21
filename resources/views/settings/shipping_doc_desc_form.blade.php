@@ -275,7 +275,7 @@
                             <div class="row m-0">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="promotional-title-field" class="form-label">Title</label>
+                                        <label for="promotional-title-field" class="form-label"><strong>Title</strong></label>
                                         <input validate-type type="text" class="form-control form-control-sm"
                                             id="promotional-title-field" name="promotional_title_field"
                                             placeholder="Promotional Title">
@@ -285,7 +285,7 @@
                                     <div class="row m-0">
                                         <div class="col-md-6 ps-md-0">
                                             <div class="mb-3">
-                                                <label for="start-date-field" class="form-label">Start Date</label>
+                                                <label for="start-date-field" class="form-label"><strong>Start Date</strong></label>
                                                 <input validate-type type="date" class="form-control form-control-sm"
                                                     id="start-date-field" name="start_date_field"
                                                     placeholder="dd/mm/yyyy">
@@ -293,7 +293,7 @@
                                         </div>
                                         <div class="col-md-6 pe-md-0">
                                             <div class="mb-3">
-                                                <label for="end-date-field" class="form-label">End Date</label>
+                                                <label for="end-date-field" class="form-label"><strong>End Date</strong></label>
                                                 <input validate-type type="date" class="form-control form-control-sm"
                                                     id="end-date-field" name="end_date_field" placeholder="dd/mm/yyyy">
                                             </div>
@@ -302,8 +302,8 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="operational-model-field" class="form-label">Operational
-                                            Model</label>
+                                        <label for="operational-model-field" class="form-label"><strong>Operational
+                                            Model</strong></label>
                                         <input type="text" class="form-control form-control-sm"
                                             id="operational-model-field" name="operational_model_field[]"
                                             placeholder="Operational Model">
@@ -311,13 +311,13 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="platform-field" class="form-label">Platform</label>
+                                        <label for="platform-field" class="form-label"><strong>Platform</strong></label>
                                         <input type="text" class="form-control form-control-sm" id="platform-field"
                                             name="platform_field[]" placeholder="Platform">
                                     </div>
                                 </div>
-                                <div class="col-12 border-bottom">
-                                    <p>PROMOTION & INFORMATION</p>
+                                <div class="col-12 px-0 border-bottom">
+                                    <p class="fs-6 card-title">PROMOTION & INFORMATION</p>
                                 </div>
                                 <div class="col-12 my-2 d-flex justify-content-between">
                                     <span class="d-inline-block">Promotional Link</span>
@@ -377,7 +377,7 @@
                                                         class="form-label">Promotional
                                                         Link (qr
                                                         code link)</label>
-                                                    <input type="text" class="form-control form-control-sm"
+                                                    <input type="text" validate-type class="form-control form-control-sm"
                                                         id="at-qr-code-promo-link-field"
                                                         name='at_qr_code_promo_link_field'
                                                         placeholder="Example: https://wms.grobook.com.my/xxx/xxx/xxx">
@@ -417,7 +417,7 @@
                                         </div>
                                     </div>
                                     <div class="col-12">
-                                        <p>Text Editing</p>
+                                        <p><strong>Text Editing</strong></p>
                                     </div>
                                     <div class="p-2">
                                         <div>
@@ -654,8 +654,15 @@
                 axios.get('/api/settings/init_shipping_doc_desc_data')
                     .then(function(response) {
                         sanitize_for_tomSelect(operational_model_tom_select, response.data.operationalModels, {id: 'id',name: 'name'}); //set the data into the tomselect
-                        sanitize_for_tomSelect(platform_tomSelect, response.data.platforms, {id: 'id',name: 'payment_type_name'}); //set the data into the tomselect
-
+                        // sanitize_for_tomSelect(platform_tomSelect, [{id:'22','name'}], {id: 'id',name: 'payment_type_name'}); //set the data into the tomselect
+                        platform_tomSelect.addOption({
+                            value: 22,
+                            text: 'Shopee'
+                        });
+                        platform_tomSelect.addOption({
+                            value: 23,
+                            text: 'Tik Tok'
+                        });
                         if(form_id == '') alert_toast_elem.querySelector('.toast-body').innerHTML = '<span>Loading Complete</span>'; // change the text in the toast
                         setTimeout(() => { if(form_id == '') alertToast.hide() }, 3500); // hide the toast 
 
@@ -753,7 +760,15 @@
                     `[name="start_date_field`), 'date');
                 let gs_end_date_result = input_validator(shopping_doc_form_elem, document.querySelector(
                     `[name="end_date_field`), 'date');
-                let promotional_attachment_type = document.querySelector('[name="promotional_attachment_type"]');
+                let promotional_attachment_type = document.querySelector('[name="promotional_attachment_type"]:checked');
+                let promotional_link_result = true;
+                
+                if(promotional_attachment_type.value == 'qr'){
+                    te_promo_link_result = input_validator(shopping_doc_form_elem, document.querySelector(
+                        `[name="at_qr_code_promo_link_field`),
+                    'text');
+                }
+
                 let te_header_result = input_validator(shopping_doc_form_elem, document.querySelector(
                         `[name="at_qr_code_promo_header_field`),
                     'text');
