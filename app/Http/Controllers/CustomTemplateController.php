@@ -15,12 +15,11 @@ class CustomTemplateController extends Controller
     {
         $columnMain = ColumnMain::all();
 
-        $templateMain = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
-            ->where('template_mains.delete_status', '!=', 1)
-            ->select('template_mains.*')
-            ->distinct()
+        $templateMain = TemplateMain::where('delete_status', '!=', 1)
             ->paginate(10);
-        
+
+        $templateMain->load('templateColumns');
+
         return view('custom_template_setting.index', [
             'title' => 'Custom Template Setting',
             'columnMain' => $columnMain,
