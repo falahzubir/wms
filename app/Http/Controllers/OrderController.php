@@ -17,13 +17,17 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Route;
 use App\Http\Traits\ApiTrait;
+use App\Http\Traits\BucketTrait;
 use App\Models\OrderEvent;
 use App\Models\AlternativePostcode;
+use App\Models\CategoryMain;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
+use App\Models\TemplateMain;
 
 class OrderController extends Controller
 {
-
+    use BucketTrait;
     /**
      * Initiate orders list
      * @param  null
@@ -32,7 +36,7 @@ class OrderController extends Controller
     public function index()
     {
         return Order::with([
-            'customer', 'items', 'items.product', 'shippings',
+            'customer', 'items', 'items.product', 'shippings', 'paymentType',
             'bucket', 'batch', 'company', 'courier', 'operationalModel',
             'logs' => function ($query) {
                 $query->orderBy('id', 'desc');
@@ -81,7 +85,8 @@ class OrderController extends Controller
             $filter_data['teams'] = true; //http request
         }
         if (!in_array(ORDER_FILTER_OP_MODEL, $exclude)) {
-            $filter_data['operational_models'] = true; //http request
+            // $filter_data['operational_models'] = true; //http request
+            $filter_data['operational_models'] = OperationalModel::get();
         }
         if (!in_array(ORDER_FILTER_STATE, $exclude)) {
             $filter_data['states'] = MY_STATES; //http request
@@ -92,6 +97,10 @@ class OrderController extends Controller
                 22 => 'Shopee',
                 23 => 'TikTok',
             ];
+        }
+
+        if(!in_array(ORDER_FILTER_BUCKET_CATEGORY, $exclude)){
+            $filter_data['bucket_categories'] = CategoryMain::where('category_status', IS_ACTIVE)->get();
         }
 
         if(!in_array(ORDER_FILTER_STATUS, $exclude)){
@@ -137,7 +146,7 @@ class OrderController extends Controller
             'title' => 'List Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -172,7 +181,7 @@ class OrderController extends Controller
             'title' => 'Pending Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_DOWNLOAD_ORDER,ACTION_ARRANGE_SHIPMENT],
         ]);
     }
@@ -191,7 +200,7 @@ class OrderController extends Controller
             'title' => 'Processing Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
         ]);
     }
@@ -211,7 +220,7 @@ class OrderController extends Controller
             'title' => 'Ready To Ship Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_APPROVE_AS_SHIPPED, ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -231,7 +240,7 @@ class OrderController extends Controller
             'title' => 'Packing Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER, ACTION_DOWNLOAD_CN],
         ]);
     }
@@ -253,7 +262,7 @@ class OrderController extends Controller
             'title' => 'Shipping Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -273,7 +282,7 @@ class OrderController extends Controller
             'title' => 'Delivered Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -294,7 +303,7 @@ class OrderController extends Controller
             'title' => 'Returned Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -310,7 +319,7 @@ class OrderController extends Controller
             'title' => 'Return Completed Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL, ORDER_FILTER_STATE]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_STATE]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
 
@@ -331,7 +340,7 @@ class OrderController extends Controller
             'title' => 'Rejected Orders',
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER],
         ]);
     }
@@ -351,7 +360,7 @@ class OrderController extends Controller
             'title' => 'Orders in Bucket Batch ' . get_picking_batch($orders->first()->bucket_batch_id),
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
-            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM, ORDER_FILTER_OP_MODEL]),
+            'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
             'actions' => [ACTION_DOWNLOAD_ORDER, ACTION_DOWNLOAD_CN],
         ]);
     }
@@ -395,6 +404,7 @@ class OrderController extends Controller
         $data['customer_type'] = $webhook['customer_type'];
         $data['operational_model_id'] = $webhook['operation_model_id'];
         $data['team_id'] = $webhook['team_id'];
+        $data['shipment_type'] = $webhook['shipment_type'] ?? null;
         $data['payment_refund'] = isset($webhook['payment_refund']) ? $webhook['payment_refund'] * 100 : 0;
         $data['sales_remarks'] = str_replace(array("\r", "\n"), '', $webhook['sales_remark'] ?? '');
         $data['dt_request_shipping'] = $webhook['dt_request_shipping'] ?? '';
@@ -402,6 +412,8 @@ class OrderController extends Controller
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
         $data['third_party_sn'] = $webhook['third_party_sn'] ?? null;
         $data['is_active'] = IS_ACTIVE;
+
+        $assigned_bucket = $this->assignBucket($data);
 
         $data_customer = $webhook['customer'];
 
@@ -459,13 +471,26 @@ class OrderController extends Controller
          if ($result) {
              $data_customer['postcode'] = $result->alternative_postcode;
          }
-         
-        $customer = Customer::updateOrCreate($data_customer);
 
+        $customer = Customer::updateOrCreate($data_customer);
         $data['customer_id'] = $customer->id;
 
         $order = Order::updateOrCreate($ids, $data);
         $p_ids['order_id'] = $order->id;
+
+        //create shipping for shopee and tiktok
+        $sosMed = [22,23];
+        if(in_array($order->payment_type, $sosMed))
+        {
+            Shipping::updateOrCreate(
+            [
+                'order_id' => $order->id,
+            ],
+            [
+                'created_by' => auth()->user()->id ?? 1,
+                'additional_data' => $webhook['additional_data'] ?? null,
+            ]);
+        }
 
         // create order item
         // group product by code
@@ -498,6 +523,14 @@ class OrderController extends Controller
                     Shipping::where('order_id', $order->id)->update(['status' => 0]);
                 } else{
                     set_order_status($order, $order->status, 'Order updated from webhook');
+                }
+            }
+
+            if($assigned_bucket != null){
+                if(check_order_status($order->id) == ORDER_STATUS_PENDING){
+                    $order->bucket_id = $assigned_bucket;
+                    $order->save();
+                    set_order_status($order, ORDER_STATUS_PROCESSING, 'Order assigned to bucket ' . $assigned_bucket);
                 }
             }
 
@@ -565,8 +598,9 @@ class OrderController extends Controller
         }
 
         if(config('settings.detect_by_phone') == 1 && config('settings.detect_by_address') == 0){
-            $array = collect($duplicate_phone)->pluck('id')->toArray();
             if(count($duplicate_phone) > 0){
+                $array = collect($duplicate_phone)->pluck('id')->toArray();
+                $array[] = $cur_order->id;
                 foreach($duplicate_phone as $order){
                     $order->duplicate_orders = implode(',', $array);
                     $order->save();
@@ -579,8 +613,9 @@ class OrderController extends Controller
         }
 
         if(config('settings.detect_by_address') == 1 && config('settings.detect_by_phone') == 0){
-            $array = collect($duplicate_address)->pluck('id')->toArray();
             if(count($duplicate_address) > 0){
+                $array = collect($duplicate_address)->pluck('id')->toArray();
+                $array[] = $cur_order->id;
                 foreach($duplicate_address as $order){
                     $order->duplicate_orders = implode(',', $array);
                     $order->save();
@@ -597,6 +632,7 @@ class OrderController extends Controller
                 if(count($duplicate_address) > 0 || count($duplicate_phone) > 0){
                     $all_duplicate = array_merge($duplicate_address, $duplicate_phone);
                     $array = array_unique(collect($all_duplicate)->pluck('id')->toArray());
+                    $array[] = $cur_order->id;
                     foreach($all_duplicate as $order){
                         $order->duplicate_orders = implode(',', $array);
                         $order->save();
@@ -613,6 +649,7 @@ class OrderController extends Controller
                 if(count($duplicate_address) > 0 && count($duplicate_phone) > 0){
                     $all_duplicate = array_intersect($duplicate_address, $duplicate_phone);
                     $array = collect($all_duplicate)->pluck('id')->toArray();
+                    $array[] = $cur_order->id;
                     foreach($all_duplicate as $order){
                         $order->duplicate_orders = implode(',', $array);
                         $order->save();
@@ -788,11 +825,24 @@ class OrderController extends Controller
             $shipping->scanned_at = $data['scanned_at'] = Carbon::now();
             $shipping->scanned_by = $data['scanned_by'] = auth()->user()->id ?? 1;
 
-            Shipping::where('order_id', $shipping->order_id)->update($data);
-            set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
+            if(config('settings.scan_multiple') == IS_ACTIVE){
+                Shipping::where('tracking_number', $request->code)->update($data);
+                $other_parcel = Shipping::where('order_id', $shipping->order_id)
+                    ->where('status', IS_ACTIVE)
+                    ->whereNull('scanned_at')
+                    ->get();
+                if(count($other_parcel) == 0){
+                    set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
+                }
+                else{
+                    set_order_status($shipping->order, ORDER_STATUS_PACKING, "Item Scanned by " . auth()->user()->name);
+                }
+            } else {
+                Shipping::where('order_id', $shipping->order_id)->update($data);
+                set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
+            }
 
-
-            return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
+            return back()->with('success', 'Successfully Scanned')->with('shipping', $shipping);
         } else {
             //check if order return
             if($shipping->order->status == ORDER_STATUS_RETURN_SHIPPING){
@@ -810,22 +860,47 @@ class OrderController extends Controller
      */
     public function download_order_csv(Request $request)
     {
-        // return $request;
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
         $orders = $this->index();
-
         $orders->whereIn('id', $request->order_ids);
-
         $orders = $this->filter_order($request, $orders);
-
         $orders = $orders->get();
 
-        Excel::store(new OrderExport($orders),"public/".$fileName);
-        // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
+        // Get headers from
+        $headers = $this->getHeader($request->template_id);
+
+        $columnName = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
+            ->join('column_mains', 'template_columns.column_main_id', '=', 'column_mains.id')
+            ->select(
+                'template_mains.*',
+                'template_columns.*',
+                'column_mains.*'
+            )
+            ->where('template_mains.delete_status', '!=', 1)
+            ->where('template_columns.deleted_at', null)
+            ->whereIn('template_columns.template_main_id', function($query) use ($request) {
+                $query->select('id')
+                    ->from('template_mains')
+                    ->where('id', $request->template_id);
+            })
+            ->orderBy('template_columns.column_position')
+            ->get();
+
+        Excel::store(new OrderExport($orders, $headers, $columnName), "public/" . $fileName);
 
         return response([
-            "file_name"=> $fileName
+            "file_name" => $fileName,
         ]);
+    }
+
+    private function getHeader($templateId)
+    {
+        $template = TemplateMain::with('columns')->find($templateId);
+
+        // Split the template_header string into an array
+        $headers = explode(', ', $template->template_header);
+
+        return $headers;
     }
 
     /** Change Postcode view
@@ -928,4 +1003,55 @@ class OrderController extends Controller
 
         return $result;
     }
+
+    public function scan_setting(){
+        $settings = Setting::haveParent()->where('type', SETTING_TYPE_SCAN)->get();
+        return view('orders.scan_setting', [
+            'title' => 'Scan Setting',
+            'settings' => $settings,
+        ]);
+    }
+
+    public function get_template_main(Request $request)
+    {
+        $status = $request->input('status');
+
+        // Define a mapping of status to template_type
+        $statusMapping = [
+            'pending' => 1,
+            'processing' => 2,
+            'packing' => 3,
+            'ready-to-ship' => 4,
+            'shipping' => 5,
+            'delivered' => 6,
+            'returned' => 7,
+            'return-completed' => 7, // Assuming the same template_type for 'returned' and 'return-completed'
+            'overall' => 8,
+            'rejected' => 9,
+        ];
+
+        // Check if the status is a valid key in the mapping
+        if (array_key_exists($status, $statusMapping)) {
+            $templateType = $statusMapping[$status];
+
+            $data = TemplateMain::where('delete_status', 0)
+                ->where('template_type', 'LIKE', "%$templateType%") // So it can check multiple values with comma.
+                ->get();
+
+            $templateMain = [];
+
+            foreach ($data as $row) {
+                $templateMain[] = [
+                    'value' => $row->id,
+                    'label' => $row->template_name
+                ];
+            }
+
+            return response()->json($templateMain);
+        } else {
+            // Handle the case where the status is not recognized
+            return response()->json(['error' => 'Invalid status'], 400);
+        }
+    }
+
 }

@@ -12,9 +12,11 @@ use App\Http\Controllers\CourierServiceLevelAgreementController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\ThirdParty\PosMalaysiaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +50,13 @@ Route::prefix('buckets')->group(function () {
     Route::get('show/{id}', [BucketController::class, 'show']);
     Route::post('check-empty-batch', [BucketController::class, 'check_empty_batch']);
     Route::post('delete', [BucketController::class, 'delete']);
+    Route::post('add-category', [BucketController::class, 'add_category']);
+    Route::post('edit-category', [BucketController::class, 'edit_category']);
+    Route::post('delete-category', [BucketController::class, 'delete_category']);
+    Route::post('store', [BucketController::class, 'store']);
+    Route::post('update', [BucketController::class, 'update']);
+    Route::post('get-bucket-by-category', [BucketController::class, 'get_bucket_by_category']);
+    Route::post('add-to-bucket', [BucketController::class, 'add_to_bucket']);
 });
 
 Route::prefix('orders')->group(function () {
@@ -59,6 +68,7 @@ Route::prefix('orders')->group(function () {
     Route::post('set-order-completed', [OrderApiController::class, 'set_order_completed']);
     Route::match(array('GET','POST'),'getStatusWMS', [OrderApiController::class, 'getStatusWMS']);
     Route::match(array('GET','POST'),'getStatusWMSFilter', [OrderApiController::class, 'getStatusWMSFilter']);
+    Route::match(array('GET','POST'),'parcels', [OrderApiController::class, 'scanParcelRanking']);
 });
 
 Route::prefix('shippings')->group(function () {
@@ -113,6 +123,13 @@ Route::prefix('sla')->group(function(){
     Route::delete('/', [CourierServiceLevelAgreementController::class, 'delete']);
     Route::post('check-duplicate/{courier}/{id?}', [CourierServiceLevelAgreementController::class, 'check_duplicate']);
 });
+
+Route::prefix('pos')->group(function(){
+    Route::post('generate-connote', [PosMalaysiaController::class, 'generate_connote']);
+    Route::post('generate-pl9', [PosMalaysiaController::class, 'generate_pl9']);
+    Route::post('download-connote', [PosMalaysiaController::class, 'download_connote']);
+});
+
 Route::get('scanned-parcel/{year}/{month}/{day?}', [OrderController::class, 'scanned_parcel']);
 
 Route::post('bucket-batches/generate_cn', [BucketController::class, 'check_empty_bucket']);

@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
 use App\Models\Order;
+use App\Models\Shipping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 
 class OrderApiController extends Controller
@@ -150,7 +152,7 @@ class OrderApiController extends Controller
 
         $orders = Order::whereIn('id', $request->order_ids)->get();
 
-        if (set_order_status_bulk($orders, ORDER_STATUS_SHIPPING, "Approved manually by {$request->user_id}")) {
+        if (set_order_status_bulk($orders, ORDER_STATUS_DELIVERED, "Approved manually by {$request->user_id}")) {
             return response()->json(['success' => 'ok']);
         } else {
             return response()->json(['error' => 'error']);
@@ -233,5 +235,65 @@ class OrderApiController extends Controller
                 'message' => 'Order not found'
             ], 200);
         }
+    }
+
+    public function scanParcelRanking(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|string',
+        ]);
+
+        $today = $request->filled('date') ? Carbon::parse($request->date)->toDateString() :  Carbon::today()->toDateString();
+        $startMonth = $request->filled('date') ? Carbon::parse($request->date)->startOfMonth()->toDateString() : Carbon::now()->startOfMonth()->toDateString();
+        $endMonth = $request->filled('date') ? Carbon::parse($request->date)->endOfMonth()->toDateString() : Carbon::now()->endOfMonth()->toDateString();
+
+        if($request->type == 'individual')
+        {
+            $parcels = Shipping::select(
+                DB::raw('IFNULL(count(DISTINCT(order_id)),0) as total'),
+                DB::raw('IFNULL(SUM(CASE WHEN DATE(scanned_at) = CURDATE() THEN 1 ELSE 0 END),0) AS daily')
+            )
+            // ->where('scanned_by', 6) // Assuming '6' is the scanned_by value
+            ->where('scanned_by', $request->user_id)
+            ->where('status',IS_ACTIVE)
+            ->whereDate('scanned_at', '>=', $startMonth)
+            ->whereDate('scanned_at', '<=', $endMonth);
+        }
+        else
+        {
+            $parcels = Shipping::select('scanned_by', DB::raw('count(DISTINCT(order_id)) as total'))
+            ->with(['scannedBy'])
+            ->where('status',IS_ACTIVE);
+        }
+
+        if($request->type == 'daily')
+        {
+            $parcels = $parcels->whereDate('scanned_at', $today);
+        }
+
+        //monthly
+        if($request->type == 'monthly')
+        {
+            $parcels = $parcels->whereDate('scanned_at', '>=', $startMonth)
+            ->whereDate('scanned_at', '<=', $endMonth);
+        }
+
+        //get
+        if($request->type == 'individual'){
+
+            $parcels = $parcels->first();
+        }else{
+            $parcels = $parcels->groupBy('scanned_by')
+            ->orderBy('total', 'DESC')
+            ->get();
+        }
+        $month_name = Carbon::parse($today)->format('F Y');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Parcel found',
+            'data' => $parcels,
+            'month_name'=> $month_name
+        ], 200);
     }
 }

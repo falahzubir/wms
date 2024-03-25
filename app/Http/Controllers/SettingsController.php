@@ -38,10 +38,6 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        $request->validate([
-            'setting.*' => 'required'
-        ]);
-
         foreach ($request->setting as $key => $value) {
             $this->setSetting($key, $value);
         }

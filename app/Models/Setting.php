@@ -10,7 +10,7 @@ class Setting extends Model
 {
     use HasFactory, SoftDeletes;
     protected $table = 'settings';
-    protected $fillable = ['key', 'value'];
+    protected $guarded = [];
 
     public function parent()
     {

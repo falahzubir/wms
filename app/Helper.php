@@ -1,6 +1,11 @@
 <?php
 
+use App\Models\User;
+use App\Models\State;
 use App\Models\OrderLog;
+use App\Models\OrderItem;
+use App\Models\PaymentType;
+use App\Models\OperationalModel;
 
 if (!function_exists('currency')) {
     /**
@@ -334,5 +339,93 @@ if(!function_exists('hash_url_decode')){
         $arr_x = explode("===", $x);
         $data_return = isset($arr_x[1]) ? $arr_x[1] : '';
         return $data_return;
+    }
+}
+
+if(!function_exists('check_order_status')){
+    /**
+     * Check order status
+     *
+     * @param  int $order_id, int $status
+     * @return bool
+     */
+    function check_order_status($order_id)
+    {
+        return \App\Models\Order::where('id', $order_id)->first()->status;
+    }
+}
+
+if (!function_exists('get_state')) {
+    function get_state($state_id)
+    {
+        $result = State::find($state_id);
+
+        if ($result) {
+            return $result->name;
+        } else {
+            return null;
+        }
+    }
+}
+
+if (!function_exists('get_operational_details')) {
+    function get_operational_details($operational_model_id)
+    {
+        $result = OperationalModel::find($operational_model_id);
+
+        if ($result) {
+            return $result->name;
+        } else {
+            return null;
+        }
+    }
+}
+
+if (!function_exists('get_order_items')) {
+    function get_order_items($order_id)
+    {
+        // Join the OrderItem table with the products table
+        $orderItems = OrderItem::where('order_id', $order_id)
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->select('order_items.*', 'products.weight as weight')
+            ->get();
+
+        // Calculate the sum of quantities and weights
+        $sumQuantity = $orderItems->sum('quantity');
+        $sumWeight = $orderItems->sum('weight');
+
+        // Prepare an array with detailed information
+        $result = [
+            'sumQuantity' => $sumQuantity,
+            'sumWeight' => $sumWeight,
+        ];
+
+        return $result;
+    }
+}
+
+if (!function_exists('get_payment_name')) {
+    function get_payment_name($payment_type)
+    {
+        $result = PaymentType::find($payment_type);
+
+        if ($result) {
+            return $result->payment_type_name;
+        } else {
+            return null;
+        }
+    }
+}
+
+if (!function_exists('get_pic')) {
+    function get_pic($id)
+    {
+        $result = User::find($id);
+
+        if ($result) {
+            return $result->name;
+        } else {
+            return null;
+        }
     }
 }

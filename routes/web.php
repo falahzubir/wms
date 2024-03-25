@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AlternativePostcodeController;
 use App\Http\Controllers\AccessTokenController;
+use App\Http\Controllers\BucketAutomationController;
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\ClaimController;
@@ -18,6 +19,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TemplateSettingController;
+use App\Http\Controllers\CustomTemplateController;
 use App\Models\Company;
 use Illuminate\Support\Facades\Route;
 
@@ -53,12 +56,14 @@ Route::middleware(['auth'])->group(function() {
         Route::get('return-completed', [OrderController::class, 'return_completed'])->name('orders.return_completed');
         Route::get('scan', [OrderController::class, 'scan'])->name('orders.scan');
         Route::post('scan', [OrderController::class, 'scan_barcode'])->name('orders.scanned');
+        Route::get('scan-setting', [OrderController::class, 'scan_setting'])->name('orders.scan_setting');
         Route::get('rejected', [OrderController::class, 'rejected'])->name('orders.rejected');
         Route::post('download-order-csv', [OrderController::class, 'download_order_csv']);
         Route::get('{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
         Route::get('change-postcode', [OrderController::class, 'change_postcode_view'])->name('orders.change_postcode_view');
         Route::post('change-postcode', [OrderController::class, 'change_postcode'])->name('orders.change_postcode');
         Route::get('bucket-batch/{batch}', [OrderController::class, 'bucket_batch'])->name('orders.bucket_batch');
+        Route::get('/get_template_main', [OrderController::class, 'get_template_main']);
     });
 
     // group routes for buckets
@@ -184,11 +189,36 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/search', [AlternativePostcodeController::class, 'handleSearch'])->name('search');
     });
 
-    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+
+    Route::prefix('template_setting')->group(function() {
+        Route::get('/', [TemplateSettingController::class, 'index'])->name('template_setting.index');
+        Route::post('update', [TemplateSettingController::class, 'update'])->name('template_setting.update');
+    });
+
+    Route::prefix('custom_template_setting')->group(function() {
+        Route::get('/', [CustomTemplateController::class, 'index'])->name('custom_template_setting.index');
+        Route::post('save_template', [CustomTemplateController::class, 'saveTemplate'])->name('custom_template_setting.save');
+        Route::get('/get_columns/{id}', [CustomTemplateController::class, 'getColumns']);
+        Route::post('update_template', [CustomTemplateController::class, 'updateTemplate'])->name('custom_template_setting.update');
+        Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
+    });
+    
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::put('/', [SettingsController::class, 'update'])->name('update');
+        Route::get('bucket-category', [BucketController::class, 'bucket_category'])->name('bucket_category');
+        Route::get('bucket-automation', [BucketAutomationController::class, 'automation'])->name('bucket_automation_setting');
+        Route::post('bucket-automation', [BucketAutomationController::class, 'create'])->name('bucket_automation_setting.create');
+        Route::get('bucket-automation-list', [BucketAutomationController::class, 'list'])->name('bucket_automation_setting.get');
+        Route::delete('bucket-automation', [BucketAutomationController::class, 'delete'])->name('bucket_automation_setting.delete');
+        Route::post('bucket-automation-update', [BucketAutomationController::class, 'update'])->name('bucket_automation_setting.update');
+        Route::put('bucket-automation-status', [BucketAutomationController::class, 'update_status'])->name('bucket_automation_setting.update_status');
+        Route::post('bucket-automation-update-priority', [BucketAutomationController::class, 'update_priority'])->name('bucket_automation_setting.update_priority');
+    });
+
 });
 
-    // Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
+    Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
 
 Route::get('notifications', [NotificationController::class, 'list']);
 

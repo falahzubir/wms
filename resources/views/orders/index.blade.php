@@ -63,10 +63,87 @@
         .bg-susu {
             background-color: #FF8244;
         }
+        .swal2-styled.swal2-custom {
+            border: 0;
+            border-radius: .25em;
+            /* background: initial; */
+            font-size: 1em;
+            border: 1px solid #cecece;
+            box-shadow: 1px 1px 0px 0px #cecece;
+        }
+
+        .swal2-dhl-ecommerce {
+            background-color: #FFCC00;
+            color: #D40510;
+        }
+
+        .swal2-posmalaysia {
+            background-color: #fff;
+            color: #FF0000;
+        }
+
+        .swal2-tiktok {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .swal2-shopee {
+            background-color: #E74A2B;
+            color: #fff;
+        }
+
+        .swal2-styled.swal2-custom {
+            border: 0;
+            border-radius: .25em;
+            /* background: initial; */
+            font-size: 1em;
+            border: 1px solid #cecece;
+            box-shadow: 1px 1px 0px 0px #cecece;
+        }
+        .swal2-dhl-ecommerce {
+            background-color: #FFCC00;
+            color: #D40510;
+        }
+
+        .swal2-posmalaysia {
+            background-color: #fff;
+            color: #FF0000;
+        }
+
+        .swal2-tiktok {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .swal2-shopee {
+            background-color: #E74A2B;
+            color: #fff;
+        }
 
         .bg-purple {
             background-color: purple;
         }
+
+        .btn-teal {
+            background-color: #3B8C9E;
+            color: #fff;
+        }
+
+        .btn-teal:hover {
+            background-color: #2d6a75;
+            color: #fff;
+        }
+
+        .small-check-box {
+            margin: 4px 0 0;
+            line-height: normal;
+            width: 14px;
+            height: 14px;
+        }
+        .custom-btn-width {
+            width: 100%; /* Adjust this value as needed */
+        }
+
 
     </style>
 
@@ -79,7 +156,7 @@
                     <h5 class="card-title">Filters..</h5>
 
                     <!-- No Labels Form -->
-                    <form class="row g-3" action="{{ url()->current() }}">
+                    <form id="search-form" class="row g-3" action="{{ url()->current() }}">
                         <div class="col-md-12">
                             <input type="text" class="form-control" placeholder="Search" name="search"
                                 value="{{ old('search', Request::get('search')) }}">
@@ -219,7 +296,7 @@
                                 @foreach ($orders as $key => $order)
                                     <tr style="font-size: 0.8rem;">
                                         <th scope="row">{{ $key + $orders->firstItem() }}</th>
-                                        <td><input type="checkbox" name="check_order[]" class="check-order"
+                                        <td><input onclick="removeOldTicked()" type="checkbox" name="check_order[]" class="check-order"
                                                 id="" value="{{ $order->id }}">
                                         </td>
                                         <td>
@@ -237,7 +314,7 @@
                                                 {{-- add shipping number modal --}}
                                                 @if (Route::is('orders.processing'))
                                                    {{-- @if($order->is_multiple_carton) --}}
-                                                        <button class="btn btn-warning p-0 px-1 m-1" onclick="multiple_cn({order:'{{ $order }}',ref_no:'{{ order_num_format($order) }}'})"></>
+                                                        <button class="btn btn-warning p-0 px-1 m-1" onclick="multiple_cn({order:`{{ $order }}`,ref_no:`{{ order_num_format($order) }}`})"></>
                                                             <i class="bi bi-file-earmark-ruled"></i>
                                                         </button>
                                                     {{-- @endif --}}
@@ -725,9 +802,114 @@
         </div>
     </div>
 
+    {{-- Start Bucket Category Modal --}}
+    <div class="modal fade" id="modal-open-bucket-category" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <form action="" id="submit-open-bucket-category">
+            @csrf
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="category-title">Add to Bucket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="pt-3 pb-3">
+                            <p class="fw-bold" style="font-size: 20px;" for="category-id">Please select bucket Category!</p>
+                            <div style="display: flex ;justify-content: center;">
+                                <select onchange="selectCategory(this)" class="form-select" id="category-id" name="category_id" style="width: 80%" data-live-search="true">
+                                    <option value="">Select a Category</option>
+                                    @foreach ($filter_data->bucket_categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->category_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="submit-bucket-category" onclick="proceedModal()" type="button"
+                            class="btn btn-warning text-white" disabled>Proceed</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {{-- End Bucket Category Modal --}}
+
+    {{-- Start Proceed Modal --}}
+    <div class="modal fade" id="modal-proceed-bucket" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <form action="" id="submit-proceed-bucket">
+            @csrf
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="category-title">Add to Bucket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body pt-4 pb-4">
+
+                        {{-- Button --}}
+                        <div class="container">
+                            <div class="row justify-content-center">
+                                <div class="col-12 col-md-4 text-center pb-2">
+                                    <button type="button" class="btn btn-lg btn-outline-dark custom-btn-width" disabled>
+                                        <span style="font-size: 16px;">
+                                            TOTAL ORDER: <span id="totalOrderPending" class="fw-bold text-dark">0</span>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="col-12 col-md-4 text-center pb-2">
+                                    <button type="button" class="btn btn-lg btn-outline-dark custom-btn-width" disabled>
+                                        <span style="font-size: 16px;">
+                                            REMAINING ORDER: <span id="remainingOrderPending" class="fw-bold text-dark">0</span>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="col-12 col-md-4 text-center pb-2">
+                                    <button type="button" onclick="distribute()" class="btn btn-lg btn-teal custom-btn-width">
+                                        <i class="ri-share-forward-fill"></i>
+                                        <span style="font-size: 16px;">
+                                            Redistribute
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="row m-0 w-100 pt-3" id="submit-proceed-bucket-modal-body">
+                            </div>
+                            <input type="hidden" id="order_ids" name="order_ids">
+                        </div>
+                        {{-- Button --}}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="submit-proceed-bucket-button" onclick="submitAddToBucket()" type="button"
+                            class="btn btn-primary text-white">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {{-- End Bucket Category Modal --}}
+
 @include("orders.multiple_cn_modal")
 <x-slot name="script">
     <script>
+        let checkedOrder = [];
+        let categoryBucket;
+        let arrange_shipment_platform = {
+            'shopee' : 'Shopee',
+            'tiktok' : 'TikTok'
+        };
+
+        let generate_cn_couriers = {
+            'dhl-ecommerce' : 'DHL Ecommerce',
+            'posmalaysia' : 'POS Malaysia',
+            'shopee' : 'Shopee',
+            'tiktok' : 'TikTok'
+        };
 
         document.querySelector('#filter-order').onclick = function() {
             document.querySelector('#order-table').style.display = 'block';
@@ -738,86 +920,290 @@
         @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
             document.querySelector('#add-to-bucket-btn').onclick = function() {
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                let checkedValue = inputElements.filter(chk => chk.checked).length;
 
-                // sweet alert
-                if (checkedValue == 0) {
+                let modalOne = new bootstrap.Modal(document.getElementById('modal-open-bucket-category'), {
+                    keyboard: false
+                });
+
+                inputElements.forEach(input => {
+                    if (input.checked) {
+                        checkedOrder.push(input.value);
+                    }
+                });
+
+                document.querySelector('#category-id').value = "";
+                document.querySelector('#submit-bucket-category').disabled = true;
+                if (checkedOrder.length == 0) {
                     Swal.fire({
                         title: 'No order selected!',
-                        text: "Please select at least one order to add to bucket.",
+                        text: "All order in the list will be added to bucket.",
                         icon: 'warning',
-                        confirmButtonText: 'OK'
+                        confirmButtonText: 'Yes, Select overall',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonText: 'Cancel',
+                        showCancelButton: true,
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            modalOne.show();
+                        }
                     })
                     return;
+                }else{
+                    modalOne.show();
                 }
-                //get bucket lists
-                axios.get('/api/buckets')
-                    .then(function(response) {
-                        // handle success
-                        let buckets = response.data;
-                        let bucketOptions = {};
-                        buckets.forEach(bucket => {
-                            bucketOptions[bucket.id] = bucket.name;
-                        });
-                        Swal.fire({
-                            title: 'Please select bucket!',
-                            input: 'select',
-                            inputOptions: bucketOptions,
-                            inputPlaceholder: 'Select a bucket',
-                            showCancelButton: true,
-                            inputValidator: (value) => {
-                                return new Promise((resolve) => {
-                                    if (value !== '') {
-                                        resolve()
-                                    } else {
-                                        resolve('You need to select a bucket!')
-                                    }
-                                })
-                            }
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                //get checked order
-                                let checkedOrder = [];
-                                inputElements.forEach(input => {
-                                    if (input.checked) {
-                                        checkedOrder.push(input.value);
-                                    }
-                                });
-                                //add to bucket
-                                axios.post('/api/add-to-bucket', {
-                                        bucket_id: result.value,
-                                        order_ids: checkedOrder,
-                                    })
-                                    .then(function(response) {
-                                        // handle success
-                                        Swal.fire({
-                                            title: 'Success!',
-                                            text: "Order added to bucket.",
-                                            icon: 'success',
-                                            confirmButtonText: 'OK'
-                                        }).then((result) => {
-                                            if (result.isConfirmed) {
-                                                location.reload();
-                                            }
-                                        });
-                                    })
-                                    .catch(function(error) {
-                                        // handle error
-                                        console.log(error);
-                                    })
-                                    .then(function() {
-                                        // always executed
-                                    });
-                            }
-                        })
-                    })
-                    .catch(function(error) {
-                        // handle error
-                        console.log(error);
-                    })
-
             }
         @endif
+
+        const removeOldTicked = () =>
+        {
+            checkedOrder = []; //reset array
+        }
+
+        const selectCategory = (el) =>
+        {
+            let val = el.value;
+
+            if(val != ""){
+                document.querySelector('#submit-bucket-category').disabled = false;
+            }else{
+                document.querySelector('#submit-bucket-category').disabled = true;
+            }
+
+            categoryBucket = val;
+
+        }
+
+        const proceedModal = async () =>
+        {
+            let modal = new bootstrap.Modal(document.getElementById('modal-proceed-bucket'), {
+                keyboard: false
+            });
+
+            let html = '';
+
+            let formData = new FormData(document.querySelector('#search-form'));
+            formData.append('category_id', categoryBucket);
+            formData.append('order_ids', checkedOrder);
+            let response = await axios.post('/api/buckets/get-bucket-by-category',formData).then(res => {
+
+                let totalOrder = res.data.totalOrder;
+                document.querySelector('#totalOrderPending').innerHTML = totalOrder;
+                document.querySelector('#order_ids').value = res.data.order_ids;
+                // let remainingOrder = res.data.remainingOrder;
+                // document.querySelector('#remainingOrderPending').innerHTML = remainingOrder;
+
+
+                for (let index = 0; index < res.data.categoryBucket.length; index++) {
+                    const categoryBucket = res.data.categoryBucket[index];
+                    html += `
+                    <div class="col-12 col-md-6 text-center pb-2">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <input onclick="tickBucket(this)" type="checkbox" class="form-check-input" id="check-all-${categoryBucket.bucket_id}" checked>
+                                    <span class="d-inline-block mx-2"><i class="bi bi-basket"></i></span>
+                                    <label class="form-check-label mx-2" for="check-all">
+                                        ${categoryBucket.bucket.name}:
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex">
+                                <i onclick="minusNumber(this)" class="bi bi-dash-circle-fill text-primary fs-5"></i>
+                                <input name="bucket_id[${categoryBucket.bucket_id}]" oninput="constantNumber(this)" type="number" id="input-number-${categoryBucket.bucket_id}" class="form-control form-control-sm mx-2" style="width: 5rem; text-align: center;" value="0">
+                                <i onclick="plusNumber(this)" class="bi bi-plus-circle-fill text-primary fs-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                }
+
+                document.querySelector('#submit-proceed-bucket-modal-body').innerHTML = html;
+
+                modal.show();
+                distribute();
+
+            }).catch(err => {
+                console.log(err);
+            });
+
+        }
+
+        const constantNumber = (el) =>
+        {
+            let remainingOrder = parseInt(document.querySelector('#remainingOrderPending').innerHTML);
+            let newVal = el.value;
+            let oldValue = el.getAttribute('data-value');
+
+            //only on ticked bucket
+            let tickedBucket = el.parentElement.parentElement.parentElement.querySelector('input[type="checkbox"]:checked');
+            if(tickedBucket == null)
+            {
+                return; //stop function
+            }
+
+            if(newVal > remainingOrder)
+            {
+                console.log('more');
+                el.value = newVal;
+                let currentNewVal = oldValue - newVal + remainingOrder;
+                document.querySelector('#remainingOrderPending').innerHTML = currentNewVal; //set remaining order
+                el.setAttribute('data-value', newVal); //set data attribute
+                validationInputBucket(el);
+            }
+            else if(newVal < remainingOrder)
+            {
+                console.log('less');
+                el.value = newVal;
+                let currentNewVal = oldValue - newVal + remainingOrder;
+                document.querySelector('#remainingOrderPending').innerHTML = currentNewVal; //set remaining order
+                el.setAttribute('data-value', newVal); //set data attribute
+                validationInputBucket(el);
+            }
+            else
+            {
+                console.log('equal');
+                el.value = newVal;
+                let currentNewVal = oldValue - newVal + remainingOrder;
+                document.querySelector('#remainingOrderPending').innerHTML = currentNewVal; //set remaining order
+                el.setAttribute('data-value', newVal); //set data attribute
+                validationInputBucket(el);
+            }
+        }
+
+        const minusNumber = (el) =>
+        {
+            let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+            let val = el.parentElement.querySelector('input[type="number"]').value;
+
+            if(val == 0)
+            {
+                el.parentElement.querySelector('input[type="number"]').value = 0;
+            }
+            else
+            {
+                el.parentElement.querySelector('input[type="number"]').value = parseInt(val) - 1; //set value
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + 1; //set remaining order
+                el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) - 1); //set data attribute
+            }
+        }
+
+        const plusNumber = (el) =>
+        {
+            let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+            let val = el.parentElement.querySelector('input[type="number"]').value;
+
+            if(remainingOrder != 0)
+            {
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) - 1; //set remaining order
+                el.parentElement.querySelector('input[type="number"]').value = parseInt(val) + 1; //set value
+                el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) + 1); //set data attribute
+            }
+            else
+            {
+                return; //stop function
+            }
+        }
+
+        const distribute = () =>
+        {
+            let totalOrder = document.querySelector('#totalOrderPending').innerHTML;
+            let bucketModal = document.querySelector('#submit-proceed-bucket-modal-body');
+
+            let buckets = bucketModal.querySelectorAll('input[type="number"]'); //all bucket
+            let bucketsActive = bucketModal.querySelectorAll('input[type="checkbox"]:checked'); //ticked bucket
+
+            let divide = Math.floor(totalOrder / bucketsActive.length); //take only ticked bucket
+            let remainder = totalOrder % bucketsActive.length; //take only ticked bucket
+
+            document.querySelector('#remainingOrderPending').innerHTML = remainder; //set remaining order
+
+            // set value for each bucket
+            buckets.forEach(bucket => {
+                if(bucket.parentElement.parentElement.parentElement.querySelector('input[type="checkbox"]').checked)
+                {
+                    bucket.value = divide; //divide value equally
+                    bucket.setAttribute('data-value', divide); //set data attribute
+                }
+            });
+
+        }
+
+        const validationInputBucket = (el) =>
+        {
+            let remainingOrder = parseInt(document.querySelector('#remainingOrderPending').innerHTML);
+            if(remainingOrder < 0)
+            {
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').style.borderColor = 'red'; //set border color red
+                document.querySelector('#submit-proceed-bucket-button').disabled = true; //disable submit button
+            }
+            else
+            {
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').style.borderColor = '#ced4da'; // reset border color
+                document.querySelector('#submit-proceed-bucket-button').disabled = false; //enable submit button
+            }
+        }
+
+        const tickBucket = (el) =>
+        {
+            if(!el.checked)
+            {
+                //add old value to remaining order
+                let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) + parseInt(el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value);
+                //reset value after untick
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value = 0;
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').setAttribute('data-value', 0);
+            }
+            else
+            {
+                //remove old value from remaining order
+                let remainingOrder = document.querySelector('#remainingOrderPending').innerHTML;
+                document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) - parseInt(el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value);
+
+                let newVal = el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').value;
+                //set attribute value
+                el.parentElement.parentElement.parentElement.querySelector('input[type="number"]').setAttribute('data-value', newVal);
+            }
+            validationInputBucket(el);
+        }
+
+        const submitAddToBucket = async() =>
+        {
+            Swal.fire({
+                title: 'Please wait!',
+                html: 'Adding to bucket...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+            });
+
+            let form = document.querySelector('#submit-proceed-bucket');
+            let formData = new FormData(form);
+
+            let response = await axios.post('/api/buckets/add-to-bucket', formData).then(res => {
+                Swal.fire({
+                    title: 'Success!',
+                    html: res.data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        location.reload();
+                    }
+                })
+            }).catch(err => {
+                Swal.fire({
+                    title: 'Error!',
+                    html: err.response.data.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                })
+            });
+        }
 
         // generate shipping label
         @if (in_array(ACTION_GENERATE_CN, $actions))
@@ -857,22 +1243,51 @@
                 })
                 return;
             }
-                //confirmation to generate cn
-                Swal.fire({
-                    title: 'Are you sure to generate shipping label?',
-                    html: `You are about to generate shipping label for ${checkedValue} order(s).`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, generate it!',
-                    footer: '<small>Note: Order with existing Consignment Note will be ignored.</small>',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        generateCN();
-                    }
-                })
-            }
+
+
+            //sweetalert courier options
+            Swal.fire({
+                title: 'Please select courier!',
+                html: `
+                <div class="swal2-actins" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="swal2-loader"></div>
+                    ${Object.keys(generate_cn_couriers).map((key) => {
+                        return `<button type="button" class="swal2-custom swal2-${key} swal2-styled" style="display: inline-block;"
+                            aria-label="" onclick="conformationDownloadCN('${key}', '${checkedValue}')" >
+                            ${generate_cn_couriers[key]}
+                            </button>`;
+                    }).join('')}
+                    </div>
+                </div>
+                `,
+                showCancelButton: true,
+                showConfirmButton: false,
+
+            })
+
+        }
+
+        const conformationDownloadCN = (type,checkedValue) => {
+
+            Swal.fire({
+                title: `Are you sure to generate ${generate_cn_couriers[type]} shipping label?`,
+                html: `You are about to generate shipping label for ${checkedValue} order(s).`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, generate it!',
+                footer: '<small>Note: Order with existing Consignment Note will be ignored.</small>',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Please select courier!',
+
+                    })
+                    generateCN(type);
+                }
+            })
+        }
         @endif
 
         @if (in_array(ACTION_APPROVE_AS_SHIPPED, $actions))
@@ -949,6 +1364,14 @@
                     confirmButtonText: 'Yes, download it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Please wait!',
+                            html: 'Downloading...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading()
+                            },
+                        });
                         download_cn(checkedOrder);
                     }
                 })
@@ -957,40 +1380,76 @@
 
         // download csv
         @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
-            document.querySelector('#download-order-btn').onclick = function() {
-                const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
-                let checkedValue = inputElements.filter(chk => chk.checked).length;
+        document.querySelector('#download-order-btn').onclick = function () {
 
-                if (checkedValue == 0) {
+            // Get url segment
+            const urlSegments = window.location.pathname.split('/');
+            const status = urlSegments[2];
+
+            fetch(`/orders/get_template_main?status=${status}`)
+                .then(response => response.json())
+                .then(options => {
                     Swal.fire({
-                        title: 'No order selected!',
-                        html: `<div>Are you sure to download {{ isset($orders) ? $orders->total() : 0 }} order(s).</div>
-                            <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
-                        icon: 'warning',
-                        confirmButtonText: 'Download',
+                        title: 'Download CSV',
+                        html: `
+                            <div class="row">
+                                <div class="col-4 mt-2">
+                                    <label>Choose Template</label>
+                                </div>
+                                <div class="col-8">
+                                    <select id="template-select" class="form-select">
+                                        ${options.map(option => `<option value="${option.value}">${option.label}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                        `,
+                        width: '50%',
                         showCancelButton: true,
                         cancelButtonText: 'Cancel',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            let checkedOrder = [];
-                            inputElements.forEach(input => {
-                                if (input.checked) {
-                                    checkedOrder.push(input.value);
-                                }
-                            });
-                            download_csv(checkedOrder);
-                        }
-                    })
-                } else {
-                    let checkedOrder = [];
-                    inputElements.forEach(input => {
-                        if (input.checked) {
-                            checkedOrder.push(input.value);
-                        }
+                        confirmButtonText: 'Download',
+                        preConfirm: () => {
+                            const templateSelect = document.getElementById('template-select');
+                            const chosenTemplate = templateSelect.value;
+
+                            const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                            let checkedValue = inputElements.filter(chk => chk.checked).length;
+
+                            if (checkedValue == 0) {
+                                Swal.fire({
+                                    title: 'No order selected!',
+                                    html: `<div>Are you sure to download {{ isset($orders) ? $orders->total() : 0 }} order(s).</div>
+                                            <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
+                                    icon: 'warning',
+                                    confirmButtonText: 'Download',
+                                    showCancelButton: true,
+                                    cancelButtonText: 'Cancel',
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        let checkedOrder = [];
+                                        inputElements.forEach(input => {
+                                            if (input.checked) {
+                                                checkedOrder.push(input.value);
+                                            }
+                                        });
+                                        download_csv(checkedOrder, chosenTemplate);
+                                    }
+                                });
+                            } else {
+                                let checkedOrder = [];
+                                inputElements.forEach(input => {
+                                    if (input.checked) {
+                                        checkedOrder.push(input.value);
+                                    }
+                                });
+                                download_csv(checkedOrder, chosenTemplate);
+                            }
+                        },
                     });
-                    download_csv(checkedOrder);
-                }
-            }
+                })
+                .catch(error => {
+                    console.error('Error fetching template options:', error);
+                });
+        };
         @endif
 
         document.querySelectorAll('.add-shipping-number').forEach(btn => {
@@ -1073,26 +1532,11 @@
 
         @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
             document.querySelector('#arrange-shipment-btn').onclick = function() {
-                //add loading to button
-                Swal.fire({
-                    title: 'Arranging shipment...',
-                    html: 'Please wait while we are arranging shipment for your order(s).',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading()
-                    },
-                });
                 const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                 let checkedValue = inputElements.filter(chk => chk.checked).length;
-                //get checked order
-                let checkedOrder = [];
-                inputElements.forEach(input => {
-                    if (input.checked) {
-                        checkedOrder.push(input.value);
-                    }
-                });
+
                 //check if checked order is empty return and remove Swal.showLoading()
-                if(checkedOrder.length == 0){
+                if(checkedValue == 0){
                     Swal.fire({
                         title: 'Error!',
                         text: "Please select at least one order to arrange shipment.",
@@ -1103,33 +1547,38 @@
                     return;
                 }
 
-                let response = axios.post('/api/arrange-shipment', {
-                    order_ids: checkedOrder,
-                })
-                .then(function(response) {
-                    Swal.fire({
-                        title: 'Success!',
-                        html: `${response.data.message}`,
-                        icon: 'success',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            location.reload();
-                        }
-                    });
-                }).catch(function(error) {
-                    // handle error
-                    Swal.fire({
-                        title: 'Error!',
-                        html: 'Something went wrong Please contact admin',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    })
-                })
+                //get checked order
+                let checkedOrder = [];
+                inputElements.forEach(input => {
+                    if (input.checked) {
+                        checkedOrder.push(input.value);
+                    }
+                });
+
+                //sweetalert platform options
+                Swal.fire({
+                    title: 'Please select platform!',
+                    html: `
+                    <div class="swal2-actins" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="swal2-loader"></div>
+                        ${Object.keys(arrange_shipment_platform).map((key) => {
+                            return `<button type="button" class="swal2-custom swal2-${key} swal2-styled" style="display: inline-block;"
+                                aria-label="" onclick="confirmationArrange('${key}', '${checkedOrder}')" >
+                                ${arrange_shipment_platform[key]}
+                                </button>`;
+                        }).join('')}
+                        </div>
+                    </div>
+                    `,
+                    showCancelButton: true,
+                    showConfirmButton: false,
+
+                });
             }
         @endif
 
 
-        async function generateCN() {
+        async function generateCN(type) {
             //show loading modal
             Swal.fire({
                 title: 'Generating shipping label...',
@@ -1151,84 +1600,315 @@
 
             let sameCompany = await check_same_company(checkedOrder);
 
-            axios.post('/api/request-cn', {
-                    order_ids: checkedOrder,
-                })
-                .then(function(response) {
+            if(type == 'posmalaysia'){
+               requestCNPOS(type, checkedOrder);
+               return;
+            }
 
-                    let text = "Shipping label generated."
-                    if (response.data == 0) {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: "Selected order already has CN.",
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        })
-                        return;
-                    }
-
-                    if (!response.data.success)
-                    {
-                        Swal.fire({
-                            title: 'Error!',
-                            html: `${response.data.all_fail.message}` ?? "Fail to generate CN",
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        })
-                        return;
-                    }
-
-                    // handle success, close or download
-                    if(response.data != null ){
-                        if(response.data.error != null){
-                            text = "Shipping label generated.However has "+response.data.error;
-                        }
-
-                        if(response.data.all_fail){
-                            if(typeof response.data.all_fail == "boolean"){
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: "Fail to generate CN",
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                })
-                            }else{
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: "Fail to generate CN "+response.data.all_fail,
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                })
-                            }
-
-                            return;
-                        }
-                    }
-
-                    Swal.fire({
-                        title: 'Success!',
-                        text: text,
-                        icon: 'success',
-                        confirmButtonText: 'Download',
-                        showCancelButton: true,
-                        cancelButtonText: 'Ok',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            download_cn(checkedOrder)
-                        } else {
-                            location.reload();
-                        }
-                    });
-                })
-                .catch(function(error) {
-                    // handle error
-                    console.log(error);
-                })
-                .then(function() {
-                    // always executed
-                });
+            requestCN(type, checkedOrder);
 
         } //end of generateCN
+
+        // request CN
+        const requestCN = (type, checkedOrder) => {
+            axios.post('/api/request-cn', {
+                order_ids: checkedOrder,
+                type: type,
+            })
+            .then(function(response) {
+
+                let text = "Shipping label generated."
+                if (response.data == 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: "Selected order already has CN.",
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
+                    return;
+                }
+
+                if (!response.data.success)
+                {
+                    // let message = response.data.error ?? response.data.message;
+                    let message = JSON.stringify(response.data);
+                    Swal.fire({
+                        title: 'Error!',
+                        html: `${message}` ?? "Fail to generate CN",
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
+                    return;
+                }
+
+                // handle success, close or download
+                if(response.data != null ){
+                    if(response.data.error != null){
+                        text = "Shipping label generated.However has "+response.data.error;
+                    }
+
+                    if(response.data.all_fail){
+                        if(typeof response.data.all_fail == "boolean"){
+                            Swal.fire({
+                                title: 'Error!',
+                                text: "Fail to generate CN",
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            })
+                        }else{
+                            Swal.fire({
+                                title: 'Error!',
+                                text: "Fail to generate CN "+response.data.all_fail,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            })
+                        }
+
+                        return;
+                    }
+                }
+
+                Swal.fire({
+                    title: 'Success!',
+                    text: text,
+                    icon: 'success',
+                    confirmButtonText: 'Download',
+                    showCancelButton: true,
+                    cancelButtonText: 'Ok',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        download_cn(checkedOrder)
+                    } else {
+                        location.reload();
+                    }
+                });
+            })
+            .catch(function(error) {
+                Swal.fire({
+                    title: 'Error!',
+                    html: `Fail to generate CN, Please contact admin`,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                })
+            })
+        }
+
+        async function requestCNPOS(type, checkedOrder) {
+            // sweet alert
+            Swal.fire({
+                title: 'Generating shipping label...',
+                html: `<div id="generateConnoteModalPOS">
+                        <div id="generateConnotePOS">
+                            Generate Consignment Notes
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="generatePl9POS" class="d-none">
+                            Generate PL9
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="generateCnPOS" class="d-none">
+                            Generate Consignment Notes
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="mergeCnPOS" class="d-none">
+                            Merging Consignment Notes
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="downloadCnPOS" class="d-none">
+                            <div class="mt-3">Download Request CN Successful.</div>
+                        </div>
+                    </div>`,
+                allowOutsideClick: false,
+                showConfirmButton: false,
+            });
+
+
+            function generateConnote(item) {
+                return new Promise((resolve) => {
+                    axios.post('/api/pos/generate-connote', {
+                        order_ids: item,
+                        type: type,
+                    }).then(function(response){
+                        if(response.data.status && response.data.status == 'success'){
+                            document.querySelector('#generateConnotePOS').innerHTML = `
+                                Generate Consignment Notes
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            `;
+                            document.querySelector('#generatePl9POS').classList.remove('d-none');
+                        }
+                        else {
+                            document.querySelector('#generateConnotePOS').innerHTML = `
+                                Generate Consignment Notes
+                                <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                <br>
+                                <small class="text-danger">
+                                ${response.data.message.join('<br>')}
+                                </small>
+                            `;
+                            document.querySelector('#generatePl9POS').classList.remove('d-none');
+                            // Swal.fire({
+                            //     title: 'Error!',
+                            //     html: response.data.message.join('<br>'),
+                            //     icon: 'error',
+                            //     confirmButtonText: 'OK'
+                            // });
+
+                        }
+                        resolve();
+                    }).catch(function(error) {
+                        Swal.fire({
+                            title: 'Error!',
+                            html: `Fail to generate CN, Please contact admin`,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                        resolve();
+                    });
+                });
+            }
+
+            function generatePl9(item) {
+                return new Promise((resolve) => {
+                    axios.post('/api/pos/generate-pl9', {
+                        order_ids: item,
+                        type: type,
+                    }).then(function(response){
+                        if(response.data.status && response.data.status == 'success'){
+                            document.querySelector('#generatePl9POS').innerHTML = `
+                                Generate PL9
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            `;
+                            document.querySelector('#generateCnPOS').classList.remove('d-none');
+                        }
+                        else{
+                            document.querySelector('#generatePl9POS').innerHTML = `
+                                Generate PL9
+                                <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                <br>
+                                <small class="text-danger">
+                                </small>
+                            `;
+                            document.querySelector('#generateCnPOS').classList.remove('d-none');
+                        }
+                        resolve();
+                    });
+                });
+            }
+
+            function generateCn(item) {
+                return new Promise((resolve) => {
+                    axios.post('/api/pos/download-connote', {
+                        order_ids: item,
+                        type: type,
+                    }).then(function(response){
+                        if(response.data.status && response.data.status == 'success'){
+                            document.querySelector('#generateCnPOS').innerHTML = `
+                                Generate Consignment Notes
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            `;
+                            document.querySelector('#mergeCnPOS').classList.remove('d-none');
+                        }
+                        if(response.data.status && response.data.status == 'error'){
+                            document.querySelector('#generateCnPOS').innerHTML = `
+                                Generate Consignment Notes
+                                <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                <br>
+                                <small class="text-danger">
+                                ${response.data.message.join('<br>')}
+                                </small>
+                            `;
+                            document.querySelector('#mergeCnPOS').classList.remove('d-none');
+                        }
+                        resolve();
+                    });
+                });
+            }
+
+            function downloadCn(item) {
+                return new Promise((resolve) => {
+                    axios({
+                    url: '/api/download-consignment-note',
+                        method: 'POST',
+                        responseType: 'json', // important
+                        data: {
+                            order_ids: item,
+                        }
+                    })
+                    .then(function(res) {
+                        if(!res.data.status && res.data.download_url == false){
+                            Swal.fire({
+                                title: 'Error!',
+                                html: res.data.error ?? "Fail to generate CN",
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            })
+                            return;
+                        }
+
+                        const fileName = String(res.data.download_url).split("/").pop();
+                        let a = document.createElement('a');
+                        a.download = fileName;
+                        a.target = '_blank';
+                        a.download = fileName;
+                        a.href = res.data.download_url;
+                        a.click();
+                        document.querySelector('#mergeCnPOS').innerHTML = `
+                                Merging Consignment Notes
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            `;
+                            document.querySelector('#downloadCnPOS').classList.remove('d-none');
+                            document.querySelector('#downloadCnPOS').innerHTML = `
+                            <div class="mt-3">Download Request CN Successful.</div>
+                            <div>Click <a href="${a.href}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>
+                        `;
+                        resolve(res.data);
+                    })
+                    .catch(function(error) {
+                        // handle error
+                        console.log(error);
+                        Swal.fire({
+                            title: 'Success!',
+                            html: `Failed to generate pdf`,
+                            allowOutsideClick: false,
+                            icon: 'error',
+                        });
+                        resolve();
+                    });
+                });
+            }
+
+            // generate connote
+            await generateConnote(checkedOrder);
+            // generate pl9
+            await generatePl9(checkedOrder);
+            // generate cn
+            await generateCn(checkedOrder);
+            // download cn
+            await downloadCn(checkedOrder)
+            .then(function(download){
+                Swal.update({
+                    title: 'Success!',
+                    html: document.querySelector('#generateConnoteModalPOS').innerHTML,
+                    footer: '<small class="text-danger">Please enable popup if required</small>',
+                    allowOutsideClick: false,
+                    icon: 'success',
+                    showConfirmButton: true,
+                })
+                // if confirm button clicked reload
+                Swal.getConfirmButton().onclick = function(){
+                    location.reload();
+                }
+            })
+
+        }
 
         function approveAsShipped(checkedOrders) {
             axios({
@@ -1426,7 +2106,7 @@
             return dateTime;
         }
 
-        function download_csv(checkedOrder) {
+        function download_csv(checkedOrder, chosenTemplate) {
             // const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
             // const param_obj = queryStringToJSON(params);
             if (checkedOrder.length == 0) {
@@ -1434,6 +2114,7 @@
             }
             axios.post('/api/download-order-csv', {
                     order_ids: checkedOrder,
+                    template_id: chosenTemplate,
                 })
                 .then(function(response) {
                     // handle success, close or download
@@ -1817,6 +2498,62 @@
             }
         }
 
+        const confirmationArrange = (type,checkedValue) => {
+            //change checkedValue to array
+
+            if(typeof checkedValue == "string"){
+                checkedValue = checkedValue.split(',');
+            }
+
+            Swal.fire({
+                title: `Are you sure to arrange shipment for ${checkedValue.length} order(s)?`,
+                html: `You are about to arrange shipment for ${checkedValue.length} order(s) on ${arrange_shipment_platform[type]}.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, arrange it!',
+                footer: '<small>Note: Order status will be changed to "Pending Shipment".</small>',
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    // add loading to button
+                    Swal.fire({
+                        title: 'Arranging shipment...',
+                        html: 'Please wait while we are arranging shipment for your order(s).',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        },
+                    });
+
+                    let response = axios.post('/api/arrange-shipment', {
+                        order_ids: checkedValue,
+                        platform: type,
+                    })
+                    .then(function(response) {
+                        Swal.fire({
+                            title: 'Success!',
+                            html: `${response.data.message}`,
+                            icon: 'success',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                location.reload();
+                            }
+                        });
+                    }).catch(function(error) {
+                        // handle error
+                        Swal.fire({
+                            title: 'Error!',
+                            html: 'Something went wrong Please contact admin',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        })
+                    })
+
+                }
+            });
+        }
         const duplicateModal = (ids) => {
             ids = ids.split(',');
             let count = ids.length;

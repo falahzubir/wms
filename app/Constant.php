@@ -124,6 +124,7 @@ if(!defined('ORDER_FILTER_COMPANY')) define('ORDER_FILTER_COMPANY', 8);
 if(!defined('ORDER_FILTER_STATE')) define('ORDER_FILTER_STATE', 9);
 if(!defined('ORDER_FILTER_PLATFORM')) define('ORDER_FILTER_PLATFORM', 10);
 if(!defined('ORDER_FILTER_STATUS')) define('ORDER_FILTER_STATUS', 11);
+if(!defined('ORDER_FILTER_BUCKET_CATEGORY')) define('ORDER_FILTER_BUCKET_CATEGORY', 12);
 
 // date types
 if(!defined('ORDER_DATE_TYPES')) define('ORDER_DATE_TYPES', [
@@ -138,6 +139,7 @@ if(!defined('CLAIM_DATE_TYPES')) define('CLAIM_DATE_TYPES', [
 
 //DHL
 if(!defined('DHL_ID')) define('DHL_ID',15);
+if(!defined('POSMALAYSIA_ID')) define('POSMALAYSIA_ID', 76);
 
 // courier id which will be auto shipping, other will have to set menually
 if(!defined('AUTO_SHIPPING_COURIER')) define('AUTO_SHIPPING_COURIER', [15]);
@@ -169,6 +171,7 @@ if(!defined('COURIER_OTHERS')) define('COURIER_OTHERS', 99);
 
 // Payment Type
 if(!defined('PAYMENT_TYPE_SHOPEE')) define('PAYMENT_TYPE_SHOPEE', 22);
+if(!defined('PAYMENT_TYPE_TIKTOK')) define('PAYMENT_TYPE_TIKTOK', 23);
 
 // auto reject dhl option
 if(!defined('AUTO_REJECT_DHL')) define('AUTO_REJECT_DHL', true);
@@ -194,3 +197,15 @@ if(!defined('CLAIM_STATUS_COMPLETED')) define('CLAIM_STATUS_COMPLETED', 1);
 
 if(!defined('SHOPEE_LIVE_PARTNER_ID')) define('SHOPEE_LIVE_PARTNER_ID', '2004184');
 if(!defined('SHOPEE_LIVE_PARTNER_KEY')) define('SHOPEE_LIVE_PARTNER_KEY', 'e9b00cc3924edee9d1675f60116adc56bbc5e9f3bfd241d463e84bc695b86e03');
+
+if(!defined('SETTING_TYPE_GENERAL')) define('SETTING_TYPE_GENERAL', 1);
+if(!defined('SETTING_TYPE_SCAN')) define('SETTING_TYPE_SCAN', 2);
+
+if(!defined('SETTING_DATA_TYPE_STRING')) define('SETTING_DATA_TYPE_STRING', 'string');
+if(!defined('SETTING_DATA_TYPE_INTEGER')) define('SETTING_DATA_TYPE_INTEGER', 'integer');
+if(!defined('SETTING_DATA_TYPE_BOOLEAN')) define('SETTING_DATA_TYPE_BOOLEAN', 'boolean');
+if(!defined('SETTING_DATA_TYPE_ARRAY')) define('SETTING_DATA_TYPE_ARRAY', 'array');
+if(!defined('SETTING_DATA_TYPE_JSON')) define('SETTING_DATA_TYPE_JSON', 'json');
+
+if(!defined('TIKTOK_APP_KEY')) define('TIKTOK_APP_KEY', '68r1ubo74bujf');
+if(!defined('TIKTOK_APP_SECRET')) define('TIKTOK_APP_SECRET', 'f0e77dbfcdce30efe2b144dc0ebc99c1b35499e5');

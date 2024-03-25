@@ -143,16 +143,33 @@
             </li><!-- End return List Nav -->
         @endcan
 
-        @can('view.scan_parcel')
-            <!-- Scan Parcel link -->
-            <li class="nav-item">
-                <a class="nav-link {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.scan') }}">
-                    <i class="bx bx-barcode-reader"></i>
-                    <span>Scan Parcel</span>
-                </a>
-            </li><!-- End Scan Parcel Nav -->
-        @endcan
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#components-nav-scan" data-bs-toggle="collapse" href="#">
+                <i class="bx bx-barcode-reader"></i><span>Scan Parcel</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="components-nav-scan"
+                class="nav-content {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }} "
+                data-bs-parent="#sidebar-nav">
+                @can('view.scan_parcel')
+                    <li>
+                        <a class="nav-link {{ Route::current()->getName() != 'orders.scan' ? 'collapsed' : '' }}"
+                            href="{{ route('orders.scan') }}">
+                            <i class="bx bx-barcode-reader"></i>
+                            <span>Scan</span>
+                        </a>
+                    </li>
+                @endcan
+                @can('view.scan_setting')
+                    <li>
+                        <a class="nav-link {{ Route::current()->getName() != 'orders.scan_setting' ? 'collapsed' : '' }}"
+                            href="{{ route('orders.scan_setting') }}">
+                            <i class="bx bx-barcode-reader"></i>
+                            <span>Setting</span>
+                        </a>
+                    </li>
+                @endcan
+            </ul>
+        </li><!-- End Components Nav -->
 
         @can('product.list')
             <li class="nav-item">
@@ -250,6 +267,22 @@
                 <ul id="components-nav"
                     class="nav-content {{ Route::current()->getName() != 'companies.index' ? 'collapsed' : '' }} "
                     data-bs-parent="#sidebar-nav">
+                    @can('view.bucket_category_list')
+                    <li>
+                        <a href="{{ route('settings.bucket_category') }}"
+                            {{ Route::current()->getName() == 'settings.bucket_category' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Bucket Category</span>
+                        </a>
+                    </li>
+                    @endcan
+                    @can('view.setting_bucket_automation')
+                    <li>
+                        <a href="{{ route('settings.bucket_automation_setting') }}"
+                            {{ Route::current()->getName() == 'settings.bucket_automation_setting' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Bucket Automation Setting</span>
+                        </a>
+                    </li>
+                    @endcan
                     <li>
                         <a href="{{ route('alternative_postcode.index') }}"
                             {{ Route::current()->getName() == 'alternative_postcode.index' ? 'class=active' : '' }}>
@@ -307,10 +340,37 @@
                     <li>
                         <a href="{{ route('settings.index') }}"
                             {{ Route::current()->getName() == 'settings.index' ? 'class=active' : '' }}>
-                            <i class="bi bi-circle"></i><span>Settings</span>
+                            <i class="bi bi-circle"></i><span>General Settings</span>
                         </a>
                     </li>
                     @endrole
+                    <li>
+                        <a class="nav-link collapsed" data-bs-target="#components-nav-report-shipment" data-bs-toggle="collapse" href="#">
+                            <i class="bi bi-circle"></i></i><span>Template</span><i class="bi bi-chevron-down ms-auto"></i>
+                        </a>
+                        @can('view.template_setting')
+                            <ul class=" {{ Route::current()->getName() != 'template_setting.index' ? 'collapsed' : '' }} ">
+                                <li>
+                                    <a href="{{ route('template_setting.index') }}"
+                                        {{ Route::current()->getName() == 'template_setting.index' ? 'class=active' : '' }}>
+                                        <i class="bi bi-circle"></i>
+                                        <span>Template Setting</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        @endcan
+                        @can('view.custom_template_setting')
+                            <ul class=" {{ Route::current()->getName() != 'custom_template_setting.index' ? 'collapsed' : '' }} ">
+                                <li>
+                                    <a href="{{ route('custom_template_setting.index') }}"
+                                        {{ Route::current()->getName() == 'template_setting.index' ? 'class=active' : '' }}>
+                                        <i class="bi bi-circle"></i>
+                                        <span>Custom Template Setting</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        @endcan
+                    </li>
                 </ul>
             </li><!-- End Components Nav -->
         @endcan
