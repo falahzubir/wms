@@ -1,4 +1,4 @@
-<div class="modal-body position-relative">
+{{-- <div class="modal-body position-relative">
     <button type="button" class="btn-close position-absolute bg-light rounded-circle"
         style="top: -3%;right:-3%;color:white" data-bs-dismiss="modal" aria-label="Close"></button>
     <h3 class="text-center" style="font-size: 1.35rem"><strong>Packing List</strong></h3>
@@ -60,4 +60,10 @@
 
         </div>
     </div>
-</div>
+</div> --}}
+
+<html>
+    <body>
+        asd
+    </body>
+</html>

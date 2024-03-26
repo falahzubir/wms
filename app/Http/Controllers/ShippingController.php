@@ -584,8 +584,16 @@ class ShippingController extends Controller
         Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
     }
 
+    // public function generate_product_description($order)
+    // {
+        
+
+    //     return $path;
+    // }
+
     public function download_cn(Request $request)
     {
+
         $sorted_order_id = $this->sort_order_to_download($request->order_ids);
 
         $attachments = Shipping::select('attachment', "order_id")->active()->whereIn('order_id', $sorted_order_id)->get()
@@ -625,11 +633,11 @@ class ShippingController extends Controller
             //START HERE FOR MERGING PDF
             $sdd_template = ShippingDocumentTemplate::find(1);
 
-
             // Pdf::view('pdf_template.shipping_description_document_template', ['order_template' => $attachments,'sdd_template'=>$sdd_template ])
-            // // ->format('a5')
+            // ->format('a5')
             // ->save('template_shipping_description.pdf');
-
+            Pdf::view('pdf_template.shipping_description_document_template')->save(storage_path('app/public/temp_storage'.date('Ymd_His').'.pdf'));
+            $pdf->addPDF(storage_path('app/public/temp_storage'.date('Ymd_His').'.pdf'));
         }
 
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
