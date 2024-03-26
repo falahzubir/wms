@@ -109,7 +109,6 @@ class SettingsController extends Controller
     }
     public function add_sdd(Request $request)
     {
-        dd($request['promotional_attachment_type']);
         $file = [];
         if ($request->hasFile('promotional_link_upload_file') && $request['promotional_attachment_type'] == 'photo') {
             $filePath = Storage::put('/public/img', $request->promotional_link_upload_file);
@@ -190,5 +189,10 @@ class SettingsController extends Controller
         }
     
         return response()->json(['message' => 'Data updated successfully', 'data' => $ShippingDocumentTemplate], 200);
+    }
+
+    //To be used when download cn
+    public function sdd_template_view(){
+        return view('pdf_template.shipping_description_document_template');
     }
 }

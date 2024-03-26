@@ -21,6 +21,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TemplateSettingController;
 use App\Http\Controllers\CustomTemplateController;
 use App\Models\Company;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -193,6 +194,8 @@ Route::middleware(['auth'])->group(function() {
         Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
     });
     
+
+
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::put('/', [SettingsController::class, 'update'])->name('update');
@@ -214,6 +217,8 @@ Route::middleware(['auth'])->group(function() {
     });
 
 });
+
+    Route::get("sdd_template",[SettingsController::class,'sdd_template_view']);
 
     Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
 

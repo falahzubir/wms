@@ -275,7 +275,8 @@
                             <div class="row m-0">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="promotional-title-field" class="form-label"><strong>Title</strong></label>
+                                        <label for="promotional-title-field"
+                                            class="form-label"><strong>Title</strong></label>
                                         <input validate-type type="text" class="form-control form-control-sm"
                                             id="promotional-title-field" name="promotional_title_field"
                                             placeholder="Promotional Title">
@@ -285,7 +286,8 @@
                                     <div class="row m-0">
                                         <div class="col-md-6 ps-md-0">
                                             <div class="mb-3">
-                                                <label for="start-date-field" class="form-label"><strong>Start Date</strong></label>
+                                                <label for="start-date-field" class="form-label"><strong>Start
+                                                        Date</strong></label>
                                                 <input validate-type type="date" class="form-control form-control-sm"
                                                     id="start-date-field" name="start_date_field"
                                                     placeholder="dd/mm/yyyy">
@@ -293,7 +295,8 @@
                                         </div>
                                         <div class="col-md-6 pe-md-0">
                                             <div class="mb-3">
-                                                <label for="end-date-field" class="form-label"><strong>End Date</strong></label>
+                                                <label for="end-date-field" class="form-label"><strong>End
+                                                        Date</strong></label>
                                                 <input validate-type type="date" class="form-control form-control-sm"
                                                     id="end-date-field" name="end_date_field" placeholder="dd/mm/yyyy">
                                             </div>
@@ -303,7 +306,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="operational-model-field" class="form-label"><strong>Operational
-                                            Model</strong></label>
+                                                Model</strong></label>
                                         <input type="text" class="form-control form-control-sm"
                                             id="operational-model-field" name="operational_model_field[]"
                                             placeholder="Operational Model">
@@ -377,7 +380,8 @@
                                                         class="form-label">Promotional
                                                         Link (qr
                                                         code link)</label>
-                                                    <input type="text" validate-type class="form-control form-control-sm"
+                                                    <input type="text" validate-type
+                                                        class="form-control form-control-sm"
                                                         id="at-qr-code-promo-link-field"
                                                         name='at_qr_code_promo_link_field'
                                                         placeholder="Example: https://wms.grobook.com.my/xxx/xxx/xxx">
@@ -547,7 +551,21 @@
             const baseURL = "{{ asset('') }}";
             let desc_editor;
             ClassicEditor
-                .create(document.querySelector('#editor'))
+                .create(document.querySelector('#editor'), {
+                    toolbar: {
+                        items: [
+                            'heading',
+                            '|',
+                            'bold',
+                            'italic',
+                            'underline',
+                            'strikethrough',
+                            '|',
+                            'undo',
+                            'redo'
+                        ]
+                    }
+                })
                 .then(editor => {
                     desc_editor = editor;
                 })
@@ -653,7 +671,10 @@
                 // GET DATA FOR TOM SELECT VALUE
                 axios.get('/api/settings/init_shipping_doc_desc_data')
                     .then(function(response) {
-                        sanitize_for_tomSelect(operational_model_tom_select, response.data.operationalModels, {id: 'id',name: 'name'}); //set the data into the tomselect
+                        sanitize_for_tomSelect(operational_model_tom_select, response.data.operationalModels, {
+                            id: 'id',
+                            name: 'name'
+                        }); //set the data into the tomselect
                         // sanitize_for_tomSelect(platform_tomSelect, [{id:'22','name'}], {id: 'id',name: 'payment_type_name'}); //set the data into the tomselect
                         platform_tomSelect.addOption({
                             value: 22,
@@ -663,33 +684,47 @@
                             value: 23,
                             text: 'Tik Tok'
                         });
-                        if(form_id == '') alert_toast_elem.querySelector('.toast-body').innerHTML = '<span>Loading Complete</span>'; // change the text in the toast
-                        setTimeout(() => { if(form_id == '') alertToast.hide() }, 3500); // hide the toast 
+                        if (form_id == '') alert_toast_elem.querySelector('.toast-body').innerHTML =
+                            '<span>Loading Complete</span>'; // change the text in the toast
+                        setTimeout(() => {
+                            if (form_id == '') alertToast.hide()
+                        }, 3500); // hide the toast 
 
                         //IF the URL contain sdd id or entering editing phase
                         if (form_id != '') {
                             axios.get(`/api/settings/edit_sdd/form/${form_id}`)
                                 .then(function(response) {
                                     let sdd_edit_data = response.data.data;
-                                    alert_toast_elem.querySelector('.toast-body').innerHTML ='<span>Loading Complete</span>';
+                                    alert_toast_elem.querySelector('.toast-body').innerHTML =
+                                        '<span>Loading Complete</span>';
 
-                                    document.getElementById('promotional-title-field').value = sdd_edit_data.promotional_title //title input field
-                                    document.getElementById('start-date-field').value = sdd_edit_data.start_date; //start date input field
-                                    document.getElementById('end-date-field').value = sdd_edit_data.end_date; //end date input field
-                                    operational_model_tom_select.setValue(sdd_edit_data.operational_model_id.split(',')); // set the data for op_model tomselect
-                                    platform_tomSelect.setValue(sdd_edit_data.platform.split(',')); // set the data for platform tomselect
-                                    let link_type_radio = document.querySelector(`[name="promotional_attachment_type"][value='${sdd_edit_data.link_type == '1' ? 'qr' : 'photo'}']`) //link type/promotional_attachment_type input field
+                                    document.getElementById('promotional-title-field').value = sdd_edit_data
+                                        .promotional_title //title input field
+                                    document.getElementById('start-date-field').value = sdd_edit_data
+                                        .start_date; //start date input field
+                                    document.getElementById('end-date-field').value = sdd_edit_data
+                                        .end_date; //end date input field
+                                    operational_model_tom_select.setValue(sdd_edit_data.operational_model_id.split(
+                                        ',')); // set the data for op_model tomselect
+                                    platform_tomSelect.setValue(sdd_edit_data.platform.split(
+                                        ',')); // set the data for platform tomselect
+                                    let link_type_radio = document.querySelector(
+                                        `[name="promotional_attachment_type"][value='${sdd_edit_data.link_type == '1' ? 'qr' : 'photo'}']`
+                                    ) //link type/promotional_attachment_type input field
                                     link_type_radio.checked = true;
                                     link_type_radio.dispatchEvent(new Event('change'));
-                                        
-                                    if(sdd_edit_data.link_type == '1'){
-                                        document.getElementById('at-qr-code-promo-link-field').value = sdd_edit_data.content_path; //promo link (QR CODE SELECTED) date input field
-                                        if(sdd_edit_data.additional_detail != null){
-                                            sdd_edit_data.additional_detail.forEach((detail_select)=>{
-                                                document.getElementById(`at-qr-code-order-details-check-${detail_select}`).checked = true;
+
+                                    if (sdd_edit_data.link_type == '1') {
+                                        document.getElementById('at-qr-code-promo-link-field').value = sdd_edit_data
+                                            .content_path; //promo link (QR CODE SELECTED) date input field
+                                        if (sdd_edit_data.additional_detail != null) {
+                                            sdd_edit_data.additional_detail.forEach((detail_select) => {
+                                                document.getElementById(
+                                                        `at-qr-code-order-details-check-${detail_select}`)
+                                                    .checked = true;
                                             });
                                         }
-                                    }else{
+                                    } else {
                                         // Uploading the file
                                         // let reader = new FileReader();
                                         // // Set up event listeners to handle file reading
@@ -699,12 +734,13 @@
                                         // };
                                         //     // Read the file as a data URL
                                         //     reader.readAsDataURL(sdd_edit_data.content_path);
-                                        }
+                                    }
 
-                                        document.getElementById('at-qr-code-promo-header-field').value = sdd_edit_data.promotion_header; //header input field
-                                        
-                                        desc_editor.setData(sdd_edit_data.description)//description (CKEDITOR)input field
-                                    
+                                    document.getElementById('at-qr-code-promo-header-field').value = sdd_edit_data
+                                        .promotion_header; //header input field
+
+                                    desc_editor.setData(sdd_edit_data.description) //description (CKEDITOR)input field
+
                                     setTimeout(() => {
                                         alertToast.hide();
                                     }, 3500);
@@ -762,11 +798,11 @@
                     `[name="end_date_field`), 'date');
                 let promotional_attachment_type = document.querySelector('[name="promotional_attachment_type"]:checked');
                 let promotional_link_result = true;
-                
-                if(promotional_attachment_type.value == 'qr'){
+
+                if (promotional_attachment_type.value == 'qr') {
                     te_promo_link_result = input_validator(shopping_doc_form_elem, document.querySelector(
-                        `[name="at_qr_code_promo_link_field`),
-                    'text');
+                            `[name="at_qr_code_promo_link_field`),
+                        'text');
                 }
 
                 let te_header_result = input_validator(shopping_doc_form_elem, document.querySelector(
@@ -780,7 +816,7 @@
                     let serializedFormData = new FormData(shopping_doc_form_elem);
                     serializedFormData.append('text_editor_description', desc_editor.getData());
 
-                    if(form_id != ''){ // if form_id exist in the segment or url = editing phase
+                    if (form_id != '') { // if form_id exist in the segment or url = editing phase
                         axios({
                             headers: {
                                 'Content-Type': 'multipart/form-data'
@@ -794,7 +830,7 @@
                         }).catch(function(error) {
                             console.log(error);
                         });
-                    }else{ // add new shipping document descripton phase
+                    } else { // add new shipping document descripton phase
                         axios({
                             headers: {
                                 'Content-Type': 'multipart/form-data'
@@ -809,21 +845,21 @@
                             console.log(error)
                         });
                     }
-                    
-                function success_alert(){
-                    Swal.fire({
-                        title: "Success?",
-                        text: "Promotion & Information Saved!",
-                        icon: "success",
-                        showCancelButton: false,
-                        confirmButtonColor: "#7066E0",
-                        confirmButtonText: "Okay"
+
+                    function success_alert() {
+                        Swal.fire({
+                            title: "Success?",
+                            text: "Promotion & Information Saved!",
+                            icon: "success",
+                            showCancelButton: false,
+                            confirmButtonColor: "#7066E0",
+                            confirmButtonText: "Okay"
                         }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.replace(`${baseURL}settings/ship_doc_desc`);
-                        }
-                    });
-                }
+                            if (result.isConfirmed) {
+                                window.location.replace(`${baseURL}settings/ship_doc_desc`);
+                            }
+                        });
+                    }
                 }
 
             }
