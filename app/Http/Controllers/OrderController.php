@@ -545,21 +545,28 @@ class OrderController extends Controller
      */
     public function check_duplicate($cur_customer, $cur_order)
     {
-        //return if duplicate detection is off
-        if(config('settings.detect_by_phone') == 0 && config('settings.detect_by_address') == 0){
-            return false;
-        }
+        $setting['detection_time'] = config('settings.detection_time');
+        $setting['detect_by_phone'] = config('settings.detect_by_phone');
+        $setting['detect_by_address'] = config('settings.detect_by_address');
+        $setting['detect_operation_type'] = config('settings.detect_operation_type');
+        $setting['detect_by_product'] = config('settings.detect_by_product');
 
-        $orders = Order::with('customer')
-            ->where('processed_at', '>=', Carbon::now()->subSeconds(config('settings.detection_time')))
+        //return if duplicate detection is off #time is REQUIRED
+        if( empty($setting['detection_time']) )
+        {
+           return false;
+        }
+        $orders = Order::with(['customer','items'])
+            ->where('processed_at', '>=', Carbon::now()->subSeconds($setting['detection_time']))
             ->whereNot('id', $cur_order->id);
 
         $duplicate_address = [];
         $duplicate_phone = [];
+        $duplicate_product = [];
         $all_duplicate = [];
 
         //check if duplicate by address
-        if(config('settings.detect_by_address') == 1){
+        if($setting['detect_by_address'] == 1){
             $addresses = $orders->get();
             if(count($addresses) > 0){
                 foreach($addresses as $order){
@@ -572,7 +579,7 @@ class OrderController extends Controller
         }
 
         //check if duplicate by phone
-        if(config('settings.detect_by_phone') == 1){
+        if($setting['detect_by_phone'] == 1){
             //get all addresses from orders with address id as array index
             $phones = [];
             if($cur_customer->phone != null){
@@ -592,76 +599,98 @@ class OrderController extends Controller
             }
         }
 
-        //return if not duplicate
-        if(count($duplicate_address) == 0 && count($duplicate_phone) == 0){
-            return false;
+        //check if duplicate by product
+        if( $setting['detect_by_product'] === 'ANY' ) #check if any product from both order is same
+        {
+            $products = $cur_order->items->pluck('product_id')->toArray();
+            $orders->whereHas('items', function ($q) use ($products) {
+                $q->whereIn('product_id', $products);
+            });
+            $duplicate_product = $orders->get();
         }
-
-        if(config('settings.detect_by_phone') == 1 && config('settings.detect_by_address') == 0){
-            if(count($duplicate_phone) > 0){
-                $array = collect($duplicate_phone)->pluck('id')->toArray();
-                $array[] = $cur_order->id;
-                foreach($duplicate_phone as $order){
-                    $order->duplicate_orders = implode(',', $array);
-                    $order->save();
-                }
-                $cur_order->duplicate_orders = implode(',', $array);
-                $cur_order->save();
-                return true;
-            }
-            return false;
-        }
-
-        if(config('settings.detect_by_address') == 1 && config('settings.detect_by_phone') == 0){
-            if(count($duplicate_address) > 0){
-                $array = collect($duplicate_address)->pluck('id')->toArray();
-                $array[] = $cur_order->id;
-                foreach($duplicate_address as $order){
-                    $order->duplicate_orders = implode(',', $array);
-                    $order->save();
-                }
-                $cur_order->duplicate_orders = implode(',', $array);
-                $cur_order->save();
-                return true;
-            }
-            return false;
-        }
-
-        if(config('settings.detect_operation_type') == 'OR'){
-            if(config('settings.detect_by_address') == 1 || config('settings.detect_by_phone') == 1){
-                if(count($duplicate_address) > 0 || count($duplicate_phone) > 0){
-                    $all_duplicate = array_merge($duplicate_address, $duplicate_phone);
-                    $array = array_unique(collect($all_duplicate)->pluck('id')->toArray());
-                    $array[] = $cur_order->id;
-                    foreach($all_duplicate as $order){
-                        $order->duplicate_orders = implode(',', $array);
-                        $order->save();
+        //check if duplicate by product
+        if( $setting['detect_by_product'] === 'ALL' )
+        {
+            $products = $cur_order->items->pluck('product_id')->toArray();
+            $orders->whereHas('items', function ($q) use ($products) {
+                $q->whereIn('product_id', $products);
+            });
+            $matching_orders = $orders->get();
+            foreach ($matching_orders as $order)
+            {
+                $matching_products = $order->items->pluck('product_id')->toArray();
+                if (count($matching_products) === count($products))
+                {
+                    $matching_products = array_diff($matching_products, $products);
+                    if (count($matching_products) === 0)
+                    {
+                        $duplicate_product[] = $order;
                     }
-                    $cur_order->duplicate_orders = implode(',', $array);
-                    $cur_order->save();
-                    return true;
                 }
-                return false;
-            }
-        }
-        else {
-            if(config('settings.detect_by_address') == 1 && config('settings.detect_by_phone') == 1){
-                if(count($duplicate_address) > 0 && count($duplicate_phone) > 0){
-                    $all_duplicate = array_intersect($duplicate_address, $duplicate_phone);
-                    $array = collect($all_duplicate)->pluck('id')->toArray();
-                    $array[] = $cur_order->id;
-                    foreach($all_duplicate as $order){
-                        $order->duplicate_orders = implode(',', $array);
-                        $order->save();
-                    }
-                    $cur_order->duplicate_orders = implode(',', $array);
-                    $cur_order->save();
-                    return true;
-                }
-                return false;
             }
         }
 
+        ##############################
+        #  Detect operation type OR  #
+        ##############################
+        if( $setting['detect_operation_type'] === 'OR' )
+        {
+            if ($setting['detect_by_phone'] == 1) {
+                $all_duplicate = array_merge($all_duplicate, $duplicate_phone);
+            }
+
+            if ($setting['detect_by_address'] == 1) {
+                $all_duplicate = array_merge($all_duplicate, $duplicate_address);
+            }
+
+            $all_duplicate = array_unique($all_duplicate);
+
+            if ($setting['detect_by_product'] === 'ANY' || $setting['detect_by_product'] === 'ALL') {
+                $all_duplicate = collect($all_duplicate)->merge($duplicate_product);
+                $all_duplicate = $all_duplicate->unique('id')->values()->all();
+
+            }
+
+            return $this->handleDuplicates($all_duplicate, $cur_order);
+        }
+
+        ##############################
+        # Detect operation type AND  #
+        ##############################
+        if( $setting['detect_operation_type'] === 'AND' )
+        {
+            $non_empty_arrays = array_filter([$duplicate_address, $duplicate_phone, $duplicate_product]);
+            if (empty($non_empty_arrays))
+            {
+                $all_duplicate = [];
+            }
+            else
+            {
+                $all_duplicate = call_user_func_array('array_intersect', $non_empty_arrays);
+            }
+
+            return $this->handleDuplicates($all_duplicate, $cur_order);
+        }
+
+        return false;
+    }
+
+    function handleDuplicates($duplicates, $cur_order)
+    {
+        if (count($duplicates) > 0)
+        {
+            $array = collect($duplicates)->pluck('id')->toArray();
+            $array[] = $cur_order->id;
+            foreach ($duplicates as $order)
+            {
+                $order->duplicate_orders = implode(',', $array);
+                $order->save();
+            }
+            die;
+            $cur_order->duplicate_orders = implode(',', $array);
+            $cur_order->save();
+            return true;
+        }
         return false;
     }
 
@@ -1070,6 +1099,13 @@ class OrderController extends Controller
             // Handle the case where the status is not recognized
             return response()->json(['error' => 'Invalid status'], 400);
         }
+    }
+
+    public function test() #left here for testing
+    {
+        $order = Order::where('id',11929)->first();
+        $customer = Customer::where('id',$order->customer_id)->first();
+        $this->check_duplicate($customer, $order);
     }
 
 }
