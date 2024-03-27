@@ -629,7 +629,6 @@ class OrderController extends Controller
                 }
             }
         }
-
         ##############################
         #  Detect operation type OR  #
         ##############################
@@ -686,7 +685,6 @@ class OrderController extends Controller
                 $order->duplicate_orders = implode(',', $array);
                 $order->save();
             }
-            die;
             $cur_order->duplicate_orders = implode(',', $array);
             $cur_order->save();
             return true;
@@ -1103,7 +1101,7 @@ class OrderController extends Controller
 
     public function test() #left here for testing
     {
-        $order = Order::where('id',11929)->first();
+        $order = Order::where('id',11932)->first();
         $customer = Customer::where('id',$order->customer_id)->first();
         $this->check_duplicate($customer, $order);
     }

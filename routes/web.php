@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function() {
         Route::post('change-postcode', [OrderController::class, 'change_postcode'])->name('orders.change_postcode');
         Route::get('bucket-batch/{batch}', [OrderController::class, 'bucket_batch'])->name('orders.bucket_batch');
         Route::get('/get_template_main', [OrderController::class, 'get_template_main']);
+        Route::get('/test', [OrderController::class, 'test']);
     });
 
     // group routes for buckets
@@ -192,7 +193,7 @@ Route::middleware(['auth'])->group(function() {
         Route::post('update_template', [CustomTemplateController::class, 'updateTemplate'])->name('custom_template_setting.update');
         Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
     });
-    
+
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::put('/', [SettingsController::class, 'update'])->name('update');
