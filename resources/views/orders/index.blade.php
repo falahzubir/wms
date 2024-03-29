@@ -1378,13 +1378,15 @@
                     //confirmation to generate cn
                     Swal.fire({
                         title: 'Are you sure to download shipping label?',
-                        html: `You are about to download shipping label for ${checkedValue} order(s).`,
+                        html: `<p class="text-secondary" style="font-size:0.75rem">You are about to download shipping label for ${checkedValue} order(s).</p><label style="font-size:0.8rem"><input type="checkbox" name="inc_packing_list_download_cn" id="inc-packing-list-download-cn" checked> <span class="ms-2" for="inc-packing-list-download-cn">Include packing list</span></label>`,
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#3085d6',
                         cancelButtonColor: '#d33',
                         confirmButtonText: 'Yes, download it!'
                     }).then((result) => {
+                        let inc_packing_list_check = document.getElementById('inc-packing-list-download-cn')
+                            .checked;
                         if (result.isConfirmed) {
                             Swal.fire({
                                 title: 'Please wait!',
@@ -1394,7 +1396,7 @@
                                     Swal.showLoading()
                                 },
                             });
-                            download_cn(checkedOrder);
+                            download_cn(checkedOrder, inc_packing_list_check);
                         }
                     })
                 }
@@ -1979,6 +1981,7 @@
                         responseType: 'json', // important
                         data: {
                             order_ids: checkedOrder,
+                            inc_packing_list: inc_packing_list_result
                         }
                     })
                     .then(function(res) {
@@ -2016,7 +2019,7 @@
                         console.log(error);
                         Swal.fire({
                             title: 'Success!',
-                            html: `Failed to generate pdf`,
+                            html: error.response.data.message,
                             allowOutsideClick: false,
                             icon: 'error',
                         });

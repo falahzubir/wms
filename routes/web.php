@@ -193,7 +193,7 @@ Route::middleware(['auth'])->group(function() {
         Route::post('update_template', [CustomTemplateController::class, 'updateTemplate'])->name('custom_template_setting.update');
         Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
     });
-    
+
 
 
     Route::prefix('settings')->name('settings.')->group(function () {
@@ -213,7 +213,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
 
 
-        
+
     });
 
 });
@@ -257,5 +257,9 @@ Route::middleware(['auth'])->group(function() {
                 return 'Seeds ran successfully!';
             // }
         });
+    });
+
+    Route::get('/test',function(){
+        return view('pdf_template.shipping_description_document_template');
     });
 

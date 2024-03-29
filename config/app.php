@@ -181,8 +181,8 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
-        Webklex\PDFMerger\Providers\PDFMergerServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
+        Webklex\PDFMerger\Providers\PDFMergerServiceProvider::class,
 
         /*
          * Package Service Providers...

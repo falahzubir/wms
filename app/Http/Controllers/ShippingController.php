@@ -586,24 +586,23 @@ class ShippingController extends Controller
 
     // public function generate_product_description($order)
     // {
-        
+
 
     //     return $path;
     // }
 
     public function download_cn(Request $request)
     {
-
         $sorted_order_id = $this->sort_order_to_download($request->order_ids);
 
         $attachments = Shipping::select('attachment', "order_id")->active()->whereIn('order_id', $sorted_order_id)->get()
             ->sortBy(function ($model) use ($sorted_order_id) {
                 return array_search($model->order_id, $sorted_order_id);
             });
-        $attachments = $attachments->pluck('attachment')->toArray();
+        $attachmentsChecking = $attachments->pluck('attachment')->toArray();
 
         // Filter out null values
-        $filteredAttachments = array_filter($attachments, function ($attachment) {
+        $filteredAttachments = array_filter($attachmentsChecking, function ($attachment) {
             return !is_null($attachment);
         });
 
@@ -614,30 +613,34 @@ class ShippingController extends Controller
 
         $pdf = PDFMerger::init();
 
-        foreach ($filteredAttachments as $attachment) {
-            if (!file_exists(storage_path('app/public/' . $attachment))) {
+        foreach ($attachments as $rs) {
+
+            //unset if attachment is null
+            if ($rs->attachment == null) {
+                continue;
+            }
+            $order_id = $rs->order_id;
+            $attach = $rs->attachment;
+
+            if (!file_exists(storage_path('app/public/' . $attach))) {
                 continue;
             }
 
-            if (!is_file(storage_path('app/public/' . $attachment))) {
+            if (!is_file(storage_path('app/public/' . $attach))) {
                 continue;
             }
 
-            if (file_get_contents(storage_path('app/public/' . $attachment)) == "") {
+            if (file_get_contents(storage_path('app/public/' . $attach)) == "") {
                 continue;
             }
 
-            $pdf->addPDF(storage_path('app/public/' . $attachment));
-            
+            $pdf->addPDF(storage_path('app/public/' . $attach));
 
-            //START HERE FOR MERGING PDF
-            $sdd_template = ShippingDocumentTemplate::find(1);
-
-            // Pdf::view('pdf_template.shipping_description_document_template', ['order_template' => $attachments,'sdd_template'=>$sdd_template ])
-            // ->format('a5')
-            // ->save('template_shipping_description.pdf');
-            Pdf::view('pdf_template.shipping_description_document_template')->save(storage_path('app/public/temp_storage'.date('Ymd_His').'.pdf'));
-            $pdf->addPDF(storage_path('app/public/temp_storage'.date('Ymd_His').'.pdf'));
+            if($request->inc_packing_list)
+            {
+                $productList = $this->generate_product_description($order_id);
+                $pdf->addPDF(storage_path('app/public/' . $productList));
+            }
         }
 
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
@@ -649,6 +652,34 @@ class ShippingController extends Controller
         }
 
         return response()->json(['download_url' => '/generated_labels/' . $filename]);
+    }
+
+    public function generate_product_description($order_id)
+    {
+        $order = Order::with(['items', 'items.product'])->find($order_id);
+        $path = 'product_desc/' . $order->id . '_product_description.pdf';
+
+        try {
+
+            //check first if file exists
+            if (file_exists(storage_path('app/public/' . $path))) {
+                return $path;
+            }else{
+                $pdf = PDF::view('pdf_template.shipping_description_document_template', compact('order'));
+                $pdf->format('a6')->save(storage_path('app/public/' . $path));
+
+                //store in shippings table
+                Shipping::updateOrCreate(
+                    ['order_id' => $order_id],
+                    ['packing_attachment' => $path]
+                );
+            }
+            return $path;
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'error' => $e->getMessage()]);
+        }
+
     }
 
     public function download_cn_bucket(Request $request)
