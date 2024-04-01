@@ -1376,6 +1376,7 @@ class ShippingController extends Controller
 
         foreach($orders as $key => $value)
         {
+            $product_list = $this->generate_product_description($value->id);
             $order[$key]['id'] = $value->id;
 
             if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->first()->tracking_number))
@@ -1423,6 +1424,7 @@ class ShippingController extends Controller
                             //save to shippings table
                             $shipping = Shipping::where('order_id', $value->id)->first();
                             $shipping->attachment = $getDownloadShippingDocument;
+                            $shipping->packing_attachment = $product_list;
                             $shipping->save();
 
                             $order[$key]['attachment'] = $getDownloadShippingDocument;
@@ -1514,6 +1516,7 @@ class ShippingController extends Controller
 
         foreach($orders as $key => $value)
         {
+            $product_list = $this->generate_product_description($value->id);
             $order[$key]['id'] = $value->id;
             if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings[0]->tracking_number))
             {
@@ -1538,6 +1541,7 @@ class ShippingController extends Controller
             // save to shippings table
             $shipping = Shipping::where('order_id', $value->id)->first();
             $shipping->attachment = $generateCN['data']['file_name'];
+            $shipping->packing_attachment = $product_list;
             $shipping->save();
 
             $order[$key]['attachment'] = $generateCN['data']['file_name'];

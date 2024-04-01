@@ -18,6 +18,7 @@
         "maatwebsite/excel": "^3.1",
         "psr/simple-cache": "^2.0",
         "realrashid/sweet-alert": "^7.1",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-pdf": "^1.4",
         "spatie/laravel-permission": "^5.9",
         "spatie/laravel-webhook-client": "^3.1",
