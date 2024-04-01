@@ -556,9 +556,6 @@ class OrderController extends Controller
         {
            return false;
         }
-        $orders = Order::with(['customer','items'])
-            ->where('processed_at', '>=', Carbon::now()->subSeconds($setting['detection_time']))
-            ->whereNot('id', $cur_order->id);
 
         $duplicate_address = [];
         $duplicate_phone = [];
@@ -567,7 +564,9 @@ class OrderController extends Controller
 
         //check if duplicate by address
         if($setting['detect_by_address'] == 1){
-            $addresses = $orders->get();
+            $addresses = Order::with(['customer','items'])
+            ->where('processed_at', '>=', Carbon::now()->subSeconds($setting['detection_time']))
+            ->whereNot('id', $cur_order->id)->get();
             if(count($addresses) > 0){
                 foreach($addresses as $order){
                     similar_text(strtoupper($order->customer->address), strtoupper($cur_customer->address), $percent);
@@ -588,10 +587,16 @@ class OrderController extends Controller
             if($cur_customer->phone_2 != null){
                 $phones[] = $cur_customer->phone_2;
             }
-            $phone = $orders->whereHas('customer', function ($q) use ($phones) {
-                $q->whereIn('phone', $phones)
-                    ->orWhereIn('phone_2', $phones);
-            })->get();
+            $phone = Order::with(['customer', 'items'])
+            ->where('processed_at', '>=', Carbon::now()->subSeconds($setting['detection_time']))
+            ->where('id', '!=', $cur_order->id)
+            ->where(function ($query) use ($phones) {
+                $query->whereHas('customer', function ($q) use ($phones) {
+                    $q->whereIn('phone', $phones)
+                        ->orWhereIn('phone_2', $phones);
+                });
+            })
+            ->get();
             if(count($phone) > 0){
                 foreach($phone as $order){
                     $duplicate_phone[] = $order;
@@ -603,19 +608,25 @@ class OrderController extends Controller
         if( $setting['detect_by_product'] === 'ANY' ) #check if any product from both order is same
         {
             $products = $cur_order->items->pluck('product_id')->toArray();
-            $orders->whereHas('items', function ($q) use ($products) {
-                $q->whereIn('product_id', $products);
-            });
-            $duplicate_product = $orders->get();
+            $duplicate_product = Order::with(['customer','items'])
+            ->where('processed_at', '>=', Carbon::now()->subSeconds($setting['detection_time']))
+            ->where(function ($query) use ($cur_order, $products) {
+                $query->whereNot('id', $cur_order->id)
+                      ->whereHas('items', function ($q) use ($products) {
+                          $q->whereIn('product_id', $products);
+                      });
+            })->get();
         }
         //check if duplicate by product
         if( $setting['detect_by_product'] === 'ALL' )
         {
             $products = $cur_order->items->pluck('product_id')->toArray();
-            $orders->whereHas('items', function ($q) use ($products) {
+            $matching_orders = Order::with(['customer','items'])
+            ->where('processed_at', '>=', Carbon::now()->subSeconds($setting['detection_time']))
+            ->where('id', '!=', $cur_order->id)
+            ->whereHas('items', function ($q) use ($products) {
                 $q->whereIn('product_id', $products);
-            });
-            $matching_orders = $orders->get();
+            })->get();
             foreach ($matching_orders as $order)
             {
                 $matching_products = $order->items->pluck('product_id')->toArray();
@@ -1101,7 +1112,7 @@ class OrderController extends Controller
 
     public function test() #left here for testing
     {
-        $order = Order::where('id',11932)->first();
+        $order = Order::where('id',11938)->first();
         $customer = Customer::where('id',$order->customer_id)->first();
         $this->check_duplicate($customer, $order);
     }
