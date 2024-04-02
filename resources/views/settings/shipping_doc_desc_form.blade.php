@@ -577,7 +577,7 @@
 
 
             // ELEMENT LIST \/
-            const pa_photo = document.getElementById('attachment-type-file'); // promotional attachment 
+            const pa_photo = document.getElementById('attachment-type-file'); // promotional attachment
             const pa_qr = document.getElementById('attachment-type-qr');
             const preview_modal_elem = document.getElementById('promotional-attachment-preview');
             const shopping_doc_form_elem = document.getElementById('shipping-doc-form');
@@ -656,7 +656,7 @@
 
                 })
 
-                // Toast 
+                // Toast
                 alertToast = new bootstrap.Toast(alert_toast_elem, {
                     autohide: false
                 }); // Returns a Bootstrap toast instance
@@ -688,7 +688,7 @@
                             '<span>Loading Complete</span>'; // change the text in the toast
                         setTimeout(() => {
                             if (form_id == '') alertToast.hide()
-                        }, 3500); // hide the toast 
+                        }, 3500); // hide the toast
 
                         //IF the URL contain sdd id or entering editing phase
                         if (form_id != '') {
@@ -789,7 +789,7 @@
                 };
                 // HINT
                 // gs- general setting section
-                // te- text editing section 
+                // te- text editing section
                 let gs_title_result = input_validator(shopping_doc_form_elem, document.querySelector(
                     `[name="promotional_title_field"]`), 'text');
                 let gs_start_date_result = input_validator(shopping_doc_form_elem, document.querySelector(

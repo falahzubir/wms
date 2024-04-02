@@ -668,7 +668,10 @@ class ShippingController extends Controller
         $path = 'product_desc/' .Carbon::now()->format('Ymd_His').'_'.$order_id . '_product_description.pdf';
 
         try {
-            $pdf = PDF::view('pdf_template.shipping_description_document_template', compact('order'));
+            $ship_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())
+            ->where('end_date', '>=', Carbon::now())
+            ->first();
+            $pdf = PDF::view('pdf_template.shipping_description_document_template', compact('order', 'ship_docs'));
             $pdf->format('a6')->save(storage_path('app/public/' . $path));
 
         } catch (\Exception $e) {
@@ -689,6 +692,9 @@ class ShippingController extends Controller
         $orderItems = array_column($rs, 'order_item_id');
         $quantity = array_column($rs, 'quantity');
 
+        $ship_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())
+        ->where('end_date', '>=', Carbon::now())
+        ->first();
         $items = OrderItem::with(['product'])->whereIn('id', $orderItems)->get();
         foreach ($items as $key => $value) {
             $total_price = $value->price/$value->quantity;
@@ -701,7 +707,7 @@ class ShippingController extends Controller
         $path = 'product_desc/' .Carbon::now()->format('Ymd_His').'_'.$order_id . '_product_description.pdf';
 
         try {
-            $pdf = PDF::view('pdf_template.shipping_description_document_template_multiple', compact('items'));
+            $pdf = PDF::view('pdf_template.shipping_description_document_template_multiple', compact('items', 'ship_docs'));
             $pdf->format('a6')->save(storage_path('app/public/' . $path));
 
         } catch (\Exception $e) {

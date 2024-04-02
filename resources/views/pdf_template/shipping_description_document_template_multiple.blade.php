@@ -70,7 +70,7 @@
                             <td><span>{{ $item->product->name }}</span></td>
                             <td><span>{{ $item->quantity }}</span></td>
                             <td class="text-end"><span>RM {{ number_format($item->product->price, 2) }}</span></td>
-                            <td class="text-end"><span>RM {{ number_format($item->price, 2) }}</span></td>
+                            <td class="text-end"><span>RM {{ number_format(($item->price/100), 2) }}</span></td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -78,7 +78,7 @@
                     <tr>
                         <td><span>Qty Total : {{ $items->sum('quantity') }}</span></td>
                         <td class="text-end" colspan="2"><span>Total</span></td>
-                        <td class="text-end"><span>RM {{ number_format( $items->sum('price'), 2) }}</span></td>
+                        <td class="text-end"><span>RM {{ number_format(($items->sum('price')/100), 2) }}</span></td>
                     </tr>
                 </tfoot>
             @else

@@ -183,6 +183,7 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
         Webklex\PDFMerger\Providers\PDFMergerServiceProvider::class,
+        LaravelQRCode\Providers\QRCodeServiceProvider::class,
 
         /*
          * Package Service Providers...
@@ -199,7 +200,6 @@ return [
         \App\Providers\FortifyServiceProvider::class,
         Spatie\Permission\PermissionServiceProvider::class,
         App\Providers\SettingsServiceProvider::class,
-
     ],
 
     /*
@@ -218,6 +218,7 @@ return [
         'PDFMerger' => Webklex\PDFMerger\Facades\PDFMergerFacade::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
         'Carbon' => \Carbon\Carbon::class,
+        'QRCode' => LaravelQRCode\Facades\QRCode::class,
     ])->toArray(),
 
     /*
