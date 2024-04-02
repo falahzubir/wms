@@ -296,6 +296,22 @@
                             <span>Companies</span>
                         </a>
                     </li>
+                    @can('view.courier_setting')
+                        <li>
+                            <a href="{{ route('couriers.index') }}"
+                                {{ Route::current()->getName() == 'couriers.index' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i><span>Courier</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('view.selected_coverage')
+                        <li>
+                            <a href="{{ route('couriers.selectedCoverage') }}"
+                                {{ Route::current()->getName() == 'couriers.coverage' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i><span>Selected Coverage</span>
+                            </a>
+                        </li>
+                    @endcan
                     @can('permission.update')
                         <li>
                             <a href="{{ route('roles.index') }}"

@@ -1,11 +1,16 @@
-@props(['title' => 'Untitled'])
+@props(['title' => 'Untitled', 'crumbList' => false])
 <div class="pagetitle">
     <h1>{{ $title }}</h1>
     <!-- Breadcrumb disabled for time being -->
-    {{-- <nav>
+    @if($crumbList)
+    <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-            <li class="breadcrumb-item active">Dashboard</li>
+            @if(isset($crumbList))
+                @foreach($crumbList as $crumb)
+                <li class="breadcrumb-item {{ $crumb['active'] ?? '' }}"><a href="{{ $crumb['url'] }}">{{ $crumb['name'] }}</a></li>
+                @endforeach
+            @endif
         </ol>
-    </nav> --}}
+    </nav>
+    @endif
 </div><!-- End Page Title -->

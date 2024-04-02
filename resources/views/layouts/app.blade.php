@@ -1,5 +1,4 @@
-@props(['title' => 'Untitled'])
-
+@props(['title' => 'Untitled', 'crumbList' => false])
     <!-- ======= HTML Header ======= -->
     <x-header :title="$title" />
 
@@ -8,7 +7,7 @@
 
     <main id="main" class="main" style="min-height: 100vh">
 
-        <x-breadcrumb :title="$title" />
+        <x-breadcrumb :title="$title" :crumbList="$crumbList" />
 
         <!-- ======= Notification Alert ======= -->
         @if(request()->segment(1) === 'alternative_postcode')

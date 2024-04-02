@@ -503,6 +503,11 @@ class PosMalaysiaController extends ShippingController
                     mkdir(storage_path('app/public/pos_labels'), 0777, true);
                 }
 
+                //check if file exist, rename the original file
+                if(file_exists($filePath)){
+                    shell_exec('mv '.$filePath.' '.$filePath.'_deleted'.date('YmdHis'));
+                }
+
                 // Save the file
                 file_put_contents($filePath, $fileContent);
 
