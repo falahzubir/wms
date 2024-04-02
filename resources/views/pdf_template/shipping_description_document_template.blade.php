@@ -98,7 +98,8 @@
             <span class="position-absolute" id="second"></span>
             <div class="d-flex justify-content-center">
                 <div class="box" style="--c:black;--w:40px;--b:6px">
-                    <img width="150" height="150" src="{{ env('APP_URL') }}/{{ $ship_docs->content_path }}"alt="QR Code">
+                    {{-- <img width="150" height="150" src="{{ env('APP_URL') }}/{{ $ship_docs->content_path }}"alt="QR Code"> --}}
+                    <img width="150" height="150" src="https://upload.wikimedia.org/wikipedia/commons/5/5b/Qrcode_wikipedia.jpg" alt="QR Code">
 
                 </div>
             </div>
