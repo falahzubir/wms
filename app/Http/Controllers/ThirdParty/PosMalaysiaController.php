@@ -331,7 +331,10 @@ class PosMalaysiaController extends ShippingController
             Artisan::call('posmalaysia-token:cron');
         }
 
-        // if shipping data not exist
+        // $orders_pos = Order::doesntHave('shippings')->with([
+        //     'company', 'operationalModel', 'batch',
+        // ])->whereIn('id', $request->order_ids)->where('courier_id', POSMALAYSIA_ID)->get();
+
         if($order->shippings->count() == 0){
             $gen_connote = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_connote, [
                     'numberOfItem' => count($data),
@@ -342,34 +345,35 @@ class PosMalaysiaController extends ShippingController
                     'username' => config('settings.genconnote_username'),
                 ])->json();
 
-                if($gen_connote['StatusCode'] != '01'){
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => $gen_connote['Message'],
-                    ], 400);
-                }
+            if($gen_connote['StatusCode'] != '01'){
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $gen_connote['Message'],
+                ], 400);
+            }
+        }
 
-                //split to array
-                $shippings = [];
-                $connote_array = explode('|', $gen_connote['ConnoteNo']);
-                foreach($data as $key => $value){
-                    $shippings[] = [
-                        'order_id' => $order->id,
-                        'tracking_number' => $connote_array[$key],
-                        'shipment_number' => shipment_num_format_mult($order, $key),
-                        'courier' => 'posmalaysia',
-                        'created_by' => auth()->user()->id ?? 1,
-                    ];
-                }
+        if(isset($gen_connote)){
+            $shippings = [];
+            $connote_array = explode('|', $gen_connote['ConnoteNo']);
 
-                Shipping::insert($shippings);
+            foreach($data as $key => $value){
+                $shippings[] = [
+                    'order_id' => $order->id,
+                    'tracking_number' => $connote_array[$key],
+                    'shipment_number' => shipment_num_format_mult($order, $key),
+                    'courier' => 'posmalaysia',
+                    'created_by' => auth()->user()->id ?? 1,
+                ];
             }
 
-            else{
-                $connote_array = $order->shippings->pluck('tracking_number')->toArray();
-            }
-        //if additional reference not exist
-        if($order->shippings->whereNull('additional_reference')->count() > 0){
+            Shipping::insert($shippings);
+        }
+        else{
+            $connote_array = $order->shippings->pluck('tracking_number')->toArray();
+        }
+
+        if($order->shippings->whereNull('shippings.additional_reference')->count() == 0){
             $pl9_generate = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_pl9, [
                 'AccountNo' => config('settings.gen3pl_account_no'),
                 'Secretid' => config('settings.gen3pl_secret_id'),
@@ -389,76 +393,89 @@ class PosMalaysiaController extends ShippingController
         }
 
         foreach($data as $key => $cn){
-            $shipping = Shipping::where('tracking_number', $connote_array[$key])->first();
-            $json_data = [
-                'subscriptionCode' => $order->company->posmalaysia_subscribtion_code,
-                'requireToPickup' => config('settings.genpreacceptedsingle_require_to_pickup'),
-                'requireWebHook' => config('settings.genpreacceptedsingle_require_web_hook'),
-                'accountNo' => config('settings.genpreacceptedsingle_account_no'),
-                'callerName' => config('settings.genpreacceptedsingle_caller_name'),
-                'callerPhone' => config('settings.genpreacceptedsingle_caller_phone'),
-                'pickupLocationID' => config('settings.genpreacceptedsingle_pickup_location_id'),
-                'pickupLocationName' => config('settings.genpreacceptedsingle_pickup_location_name'),
-                'contactPerson' => config('settings.genpreacceptedsingle_contact_person'),
-                'phoneNo' => config('settings.genpreacceptedsingle_phone_no'),
-                'pickupAddress' => config('settings.genpreacceptedsingle_pickup_address'),
-                'pickupDistrict' => config('settings.genpreacceptedsingle_pickup_district'),
-                'pickupProvince' => config('settings.genpreacceptedsingle_pickup_province'),
-                'pickupCountry' => config('settings.genpreacceptedsingle_pickup_country'),
-                'pickupLocation' => config('settings.genpreacceptedsingle_pickup_location'),
-                'pickupEmail' => config('settings.genpreacceptedsingle_pickup_email'),
-                'postCode' => config('settings.genpreacceptedsingle_post_code'),
-                'ItemType' => config('settings.genpreacceptedsingle_item_type'),
-                'totalQuantityToPickup' => count($data), //to be confirmed
-                'totalWeight' => get_order_weight($order, $cn)/1000, // KG
-                'ConsignmentNoteNumber' => $connote_array[$key],
-                'PaymentType' => $order->purchase_type == PURCHASE_TYPE_COD ? 0 : 2,
-                'Amount' => $order->total_price/100,
-                'readyToCollectAt' => date('h:i A', strtotime('+1 hour')),
-                'closeAt' => config('settings.genpreacceptedsingle_close_at'),
-                'receiverName' => $order->customer->name,
-                'receiverFname' => $order->customer->name,
-                'receiverLname' => $order->customer->name,
-                'receiverID' => '',
-                'receiverAddress' => $order->customer->address,
-                'receiverAddress2' => '',
-                'receiverDistrict' => '',
-                'receiverProvince' => MY_STATES[$order->customer->state],
-                'receiverCity' => $order->customer->city,
-                'receiverPostCode' => $order->customer->postcode,
-                'receiverCountry' => 'MY',
-                'receiverEmail' => '',
-                'receiverPhone01' => $order->customer->phone,
-                'receiverPhone02' => $order->customer->phone_2 ?? $order->customer->phone,
-                'sellerReferenceNo' => shipment_num_format_mult($order, $key),
-                'itemDescription' => $this->package_description($order, $cn),
-                'sellerOrderNo' => $order->sales_id,
-                'comments' => $order->shipping_remarks,
-                'packDesc' => get_shipping_remarks($order, $cn),
-                'packVol' => '',
-                'packLeng' => '',
-                'packWidth' => '',
-                'packHeight' => '',
-                'packTotalitem' => '',
-                'orderDate' => date('Y-m-d'),
-                'packDeliveryType' => '',
-                'ShipmentName' => 'PosLaju',
-                'pickupProv' => '',
-                'deliveryProv' => '',
-                'postalCode' => '',
-                'currency' => 'MYR',
-                'countryCode' => 'MY',
-                'pickupDate' => ''
-            ];
-
-            $request = Http::withToken($bearer->token, 'Bearer')->post($this->posmalaysia_download_connote, $json_data)->json();
-
-            $save = $this->save_connote($request, $order, $shipping, $key);
-
-            if($save !== true){
-                $error[] = $save;
+            if(!isset($shipping)){
+                $shipping = Shipping::where('tracking_number', $connote_array[$key])->first();
             }
+            if($key == 0){ // parent json
+                $json_data = [
+                    'subscriptionCode' => config('settings.genpreacceptedsingle_subscription_code'),
+                    'requireToPickup' => config('settings.genpreacceptedsingle_require_to_pickup'),
+                    'requireWebHook' => config('settings.genpreacceptedsingle_require_web_hook'),
+                    'accountNo' => config('settings.genpreacceptedsingle_account_no'),
+                    'callerName' => config('settings.genpreacceptedsingle_caller_name'),
+                    'callerPhone' => config('settings.genpreacceptedsingle_caller_phone'),
+                    'pickupLocationID' => config('settings.genpreacceptedsingle_pickup_location_id'),
+                    'pickupLocationName' => config('settings.genpreacceptedsingle_pickup_location_name'),
+                    'contactPerson' => config('settings.genpreacceptedsingle_contact_person'),
+                    'phoneNo' => config('settings.genpreacceptedsingle_phone_no'),
+                    'pickupAddress' => config('settings.genpreacceptedsingle_pickup_address'),
+                    'pickupDistrict' => config('settings.genpreacceptedsingle_pickup_district'),
+                    'pickupProvince' => config('settings.genpreacceptedsingle_pickup_province'),
+                    'pickupCountry' => config('settings.genpreacceptedsingle_pickup_country'),
+                    'pickupLocation' => config('settings.genpreacceptedsingle_pickup_location'),
+                    'pickupEmail' => config('settings.genpreacceptedsingle_pickup_email'),
+                    'postCode' => config('settings.genpreacceptedsingle_post_code'),
+                    'ItemType' => config('settings.genpreacceptedsingle_item_type'),
+                    'totalQuantityToPickup' => count($data),
+                    'totalWeight' => get_order_weight($order, $cn)/1000, // KG
+                    'ConsignmentNoteNumber' => $connote_array[$key], // parent connote, first child
+                    'PaymentType' => $order->purchase_type == PURCHASE_TYPE_COD ? 0 : 2,
+                    'Amount' => $order->total_price/100,
+                    'readyToCollectAt' => date('h:i A', strtotime('+1 hour')),
+                    'closeAt' => config('settings.genpreacceptedsingle_close_at'),
+                    'receiverName' => $order->customer->name,
+                    'receiverFname' => $order->customer->name,
+                    'receiverLname' => $order->customer->name,
+                    'receiverID' => '',
+                    'receiverAddress' => $order->customer->address,
+                    'receiverAddress2' => '',
+                    'receiverDistrict' => '',
+                    'receiverProvince' => MY_STATES[$order->customer->state],
+                    'receiverCity' => $order->customer->city,
+                    'receiverPostCode' => $order->customer->postcode,
+                    'receiverCountry' => 'MY',
+                    'receiverEmail' => '',
+                    'receiverPhone01' => $order->customer->phone,
+                    'receiverPhone02' => $order->customer->phone_2 ?? $order->customer->phone,
+                    'sellerReferenceNo' => shipment_num_format_mult($order, $key),
+                    'itemDescription' => $this->package_description($order, $cn),
+                    'sellerOrderNo' => $order->sales_id,
+                    'comments' => $order->shipping_remarks,
+                    'packDesc' => get_shipping_remarks($order, $cn),
+                    'packVol' => '',
+                    'packLeng' => '',
+                    'packWidth' => '',
+                    'packHeight' => '',
+                    'packTotalitem' => '',
+                    'orderDate' => '', //to be confirmed
+                    'packDeliveryType' => '',
+                    'ShipmentName' => 'PosLaju',
+                    'pickupProv' => '',
+                    'deliveryProv' => '',
+                    'postalCode' => '',
+                    'currency' => 'MYR',
+                    'countryCode' => 'MY',
+                    'pickupDate' => date('Y-m-d'), //to be confirmed
+                    'isMPS' => true,
+                ];
+            } else {
+                $json_data['mps'][$key-1] = [
+                    'consignmentNoteNumber' => $connote_array[$key],
+                    'weight' => get_order_weight($order, $cn)/1000,
+                    'length' => '0',
+                    'width' => '0',
+                    'height' => '0',
+                    'details' => null,
+                ];
+            }
+        }
+        // dd($shipping);
+        $request = Http::withToken($bearer->token, 'Bearer')->post($this->posmalaysia_download_connote, $json_data)->json();
 
+        $save = $this->save_connote($request, $order, $shipping, true);
+
+        if($save !== true){
+            $error[] = $save;
         }
         if(count($error) > 0){
             return response()->json([
@@ -476,7 +493,7 @@ class PosMalaysiaController extends ShippingController
 
     }
 
-    private function save_connote($request, $order, $shipping, $no = 0)
+    private function save_connote($request, $order, $shipping, $mult = false)
     {
         $error = [];
         if(isset($request['pdf']) && $request['pdf'] != null){
@@ -492,11 +509,10 @@ class PosMalaysiaController extends ShippingController
 
             // Get the file content
             $fileContent = file_get_contents($fileUrl, false, $context);
-
             if ($fileContent !== false) {
                 // echo base64_encode($fileContent);
                 // Specify the file name with the .pdf extension
-                $fileName = ($no > 0 ? shipment_num_format_mult($order, $no) : shipment_num_format($order)) . '.pdf';
+                $fileName = ($mult == true ? shipment_num_format_mult($order, 1).'_original' : shipment_num_format($order)) . '.pdf';
                 $filePath = storage_path('app/public/pos_labels/' . $fileName);
 
                 // Set the appropriate headers for a PDF file
@@ -508,9 +524,23 @@ class PosMalaysiaController extends ShippingController
                     mkdir(storage_path('app/public/pos_labels'), 0777, true);
                 }
 
-                // Save the file
-                file_put_contents($filePath, $fileContent);
+                //check if file exist, rename the original file
+                if(file_exists($filePath)){
+                    shell_exec('mv '.$filePath.' '.$filePath.'_deleted'.date('YmdHis'));
+                }
 
+                // Save the file
+                if(file_put_contents($filePath, $fileContent)){
+                    if($mult == true){ //split connote pdf
+                        $new_file_path = storage_path('app/public/pos_labels/' . shipment_num_format_mult($order, 1) . '.pdf');
+                        shell_exec('gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile='.$new_file_path.' '.$filePath);
+                        unlink($filePath);
+                        $fileName = shipment_num_format_mult($order, 1) . '.pdf';
+                    }
+                    else{
+                        file_put_contents($filePath, $fileContent);
+                    }
+                }
                 // save path to shipping
                 $shipping->update(['attachment' => "pos_labels/".$fileName]);
 
