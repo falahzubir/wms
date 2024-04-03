@@ -839,13 +839,6 @@ class ShippingController extends Controller
 
         $array_data = ($request->input('cn_data'));
 
-        $orders_dhl = Order::doesntHave('shippings')->with([
-            'customer', 'items', 'items.product', 'company',
-            'company.access_tokens' => function ($query) {
-                $query->where('type', 'dhl');
-            }
-        ])->whereIn('id', $order_id)->where('courier_id', DHL_ID)->get();
-
         // for now support only dhl-ecommerce and posmalaysia
         if($request->input('courier_id') == DHL_ID){
             return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
