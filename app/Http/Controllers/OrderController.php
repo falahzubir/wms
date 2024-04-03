@@ -842,7 +842,7 @@ class OrderController extends Controller
                 set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
             }
 
-            return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
+            return back()->with('success', 'Successfully Scanned')->with('shipping', $shipping);
         } else {
             //check if order return
             if($shipping->order->status == ORDER_STATUS_RETURN_SHIPPING){
@@ -858,26 +858,6 @@ class OrderController extends Controller
      * @param  Request $request
      * @return json
      */
-    // public function download_order_csv(Request $request)
-    // {
-    //     // return $request;
-    //     $fileName = date('Ymdhis') . '_list_of_orders.csv';
-    //     $orders = $this->index();
-
-    //     $orders->whereIn('id', $request->order_ids);
-
-    //     $orders = $this->filter_order($request, $orders);
-
-    //     $orders = $orders->get();
-
-    //     Excel::store(new OrderExport($orders),"public/".$fileName);
-    //     // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
-
-    //     return response([
-    //         "file_name"=> $fileName
-    //     ]);
-    // }
-
     public function download_order_csv(Request $request)
     {
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
@@ -903,6 +883,7 @@ class OrderController extends Controller
                     ->from('template_mains')
                     ->where('id', $request->template_id);
             })
+            ->orderBy('template_columns.column_position')
             ->get();
 
         Excel::store(new OrderExport($orders, $headers, $columnName), "public/" . $fileName);
@@ -1045,6 +1026,7 @@ class OrderController extends Controller
             'delivered' => 6,
             'returned' => 7,
             'return-completed' => 7, // Assuming the same template_type for 'returned' and 'return-completed'
+            'overall' => 8,
             'rejected' => 9,
         ];
 

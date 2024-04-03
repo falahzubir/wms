@@ -1,10 +1,11 @@
 <?php
 
-use App\Models\OrderLog;
+use App\Models\User;
 use App\Models\State;
-use App\Models\OperationalModel;
+use App\Models\OrderLog;
 use App\Models\OrderItem;
 use App\Models\PaymentType;
+use App\Models\OperationalModel;
 
 if (!function_exists('currency')) {
     /**
@@ -311,6 +312,36 @@ if(!function_exists('is_digit_count')){
     }
 }
 
+if(!function_exists('hash_url_encode')){
+    /**
+     * Encode url
+     *
+     * @param  string $url
+     * @return string
+     */
+    function hash_url_encode($id)
+    {
+        $url_hash_key = 'Gr0b0xT3cH@URL===';
+        return urlencode(base64_encode($url_hash_key.$id));
+    }
+}
+
+if(!function_exists('hash_url_decode')){
+    /**
+     * Decode url
+     *
+     * @param  string $url
+     * @return string
+     */
+    function hash_url_decode($decoded_id)
+    {
+        $x = base64_decode(urldecode($decoded_id));
+        $arr_x = explode("===", $x);
+        $data_return = isset($arr_x[1]) ? $arr_x[1] : '';
+        return $data_return;
+    }
+}
+
 if(!function_exists('check_order_status')){
     /**
      * Check order status
@@ -380,6 +411,19 @@ if (!function_exists('get_payment_name')) {
 
         if ($result) {
             return $result->payment_type_name;
+        } else {
+            return null;
+        }
+    }
+}
+
+if (!function_exists('get_pic')) {
+    function get_pic($id)
+    {
+        $result = User::find($id);
+
+        if ($result) {
+            return $result->name;
         } else {
             return null;
         }
