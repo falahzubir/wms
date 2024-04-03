@@ -530,9 +530,6 @@ class PosMalaysiaController extends ShippingController
                 }
 
                 // Save the file
-                file_put_contents($filePath, $fileContent);
-
-                // Save the file
                 if(file_put_contents($filePath, $fileContent)){
                     if($mult == true){ //split connote pdf
                         $new_file_path = storage_path('app/public/pos_labels/' . shipment_num_format_mult($order, 1) . '.pdf');
