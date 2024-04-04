@@ -129,6 +129,13 @@
                         @else
                             <td>-</td>
                         @endif
+                    @elseif ($column->column_name == "order_pic")
+                        <td>
+                            @php
+                            $staffNames = collect(json_decode($staffMain))->pluck('staff_name')->implode(', ');
+                            @endphp
+                            {{ !empty($staffNames) ? $staffNames : '-' }}
+                        </td>
                     @else
                         <td>{{ $order->{$column->column_name} ?? '' }}</td>
                     @endif
