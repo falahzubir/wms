@@ -363,7 +363,7 @@
                                             confirmButtonText: 'Download',
                                             cancelButtonText: 'OK', // Change close button text to 'OK'
                                             showCancelButton: true, // Show close button
-                                            showCloseButton: true, 
+                                            showCloseButton: true,
                                         }).then((result) => {
                                             if (result.isConfirmed) {
                                                 axios({
@@ -372,6 +372,7 @@
                                                         responseType: 'json', // important
                                                         data: {
                                                             order_ids: [order_id],
+                                                            inc_packing_list: inc_packing_list_generated_cn_multiple_cn_checkbox_value
                                                         }
                                                     })
                                                     .then(function(res) {

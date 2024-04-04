@@ -689,11 +689,6 @@ class ShippingController extends Controller
         return $shipping_docs;
     }
 
-    public function test()
-    {
-        dd($this->generate_product_description(11916));
-    }
-
     public function generate_product_description($order_id)
     {
         $addon_url = '';
@@ -703,19 +698,22 @@ class ShippingController extends Controller
         try {
             $ship_docs = $this->checking_shipping_docs($order_id);
             if($ship_docs != null){
-                $additional_details = json_decode($ship_docs->additional_detail, true);
-                switch ($additional_details) {
-                    case in_array('1', $additional_details):
-                        $addon_url .= '?order_id=' . $order->id . '&';
-                        break;
-                    case in_array('2', $additional_details):
-                        $addon_url .= '?tracking_number=' . $order->shippings->first()->tracking_number . '&';
-                        break;
-                    case in_array('3', $additional_details):
-                        $addon_url .= '?customer_tel=' . $order->customer->phone;
-                        break;
-                    default:
-                        break;
+                if($ship_docs->additional_detail != null){
+
+                    $additional_details = json_decode($ship_docs->additional_detail, true);
+                    switch ($additional_details) {
+                        case in_array('1', $additional_details):
+                            $addon_url .= '?order_id=' . $order->id . '&';
+                            break;
+                        case in_array('2', $additional_details):
+                            $addon_url .= '?tracking_number=' . $order->shippings->first()->tracking_number . '&';
+                            break;
+                        case in_array('3', $additional_details):
+                            $addon_url .= '?customer_tel=' . $order->customer->phone;
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
             $pdf = PDF::view('pdf_template.shipping_description_document_template', compact('order', 'ship_docs', 'addon_url'));
@@ -751,19 +749,21 @@ class ShippingController extends Controller
         $order = Order::with(['items', 'items.product', 'shippings', 'customer'])->find($order_id);
         $ship_docs = $this->checking_shipping_docs($order_id);
         if($ship_docs != null){
-            $additional_details = json_decode($ship_docs->additional_detail, true);
-            switch ($additional_details) {
-                case in_array('1', $additional_details):
-                    $addon_url .= '?order_id=' . $order->id . '&';
-                    break;
-                case in_array('2', $additional_details):
-                    $addon_url .= '?tracking_number=' . $order->shippings->first()->tracking_number . '&';
-                    break;
-                case in_array('3', $additional_details):
-                    $addon_url .= '?customer_tel=' . $order->customer->phone;
-                    break;
-                default:
-                    break;
+            if($ship_docs->additional_detail != null){
+                $additional_details = json_decode($ship_docs->additional_detail, true);
+                switch ($additional_details) {
+                    case in_array('1', $additional_details):
+                        $addon_url .= '?order_id=' . $order->id . '&';
+                        break;
+                    case in_array('2', $additional_details):
+                        $addon_url .= '?tracking_number=' . $order->shippings->first()->tracking_number . '&';
+                        break;
+                    case in_array('3', $additional_details):
+                        $addon_url .= '?customer_tel=' . $order->customer->phone;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 

@@ -105,8 +105,7 @@
                                 {!! QrCode::size(150)->generate($ship_docs->content_path.$addon_url) !!}
                             </div>
                         @else
-                            <img width="150" height="150"
-                                src="{{ env('APP_URL') }}/{{ $ship_docs->content_path }}"alt="QR Code">
+                            <img width="150" height="150" src="{{ public_path($ship_docs->content_path) }}" alt="QR Code">
                         @endif
                     </div>
                 </div>
