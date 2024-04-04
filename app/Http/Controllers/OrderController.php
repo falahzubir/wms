@@ -571,7 +571,7 @@ class OrderController extends Controller
                 foreach($addresses as $order){
                     similar_text(strtoupper($order->customer->address), strtoupper($cur_customer->address), $percent);
                     if($percent >= config('settings.detect_by_address_percentage')){
-                        $duplicate_address[] = $order;
+                        $duplicate_address[] = $order->toArray();
                     }
                 }
             }
@@ -599,7 +599,7 @@ class OrderController extends Controller
             ->get();
             if(count($phone) > 0){
                 foreach($phone as $order){
-                    $duplicate_phone[] = $order;
+                    $duplicate_phone[] = $order->toArray();
                 }
             }
         }
@@ -615,7 +615,7 @@ class OrderController extends Controller
                       ->whereHas('items', function ($q) use ($products) {
                           $q->whereIn('product_id', $products);
                       });
-            })->get();
+            })->get()->toArray();
         }
         //check if duplicate by product
         if( $setting['detect_by_product'] === 'ALL' )
@@ -635,7 +635,7 @@ class OrderController extends Controller
                     $matching_products = array_diff($matching_products, $products);
                     if (count($matching_products) === 0)
                     {
-                        $duplicate_product[] = $order;
+                        $duplicate_product[] = $order->toArray();
                     }
                 }
             }
@@ -676,6 +676,10 @@ class OrderController extends Controller
             }
             else
             {
+                foreach ($non_empty_arrays as $key => $value)
+                {
+                    $non_empty_arrays[$key] = collect($value)->pluck('id')->toArray();
+                }
                 $all_duplicate = call_user_func_array('array_intersect', $non_empty_arrays);
             }
 
@@ -689,12 +693,13 @@ class OrderController extends Controller
     {
         if (count($duplicates) > 0)
         {
-            $array = collect($duplicates)->pluck('id')->toArray();
+            $array = $duplicates;
             $array[] = $cur_order->id;
             foreach ($duplicates as $order)
             {
-                $order->duplicate_orders = implode(',', $array);
-                $order->save();
+                $orders = Order::find($order);
+                $orders->duplicate_orders = implode(',', $array);
+                $orders->save();
             }
             $cur_order->duplicate_orders = implode(',', $array);
             $cur_order->save();
@@ -1112,7 +1117,7 @@ class OrderController extends Controller
 
     public function test() #left here for testing
     {
-        $order = Order::where('id',11938)->first();
+        $order = Order::where('id',11956)->first();
         $customer = Customer::where('id',$order->customer_id)->first();
         $this->check_duplicate($customer, $order);
     }
