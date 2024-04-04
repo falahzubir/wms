@@ -652,15 +652,16 @@ class OrderController extends Controller
             if ($setting['detect_by_address'] == 1) {
                 $all_duplicate = array_merge($all_duplicate, $duplicate_address);
             }
-
-            $all_duplicate = array_unique($all_duplicate);
+            if(count($all_duplicate) > 0){
+                $all_duplicate = collect($all_duplicate)->unique('id')->values()->all();
+            }
 
             if ($setting['detect_by_product'] === 'ANY' || $setting['detect_by_product'] === 'ALL') {
                 $all_duplicate = collect($all_duplicate)->merge($duplicate_product);
                 $all_duplicate = $all_duplicate->unique('id')->values()->all();
 
             }
-
+            $all_duplicate = collect($all_duplicate)->pluck('id')->toArray();
             return $this->handleDuplicates($all_duplicate, $cur_order);
         }
 
