@@ -70,7 +70,7 @@
                             <td><span>{{ $item->product->name }}</span></td>
                             <td><span>{{ $item->quantity }}</span></td>
                             <td class="text-end"><span>RM {{ number_format($item->product->price, 2) }}</span></td>
-                            <td class="text-end"><span>RM {{ number_format(($item->price/100), 2) }}</span></td>
+                            <td class="text-end"><span>RM {{ number_format($item->price / 100, 2) }}</span></td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -78,7 +78,8 @@
                     <tr>
                         <td><span>Qty Total : {{ $order->items->sum('quantity') }}</span></td>
                         <td class="text-end" colspan="2"><span>Total</span></td>
-                        <td class="text-end"><span>RM {{ number_format(($order->items->sum('price')/100), 2) }}</span></td>
+                        <td class="text-end"><span>RM {{ number_format($order->items->sum('price') / 100, 2) }}</span>
+                        </td>
                     </tr>
                 </tfoot>
             @else
@@ -90,24 +91,31 @@
             @endif
         </table>
     </div>
-    <div>
-        <h5 class="text-center"><strong>{{ $ship_docs->promotion_header }}</strong></h5>
-        <h4 class="text-center"><strong id="modal-preview-header-box"></strong></h4>
-        <div class="text-center my-5" id="qr-code-box">
-            <span class="position-absolute" id="first"></span>
-            <span class="position-absolute" id="second"></span>
-            <div class="d-flex justify-content-center">
-                <div class="box" style="--c:black;--w:40px;--b:6px">
-                    <img width="150" height="150" src="{{ env('APP_URL') }}/{{ $ship_docs->content_path }}"alt="QR Code">
-                    {{-- <img width="150" height="150" src="https://upload.wikimedia.org/wikipedia/commons/5/5b/Qrcode_wikipedia.jpg" alt="QR Code"> --}}
-
+    @if ($ship_docs != null)
+        <div>
+            <h5 class="text-center"><strong>{{ $ship_docs->promotion_header }}</strong></h5>
+            <h4 class="text-center"><strong id="modal-preview-header-box"></strong></h4>
+            <div class="text-center my-5" id="qr-code-box">
+                <span class="position-absolute" id="first"></span>
+                <span class="position-absolute" id="second"></span>
+                <div class="d-flex justify-content-center">
+                    <div class="box" style="--c:black;--w:40px;--b:6px">
+                        @if ($ship_docs->link_type == 1)
+                            <div width="150" height="150">
+                                {!! QrCode::size(150)->generate($ship_docs->content_path.$addon_url) !!}
+                            </div>
+                        @else
+                            <img width="150" height="150"
+                                src="{{ env('APP_URL') }}/{{ $ship_docs->content_path }}"alt="QR Code">
+                        @endif
+                    </div>
                 </div>
+                <span class="position-absolute" id="third"></span>
+                <span class="position-absolute" id="fourth"></span>
             </div>
-            <span class="position-absolute" id="third"></span>
-            <span class="position-absolute" id="fourth"></span>
+            <div class="text-left" id="modal-preview-desc-box" style="font-size: 12px;">
+                {!! $ship_docs->description !!}
+            </div>
         </div>
-        <div class="text-left" id="modal-preview-desc-box" style="font-size: 12px;">
-            {!! $ship_docs->description !!}
-        </div>
-    </div>
+    @endif
 </div>

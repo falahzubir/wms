@@ -662,16 +662,63 @@ class ShippingController extends Controller
         return response()->json(['download_url' => '/generated_labels/' . $filename]);
     }
 
+    public function checking_shipping_docs($order_id)
+    {
+        $order = Order::find($order_id);
+        $operational_model_id = $order->operational_model_id;
+        $platform_id = $order->payment_type;
+        $shipping_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())
+        ->where('end_date', '>=', Carbon::now())
+        ->when(!empty($operational_model_id), function ($query) use ($operational_model_id) {
+            $query->where('operational_model_id', 'like', '%' . $operational_model_id . '%');
+        })
+        ->when(!empty($platform_id), function ($query) use ($platform_id) {
+            $query->where('platform_id', 'like', '%' . $platform_id . '%');
+        })
+        ->first();
+
+        if (!$shipping_docs) {
+            $shipping_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())->where('end_date', '>=', Carbon::now())
+            ->whereNull('platform')->whereNull('operational_model_id')->first();
+
+            if (!$shipping_docs) {
+                return null;
+            }
+        }
+
+        return $shipping_docs;
+    }
+
+    public function test()
+    {
+        dd($this->generate_product_description(11916));
+    }
+
     public function generate_product_description($order_id)
     {
-        $order = Order::with(['items', 'items.product'])->find($order_id);
+        $addon_url = '';
+        $order = Order::with(['items', 'items.product', 'shippings', 'customer'])->find($order_id);
         $path = 'product_desc/' .Carbon::now()->format('Ymd_His').'_'.$order_id . '_product_description.pdf';
 
         try {
-            $ship_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())
-            ->where('end_date', '>=', Carbon::now())
-            ->first();
-            $pdf = PDF::view('pdf_template.shipping_description_document_template', compact('order', 'ship_docs'));
+            $ship_docs = $this->checking_shipping_docs($order_id);
+            if($ship_docs != null){
+                $additional_details = json_decode($ship_docs->additional_detail, true);
+                switch ($additional_details) {
+                    case in_array('1', $additional_details):
+                        $addon_url .= '?order_id=' . $order->id . '&';
+                        break;
+                    case in_array('2', $additional_details):
+                        $addon_url .= '?tracking_number=' . $order->shippings->first()->tracking_number . '&';
+                        break;
+                    case in_array('3', $additional_details):
+                        $addon_url .= '?customer_tel=' . $order->customer->phone;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            $pdf = PDF::view('pdf_template.shipping_description_document_template', compact('order', 'ship_docs', 'addon_url'));
             $pdf->format('a6')->save(storage_path('app/public/' . $path));
 
         } catch (\Exception $e) {
@@ -684,6 +731,7 @@ class ShippingController extends Controller
 
     public function generate_multiple_product_description($rs)
     {
+        $addon_url = '';
         //remove array when quantity is 0
         $rs = array_filter($rs, function ($value) {
             return $value['quantity'] > 0;
@@ -692,9 +740,6 @@ class ShippingController extends Controller
         $orderItems = array_column($rs, 'order_item_id');
         $quantity = array_column($rs, 'quantity');
 
-        $ship_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())
-        ->where('end_date', '>=', Carbon::now())
-        ->first();
         $items = OrderItem::with(['product'])->whereIn('id', $orderItems)->get();
         foreach ($items as $key => $value) {
             $total_price = $value->price/$value->quantity;
@@ -703,11 +748,29 @@ class ShippingController extends Controller
         }
 
         $order_id = $items[0]->order_id;
+        $order = Order::with(['items', 'items.product', 'shippings', 'customer'])->find($order_id);
+        $ship_docs = $this->checking_shipping_docs($order_id);
+        if($ship_docs != null){
+            $additional_details = json_decode($ship_docs->additional_detail, true);
+            switch ($additional_details) {
+                case in_array('1', $additional_details):
+                    $addon_url .= '?order_id=' . $order->id . '&';
+                    break;
+                case in_array('2', $additional_details):
+                    $addon_url .= '?tracking_number=' . $order->shippings->first()->tracking_number . '&';
+                    break;
+                case in_array('3', $additional_details):
+                    $addon_url .= '?customer_tel=' . $order->customer->phone;
+                    break;
+                default:
+                    break;
+            }
+        }
 
         $path = 'product_desc/' .Carbon::now()->format('Ymd_His').'_'.$order_id . '_product_description.pdf';
 
         try {
-            $pdf = PDF::view('pdf_template.shipping_description_document_template_multiple', compact('items', 'ship_docs'));
+            $pdf = PDF::view('pdf_template.shipping_description_document_template_multiple', compact('items', 'ship_docs', 'addon_url'));
             $pdf->format('a6')->save(storage_path('app/public/' . $path));
 
         } catch (\Exception $e) {

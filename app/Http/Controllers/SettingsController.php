@@ -121,12 +121,9 @@ class SettingsController extends Controller
                 'additional_detail' => null
             ];
         }else if($request->hasFile('promotional_link_upload_file') == false && $request['promotional_attachment_type'] == 'qr'){
-            $fileName = 'img/qr_code_' . time() . '.png';
-            $filePath = public_path($fileName);
-            QRCode::url($request->input('at_qr_code_promo_link_field'))->setOutfile($filePath)->setSize(10)->setMargin(1)->png();
             $file = [
                 'additional_detail' => json_encode($request['at_qr_code_order_details_check'] ?? null),
-                'content_path' => $fileName
+                'content_path' => $request->input('at_qr_code_promo_link_field') ?? null
             ];
         }
 
@@ -164,10 +161,11 @@ class SettingsController extends Controller
 
         $file = [];
         if ($request->hasFile('promotional_link_upload_file') && $request['promotional_attachment_type'] == 'photo') {
-            $filePath = Storage::put('/public/img', $request->promotional_link_upload_file);
-            $fileName = Storage::url($filePath);
+            $fileName = 'img/' . time() . '.' . $request->promotional_link_upload_file->extension();
+            $filePath = public_path($fileName);
+            $request->promotional_link_upload_file->move(public_path('img'), $fileName);
             $file = [
-                'content_path' => $filePath,
+                'content_path' => $fileName,
                 'additional_detail' => null
             ];
         } else if ($request->hasFile('promotional_link_upload_file') == false && $request['promotional_attachment_type'] == 'qr') {
@@ -183,7 +181,7 @@ class SettingsController extends Controller
             'end_date' => $request->input('end_date_field'),
             'operational_model_id' => $request->input('operational_model_field') != null ? implode(', ', $request->input('operational_model_field')) : null,
             'platform' => $request->input('platform_field') != null ? implode(', ', $request->input('platform_field')) : null,
-            'link_type' => $request->input('promotional_attachment_type') == 'photo' ? 1 : 2,
+            'link_type' => $request->input('promotional_attachment_type') == 'photo' ? 2 : 1,
             'promotion_header' => $request->input('at_qr_code_promo_header_field') ?? null,
             'description' => $request->input('text_editor_description') ?? null,
             'updated_at' => Carbon::now(),

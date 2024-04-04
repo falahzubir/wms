@@ -259,7 +259,3 @@ Route::middleware(['auth'])->group(function() {
         });
     });
 
-    Route::get('/test',function(){
-        return view('pdf_template.shipping_description_document_template');
-    });
-

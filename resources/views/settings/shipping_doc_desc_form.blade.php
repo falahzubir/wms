@@ -704,10 +704,15 @@
                                         .start_date; //start date input field
                                     document.getElementById('end-date-field').value = sdd_edit_data
                                         .end_date; //end date input field
-                                    operational_model_tom_select.setValue(sdd_edit_data.operational_model_id.split(
+                                    if (sdd_edit_data.operational_model_id != null)
+                                    {
+                                        operational_model_tom_select.setValue(sdd_edit_data.operational_model_id.split(
                                         ',')); // set the data for op_model tomselect
-                                    platform_tomSelect.setValue(sdd_edit_data.platform.split(
-                                        ',')); // set the data for platform tomselect
+                                    }
+                                    if(sdd_edit_data.platform != null){
+                                        platform_tomSelect.setValue(sdd_edit_data.platform.split(
+                                            ',')); // set the data for platform tomselect
+                                    }
                                     let link_type_radio = document.querySelector(
                                         `[name="promotional_attachment_type"][value='${sdd_edit_data.link_type == '1' ? 'qr' : 'photo'}']`
                                     ) //link type/promotional_attachment_type input field
@@ -718,7 +723,9 @@
                                         document.getElementById('at-qr-code-promo-link-field').value = sdd_edit_data
                                             .content_path; //promo link (QR CODE SELECTED) date input field
                                         if (sdd_edit_data.additional_detail != null) {
-                                            sdd_edit_data.additional_detail.forEach((detail_select) => {
+                                            const additional_detail = JSON.parse(sdd_edit_data.additional_detail);
+
+                                            additional_detail.forEach((detail_select) => {
                                                 document.getElementById(
                                                         `at-qr-code-order-details-check-${detail_select}`)
                                                     .checked = true;

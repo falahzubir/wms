@@ -91,24 +91,28 @@
         </table>
     </div>
     <div>
-        <h5 class="text-center"><strong>SCAN & WIN CONTEST</strong></h5>
+        <h5 class="text-center"><strong>{{ $ship_docs->promotion_header }}</strong></h5>
         <h4 class="text-center"><strong id="modal-preview-header-box"></strong></h4>
         <div class="text-center my-5" id="qr-code-box">
             <span class="position-absolute" id="first"></span>
             <span class="position-absolute" id="second"></span>
             <div class="d-flex justify-content-center">
                 <div class="box" style="--c:black;--w:40px;--b:6px">
-                    <img width="150" height="150" src="https://img.freepik.com/premium-vector/qr-code-vector-icon_389832-989.jpg" alt="">
-
+                    @if ($ship_docs->link_type == 1)
+                        <div width="150" height="150">
+                            {!! QrCode::size(150)->generate($ship_docs->content_path.$addon_url) !!}
+                        </div>
+                    @else
+                        <img width="150" height="150"
+                            src="{{ env('APP_URL') }}/{{ $ship_docs->content_path }}"alt="QR Code">
+                    @endif
                 </div>
             </div>
             <span class="position-absolute" id="third"></span>
             <span class="position-absolute" id="fourth"></span>
         </div>
         <div class="text-left" id="modal-preview-desc-box" style="font-size: 12px;">
-            <p><b>SCAN QR</b> code yang terdapat pada parcel anda dan <b>ISI MAKLUMAT</b>
-                anda pada borang untuk melayakkan diri anda memenangi hadiah cabutan bertuah.
-            </p>
+            {!! $ship_docs->description !!}
         </div>
     </div>
 </div>
