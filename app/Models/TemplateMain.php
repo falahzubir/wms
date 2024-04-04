@@ -19,4 +19,9 @@ class TemplateMain extends Model
     {
         return $this->hasMany(TemplateColumn::class, 'template_main_id', 'id');
     }
+
+    public function templateColumns()
+    {
+        return $this->hasMany(TemplateColumn::class, 'template_main_id');
+    }
 }

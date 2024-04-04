@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\api\ShippingApiController;
 use App\Http\Controllers\api\WebhookController;
+use App\Http\Controllers\CourierServiceLevelAgreementController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TestController;
@@ -95,6 +96,32 @@ Route::prefix('reports')->group(function() {
     Route::get('order-matrix/comparison', [ReportController::class, 'get_order_matrix']);
     Route::get('pending-report', [ReportController::class, 'get_pending_report']);
     // Route::get('shipment', [ReportController::class, 'shipment']);
+});
+
+Route::prefix('couriers')->group(function(){
+    Route::post('/listCourier', [CourierController::class, 'listCourier']);
+    Route::post('/addCourier', [CourierController::class, 'addCourier']);
+    Route::post('/deleteCourier', [CourierController::class, 'deleteCourier']);
+    Route::post('/listCoverage', [CourierController::class, 'listCoverage']);
+    Route::post('/addCoverage', [CourierController::class, 'addCoverage']);
+    Route::post('/listSelectedCoverage', [CourierController::class, 'listSelectedCoverage']);
+    Route::post('/defaultCoverageState', [CourierController::class, 'defaultCoverageState']);
+    Route::put('/defaultCoverageState', [CourierController::class, 'updateDefaultCoverageState']);
+    Route::post('/exceptionalCoverage', [CourierController::class, 'exceptionalCoverage']);
+    Route::put('/exceptionalCoverage', [CourierController::class, 'updateExceptionalCoverage']);
+    Route::post('/uploadExceptionalCoverage', [CourierController::class, 'uploadExceptionalCoverage']);
+    Route::delete('/exceptionalCoverage', [CourierController::class, 'deleteExceptionalCoverage']);
+    Route::post('/addExceptionalCoverage', [CourierController::class, 'addExceptionalCoverage']);
+    Route::post('/updateGeneralSettings', [CourierController::class, 'updateGeneralSettings']);
+});
+
+Route::prefix('sla')->group(function(){
+    Route::get('list/{courier}', [CourierServiceLevelAgreementController::class, 'list']);
+    Route::get('show/{id}', [CourierServiceLevelAgreementController::class, 'show']);
+    Route::post('add/{courier}', [CourierServiceLevelAgreementController::class, 'create']);
+    Route::post('update/{sla}', [CourierServiceLevelAgreementController::class, 'update']);
+    Route::delete('/', [CourierServiceLevelAgreementController::class, 'delete']);
+    Route::post('check-duplicate/{courier}/{id?}', [CourierServiceLevelAgreementController::class, 'check_duplicate']);
 });
 
 Route::prefix('pos')->group(function(){
