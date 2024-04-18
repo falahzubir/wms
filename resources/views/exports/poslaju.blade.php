@@ -15,7 +15,7 @@
 
                     @elseif ($column->column_name == "companies_name")
                         <td>{{ optional($order->company)->name }}</td>
-                     @elseif ($column->column_name == "companies_phone")
+                    @elseif ($column->column_name == "companies_phone")
                         <td>{{ $order->company->phone }}</td>
                     @elseif ($column->column_name == "companies_address")
                         <td>{{ $order->company->address }}</td>
