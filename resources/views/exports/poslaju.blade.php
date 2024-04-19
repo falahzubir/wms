@@ -7,6 +7,9 @@
         </tr>
     </thead>
     <tbody>
+        {{-- @php
+            dd($orders);
+        @endphp --}}
         @foreach ($orders as $key => $order)
             <tr>
                 @foreach ($columnName as $column)
@@ -132,9 +135,22 @@
                     @elseif ($column->column_name == "order_pic")
                         <td>
                             @php
-                            $staffNames = collect(json_decode($staffMain))->pluck('staff_name')->implode(', ');
+                                $salesId = $order->sales_id;
+                                $staffNames = json_decode($staffMain, true);
                             @endphp
-                            {{ !empty($staffNames) ? $staffNames : '-' }}
+                            @if (!empty($staffNames))
+                                @foreach ($staffNames as $staff)
+                                    @if ($staff['sales_id'] == $salesId)
+                                        {{ $staff['staff_name'] }}
+                                        @php $found = true; @endphp
+                                    @endif
+                                @endforeach
+                                @if (!isset($found))
+                                    -
+                                @endif
+                            @else
+                                -
+                            @endif
                         </td>
                     @else
                         <td>{{ $order->{$column->column_name} ?? '' }}</td>
