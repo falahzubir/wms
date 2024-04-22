@@ -49,6 +49,10 @@ class PosMalaysiaController extends ShippingController
         $error = [];
         foreach ($orders_pos as $order) {
 
+            //check for COD with zero payment, change to Prefix PAID
+            if($order->purchase_type == PURCHASE_TYPE_COD && $order->total_price == 0){
+                $order->purchase_type = PURCHASE_TYPE_PAID;
+            }
             $connote = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_connote, [
                 'numberOfItem' => 1,
                 'Prefix' => $order->purchase_type == PURCHASE_TYPE_COD ? config('settings.genconnote_prefix_cod') : config('settings.genconnote_prefix_paid'),
@@ -181,6 +185,10 @@ class PosMalaysiaController extends ShippingController
         $error = [];
 
         foreach ($orders_pos as $order) {
+            //check for COD with zero payment, change to Prefix PAID
+            if($order->purchase_type == PURCHASE_TYPE_COD && $order->total_price == 0){
+                $order->purchase_type = PURCHASE_TYPE_PAID;
+            }
             foreach($order->shippings as $shipping){
                 $json_data = [
                     'subscriptionCode' => $order->company->posmalaysia_subscribtion_code,
