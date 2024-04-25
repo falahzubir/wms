@@ -107,6 +107,19 @@
                         @else
                             <td>-</td>
                         @endif
+                    @elseif($column->column_name == "tracking_number")
+                        @if ($order->shippings->isNotEmpty())
+                            <td>
+                                @foreach ($order->shippings as $shipping)
+                                    {{ $shipping->tracking_number }}
+                                    @if (!$loop->last)
+                                        <br>
+                                    @endif
+                                @endforeach
+                            </td>
+                        @else
+                            <td>-</td>
+                        @endif
                     @elseif ($column->column_name == "scan_date")
                         @if ($order->shippings->isNotEmpty())
                             <td>{{ $order->shippings()->latest()->first()->scanned_at }}</td>
