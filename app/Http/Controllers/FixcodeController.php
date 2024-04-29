@@ -44,9 +44,11 @@ class FixcodeController extends Controller
 
             //update orders with processing date
             foreach ($response as $order) {
-                Order::where('sales_id', $order['sales_id'])->update([
-                    'processed_at' => $order['dt_processing'],
-                ]);
+                if (is_array($order) && isset($order['sales_id'], $order['dt_processing'])) {
+                    Order::where('sales_id', $order['sales_id'])->update([
+                        'processed_at' => $order['dt_processing'],
+                    ]);
+                }
             }
 
             return response()->json(['message' => 'Success'], 200);
