@@ -35,7 +35,8 @@ class FixcodeController extends Controller
 
         if ($response->status() == 200) {
 
-            $response = $response->json();
+            $response = $response->body();
+            dd($response);
 
             //update orders with processing date
             foreach ($response as $order) {
