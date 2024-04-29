@@ -35,12 +35,7 @@ class FixcodeController extends Controller
 
         if ($response->status() == 200) {
 
-            $response = $response->body();
-            dd($response);
-
-            if (empty($response)) {
-                return response()->json(['message' => 'No data found'], 404);
-            }
+            $response = $response->json();
 
             //update orders with processing date
             foreach ($response as $order) {
