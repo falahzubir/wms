@@ -38,6 +38,10 @@ class FixcodeController extends Controller
             $response = $response->body();
             dd($response);
 
+            if (empty($response)) {
+                return response()->json(['message' => 'No data found'], 404);
+            }
+
             //update orders with processing date
             foreach ($response as $order) {
                 Order::where('sales_id', $order['sales_id'])->update([
