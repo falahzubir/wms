@@ -13,8 +13,8 @@ class FixcodeController extends Controller
         $companies = [
             'EH' => array('url' => 'https://bosemzi.com', 'company_id' => 1),
             'ED' => array('url' => 'https://aa.bosemzi.com', 'company_id' => 2),
-            // 'QITI' => array('url' => 'https://qastg.groobok', 'company_id' => 3),
-            'QITI' => array('url' => 'http://boslagi.zinx2yqtmb-ez94dnv9n3mr.p.temp-site.link', 'company_id' => 3),
+            'QITI' => array('url' => 'https://qastg.groobok', 'company_id' => 3),
+            // 'QITI' => array('url' => 'http://boslagi.zinx2yqtmb-ez94dnv9n3mr.p.temp-site.link', 'company_id' => 3),
             'INT' => array('url' => 'https://int.bosemzi.com', 'company_id' => 4),
         ];
 
