@@ -33,9 +33,10 @@ class FixcodeController extends Controller
             'sales_ids' => $orders->pluck('sales_id')->toArray(),
         ]);
 
-        if ($response->status() == 200) {
+        $response = $response->json();
 
-            $response = $response->json();
+        if ($response['status'] == 'success') {
+
 
             if(empty($response))
             {
