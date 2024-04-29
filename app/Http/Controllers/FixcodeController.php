@@ -35,13 +35,12 @@ class FixcodeController extends Controller
 
         $response = $response->json();
 
+        if(empty($response))
+        {
+            return response()->json(['message' => 'Error No Data'], 401);
+        }
+
         if ($response['status'] == 'success') {
-
-
-            if(empty($response))
-            {
-                return response()->json(['message' => 'Error No Data'], 401);
-            }
 
             //update orders with processing date
             foreach ($response as $order) {
