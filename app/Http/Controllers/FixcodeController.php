@@ -37,7 +37,9 @@ class FixcodeController extends Controller
 
             $response = $response->json();
 
-            dd($response);
+            if (empty($response)) {
+                return response()->json(['message' => 'No data found'], 404);
+            }
 
             //update orders with processing date
             foreach ($response as $order) {
