@@ -28,33 +28,38 @@ class FixcodeController extends Controller
         //dummy url
         // $companies[$company_id]['url'] = 'http://localhost/bos';
 
-        //send orders to company
+        // Send orders to company
         $response = Http::post($companies[$company_id]['url'] . '/fix_code/fix_processing_date', [
             'sales_ids' => $orders->pluck('sales_id')->toArray(),
         ]);
 
-        $response = $response->json();
-
-        if(empty($response))
-        {
-            return response()->json(['message' => 'Error No Data'], 401);
+        // Check for network errors
+        if ($response->failed()) {
+            return response()->json(['message' => 'Error: Network error'], 500);
         }
 
-        if ($response['status'] == 'success') {
+        $responseData = $response->json();
 
-            //update orders with processing date
-            foreach ($response as $order) {
-                if (is_array($order) && isset($order['sales_id'], $order['dt_processing'])) {
+        // Check if the response is empty
+        if (empty($responseData)) {
+            return response()->json(['message' => 'Error: No data received from company'], 500);
+        }
+
+        // Check if the response status is success
+        if ($responseData['status'] === 'success') {
+            // Update orders with processing date
+            foreach ($responseData['data'] as $order) {
+                if (isset($order['sales_id'], $order['dt_processing'])) {
                     Order::where('sales_id', $order['sales_id'])->update([
                         'processed_at' => $order['dt_processing'],
                     ]);
                 }
             }
-
             return response()->json(['message' => 'Success'], 200);
-
         } else {
-            return response()->json(['message' => 'Failed'], 500);
+            // Handle other types of failures
+            return response()->json(['message' => 'Error: ' . $responseData['message']], 500);
         }
+
     }
 }
