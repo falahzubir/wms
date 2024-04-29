@@ -37,6 +37,8 @@ class FixcodeController extends Controller
 
             $response = $response->json();
 
+            dd($response);
+
             //update orders with processing date
             foreach ($response as $order) {
                 Order::where('sales_id', $order['sales_id'])->update([
