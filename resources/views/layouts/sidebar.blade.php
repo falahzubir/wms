@@ -198,6 +198,7 @@
             <ul id="components-nav-report"
                 class="nav-content {{ Route::current()->getName() != 'reports.index' ? 'collapsed' : '' }} "
                 data-bs-parent="#sidebar-nav">
+                @can('report.view_sla')
                 <li>
                     <a href="{{ route('reports.sla') }}"
                         {{ Route::current()->getName() == 'reports.sla' ? 'class=active' : '' }}>
@@ -205,6 +206,8 @@
                         <span>Service Level Agreement (SLA)</span>
                     </a>
                 </li>
+                @endcan
+                @can('report.view_outbound')
                 <li>
                     <a href="{{ route('reports.outbound') }}"
                         {{ Route::current()->getName() == 'reports.outbound' ? 'class=active' : '' }}>
@@ -212,6 +215,8 @@
                         <span>Outbound</span>
                     </a>
                 </li>
+                @endcan
+                @can('report.view_order_matrix')
                 <li>
                     <a href="{{ route('reports.order_matrix') }}"
                         {{ Route::current()->getName() == 'reports.order_matrix' ? 'class=active' : '' }}>
@@ -219,6 +224,8 @@
                         <span>Order Matrix</span>
                     </a>
                 </li>
+                @endcan
+                @can('report.view_pending')
                 <li>
                     <a href="{{ route('reports.pending_report') }}"
                         {{ Route::current()->getName() == 'reports.pending_report' ? 'class=active' : '' }}>
@@ -226,6 +233,8 @@
                         <span>Pending Report</span>
                     </a>
                 </li>
+                @endcan
+                @can('report.view_shipment')
                 <li>
                     <a class="nav-link collapsed" data-bs-target="#components-nav-report-shipment" data-bs-toggle="collapse" href="#">
                         <i class="bi bi-menu-button-wide"></i><span>Shipment</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -255,6 +264,7 @@
                         </li>
                     </ul>
                 </li>
+                @endcan
             </ul>
         </li><!-- End Components Nav -->
         @endcan

@@ -14,12 +14,14 @@ class OrderExport implements FromView
     protected $orders;
     protected $headers;
     protected $columnName;
+    protected $staffMain;
 
-    public function __construct($orders, $headers, $columnName)
+    public function __construct($orders, $headers, $columnName, $staffMain)
     {
         $this->orders = $orders;
         $this->headers = $headers;
         $this->columnName = $columnName;
+        $this->staffMain = $staffMain;
     }
 
     /**
@@ -31,6 +33,7 @@ class OrderExport implements FromView
             'orders' => $this->orders,
             'headers' => $this->headers,
             'columnName' => $this->columnName,
+            'staffMain' => $this->staffMain,
         ]);
     }
 }
