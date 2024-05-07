@@ -231,7 +231,7 @@ class PosMalaysiaController extends ShippingController
                     'receiverPhone01' => $order->customer->phone,
                     'receiverPhone02' => $order->customer->phone_2 ?? $order->customer->phone,
                     'sellerReferenceNo' => shipment_num_format($order),
-                    'itemDescription' => $this->package_description($order),
+                    'itemDescription' => get_shipping_remarks($order),
                     'sellerOrderNo' => $order->sales_id,
                     'comments' => $order->shipping_remarks,
                     'packDesc' => get_shipping_remarks($order),

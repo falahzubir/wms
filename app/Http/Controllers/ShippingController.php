@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
-use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+// use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+use Karriere\PdfMerge\PdfMerge as PDFMerger;
 use App\Http\Traits\ShopeeTrait;
 use App\Http\Traits\TiktokTrait;
 use Illuminate\Support\Carbon;
@@ -604,7 +605,7 @@ class ShippingController extends Controller
             return response()->json(['status' => false, 'error' => 'No attachment found']);
         }
 
-        $pdf = PDFMerger::init();
+        $pdf = new PDFMerger;
 
         foreach ($filteredAttachments as $attachment) {
             if (!file_exists(storage_path('app/public/' . $attachment))) {
@@ -619,12 +620,11 @@ class ShippingController extends Controller
                 continue;
             }
 
-            $pdf->addPDF(storage_path('app/public/' . $attachment));
+            $pdf->add(storage_path('app/public/' . $attachment));
         }
 
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
-        $pdf->merge();
-        $pdf->save(public_path('generated_labels/' . $filename));
+        $pdf->merge(public_path('generated_labels/' . $filename));
 
         if(!file_exists(public_path('generated_labels/' . $filename))){
             return response()->json(['status' => false,'error' => 'Error in generating PDF']);
