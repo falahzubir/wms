@@ -1,22 +1,25 @@
 <?php
 
-use App\Http\Controllers\api\OrderApiController;
-use App\Http\Controllers\ShippingController;
-use App\Http\Controllers\BucketController;
-use App\Http\Controllers\CourierController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\api\ShippingApiController;
-use App\Http\Controllers\api\WebhookController;
-use App\Http\Controllers\CourierServiceLevelAgreementController;
-use App\Http\Controllers\ClaimController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\TestController;
-use App\Http\Controllers\ThirdParty\PosMalaysiaController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TestController;
+use App\Http\Controllers\ClaimController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\BucketController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\CourierController;
+use App\Http\Controllers\ShippingController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\api\WebhookController;
+use App\Http\Controllers\api\OrderApiController;
+use App\Http\Controllers\api\ShippingApiController;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+use App\Http\Controllers\ThirdParty\PosMalaysiaController;
+use App\Http\Controllers\CourierServiceLevelAgreementController;
+use App\Http\Controllers\FixcodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -144,3 +147,13 @@ Route::get('get-failed-order/{date}', [WebhookController::class, 'fail_insert'])
 Route::webhooks('webhook/sales');
 
 Route::get('test',[TestController::class, 'test']);
+
+Route::post('sign-in', [LoginController::class, 'login_through_api']);
+
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::get('sign-out', [LoginController::class, 'logout_through_api']);
+
+    Route::prefix('fixcode')->group(function () {
+    Route::get('processing-date/{company_id}', [FixcodeController::class, 'processing_date']);
+    });
+});
