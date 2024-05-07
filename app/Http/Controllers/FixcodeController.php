@@ -26,7 +26,7 @@ class FixcodeController extends Controller
         $orders = Order::where('company_id', $companies[$company_id]['company_id'])->get();
 
         //dummy url
-        $companies[$company_id]['url'] = 'http://localhost/bos';
+        // $companies[$company_id]['url'] = 'http://localhost/bos';
 
         // Send orders to company
         $response = Http::post($companies[$company_id]['url'] . '/fix_code/fix_processing_date', [
