@@ -7,6 +7,9 @@
         </tr>
     </thead>
     <tbody>
+        {{-- @php
+            dd($orders);
+        @endphp --}}
         @foreach ($orders as $key => $order)
             <tr>
                 @foreach ($columnName as $column)
@@ -15,7 +18,7 @@
 
                     @elseif ($column->column_name == "companies_name")
                         <td>{{ optional($order->company)->name }}</td>
-                     @elseif ($column->column_name == "companies_phone")
+                    @elseif ($column->column_name == "companies_phone")
                         <td>{{ $order->company->phone }}</td>
                     @elseif ($column->column_name == "companies_address")
                         <td>{{ $order->company->address }}</td>
@@ -41,7 +44,7 @@
                     @elseif ($column->column_name == "customers_city")
                         <td>="{{ $order->customer->city }}"</td>
                     @elseif ($column->column_name == "customers_state")
-                        <td>{{ get_state($order->customer->state)}}</td> 
+                        <td>{{ get_state($order->customer->state)}}</td>
                     @elseif ($column->column_name == "customers_country")
                         <td>
                             @switch($order->customer->country)
@@ -90,13 +93,65 @@
 
                     @elseif ($column->column_name == "quantity")
                         <td>{{ get_order_items($order->id)['sumQuantity'] }}</td>
-                    
+
                     @elseif ($column->column_name == "weight")
                         <td>{{ get_order_items($order->id)['sumWeight'] }}g</td>
 
                     @elseif ($column->column_name == "item_description")
-                        <td>{{ get_shipping_remarks($order)}}</td> 
-
+                        <td>{{ get_shipping_remarks($order)}}</td>
+                    @elseif ($column->column_name == "date_insert")
+                        <td>{{ $order->created_at }}</td>
+                    @elseif ($column->column_name == "shipping_date")
+                        @if ($order->shippings->isNotEmpty())
+                            <td>{{ $order->shippings()->latest()->first()->created_at }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
+                    @elseif ($column->column_name == "scan_date")
+                        @if ($order->shippings->isNotEmpty())
+                            <td>{{ $order->shippings()->latest()->first()->scanned_at }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
+                    @elseif ($column->column_name == "pic_scan")
+                        @if ($order->shippings->isNotEmpty())
+                            <td>{{ get_pic($order->shippings()->latest()->first()->scanned_by) }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
+                    @elseif ($column->column_name == "delivered_date")
+                        @if ($order->logs->isNotEmpty())
+                            @php
+                                $deliveredLog = $order->logs->where('order_status_id', 6)->first();
+                            @endphp
+                            @if ($deliveredLog)
+                                <td>{{ $deliveredLog->created_at }}</td>
+                            @else
+                                <td>-</td>
+                            @endif
+                        @else
+                            <td>-</td>
+                        @endif
+                    @elseif ($column->column_name == "order_pic")
+                        <td>
+                            @php
+                                $salesId = $order->sales_id;
+                                $staffNames = json_decode($staffMain, true);
+                            @endphp
+                            @if (!empty($staffNames))
+                                @foreach ($staffNames as $staff)
+                                    @if ($staff['sales_id'] == $salesId)
+                                        {{ $staff['staff_name'] }}
+                                        @php $found = true; @endphp
+                                    @endif
+                                @endforeach
+                                @if (!isset($found))
+                                    -
+                                @endif
+                            @else
+                                -
+                            @endif
+                        </td>
                     @else
                         <td>{{ $order->{$column->column_name} ?? '' }}</td>
                     @endif

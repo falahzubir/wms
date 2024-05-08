@@ -1,22 +1,26 @@
 <?php
 
-use App\Http\Controllers\api\OrderApiController;
-use App\Http\Controllers\ShippingController;
-use App\Http\Controllers\BucketController;
-use App\Http\Controllers\CourierController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\api\ShippingApiController;
-use App\Http\Controllers\api\WebhookController;
-use App\Http\Controllers\ClaimController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\TestController;
-use App\Http\Controllers\ThirdParty\PosMalaysiaController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TestController;
+use App\Http\Controllers\ClaimController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\BucketController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\CourierController;
+use App\Http\Controllers\ShippingController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\api\WebhookController;
+use App\Http\Controllers\api\OrderApiController;
+use App\Http\Controllers\api\ShippingApiController;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+use App\Http\Controllers\ThirdParty\PosMalaysiaController;
+use App\Http\Controllers\CourierServiceLevelAgreementController;
+use App\Http\Controllers\FixcodeController;
+use App\Http\Controllers\SettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -98,6 +102,32 @@ Route::prefix('reports')->group(function() {
     // Route::get('shipment', [ReportController::class, 'shipment']);
 });
 
+Route::prefix('couriers')->group(function(){
+    Route::post('/listCourier', [CourierController::class, 'listCourier']);
+    Route::post('/addCourier', [CourierController::class, 'addCourier']);
+    Route::post('/deleteCourier', [CourierController::class, 'deleteCourier']);
+    Route::post('/listCoverage', [CourierController::class, 'listCoverage']);
+    Route::post('/addCoverage', [CourierController::class, 'addCoverage']);
+    Route::post('/listSelectedCoverage', [CourierController::class, 'listSelectedCoverage']);
+    Route::post('/defaultCoverageState', [CourierController::class, 'defaultCoverageState']);
+    Route::put('/defaultCoverageState', [CourierController::class, 'updateDefaultCoverageState']);
+    Route::post('/exceptionalCoverage', [CourierController::class, 'exceptionalCoverage']);
+    Route::put('/exceptionalCoverage', [CourierController::class, 'updateExceptionalCoverage']);
+    Route::post('/uploadExceptionalCoverage', [CourierController::class, 'uploadExceptionalCoverage']);
+    Route::delete('/exceptionalCoverage', [CourierController::class, 'deleteExceptionalCoverage']);
+    Route::post('/addExceptionalCoverage', [CourierController::class, 'addExceptionalCoverage']);
+    Route::post('/updateGeneralSettings', [CourierController::class, 'updateGeneralSettings']);
+});
+
+Route::prefix('sla')->group(function(){
+    Route::get('list/{courier}', [CourierServiceLevelAgreementController::class, 'list']);
+    Route::get('show/{id}', [CourierServiceLevelAgreementController::class, 'show']);
+    Route::post('add/{courier}', [CourierServiceLevelAgreementController::class, 'create']);
+    Route::post('update/{sla}', [CourierServiceLevelAgreementController::class, 'update']);
+    Route::delete('/', [CourierServiceLevelAgreementController::class, 'delete']);
+    Route::post('check-duplicate/{courier}/{id?}', [CourierServiceLevelAgreementController::class, 'check_duplicate']);
+});
+
 Route::prefix('pos')->group(function(){
     Route::post('generate-connote', [PosMalaysiaController::class, 'generate_connote']);
     Route::post('generate-pl9', [PosMalaysiaController::class, 'generate_pl9']);
@@ -128,4 +158,13 @@ Route::prefix('settings')->group(function() {
     Route::get('/edit_sdd/form/{templateId}', [SettingsController::class,'edit_sdd_table']); //edit
     Route::post('/shipping_doc_desc/form/update/{form_id}', [SettingsController::class,'update_sdd']); //update
     // Route::get('shipment', [ReportController::class, 'shipment']);
+});
+Route::post('sign-in', [LoginController::class, 'login_through_api']);
+
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::get('sign-out', [LoginController::class, 'logout_through_api']);
+
+    Route::prefix('fixcode')->group(function () {
+    Route::get('processing-date/{company_id}', [FixcodeController::class, 'processing_date']);
+    });
 });

@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
-use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+// use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+use Karriere\PdfMerge\PdfMerge as PDFMerger;
 use App\Http\Traits\ShopeeTrait;
 use App\Http\Traits\TiktokTrait;
 use Illuminate\Support\Carbon;
@@ -652,8 +653,7 @@ class ShippingController extends Controller
         }
 
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
-        $pdf->merge();
-        $pdf->save(public_path('generated_labels/' . $filename));
+        $pdf->merge(public_path('generated_labels/' . $filename));
 
         if(!file_exists(public_path('generated_labels/' . $filename))){
             return response()->json(['status' => false,'error' => 'Error in generating PDF']);
@@ -985,13 +985,6 @@ class ShippingController extends Controller
         ]);
 
         $array_data = ($request->input('cn_data'));
-
-        $orders_dhl = Order::doesntHave('shippings')->with([
-            'customer', 'items', 'items.product', 'company',
-            'company.access_tokens' => function ($query) {
-                $query->where('type', 'dhl');
-            }
-        ])->whereIn('id', $order_id)->where('courier_id', DHL_ID)->get();
 
         // for now support only dhl-ecommerce and posmalaysia
         if($request->input('courier_id') == DHL_ID){

@@ -842,7 +842,7 @@ class OrderController extends Controller
                 set_order_status($shipping->order, ORDER_STATUS_READY_TO_SHIP, "Item Scanned by " . auth()->user()->name);
             }
 
-            return back()->with('success', 'Parcel Scanned Successfully')->with('shipping', $shipping);
+            return back()->with('success', 'Successfully Scanned')->with('shipping', $shipping);
         } else {
             //check if order return
             if($shipping->order->status == ORDER_STATUS_RETURN_SHIPPING){
@@ -858,36 +858,15 @@ class OrderController extends Controller
      * @param  Request $request
      * @return json
      */
-    // public function download_order_csv(Request $request)
-    // {
-    //     // return $request;
-    //     $fileName = date('Ymdhis') . '_list_of_orders.csv';
-    //     $orders = $this->index();
-
-    //     $orders->whereIn('id', $request->order_ids);
-
-    //     $orders = $this->filter_order($request, $orders);
-
-    //     $orders = $orders->get();
-
-    //     Excel::store(new OrderExport($orders),"public/".$fileName);
-    //     // \App\Jobs\DeleteTempExcelFileJob::dispatch("public/".$fileName)->delay(Carbon::now()->addMinute(2));
-
-    //     return response([
-    //         "file_name"=> $fileName
-    //     ]);
-    // }
-
     public function download_order_csv(Request $request)
     {
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
-        $orders = $this->index();
-        $orders->whereIn('id', $request->order_ids);
-        $orders = $this->filter_order($request, $orders);
-        $orders = $orders->get();
+
+        // Fetch orders along with sales_id
+        $orders = $this->index()->whereIn('id', $request->order_ids)->get();
 
         // Get headers from
-        $headers = $this->getHeader($request->template_id);
+        $headers = $this->get_header($request->template_id);
 
         $columnName = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
             ->join('column_mains', 'template_columns.column_main_id', '=', 'column_mains.id')
@@ -903,16 +882,20 @@ class OrderController extends Controller
                     ->from('template_mains')
                     ->where('id', $request->template_id);
             })
+            ->orderBy('template_columns.column_position')
             ->get();
 
-        Excel::store(new OrderExport($orders, $headers, $columnName), "public/" . $fileName);
+        // Get order PIC from BOS
+        $staffMain = $this->get_order_pic($orders->pluck('sales_id')->toArray(), $orders->pluck('company_id')->toArray());
+
+        Excel::store(new OrderExport($orders, $headers, $columnName, $staffMain), "public/" . $fileName);
 
         return response([
             "file_name" => $fileName,
         ]);
     }
 
-    private function getHeader($templateId)
+    private function get_header($templateId)
     {
         $template = TemplateMain::with('columns')->find($templateId);
 
@@ -920,6 +903,41 @@ class OrderController extends Controller
         $headers = explode(', ', $template->template_header);
 
         return $headers;
+    }
+
+    private function get_order_pic($salesIds, $companyId)
+    {
+        // Fetch company URL from the database
+        $url = Company::where('id', $companyId)->value('url');
+        $curl_url = $url . '/wms/get_staff_name';
+
+        // Initialize cURL session
+        $curl = curl_init();
+
+        // Set cURL options
+        curl_setopt_array($curl, [
+            // CURLOPT_URL => 'http://localhost/bos/wms/get_staff_name',
+            CURLOPT_URL => $curl_url,
+            CURLOPT_RETURNTRANSFER => true, // Return response as a string
+            CURLOPT_HTTPHEADER => [ // Set headers if needed
+                'Content-Type: application/json',
+            ],
+            CURLOPT_POST => true, // Use POST request
+            CURLOPT_POSTFIELDS => json_encode(['sales_ids' => $salesIds]),
+        ]);
+
+        // Execute cURL session
+        $response = curl_exec($curl);
+
+        // Check for errors
+        if ($response === false) {
+            $error = curl_error($curl);
+        }
+
+        // Close cURL session
+        curl_close($curl);
+
+        return $response;
     }
 
     /** Change Postcode view
@@ -1045,6 +1063,7 @@ class OrderController extends Controller
             'delivered' => 6,
             'returned' => 7,
             'return-completed' => 7, // Assuming the same template_type for 'returned' and 'return-completed'
+            'overall' => 8,
             'rejected' => 9,
         ];
 
