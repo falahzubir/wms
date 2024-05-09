@@ -607,7 +607,7 @@ class ShippingController extends Controller
             return ($value->attachment != null) && ($value->attachment != "");
         });
 
-        $pdf = PDFMerger::init();
+        $pdf = new PDFMerger;
 
         foreach ($attachments as $rs) {
 
@@ -632,7 +632,7 @@ class ShippingController extends Controller
                 continue;
             }
 
-            $pdf->addPDF(storage_path('app/public/' . $attach));
+            $pdf->add(storage_path('app/public/' . $attach));
 
             if($request->inc_packing_list && !empty($packing_attach))
             {
@@ -648,7 +648,7 @@ class ShippingController extends Controller
                     continue;
                 }
 
-                $pdf->addPDF(storage_path('app/public/' . $packing_attach));
+                $pdf->add(storage_path('app/public/' . $packing_attach));
             }
         }
 
