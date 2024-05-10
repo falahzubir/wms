@@ -678,8 +678,17 @@ class ShippingController extends Controller
         ->first();
 
         if (!$shipping_docs) {
-            $shipping_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())->where('end_date', '>=', Carbon::now())
-            ->whereNull('platform')->whereNull('operational_model_id')->first();
+            $shipping_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())
+            ->where('end_date', '>=', Carbon::now())
+            ->where(function ($query) {
+                $query->whereNull('platform')
+                    ->orWhere('platform', '=' , ''); // Check for empty string
+            })
+            ->where(function ($query) {
+                $query->whereNull('operational_model_id')
+                    ->orWhere('operational_model_id', '=' , ''); // Check for empty string
+            })
+            ->first();
 
             if (!$shipping_docs) {
                 return null;
@@ -697,6 +706,7 @@ class ShippingController extends Controller
 
         try {
             $ship_docs = $this->checking_shipping_docs($order_id);
+            dd($ship_docs);
             if($ship_docs != null){
                 if($ship_docs->additional_detail != null){
 
