@@ -706,7 +706,6 @@ class ShippingController extends Controller
 
         try {
             $ship_docs = $this->checking_shipping_docs($order_id);
-            dd($ship_docs);
             if($ship_docs != null){
                 if($ship_docs->additional_detail != null){
 
