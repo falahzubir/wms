@@ -673,7 +673,7 @@ class ShippingController extends Controller
             $query->where('operational_model_id', 'like', '%' . $operational_model_id . '%');
         })
         ->when(!empty($platform_id), function ($query) use ($platform_id) {
-            $query->where('platform_id', 'like', '%' . $platform_id . '%');
+            $query->where('platform', 'like', '%' . $platform_id . '%');
         })
         ->first();
 
@@ -1448,6 +1448,7 @@ class ShippingController extends Controller
         foreach($orders as $key => $value)
         {
             $product_list = $this->generate_product_description($value->id);
+            dd($product_list);
             $order[$key]['id'] = $value->id;
 
             if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->first()->tracking_number))
