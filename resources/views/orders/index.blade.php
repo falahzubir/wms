@@ -1623,7 +1623,7 @@
                 let sameCompany = await check_same_company(checkedOrder);
 
                 if (type == 'posmalaysia') {
-                    requestCNPOS(type, checkedOrder);
+                    requestCNPOS(type, checkedOrder, inc_packing_list_result);
                     return;
                 }
 
@@ -1715,7 +1715,7 @@
                     })
             }
 
-            async function requestCNPOS(type, checkedOrder) {
+            async function requestCNPOS(type, checkedOrder, inc_packing_list_result) {
                 // sweet alert
                 Swal.fire({
                     title: 'Generating shipping label...',
@@ -1852,7 +1852,7 @@
                     });
                 }
 
-                function downloadCn(item) {
+                function downloadCn(item, inc_packing_list_result) {
                     return new Promise((resolve) => {
                         axios({
                                 url: '/api/download-consignment-note',
@@ -1860,6 +1860,7 @@
                                 responseType: 'json', // important
                                 data: {
                                     order_ids: item,
+                                    inc_packing_list: inc_packing_list_result
                                 }
                             })
                             .then(function(res) {
@@ -1912,7 +1913,7 @@
                 // generate cn
                 await generateCn(checkedOrder);
                 // download cn
-                await downloadCn(checkedOrder)
+                await downloadCn(checkedOrder, inc_packing_list_result)
                     .then(function(download) {
                         Swal.update({
                             title: 'Success!',
