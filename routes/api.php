@@ -20,6 +20,7 @@ use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 use App\Http\Controllers\ThirdParty\PosMalaysiaController;
 use App\Http\Controllers\CourierServiceLevelAgreementController;
 use App\Http\Controllers\FixcodeController;
+use App\Http\Controllers\SettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -148,6 +149,16 @@ Route::webhooks('webhook/sales');
 
 Route::get('test',[TestController::class, 'test']);
 
+Route::prefix('settings')->group(function() {
+    // Route::get('sla', [ReportController::class, 'sla']);
+    Route::get('/init_shipping_doc_desc_data', [SettingsController::class,'init_shipping_doc_desc_page_data']);
+    Route::get('/init_sdd_table', [SettingsController::class,'init_sdd_table']);
+    Route::post('/shipping_doc_desc/form/add',[SettingsController::class,'add_sdd']); //add
+    Route::delete('/init_sdd_table/{template}', [SettingsController::class,'delete_sdd_table']); //delete
+    Route::get('/edit_sdd/form/{templateId}', [SettingsController::class,'edit_sdd_table']); //edit
+    Route::post('/shipping_doc_desc/form/update/{form_id}', [SettingsController::class,'update_sdd']); //update
+    // Route::get('shipment', [ReportController::class, 'shipment']);
+});
 Route::post('sign-in', [LoginController::class, 'login_through_api']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {

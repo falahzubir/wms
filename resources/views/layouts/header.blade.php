@@ -16,6 +16,12 @@
     <link href="{{ asset("assets/img/favicon.png") }}" rel="icon">
     <link href="{{ asset("assets/img/apple-touch-icon.png") }}" rel="apple-touch-icon">
 
+    {{-- Font Awesome 6 --}}
+    <script src="https://kit.fontawesome.com/1e6208c161.js" crossorigin="anonymous"></script>
+
+    {{-- CKEDITOR 5 --}}
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+
     <!-- Google Fonts -->
     <link href="https://fonts.gstatic.com" rel="preconnect">
     <link

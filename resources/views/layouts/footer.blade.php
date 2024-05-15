@@ -25,7 +25,89 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 
 {{-- <script src="//www.tracking.my/track-button.js"></script> --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        init_validate_func();
+    })
 
+    function init_validate_func() {
+        document.querySelectorAll('[validate-type]').forEach((elem) => {
+            const newDivHTML = `<div class='validate-box'>${elem.outerHTML}</div>`;
+            elem.insertAdjacentHTML('beforebegin', newDivHTML);
+            elem.remove();
+        })
+    }
+
+    function input_validator(form_elem, elem, validate_type) {
+        let result;
+        let validate_box = elem.closest('.validate-box');
+
+        // Remove existing validate-guide-text elements
+        validate_box.querySelectorAll('.validate-guide-text').forEach(el => el.remove());
+
+        let validate_guide_element = document.createElement('span');
+        validate_guide_element.className = 'validate-guide-text';
+
+        if (validate_type === 'radio') {
+            let extract_name_attr = elem.getAttribute('name');
+            let extract_form_id = document.querySelector(form_elem).getAttribute('id');
+            let checkedRadio = document.querySelector(`#${extract_form_id} [name='${extract_name_attr}']:checked`);
+
+            if (!checkedRadio) {
+                validate_guide_element.textContent = 'Please Check One';
+                validate_guide_element.style.color = 'red';
+                elem.style.borderColor = 'red';
+                result = false;
+            } else {
+                validate_guide_element.style.color = '#CED4DA';
+                elem.style.borderColor = '#CED4DA';
+                result = true;
+            }
+        } else if (validate_type === 'select' || validate_type === 'selectpicker' || validate_type ===
+            'selectpicker-single') {
+            let options = elem.value;
+
+            if (options !== null && (validate_type !== 'select' || options !== '0')) {
+                validate_guide_element.style.color = '#CED4DA';
+                elem.style.borderColor = '#CED4DA';
+                result = true;
+            } else {
+                validate_guide_element.textContent = (validate_type === 'select') ? 'Please Select' : 'Required';
+                validate_guide_element.style.color = 'red';
+                elem.style.borderColor = 'red';
+                result = false;
+            }
+        } else if (validate_type === 'date') {
+            let enteredDate = new Date(elem.value);
+
+            if (!isNaN(enteredDate) && enteredDate.toISOString().split('T')[0] === elem.value) {
+                // Valid date format
+                validate_guide_element.style.color = '#CED4DA';
+                elem.style.borderColor = '#CED4DA';
+                result = true;
+            } else {
+                validate_guide_element.textContent = 'Invalid date format';
+                validate_guide_element.style.color = 'red';
+                elem.style.borderColor = 'red';
+                result = false;
+            }
+        } else {
+            if (elem.value !== '' && elem.value.length > 0) {
+                validate_guide_element.style.color = '#CED4DA';
+                elem.style.borderColor = '#CED4DA';
+                result = true;
+            } else {
+                validate_guide_element.textContent = 'Required';
+                validate_guide_element.style.color = 'red';
+                elem.style.borderColor = 'red';
+                result = false;
+            }
+        }
+
+        validate_box.appendChild(validate_guide_element);
+        return result;
+    }
+</script>
 {!! $script !!}
 
 </body>
