@@ -99,6 +99,10 @@
             const body = document.getElementById("multiple-cn-modal-body");
             const label = document.getElementById("multiple-cn-modalLabel");
             const tableBody = document.getElementById("multiple-cn-modal-table-footer-body");
+            const footNote = document.getElementById("multiple-cn-modal-foot-note");
+            if(data.courier_id == {{ POSMALAYSIA_ID }}){
+                footNote.innerHTML = "<small class='text-danger'>Note: For Pos Malaysia, maximum 20 CN per order allowed.</small>";
+            }
             label.innerHTML = data.ref_no;
             body.insertAdjacentHTML('beforeend', cn());
             tableBody.innerHTML = tableFooter();
@@ -113,34 +117,20 @@
         function addCn() {
             const body = document.getElementById("multiple-cn-modal-body");
             const tableBody = document.getElementById("multiple-cn-modal-table-footer-body");
-            body.innerHTML = "";
-            tableBody.innerHTML = "";
-        })
-        myModal.show()
-    }
-
-    function render(data) {
-        const body = document.getElementById("multiple-cn-modal-body");
-        const label = document.getElementById("multiple-cn-modalLabel");
-        const tableBody = document.getElementById("multiple-cn-modal-table-footer-body");
-        const footNote = document.getElementById("multiple-cn-modal-foot-note");
-        if(data.courier_id == {{ POSMALAYSIA_ID }}){
-            footNote.innerHTML = "<small class='text-danger'>Note: For Pos Malaysia, maximum 20 CN per order allowed.</small>";
-        }
-        label.innerHTML = data.ref_no;
-        body.insertAdjacentHTML('beforeend', cn());
-        tableBody.innerHTML = tableFooter();
-        document.querySelectorAll(".multiple-cn-input").forEach(function(el) {
-            el.addEventListener("keyup", function(e) {
-                recalculateBalance();
+            body.insertAdjacentHTML('beforeend', cn(true));
+            tableBody.innerHTML = tableFooter();
+            document.querySelectorAll(".multiple-cn-input").forEach(function(el) {
+                el.addEventListener("keyup", function(e) {
+                    recalculateBalance();
+                })
             })
             document.querySelectorAll(".delete-cn").forEach(function(el) {
                 el.addEventListener("click", function(e) {
                     const id = e.currentTarget.dataset.id;
-                    if (document.getElementById(`row-${id}`) == null) {
+                    if (document.getElementById(row-${id}) == null) {
                         return;
                     }
-                    document.getElementById(`row-${id}`).remove();
+                    document.getElementById(row-${id}).remove();
                     resquenceCN();
                     recalculateBalance();
                 })
