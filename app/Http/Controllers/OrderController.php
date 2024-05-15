@@ -905,13 +905,12 @@ class OrderController extends Controller
     public function download_order_csv(Request $request)
     {
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
-        $orders = $this->index();
-        $orders->whereIn('id', $request->order_ids);
-        $orders = $this->filter_order($request, $orders);
-        $orders = $orders->get();
+
+        // Fetch orders along with sales_id
+        $orders = $this->index()->whereIn('id', $request->order_ids)->get();
 
         // Get headers from
-        $headers = $this->getHeader($request->template_id);
+        $headers = $this->get_header($request->template_id);
 
         $columnName = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
             ->join('column_mains', 'template_columns.column_main_id', '=', 'column_mains.id')
@@ -930,14 +929,17 @@ class OrderController extends Controller
             ->orderBy('template_columns.column_position')
             ->get();
 
-        Excel::store(new OrderExport($orders, $headers, $columnName), "public/" . $fileName);
+        // Get order PIC from BOS
+        $staffMain = $this->get_order_pic($orders->pluck('sales_id')->toArray(), $orders->pluck('company_id')->toArray());
+
+        Excel::store(new OrderExport($orders, $headers, $columnName, $staffMain), "public/" . $fileName);
 
         return response([
             "file_name" => $fileName,
         ]);
     }
 
-    private function getHeader($templateId)
+    private function get_header($templateId)
     {
         $template = TemplateMain::with('columns')->find($templateId);
 
@@ -945,6 +947,41 @@ class OrderController extends Controller
         $headers = explode(', ', $template->template_header);
 
         return $headers;
+    }
+
+    private function get_order_pic($salesIds, $companyId)
+    {
+        // Fetch company URL from the database
+        $url = Company::where('id', $companyId)->value('url');
+        $curl_url = $url . '/wms/get_staff_name';
+
+        // Initialize cURL session
+        $curl = curl_init();
+
+        // Set cURL options
+        curl_setopt_array($curl, [
+            // CURLOPT_URL => 'http://localhost/bos/wms/get_staff_name',
+            CURLOPT_URL => $curl_url,
+            CURLOPT_RETURNTRANSFER => true, // Return response as a string
+            CURLOPT_HTTPHEADER => [ // Set headers if needed
+                'Content-Type: application/json',
+            ],
+            CURLOPT_POST => true, // Use POST request
+            CURLOPT_POSTFIELDS => json_encode(['sales_ids' => $salesIds]),
+        ]);
+
+        // Execute cURL session
+        $response = curl_exec($curl);
+
+        // Check for errors
+        if ($response === false) {
+            $error = curl_error($curl);
+        }
+
+        // Close cURL session
+        curl_close($curl);
+
+        return $response;
     }
 
     /** Change Postcode view

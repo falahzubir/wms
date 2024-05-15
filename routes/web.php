@@ -22,6 +22,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TemplateSettingController;
 use App\Http\Controllers\CustomTemplateController;
 use App\Models\Company;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -181,7 +182,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('selected-coverage', [CourierController::class, 'selectedcoverage'])->name('couriers.selectedCoverage');
         Route::get('default-coverage', [CourierController::class, 'defaultcoverage'])->name('couriers.defaultCoverage');
     });
-    
+
     Route::prefix('alternative_postcode')->group(function() {
         Route::get('/', [AlternativePostcodeController::class, 'index'])->name('alternative_postcode.index');
         Route::post('save', [AlternativePostcodeController::class, 'store'])->name('alternative_postcode.save');
@@ -215,9 +216,15 @@ Route::middleware(['auth'])->group(function() {
         Route::post('bucket-automation-update', [BucketAutomationController::class, 'update'])->name('bucket_automation_setting.update');
         Route::put('bucket-automation-status', [BucketAutomationController::class, 'update_status'])->name('bucket_automation_setting.update_status');
         Route::post('bucket-automation-update-priority', [BucketAutomationController::class, 'update_priority'])->name('bucket_automation_setting.update_priority');
+
+        Route::get('/ship_doc_desc',[SettingsController::class,'view_shipping_doc_desc'])->name('view_shipping_doc_desc');
+        Route::get('/ship_doc_desc/form',[SettingsController::class,'sdd_form'])->name('sdd_form');
+        Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
     });
 
 });
+
+    Route::get("sdd_template",[SettingsController::class,'sdd_template_view']);
 
     Route::get('live', fn () => view('live')); // comment out suspect cause server issues timeout error
 
