@@ -2038,6 +2038,8 @@
                 ws.on('connect', function() {
                     console.log('Connected to Socket.IO server');
                 });
+
+                console.log(ws);
             })
             const optionsMap = {
                 1: 'Phone',
@@ -2095,39 +2097,39 @@
                             console.log(data_to_be_send_to_websocket);
                             // Sending the message as JSON
                             ws.emit('wms_data', JSON.stringify(data_to_be_send_to_websocket));
-                            axios.post('/api/orders/reject', {
-                                    order_id: orderId,
-                                    reason,
-                                    reject_reason
-                                })
-                                .then(function(response) {
-                                    // handle success, close or download
-                                    if (response.status == 200) {
-                                        Swal.fire({
-                                                title: 'Success!',
-                                                text: "Order rejected.",
-                                                icon: 'success',
-                                                confirmButtonText: 'OK'
-                                            })
-                                            .then((result) => {
-                                                if (result.isConfirmed) {
-                                                    location.reload();
-                                                }
-                                            })
-                                    } else {
-                                        Swal.fire({
-                                            title: 'Error!',
-                                            text: "Something went wrong.",
-                                            icon: 'error',
-                                            confirmButtonText: 'OK'
-                                        })
-                                        return;
-                                    }
-                                })
-                                .catch(function(error) {
-                                    // handle error
-                                    console.log(error);
-                                })
+                        //     axios.post('/api/orders/reject', {
+                        //             order_id: orderId,
+                        //             reason,
+                        //             reject_reason
+                        //         })
+                        //         .then(function(response) {
+                        //             // handle success, close or download
+                        //             if (response.status == 200) {
+                        //                 Swal.fire({
+                        //                         title: 'Success!',
+                        //                         text: "Order rejected.",
+                        //                         icon: 'success',
+                        //                         confirmButtonText: 'OK'
+                        //                     })
+                        //                     .then((result) => {
+                        //                         if (result.isConfirmed) {
+                        //                             location.reload();
+                        //                         }
+                        //                     })
+                        //             } else {
+                        //                 Swal.fire({
+                        //                     title: 'Error!',
+                        //                     text: "Something went wrong.",
+                        //                     icon: 'error',
+                        //                     confirmButtonText: 'OK'
+                        //                 })
+                        //                 return;
+                        //             }
+                        //         })
+                        //         .catch(function(error) {
+                        //             // handle error
+                        //             console.log(error);
+                        //         })
                         }
 
                         
