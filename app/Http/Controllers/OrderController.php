@@ -672,6 +672,25 @@ class OrderController extends Controller
         ##############################
         if( $setting['detect_operation_type'] === 'AND' )
         {
+            //check if any of the arrays are empt, then no duplicate
+            if ($setting['detect_by_phone'] == 1) {
+                if (empty($duplicate_phone)) {
+                    return false;
+                }
+            }
+
+            if ($setting['detect_by_address'] == 1) {
+                if (empty($duplicate_address)) {
+                    return false;
+                }
+            }
+
+            if ($setting['detect_by_product'] === 'ANY' || $setting['detect_by_product'] === 'ALL') {
+                if (empty($duplicate_product)) {
+                    return false;
+                }
+            }
+
             $non_empty_arrays = array_filter([$duplicate_address, $duplicate_phone, $duplicate_product]);
             if (empty($non_empty_arrays))
             {
@@ -1135,13 +1154,6 @@ class OrderController extends Controller
             // Handle the case where the status is not recognized
             return response()->json(['error' => 'Invalid status'], 400);
         }
-    }
-
-    public function test() #left here for testing
-    {
-        $webhook = '{"third_party_sn":null,"additional_data":null,"sales_id":"601533","company":"QA","purchase_type":"1","customer_type":"5","courier_id":"15","operation_model_id":"1","team_id":null,"dt_request_shipping":"2024-05-20 10:22:57","dt_processing":"2024-05-20 10:22:57","shipment_type":"1","customer":{"name":"Insyirah","phone":"601121134074","phone_2":null,"address":"Taman Ria","postcode":"09000","state":"3","city":"Kulim","country":"1"},"product":[{"name":"Neloco","code":"NLC","price":"50.00","quantity":"1","is_foc":"0"}],"total_price":"50.00","payment_refund":null,"sold_by":"60194534873","event_id":"0","payment_type":null,"sales_remark":null}';
-        $webhook = json_decode($webhook, true);
-        $this->create($webhook);
     }
 
 }
