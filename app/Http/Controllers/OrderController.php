@@ -519,9 +519,11 @@ class OrderController extends Controller
                 set_order_status($order, ORDER_STATUS_PENDING, 'Order created from webhook');
             } else {
                 if($order->status == ORDER_STATUS_REJECTED){
+                    $this->check_duplicate($customer, $order);
                     set_order_status($order, ORDER_STATUS_PENDING, 'Order updated from webhook, previously rejected');
                     Shipping::where('order_id', $order->id)->update(['status' => 0]);
                 } else{
+                    $this->check_duplicate($customer, $order);
                     set_order_status($order, $order->status, 'Order updated from webhook');
                 }
             }
@@ -1137,9 +1139,9 @@ class OrderController extends Controller
 
     public function test() #left here for testing
     {
-        $order = Order::where('id',11956)->first();
-        $customer = Customer::where('id',$order->customer_id)->first();
-        $this->check_duplicate($customer, $order);
+        $webhook = '{"third_party_sn":null,"additional_data":null,"sales_id":"601533","company":"QA","purchase_type":"1","customer_type":"5","courier_id":"15","operation_model_id":"1","team_id":null,"dt_request_shipping":"2024-05-20 10:22:57","dt_processing":"2024-05-20 10:22:57","shipment_type":"1","customer":{"name":"Insyirah","phone":"601121134074","phone_2":null,"address":"Taman Ria","postcode":"09000","state":"3","city":"Kulim","country":"1"},"product":[{"name":"Neloco","code":"NLC","price":"50.00","quantity":"1","is_foc":"0"}],"total_price":"50.00","payment_refund":null,"sold_by":"60194534873","event_id":"0","payment_type":null,"sales_remark":null}';
+        $webhook = json_decode($webhook, true);
+        $this->create($webhook);
     }
 
 }
