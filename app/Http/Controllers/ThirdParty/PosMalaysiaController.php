@@ -406,7 +406,7 @@ class PosMalaysiaController extends ShippingController
             }
             if($key == 0){ // parent json
                 $json_data = [
-                    'subscriptionCode' => config('settings.genpreacceptedsingle_subscription_code'),
+                    'subscriptionCode' => $order->company->posmalaysia_subscribtion_code,
                     'requireToPickup' => config('settings.genpreacceptedsingle_require_to_pickup'),
                     'requireWebHook' => config('settings.genpreacceptedsingle_require_web_hook'),
                     'accountNo' => config('settings.genpreacceptedsingle_account_no'),
