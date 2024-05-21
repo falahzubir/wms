@@ -31,8 +31,19 @@
                                                         {{ ucwords(str_replace('_', ' ', $child->key)) }}
                                                     </td>
                                                     <td>
+                                                        @if($child->key == 'detect_by_product')
+                                                        <select class="form-select" name="setting[{{$child->key}}]">
+                                                            <option value="NONE" {{ $child->value == 'NONE' ? 'selected' : '' }}>NONE</option>
+                                                            <option value="ANY" {{ $child->value == 'ANY' ? 'selected' : '' }}>ANY</option>
+                                                            <option value="ALL" {{ $child->value == 'ALL' ? 'selected' : '' }}>ALL</option>
+                                                        @elseif($child->key == 'detect_operation_type')
+                                                        <select class="form-select" name="setting[{{$child->key}}]">
+                                                            <option value="AND" {{ $child->value == 'AND' ? 'selected' : '' }}>AND</option>
+                                                            <option value="OR" {{ $child->value == 'OR' ? 'selected' : '' }}>OR</option>
+                                                        @else
                                                         <input class="form-control" type="text" value="{{ $child->value }}"
                                                             name="setting[{{$child->key}}]">
+                                                        @endif
                                                     </td>
                                                 </tr>
                                             @endforeach
