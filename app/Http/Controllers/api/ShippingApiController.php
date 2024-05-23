@@ -83,7 +83,7 @@ class ShippingApiController extends ShippingController
     public function send_shipping_info()
     {
         $orders = Order::with(['shippings', 'company'])
-            ->whereHas('shippings', function ($query) {
+            ->withWhereHas('shippings', function ($query) {
                 $query->where('status', 1)->whereNotNull('tracking_number')->where('is_send', 0);
             });
 
