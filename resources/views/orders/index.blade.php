@@ -2031,7 +2031,8 @@
             }
             let ws;
             document.addEventListener("DOMContentLoaded",function(){
-                ws = io('https://206.189.144.234:443');
+                ws = io('https://206.189.144.234:443'); //live
+                // ws = io('http://206.189.144.234:8080'); //development 
                 // ws = new WebSocket('ws://206.189.144.234:8080');
 
                 // Event listener for when the connection is established
