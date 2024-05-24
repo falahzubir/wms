@@ -2032,7 +2032,7 @@
             let ws;
             document.addEventListener("DOMContentLoaded",function(){
                 // ws = io('wss://websocketnew.groobok.com'); //live (need domain instead of ip address)
-                ws = io('https://152.42.168.240:443'); //development (need ip addrrss instead)
+                ws = io('http://152.42.168.240:3000'); //development (need ip addrrss instead)
                 // ws = new WebSocket('ws://206.189.144.234:8080');
 
                 // Event listener for when the connection is established
