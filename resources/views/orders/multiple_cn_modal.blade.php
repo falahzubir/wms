@@ -245,163 +245,280 @@
         tableBody.innerHTML = tableFooter();
     }
 
-    function generateMultipleCN(){
-        // validate
-        const errors = [];
-        var arr_data = []; //for all CN
-        var order_id = 0;
-        var courier_id = 0;
+    function generateMultipleCN() {
+            // validate
+            const errors = [];
+            var arr_data = []; //for all CN
+            var order_id = 0;
+            var courier_id = 0;
 
-        for (const [i,card] of document.querySelectorAll(".multiple-cn-card").entries()) {
-            let total = 0;
-            var arr_item = []; //for each CN
-            order_id = card.getAttribute('data-order-id');
-            courier_id = card.getAttribute('data-courier-id');
+            for (const [i, card] of document.querySelectorAll(".multiple-cn-card").entries()) {
+                let total = 0;
+                var arr_item = []; //for each CN
+                order_id = card.getAttribute('data-order-id');
+                courier_id = card.getAttribute('data-courier-id');
 
-            for (const input of card.querySelectorAll(".multiple-cn-input")) {
-                const val = parseInt(input.value);
-                const order_item_id = input.getAttribute('data-id');
-                var item = [];
+                for (const input of card.querySelectorAll(".multiple-cn-input")) {
+                    const val = parseInt(input.value);
+                    const order_item_id = input.getAttribute('data-id');
+                    var item = [];
 
-                //store in array first
-                quantity = Number.isNaN(val) ? 0 : val; //if quantity NaN change to 0
-                arr_item.push({order_item_id : order_item_id, quantity : quantity});
+                    //store in array first
+                    quantity = Number.isNaN(val) ? 0 : val; //if quantity NaN change to 0
+                    arr_item.push({
+                        order_item_id: order_item_id,
+                        quantity: quantity
+                    });
 
-                if(Number.isNaN(val)){
-                    continue;
+                    if (Number.isNaN(val)) {
+                        continue;
+                    }
+
+                    if (val < 1) {
+                        continue;
+                    }
+
+                    total += val;
                 }
 
-                if(val <1){
-                    continue;
+                if (total == 0) {
+                    errors.push(`CN ${(i+1)} all quantity can't be empty`);
+                } else {
+                    arr_data.push(arr_item);
                 }
-
-                total += val;
             }
 
-            if(total == 0){
-                errors.push(`CN ${(i+1)} all quantity can't be empty`);
-            }
-            else{
-                arr_data.push(arr_item);
-            }
-        }
-
-        if(errors.length >0){
-            // has Error;
-            Swal.fire({
-                title: 'Empty quantity!',
-                html: errors.join('<br>'),
-                icon: 'warning',
-                confirmButtonText: 'OK'
-            })
-        }
-        else{
-            //check balance
-            const tableBody = document.querySelector("#multiple-cn-modal-table-footer-body");
-            const rows = tableBody.querySelectorAll('tr');
-            quantity = 0;
-            balance = 0;
-            overall_balance = 0;
-
-            rows.forEach(row => {
-                quantity += Number(row.querySelector('#quantity').textContent);
-                balance += Number(row.querySelector('#balance').textContent);
-            });
-            overall_balance = quantity - balance;
-
-            if(overall_balance != quantity){
-                console.log(overall_balance);
+            if (errors.length > 0) {
+                // has Error;
                 Swal.fire({
-                    title: 'Balance Available',
-                    html: 'There are available balance for this order',
+                    title: 'Empty quantity!',
+                    html: errors.join('<br>'),
                     icon: 'warning',
                     confirmButtonText: 'OK'
-                });
-            }
-            else{
-                Swal.fire({
-                    title: 'Generating shipping label...',
-                    html: 'Please wait while we are generating shipping labels for this order.',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading()
-                    },
-                });
-                axios.post(`{{ route('shipping.generate_cn_multiple') }}`, {
-                    order_id : order_id,
-                    courier_id : courier_id,
-                    cn_data : arr_data
                 })
-                .then(response => {
-                    if (response.data.status == 'error') {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: response.data.message,
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        })
-                        return;
-                    }
-                    else if (response.data.status == 'success'){
-                        Swal.fire({
-                            title: 'Success!',
-                            text: response.data.message,
-                            icon: 'success',
-                            confirmButtonText: 'Download CN',
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                axios({
-                                        url: '/api/download-consignment-note',
-                                        method: 'POST',
-                                        responseType: 'json', // important
-                                        data: {
-                                            order_ids: [order_id],
-                                        }
-                                    })
-                                    .then(function(res) {
-                                        // redirect
-                                        const fileName = String(res.data.download_url).split("/").pop();
-                                        let a = document.createElement('a');
-                                        a.target = '_blank';
-                                        a.download = fileName;
-                                        a.href = res.data.download_url;
-                                        a.click();
-                                        // window.location.href = res.data.download_url;
-                                        Swal.fire({
-                                            icon: 'success',
-                                            title: 'Success',
-                                            html: `<div>Download Request CN Successful.</div>
-                                            <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
-                                            footer: '<small class="text-danger">Please enable popup if required</small>',
-                                            allowOutsideClick: false
-                                        }).then((result) => {
-                                            location.reload();
-                                        })
+            } else {
+                //check balance
+                const tableBody = document.querySelector("#multiple-cn-modal-table-footer-body");
+                const rows = tableBody.querySelectorAll('tr');
+                quantity = 0;
+                balance = 0;
+                overall_balance = 0;
 
-                                    }).catch(() => {
+                rows.forEach(row => {
+                    quantity += Number(row.querySelector('#quantity').textContent);
+                    balance += Number(row.querySelector('#balance').textContent);
+                });
+                overall_balance = quantity - balance;
+
+                if (overall_balance != quantity) {
+                    console.log(overall_balance);
+                    Swal.fire({
+                        title: 'Balance Available',
+                        html: 'There are available balance for this order',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+
+                    //safekeeping checkbox value
+                    let inc_packing_list_generated_cn_multiple_cn_checkbox_value;
+                    Swal.fire({
+                        title: `Are you sure to generate multiple Consignment Note?`,
+                        html: `<p class="text-secondary" style="font-size:0.75rem">You are about to generate shipping label for this order.</p><label style="font-size:0.8rem"><input type="checkbox" name="inc_packing_list_generated_cn_multiple_cn" id="inc-packing-list-generated-cn-multiple-cn" checked> <span class="ms-2" for="inc-packing-list-generated-cn-multiple-cn">Include packing list</span></label>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, generate it!',
+                    }).then((result) => {
+                        /* Read more about isConfirmed, isDenied below */
+                        if (result.isConfirmed) {
+                            let inc_packing_list_generated_cn_multiple_cn = document.getElementById('inc-packing-list-generated-cn-multiple-cn');
+                            inc_packing_list_generated_cn_multiple_cn_checkbox_value = inc_packing_list_generated_cn_multiple_cn.checked;
+                            Swal.fire({
+                                title: 'Generating shipping label...',
+                                html: 'Please wait while we are generating shipping labels for this order.',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading()
+                                },
+                            });
+
+                            axios.post(`{{ route('shipping.generate_cn_multiple') }}`, {
+                                    order_id: order_id,
+                                    courier_id: courier_id,
+                                    cn_data: arr_data
+                                })
+                                .then(response => {
+                                    Swal.close();
+                                    if (response.data.status == 'error') {
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: response.data.message,
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        })
+                                        return;
+                                    } else if (response.data.status == 'success') {
                                         Swal.fire({
                                             title: 'Success!',
-                                            html: `Failed to generate pdf`,
-                                            allowOutsideClick: false,
-                                            icon: 'error',
-                                        });
+                                            html: `<div class="text-muted" style="font-size:0.8rem;color:#777">${inc_packing_list_generated_cn_multiple_cn_checkbox_value ? 'Shipping label and packing list generated' : 'Shipping label generated'}</div>`,
+                                            icon: 'success',
+                                            confirmButtonText: 'Download',
+                                            cancelButtonText: 'OK', // Change close button text to 'OK'
+                                            showCancelButton: true, // Show close button
+                                            showCloseButton: true,
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                axios({
+                                                        url: '/api/download-consignment-note',
+                                                        method: 'POST',
+                                                        responseType: 'json', // important
+                                                        data: {
+                                                            order_ids: [order_id],
+                                                            inc_packing_list: inc_packing_list_generated_cn_multiple_cn_checkbox_value
+                                                        }
+                                                    })
+                                                    .then(function(res) {
+                                                        console.log(res);
+                                                        // redirect
+                                                        const fileName = String(res.data
+                                                            .download_url).split("/").pop();
+                                                        let a = document.createElement('a');
+                                                        a.target = '_blank';
+                                                        a.download = fileName;
+                                                        a.href = res.data.download_url;
+                                                        a.click();
+                                                        // window.location.href = res.data.download_url;
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Success',
+                                                            html: `<div>${inc_packing_list_generated_cn_multiple_cn_checkbox_value ? 'Download Request CN and Packing List Successful' : 'Download Request CN Successful'}.</div>
+                                             <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if items not downloaded.</div>`,
+                                                            // footer: '<small class="text-danger">Please enable popup if required</small>',
+                                                            allowOutsideClick: false
+                                                        }).then((result) => {
+                                                            location.reload();
+                                                        })
 
+                                                    }).catch(() => {
+                                                        Swal.fire({
+                                                            title: 'Success!',
+                                                            html: `Failed to generate pdf`,
+                                                            allowOutsideClick: false,
+                                                            icon: 'error',
+                                                        });
+
+                                                    })
+                                            }
+                                        })
+                                    }
+                                })
+                                .catch(error => {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: error.response.data.message,
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
                                     })
-                            }
-                        })
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: error.response.data.message,
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    })
-                });
-            }
-        }
+                                });
+                            // Simulating AJAX call (replace this with your actual AJAX call)
+                            // setTimeout(() => {
+                            //     // Close the loading Swal alert after AJAX call is complete
+                            //     Swal.close();
+                            //     // Here you can place your actual AJAX call
+                            // }, 2000);
+                        } else if (result.isDenied) {
+                            // Swal.fire("Changes are not saved", "", "info");
+                        }
+                    });
 
-    }
+
+
+
+                    // Swal.fire({
+                    //     title: 'Generating shipping label...',
+                    //     html: 'Please wait while we are generating shipping labels for this order.',
+                    //     allowOutsideClick: false,
+                    //     didOpen: () => {
+                    //         Swal.showLoading()
+                    //     },
+                    // });
+                    // axios.post(`{{ route('shipping.generate_cn_multiple') }}`, {
+                    //     order_id : order_id,
+                    //     courier_id : courier_id,
+                    //     cn_data : arr_data
+                    // })
+                    // .then(response => {
+                    //     if (response.data.status == 'error') {
+                    //         Swal.fire({
+                    //             title: 'Error!',
+                    //             text: response.data.message,
+                    //             icon: 'error',
+                    //             confirmButtonText: 'OK'
+                    //         })
+                    //         return;
+                    //     }
+                    //     else if (response.data.status == 'success'){
+                    //         Swal.fire({
+                    //             title: 'Success!',
+                    //             text: response.data.message,
+                    //             icon: 'success',
+                    //             confirmButtonText: 'Download CN',
+                    //         }).then((result) => {
+                    //             if (result.isConfirmed) {
+                    //                 axios({
+                    //                         url: '/api/download-consignment-note',
+                    //                         method: 'POST',
+                    //                         responseType: 'json', // important
+                    //                         data: {
+                    //                             order_ids: [order_id],
+                    //                         }
+                    //                     })
+                    //                     .then(function(res) {
+                    //                         // redirect
+                    //                         const fileName = String(res.data.download_url).split("/").pop();
+                    //                         let a = document.createElement('a');
+                    //                         a.target = '_blank';
+                    //                         a.download = fileName;
+                    //                         a.href = res.data.download_url;
+                    //                         a.click();
+                    //                         // window.location.href = res.data.download_url;
+                    //                         Swal.fire({
+                    //                             icon: 'success',
+                    //                             title: 'Success',
+                    //                             html: `<div>Download Request CN Successful.</div>
+                //                             <div>Click <a href="${res.data.download_url}" target="_blank" download="${fileName}">here</a> if CN not downloaded.</div>`,
+                    //                             footer: '<small class="text-danger">Please enable popup if required</small>',
+                    //                             allowOutsideClick: false
+                    //                         }).then((result) => {
+                    //                             location.reload();
+                    //                         })
+
+                    //                     }).catch(() => {
+                    //                         Swal.fire({
+                    //                             title: 'Success!',
+                    //                             html: `Failed to generate pdf`,
+                    //                             allowOutsideClick: false,
+                    //                             icon: 'error',
+                    //                         });
+
+                    //                     })
+                    //             }
+                    //         })
+                    //     }
+                    // })
+                    // .catch(error => {
+                    //     Swal.fire({
+                    //         title: 'Error!',
+                    //         text: error.response.data.message,
+                    //         icon: 'error',
+                    //         confirmButtonText: 'OK'
+                    //     })
+                    // });
+                }
+            }
+
+        }
 </script>
 @endpush

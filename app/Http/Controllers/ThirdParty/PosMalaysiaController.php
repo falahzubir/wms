@@ -49,6 +49,10 @@ class PosMalaysiaController extends ShippingController
         $error = [];
         foreach ($orders_pos as $order) {
 
+            //check for COD with zero payment, change to Prefix PAID
+            if($order->purchase_type == PURCHASE_TYPE_COD && $order->total_price == 0){
+                $order->purchase_type = PURCHASE_TYPE_PAID;
+            }
             $connote = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_connote, [
                 'numberOfItem' => 1,
                 'Prefix' => $order->purchase_type == PURCHASE_TYPE_COD ? config('settings.genconnote_prefix_cod') : config('settings.genconnote_prefix_paid'),
@@ -181,6 +185,10 @@ class PosMalaysiaController extends ShippingController
         $error = [];
 
         foreach ($orders_pos as $order) {
+            //check for COD with zero payment, change to Prefix PAID
+            if($order->purchase_type == PURCHASE_TYPE_COD && $order->total_price == 0){
+                $order->purchase_type = PURCHASE_TYPE_PAID;
+            }
             foreach($order->shippings as $shipping){
                 $json_data = [
                     'subscriptionCode' => $order->company->posmalaysia_subscribtion_code,
@@ -223,7 +231,7 @@ class PosMalaysiaController extends ShippingController
                     'receiverPhone01' => $order->customer->phone,
                     'receiverPhone02' => $order->customer->phone_2 ?? $order->customer->phone,
                     'sellerReferenceNo' => shipment_num_format($order),
-                    'itemDescription' => $this->package_description($order),
+                    'itemDescription' => get_shipping_remarks($order),
                     'sellerOrderNo' => $order->sales_id,
                     'comments' => $order->shipping_remarks,
                     'packDesc' => get_shipping_remarks($order),
@@ -398,7 +406,7 @@ class PosMalaysiaController extends ShippingController
             }
             if($key == 0){ // parent json
                 $json_data = [
-                    'subscriptionCode' => config('settings.genpreacceptedsingle_subscription_code'),
+                    'subscriptionCode' => $order->company->posmalaysia_subscribtion_code,
                     'requireToPickup' => config('settings.genpreacceptedsingle_require_to_pickup'),
                     'requireWebHook' => config('settings.genpreacceptedsingle_require_web_hook'),
                     'accountNo' => config('settings.genpreacceptedsingle_account_no'),
@@ -495,6 +503,7 @@ class PosMalaysiaController extends ShippingController
 
     private function save_connote($request, $order, $shipping, $mult = false)
     {
+        $product_list = $this->generate_product_description($order->id);
         $error = [];
         if(isset($request['pdf']) && $request['pdf'] != null){
 
@@ -542,7 +551,7 @@ class PosMalaysiaController extends ShippingController
                     }
                 }
                 // save path to shipping
-                $shipping->update(['attachment' => "pos_labels/".$fileName]);
+                $shipping->update(['attachment' => "pos_labels/".$fileName, 'packing_attachment' => $product_list]);
 
             } else {
                 // Handle the error, e.g., invalid base64 string

@@ -17,4 +17,9 @@ class OperationalModel extends Model
     public function company() {
         return $this->hasOne(Company::class, 'id', 'default_company_id');
     }
+
+    // public function shippingDocumentTemplates()
+    // {
+    //     return $this->belongsToMany(ShippingDocumentTemplate::class);
+    // }
 }
