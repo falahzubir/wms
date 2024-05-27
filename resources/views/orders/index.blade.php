@@ -1109,9 +1109,9 @@
                 } else {
                     el.parentElement.querySelector('input[type="number"]').value = parseInt(val) - 1; //set value
                     document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) +
-                    1; //set remaining order
+                        1; //set remaining order
                     el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) -
-                    1); //set data attribute
+                        1); //set data attribute
                 }
             }
 
@@ -1121,10 +1121,10 @@
 
                 if (remainingOrder != 0) {
                     document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) -
-                    1; //set remaining order
+                        1; //set remaining order
                     el.parentElement.querySelector('input[type="number"]').value = parseInt(val) + 1; //set value
                     el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) +
-                    1); //set data attribute
+                        1); //set data attribute
                 } else {
                     return; //stop function
                 }
@@ -1272,9 +1272,9 @@
                     <div class="swal2-loader"></div>
                     ${Object.keys(generate_cn_couriers).map((key) => {
                         return `<button type="button" class="swal2-custom swal2-${key} swal2-styled" style="display: inline-block;"
-                                    aria-label="" onclick="conformationDownloadCN('${key}', '${checkedValue}')" >
-                                    ${generate_cn_couriers[key]}
-                                    </button>`;
+                                            aria-label="" onclick="conformationDownloadCN('${key}', '${checkedValue}')" >
+                                            ${generate_cn_couriers[key]}
+                                            </button>`;
                     }).join('')}
                     </div>
                 </div>
@@ -1587,9 +1587,9 @@
                         <div class="swal2-loader"></div>
                         ${Object.keys(arrange_shipment_platform).map((key) => {
                             return `<button type="button" class="swal2-custom swal2-${key} swal2-styled" style="display: inline-block;"
-                                        aria-label="" onclick="confirmationArrange('${key}', '${checkedOrder}')" >
-                                        ${arrange_shipment_platform[key]}
-                                        </button>`;
+                                                aria-label="" onclick="confirmationArrange('${key}', '${checkedOrder}')" >
+                                                ${arrange_shipment_platform[key]}
+                                                </button>`;
                         }).join('')}
                         </div>
                     </div>
@@ -2030,7 +2030,7 @@
                     });
             }
             let ws;
-            document.addEventListener("DOMContentLoaded",function(){
+            document.addEventListener("DOMContentLoaded", function() {
                 ws = io('https://websocketnew.groobok.com'); //live (need domain instead of ip address)
                 // ws = io('http://152.42.168.240:3000'); //development (need ip addrrss instead)
                 // ws = new WebSocket('ws://206.189.144.234:8080');
@@ -2049,6 +2049,7 @@
                 4: 'Product(Others)',
                 5: 'Change Purchase Type'
             };
+
             function reject_order(orderId) {
                 Swal.fire({
                     title: 'Are you sure to reject this order?',
@@ -2089,51 +2090,52 @@
                         if (reason) {
                             const data_to_be_send_to_websocket = {
                                 type: 'notification',
-                                order_id: orderId ,
-                                reason:optionsMap[result.value],
-                                reason_value:result.value,
-                                remark:reason
+                                order_id: orderId,
+                                reason: optionsMap[result.value],
+                                reason_value: result.value,
+                                remark: reason
                             };
                             console.log(result.value);
                             console.log(data_to_be_send_to_websocket);
-                            // Sending the message as JSON
-                            ws.emit('wms_data', JSON.stringify(data_to_be_send_to_websocket));
-                        //     axios.post('/api/orders/reject', {
-                        //             order_id: orderId,
-                        //             reason,
-                        //             reject_reason
-                        //         })
-                        //         .then(function(response) {
-                        //             // handle success, close or download
-                        //             if (response.status == 200) {
-                        //                 Swal.fire({
-                        //                         title: 'Success!',
-                        //                         text: "Order rejected.",
-                        //                         icon: 'success',
-                        //                         confirmButtonText: 'OK'
-                        //                     })
-                        //                     .then((result) => {
-                        //                         if (result.isConfirmed) {
-                        //                             location.reload();
-                        //                         }
-                        //                     })
-                        //             } else {
-                        //                 Swal.fire({
-                        //                     title: 'Error!',
-                        //                     text: "Something went wrong.",
-                        //                     icon: 'error',
-                        //                     confirmButtonText: 'OK'
-                        //                 })
-                        //                 return;
-                        //             }
-                        //         })
-                        //         .catch(function(error) {
-                        //             // handle error
-                        //             console.log(error);
-                        //         })
+
+                            axios.post('/api/orders/reject', {
+                                    order_id: orderId,
+                                    reason,
+                                    reject_reason
+                                })
+                                .then(function(response) {
+                                    // handle success, close or download
+                                    if (response.status == 200) {
+                                        // Sending the message as JSON
+                                        ws.emit('wms_data', JSON.stringify(data_to_be_send_to_websocket));
+                                        Swal.fire({
+                                                title: 'Success!',
+                                                text: "Order rejected.",
+                                                icon: 'success',
+                                                confirmButtonText: 'OK'
+                                            })
+                                            .then((result) => {
+                                                if (result.isConfirmed) {
+                                                    location.reload();
+                                                }
+                                            })
+                                    } else {
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: "Something went wrong.",
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        })
+                                        return;
+                                    }
+                                })
+                                .catch(function(error) {
+                                    // handle error
+                                    console.log(error);
+                                })
                         }
 
-                        
+
 
                     }
 
