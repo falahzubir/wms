@@ -88,6 +88,9 @@ class ShippingController extends Controller
      */
     public function request_cn(Request $request)
     {
+        // increase timeout for large request: 3 minutes
+        ini_set('max_execution_time', 180);
+
         $data = $request->validate([
             'order_ids' => 'required',
         ]);
