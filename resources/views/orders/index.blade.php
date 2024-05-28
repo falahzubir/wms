@@ -2102,7 +2102,8 @@
                             axios.post('/api/orders/reject', {
                                 order_id: orderId,
                                 reason,
-                                reject_reason
+                                reject_reason,
+                                data_to_be_send_to_websocket
                             }).then(function(response) {
                                 // handle success, close or download
                                 if (response.status == 200) {
