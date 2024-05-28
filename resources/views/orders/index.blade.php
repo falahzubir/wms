@@ -2096,15 +2096,14 @@
                                 reason_value: result.value,
                                 remark: reason
                             };
-                            console.log(result.value);
-                            console.log(data_to_be_send_to_websocket);
+                            // console.log(result.value);
+                            // console.log(data_to_be_send_to_websocket);
 
                             axios.post('/api/orders/reject', {
                                 order_id: orderId,
                                 reason,
                                 reject_reason
                             }).then(function(response) {
-                                console.log()
                                 // handle success, close or download
                                 if (response.status == 200) {
                                     // Sending the message as JSON
