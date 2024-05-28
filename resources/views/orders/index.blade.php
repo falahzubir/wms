@@ -2117,7 +2117,7 @@
                                         })
                                         .then((result) => {
                                             if (result.isConfirmed) {
-                                                // location.reload();
+                                                location.reload();
                                             }
                                         })
                                 } else {
