@@ -30,6 +30,9 @@ Trait EmziExpressTrait
                 $emziExpress->token = $responseGet->json()['token'];
                 $emziExpress->save();
             }
+            else{
+                return response()->json()->pluck('message');
+            }
         }
 
         return $emziExpress;
