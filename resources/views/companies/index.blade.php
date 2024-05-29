@@ -158,6 +158,29 @@
                                         </div>
                                         </div> --}}
                                 </div><!-- End Accordion without outline borders -->
+                                <div class="accordion accordion-flush mb-3" id="accordionFlushExample">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="flush-headingThree">
+                                            <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#flush-collapseThree"
+                                                aria-expanded="false" aria-controls="flush-collapseThree">
+                                                EMZI Express
+                                            </button>
+                                        </h2>
+                                        <div id="flush-collapseThree" class="accordion-collapse collapse"
+                                            aria-labelledby="flush-collapseThree" data-bs-parent="#accordionFlushExample">
+                                            <div class="accordion-body">
+                                                <div class="row mb-1">
+                                                    <div class="col-12">
+                                                        <label for="">Client ID</label>
+                                                        <input type="text" id="emziexpress-client-id"
+                                                            name="emziexpress_client_id" class="form-control">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <input class="me-2" type="checkbox" name="sync" id="sync-token"><label
@@ -191,11 +214,13 @@
                         .then(function(response) {
                             const data = response.data.data;
                             const dhl = data.filter(item => item.type === 'dhl');
+                            const emziexpress = data.filter(item => item.type === 'emzi-express');
                             const company = response.data.company;
 
                             document.querySelector('#dhl-client-id').value = dhl[0].client_id;
                             document.querySelector('#dhl-client-secret').value = dhl[0].client_secret;
                             document.querySelector('#posmalaysia-subscribtion-code').value = company.posmalaysia_subscribtion_code;
+                            document.querySelector('#emziexpress-client-id').value = emziexpress[0].client_id;
                         })
                         .catch(function(error) {
                             console.log(error);

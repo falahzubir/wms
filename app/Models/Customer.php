@@ -23,4 +23,9 @@ class Customer extends Model
             fn ($value) => str_replace(array("\r", "\n"), '', $value),
         );
     }
+
+    public function states()
+    {
+        return $this->belongsTo(State::class, 'state', 'id');
+    }
 }

@@ -2,29 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\ShippingsImport;
-use App\Models\AccessToken;
-use App\Models\Company;
 use App\Models\Order;
-use App\Models\OrderItem;
+use App\Models\Company;
 use App\Models\OrderLog;
 use App\Models\Shipping;
-use Illuminate\Http\Request;
+use App\Models\OrderItem;
 use Illuminate\Log\Logger;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
-use Monolog\Logger as MonologLogger;
-// use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
-use Karriere\PdfMerge\PdfMerge as PDFMerger;
+use App\Models\AccessToken;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use App\Http\Traits\ShopeeTrait;
 use App\Http\Traits\TiktokTrait;
-use Illuminate\Support\Carbon;
-use App\Http\Controllers\api\ShippingApiController;
-use App\Models\ShippingDocumentTemplate;
+use App\Imports\ShippingsImport;
+use Illuminate\Support\Facades\DB;
 use Spatie\LaravelPdf\Facades\Pdf;
+use Illuminate\Support\Facades\Log;
+// use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+use Illuminate\Support\Facades\Http;
+use Maatwebsite\Excel\Facades\Excel;
+use Monolog\Logger as MonologLogger;
+use App\Http\Traits\EmziExpressTrait;
+use Illuminate\Support\Facades\Storage;
+use App\Models\ShippingDocumentTemplate;
+use Karriere\PdfMerge\PdfMerge as PDFMerger;
+use App\Http\Controllers\api\ShippingApiController;
 
 class ShippingController extends Controller
 {
@@ -109,6 +110,9 @@ class ShippingController extends Controller
                 break;
             case('ninjavan'):
                 return $this->ninjavan_cn($request->order_ids);
+                break;
+            case('emzi-express'):
+                return $this->emzi_express_cn($request->order_ids);
                 break;
             default:
                 return response()->json([
@@ -1918,4 +1922,147 @@ class ShippingController extends Controller
             'data' => ''
         ], 200);
     }
+
+    public function emzi_express_cn($order_ids)
+    {
+        $order = [];
+        $CNS = [];
+        $message = '';
+        $errors = [];
+
+        // filter only selected order shipping not exists
+        $order_ex = Order::with(['customer.states', 'items', 'items.product', 'company'])
+        ->whereIn('id', $order_ids)
+        ->whereDoesntHave('shippings', function ($query) {
+            $query->where('courier', EMZIEXPRESS_ID);
+        })
+        ->get();
+        if(count($order_ex) == 0)
+        {
+            return 0;
+        }
+
+        foreach ($order_ex as $key => $order)
+        {
+            $product_list = $this->generate_product_description($order->id);
+            //check first access token
+            $accessToken = EmziExpressTrait::checkAccessToken($order->company->id);
+
+            // Create shipping first
+            $shipping = new Shipping();
+            $shipping->shipment_number = shipment_num_format($order);
+            $shipping->order_id = $order->id;
+            $shipping->courier = EMZIEXPRESS_ID;
+            $shipping->created_by = auth()->user()->id ?? 1;
+            $shipping->save();
+
+            # Shipment details
+            $shipmentID = $shipping->shipment_number ?? '';
+            $shipmentRemarks = get_shipping_remarks($order) ?? '';
+            $itemDescription = get_shipping_remarks($order) ?? '';
+            $totalWeight = get_order_weight($order) / 1000 ?? '';
+            $codValue = $order->total_price / 100 ?? '0';
+
+            # Pickup address and return address (same)
+            $pickupAddress = [
+                "companyName" => $order->company->name ?? '',
+                "name" => $order->company->contact_person ?? '',
+                "address1" => $order->company->address ?? '',
+                "address2" => $order->company->address2 ?? '',
+                "address3" => $order->company->address3 ?? '',
+                "city" => $order->company->city ?? '',
+                "state" => $order->company->state ?? '',
+                "country" => "MY",
+                "postCode" => $order->company->postcode ?? '',
+                "phone" => $order->company->phone ?? '',
+                "phone2" => $order->company->phone2 ?? '',
+                "email" => $order->company->email ?? ''
+            ];
+
+            # Receiver address
+            $receiverAddress = [
+                "companyName" => $pickupAddress['companyName'],
+                "name" => $order->customer->name ?? '',
+                "address1" => $order->customer->address ?? '',
+                "address2" => $order->customer->address2 ?? '',
+                "address3" => $order->customer->address3 ?? '',
+                "city" => $order->customer->city ?? '',
+                "state" => $order->customer->states->name ?? '',
+                "country" => "MY",
+                "postCode" => $order->customer->postcode ?? '',
+                "phone" => $order->customer->phone ?? '',
+                "phone2" => $order->customer->phone2 ?? '',
+                "email" => $order->customer->email ?? ''
+            ];
+
+            # JSON structure
+            $jsonArray = [
+                "requestType" => "CN",
+                "accountId" => $accessToken->client_id,
+                "pickupAddress" => $pickupAddress,
+                "shipmentItems" => [
+                    [
+                        "receiverAddress" => $receiverAddress,
+                        "returnAddress" => $pickupAddress,
+                        "shipmentID" => $shipmentID,
+                        "shipmentRemarks" => $shipmentRemarks,
+                        "itemDescription" => $itemDescription,
+                        "totalWeight" => $totalWeight,
+                        "height" => '',
+                        "length" => '',
+                        "width" => '',
+                        "codValue" => $codValue,
+                        "isMult" => ''
+                    ]
+                ]
+            ];
+
+            $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
+
+            $generateCN = EmziExpressTrait::generateCN($accessToken->token, $jsonSend);
+            if(isset($generateCN['shipmentItems'][0]['trackingNumber']) && isset($generateCN['shipmentItems'][0]['labels']))
+            {
+                $shipping->tracking_number = $generateCN['shipmentItems'][0]['trackingNumber'] ?? '';
+                $shipping->attachment = 'labels/' . shipment_num_format($order) . '.pdf';
+                $shipping->packing_attachment = $product_list;
+                Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($generateCN['shipmentItems'][0]['labels']));
+                set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL");
+                $shipping->save();
+
+                $CNS['order_ids'][] = $order->id;
+                $CNS['attachment'][] = $shipping->attachment;
+            }
+            else
+            {
+                $errors[] = $generateCN;
+            }
+
+        }
+
+        if(count($CNS) > 0)
+        {
+            return response()->json([
+                'success' => true,
+                'message' => 'Success',
+                'data' => $CNS
+            ], 200);
+        }
+
+        $message .= "Success: ".count($CNS)." generated.<br>";
+
+        if(count($errors) > 0)
+        {
+            foreach($errors as $error)
+            {
+                $message .= "Failed: ".$error['message']."<br>";
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'data' => $CNS ?? ''
+        ], 200);
+    }
+
 }
