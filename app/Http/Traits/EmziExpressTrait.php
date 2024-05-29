@@ -29,6 +29,8 @@ Trait EmziExpressTrait
             if ($responseGet->status() == 200) {
                 $emziExpress->token = $responseGet->json()['token'];
                 $emziExpress->save();
+
+                return $emziExpress;
             }
             else{
                 return response()->json()->pluck('message');
