@@ -41,7 +41,7 @@ class EmziExpressTokenExpress extends Seeder
                 'name' => 'Emzi Express Authentification',
                 'token' => 'eyJ0eXA',
                 'additional_data' => ([
-                    'email' => 'emziqiti@gmail.com',
+                    'email' => 'emziEH@gmail.com',
                 ]),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
@@ -58,7 +58,7 @@ class EmziExpressTokenExpress extends Seeder
                 'name' => 'Emzi Express Authentification',
                 'token' => 'eyJ0eXA',
                 'additional_data' => ([
-                    'email' => 'emziqiti@gmail.com',
+                    'email' => 'emziED@gmail.com',
                 ]),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
@@ -75,7 +75,7 @@ class EmziExpressTokenExpress extends Seeder
                 'name' => 'Emzi Express Authentification',
                 'token' => 'eyJ0eXA',
                 'additional_data' => ([
-                    'email' => 'emziqiti@gmail.com',
+                    'email' => 'emziEI@gmail.com',
                 ]),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
