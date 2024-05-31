@@ -54,7 +54,7 @@ class AccessTokenController extends Controller
         }
 
         if($request->emziexpress_client_id != ""){
-            AccessToken::where('company_id', $company_id)->where('type', 'emziexpress')->update(['client_id' => $request->emziexpress_client_id]);
+            AccessToken::where('company_id', $company_id)->where('type', 'emzi-express')->update(['client_id' => $request->emziexpress_client_id]);
         }
 
         return response()->json([
