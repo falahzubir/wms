@@ -1961,7 +1961,7 @@ class ShippingController extends Controller
             $shipmentRemarks = get_shipping_remarks($order) ?? '';
             $itemDescription = get_shipping_remarks($order) ?? '';
             $totalWeight = get_order_weight($order) / 1000 ?? '';
-            $codValue = $order->total_price / 100 ?? '0';
+            $codValue = $order->purchase_type == PURCHASE_TYPE_PAID ? '0' : $order->total_price / 100 ?? '0';
 
             # Pickup address and return address (same)
             $pickupAddress = [
