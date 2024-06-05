@@ -1986,7 +1986,7 @@ class ShippingController extends Controller
                 "state" => "Kedah",
                 "country" => "MY",
                 "postCode" => "08000",
-                "phone" => "60139797313",
+                "phone" => "60195687313",
                 "phone2" => "",
                 "email" => "customerservice.elsb@emzi.com.my"
             ];
