@@ -1965,18 +1965,30 @@ class ShippingController extends Controller
 
             # Pickup address and return address (same)
             $pickupAddress = [
-                "companyName" => $order->company->name ?? '',
-                "name" => $order->company->contact_person ?? '',
-                "address1" => $order->company->address ?? '',
-                "address2" => $order->company->address2 ?? '',
-                "address3" => $order->company->address3 ?? '',
-                "city" => $order->company->city ?? '',
-                "state" => $order->company->state ?? '',
+                // "companyName" => $order->company->name ?? '',
+                // "name" => $order->company->contact_person ?? '',
+                // "address1" => $order->company->address ?? '',
+                // "address2" => $order->company->address2 ?? '',
+                // "address3" => $order->company->address3 ?? '',
+                // "city" => $order->company->city ?? '',
+                // "state" => $order->company->state ?? '',
+                // "country" => "MY",
+                // "postCode" => $order->company->postcode ?? '',
+                // "phone" => $order->company->phone ?? '',
+                // "phone2" => $order->company->phone2 ?? '',
+                // "email" => $order->company->email ?? ''
+                "companyName" => "EMZI FULFILLMENT",
+                "name" => "EMZI FULLFILLMENT",
+                "address1" => "EMZI FULLFILLMENT, KOMPLEKS SP PLAZA, JALAN IBRAHIM, SUNGAI PETANI 08000 Sungai Petani, Kedah",
+                "address2" => "",
+                "address3" => "",
+                "city" => "Sungai Petani",
+                "state" => "Kedah",
                 "country" => "MY",
-                "postCode" => $order->company->postcode ?? '',
-                "phone" => $order->company->phone ?? '',
-                "phone2" => $order->company->phone2 ?? '',
-                "email" => $order->company->email ?? ''
+                "postCode" => "08000",
+                "phone" => "60139797313",
+                "phone2" => "",
+                "email" => "customerservice.elsb@emzi.com.my"
             ];
 
             # Receiver address
