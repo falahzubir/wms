@@ -89,6 +89,8 @@ class ShippingController extends Controller
      */
     public function request_cn(Request $request)
     {
+        set_time_limit(180);
+
         $data = $request->validate([
             'order_ids' => 'required',
         ]);

@@ -111,7 +111,11 @@
                         @if ($order->shippings->isNotEmpty())
                             <td>
                                 @foreach ($order->shippings as $shipping)
-                                    {{ $shipping->tracking_number }}
+                                    @if (is_numeric($shipping->tracking_number))
+                                        '{{ $shipping->tracking_number }}
+                                    @else
+                                        {{ $shipping->tracking_number }}
+                                    @endif
                                     @if (!$loop->last)
                                         <br>
                                     @endif
