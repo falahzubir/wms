@@ -97,6 +97,11 @@
             color: #fff;
         }
 
+        .swal2-emzi-express {
+            background-color: #CD5802;
+            color: #fff;
+        }
+
         .swal2-styled.swal2-custom {
             border: 0;
             border-radius: .25em;
@@ -944,7 +949,8 @@
                 'dhl-ecommerce': 'DHL Ecommerce',
                 'posmalaysia': 'POS Malaysia',
                 'shopee': 'Shopee',
-                'tiktok': 'TikTok'
+                'tiktok': 'TikTok',
+                'emzi-express' : 'EMZI Express'
             };
 
             document.querySelector('#filter-order').onclick = function() {

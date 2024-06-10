@@ -34,6 +34,7 @@ class AccessTokenController extends Controller
             'dhl_client_id' => 'nullable',
             'dhl_client_secret' => 'nullable',
             'posmalaysia_subscribtion_code' => 'regex:/^\S*$/u',
+            'emziexpress_client_id' => 'nullable',
         ]);
 
         $data = [
@@ -50,6 +51,10 @@ class AccessTokenController extends Controller
 
         if($request->posmalaysia_subscribtion_code != ""){
            Company::where('id', $company_id)->update(['posmalaysia_subscribtion_code' => $request->posmalaysia_subscribtion_code]);
+        }
+
+        if($request->emziexpress_client_id != ""){
+            AccessToken::where('company_id', $company_id)->where('type', 'emzi-express')->update(['client_id' => $request->emziexpress_client_id]);
         }
 
         return response()->json([
