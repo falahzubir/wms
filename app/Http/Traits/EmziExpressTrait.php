@@ -10,7 +10,7 @@ Trait EmziExpressTrait
 
     public static function checkAccessToken($company)
     {
-        $emziExpressUrl = app()->environment() != 'production' ? 'https://emziexpress.groobok.com' : 'https://api.emziexpress.com/v1';
+        $emziExpressUrl = app()->environment() != 'production' ? 'https://emziexpress.groobok.com' : 'https://emziexpress.emzi.com.my';
         $emziExpress = AccessToken::where('type', 'emzi-express')->where('company_id', $company)->first();
         $responseCheck = Http::withHeaders([
             'Authorization' => 'Bearer ' . $emziExpress->token,
@@ -40,7 +40,7 @@ Trait EmziExpressTrait
 
     public static function generateCN($token,$json)
     {
-        $emziExpressUrl = app()->environment() != 'production' ? 'https://emziexpress.groobok.com' : 'https://api.emziexpress.com/v1';
+        $emziExpressUrl = app()->environment() != 'production' ? 'https://emziexpress.groobok.com' : 'https://emziexpress.emzi.com.my';
 
         $response = Http::withHeaders([
             'Accept' => 'application/json',
