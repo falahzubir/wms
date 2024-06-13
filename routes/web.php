@@ -67,7 +67,8 @@ Route::middleware(['auth'])->group(function() {
         Route::post('change-postcode', [OrderController::class, 'change_postcode'])->name('orders.change_postcode');
         Route::get('bucket-batch/{batch}', [OrderController::class, 'bucket_batch'])->name('orders.bucket_batch');
         Route::get('/get_template_main', [OrderController::class, 'get_template_main']);
-        Route::get('/attempt-order-list', [AttemptOrderList::class, 'index'])->name('orders.attempt_order_list');
+        Route::get('/attempt-order-list', [AttemptOrderList::class, 'index'])->name('attempt_order_list');
+        Route::post('/attempt-order-list/filter', [AttemptOrderList::class, 'filter'])->name('attempt_order_list.filter');
         Route::get('/test', [OrderController::class, 'test']);
     });
 

@@ -75,8 +75,8 @@
 
         @can('view.attempt_order_list')
             <li class="nav-item">
-                <a class="nav-link {{ Route::current()->getName() != 'orders.attempt_order_list' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.attempt_order_list') }}">
+                <a class="nav-link {{ Route::current()->getName() != 'attempt_order_list' ? 'collapsed' : '' }}"
+                    href="{{ route('attempt_order_list') }}">
                     <i class="bi bi-journal-text"></i>
                     <span>Attempt Order List</span>
                 </a>

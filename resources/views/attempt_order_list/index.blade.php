@@ -5,8 +5,9 @@
                 <div class="card-body" style="">
                     <h5 class="card-title">Filters..</h5>
 
-                    <!-- No Labels Form -->
+                    <!-- Search -->
                     <form id="search-form" class="row g-3" action="{{ url()->current() }}">
+                        @csrf
                         <div class="col-md-12 mb-2">
                             <input type="text" class="form-control" placeholder="Search" name="search"
                                 value="{{ old('search', Request::get('search')) }}">
@@ -50,7 +51,8 @@
                         <div class="text-end">
                             <button type="submit" class="btn btn-danger" id="filter-order">Search</button>
                         </div>
-                    </form><!-- End No Labels Form -->
+                    </form>
+                    <!-- End Search -->
 
                 </div>
             </div>
