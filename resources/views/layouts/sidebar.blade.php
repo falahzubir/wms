@@ -393,6 +393,20 @@
                             </ul>
                         @endcan
                     </li>
+                    {{-- @can('view.picking_list_setting')
+                    <li>
+                        <a href="{{ route('picking_list_setting.index') }}"
+                            {{ Route::current()->getName() == 'picking_list_setting.index' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Picking List Product Sequence</span>
+                        </a>
+                    </li>
+                @endcan --}}
+                <li>
+                    <a href="{{ route('picking_list_setting.index') }}"
+                        {{ Route::current()->getName() == 'picking_list_setting.index' ? 'class=active' : '' }}>
+                        <i class="bi bi-circle"></i><span>Picking List Product Sequence</span>
+                    </a>
+                </li>
                 </ul>
             </li><!-- End Components Nav -->
         @endcan

@@ -13,6 +13,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationalModelController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PickingListSettingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
@@ -220,6 +221,11 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/ship_doc_desc',[SettingsController::class,'view_shipping_doc_desc'])->name('view_shipping_doc_desc');
         Route::get('/ship_doc_desc/form',[SettingsController::class,'sdd_form'])->name('sdd_form');
         Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
+    });
+
+     Route::prefix('picking_list_setting')->group(function() {
+     Route::get('/', [PickingListSettingController::class, 'index'])->name('picking_list_setting.index');
+        // Route::post('update', [TemplateSettingController::class, 'update'])->name('template_setting.update');
     });
 
 });
