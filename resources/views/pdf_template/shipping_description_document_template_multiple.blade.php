@@ -91,27 +91,29 @@
         </table>
     </div>
     <div>
-        <h5 class="text-center"><strong>{{ $ship_docs->promotion_header }}</strong></h5>
+        <h5 class="text-center"><strong>{{ $ship_docs->promotion_header ?? '' }}</strong></h5>
         <h4 class="text-center"><strong id="modal-preview-header-box"></strong></h4>
         <div class="text-center my-5" id="qr-code-box">
             <span class="position-absolute" id="first"></span>
             <span class="position-absolute" id="second"></span>
             <div class="d-flex justify-content-center">
                 <div class="box" style="--c:black;--w:40px;--b:6px">
-                    @if ($ship_docs->link_type == 1)
-                        <div width="150" height="150">
-                            {!! QrCode::size(150)->generate($ship_docs->content_path.$addon_url) !!}
-                        </div>
-                    @else
-                        <img width="150" height="150" src="{{ public_path($ship_docs->content_path) }}" alt="QR Code">
-                    @endif
+                    @isset($link_type)
+                        @if ($ship_docs->link_type == 1)
+                            <div width="150" height="150">
+                                {!! QrCode::size(150)->generate($ship_docs->content_path.$addon_url) !!}
+                            </div>
+                        @else
+                            <img width="150" height="150" src="{{ public_path($ship_docs->content_path) }}" alt="QR Code">
+                        @endif
+                    @endisset
                 </div>
             </div>
             <span class="position-absolute" id="third"></span>
             <span class="position-absolute" id="fourth"></span>
         </div>
         <div class="text-left" id="modal-preview-desc-box" style="font-size: 12px;">
-            {!! $ship_docs->description !!}
+            {!! $ship_docs->description ?? '' !!}
         </div>
     </div>
 </div>
