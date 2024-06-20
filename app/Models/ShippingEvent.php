@@ -9,6 +9,15 @@ class ShippingEvent extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'shipping_id', 
+        'attempt_status', 
+        'description', 
+        'attempt_time',
+        'created_at',
+        'updated_at',
+    ];
+
     protected $guarded = [];
 
     public function shipping()
