@@ -1,11 +1,13 @@
 <?php
 
-use App\Models\User;
-use App\Models\State;
-use App\Models\OrderLog;
-use App\Models\OrderItem;
-use App\Models\PaymentType;
 use App\Models\OperationalModel;
+use App\Models\OrderItem;
+use App\Models\OrderLog;
+use App\Models\PaymentType;
+use App\Models\ShippingEvent;
+use App\Models\State;
+use App\Models\User;
+
 
 if (!function_exists('currency')) {
     /**
@@ -427,5 +429,21 @@ if (!function_exists('get_pic')) {
         } else {
             return null;
         }
+    }
+}
+
+if (!function_exists('set_shipping_events')) {
+    function set_shipping_events($shipping_id, $attempt_status, $description, $attempt_time)
+    {
+        ShippingEvent::create([
+            'shipping_id' => $shipping_id,
+            'attempt_status' => $attempt_status,
+            'description' => $description,
+            'attempt_time' => $attempt_time,
+            'created_at' => now()->timezone('Asia/Kuala_Lumpur'),
+            'updated_at' => now()->timezone('Asia/Kuala_Lumpur'),
+        ]);
+
+        return true;
     }
 }

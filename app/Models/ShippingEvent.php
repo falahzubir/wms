@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class ShippingEvent extends Model
 {
     use HasFactory;
+
+    protected $guarded = [];
+
+    public function shipping()
+    {
+        return $this->belongsTo(Shipping::class);
+    }
 }

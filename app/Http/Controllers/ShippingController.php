@@ -893,6 +893,8 @@ class ShippingController extends Controller
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
 
+        set_shipping_events($request->shipping_id, $request->attempt_status, $request->description, $request->attempt_time);
+
         if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "First Milestone from Phantom")) {
             return response()->json(['success' => 'ok']);
         } else {
@@ -909,14 +911,26 @@ class ShippingController extends Controller
     {
         $request->validate([
             'tracking_id' => 'required|exists:shippings,tracking_number',
+            'shipping_id' => 'required|exists:shippings,id', // Add validation for shipping_id
+            'attempt_status' => 'required|string', // Validate status
+            'description' => 'required|string', // Validate description
+            'attempt_time' => 'required|date', // Validate dateTime
         ]);
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
 
-        if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
-            return response()->json(['success' => 'ok']);
+        if ($shipping) {
+            if (set_shipping_events($request->shipping_id, $request->attempt_status, $request->description, $request->attempt_time)) {
+                if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
+                    return response()->json(['success' => 'ok']);
+                } else {
+                    return response()->json(['error' => 'Failed to update order status'], 500);
+                }
+            } else {
+                return response()->json(['error' => 'Failed to set shipping event'], 500);
+            }
         } else {
-            return response()->json(['error' => 'error']);
+            return response()->json(['error' => 'Shipping not found'], 404);
         }
     }
 
