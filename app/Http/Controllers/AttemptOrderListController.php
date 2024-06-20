@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
-class AttemptOrderList extends Controller
+class AttemptOrderListController extends Controller
 {
     public function index(Request $request)
     {
-        $orders = Order::query();
+        $orders = Order::with(['shippings.events']);
 
         // Apply search query if present
         if ($request->has('search') && $request->search != '') {

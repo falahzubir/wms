@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\AccessTokenController;
 use App\Http\Controllers\AlternativePostcodeController;
-use App\Http\Controllers\AttemptOrderList;
+use App\Http\Controllers\AttemptOrderListController;
 use App\Http\Controllers\BucketAutomationController;
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
@@ -67,8 +67,8 @@ Route::middleware(['auth'])->group(function() {
         Route::post('change-postcode', [OrderController::class, 'change_postcode'])->name('orders.change_postcode');
         Route::get('bucket-batch/{batch}', [OrderController::class, 'bucket_batch'])->name('orders.bucket_batch');
         Route::get('/get_template_main', [OrderController::class, 'get_template_main']);
-        Route::get('/attempt-order-list', [AttemptOrderList::class, 'index'])->name('attempt_order_list');
-        Route::post('/attempt-order-list/filter', [AttemptOrderList::class, 'filter'])->name('attempt_order_list.filter');
+        Route::get('/attempt-order-list', [AttemptOrderListController::class, 'index'])->name('attempt_order_list');
+        Route::post('/attempt-order-list/filter', [AttemptOrderListController::class, 'filter'])->name('attempt_order_list.filter');
         Route::get('/test', [OrderController::class, 'test']);
     });
 

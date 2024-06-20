@@ -160,7 +160,18 @@
 
                                         {{-- Delivery Attempt Status --}}
                                         <td>
-
+                                            @foreach ($order->shippings as $shipping)
+                                                @foreach ($shipping->events as $event)
+                                                   <div>
+                                                        <i class="bi bi-stopwatch-fill"></i>
+                                                        {{ \Carbon\Carbon::parse($event->attempt_time)->format('d/m/Y H:i') }}
+                                                   </div>
+                                                   <div>
+                                                        <i class="bi bi-exclamation-circle-fill"></i>
+                                                        {{ $event->description }}
+                                                   </div>
+                                                @endforeach
+                                            @endforeach
                                         </td>
 
                                         {{-- Courier --}}
