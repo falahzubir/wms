@@ -225,7 +225,7 @@ Route::middleware(['auth'])->group(function() {
 
      Route::prefix('picking_list_setting')->group(function() {
      Route::get('/', [PickingListSettingController::class, 'index'])->name('picking_list_setting.index');
-        // Route::post('update', [TemplateSettingController::class, 'update'])->name('template_setting.update');
+     Route::post('/picking-list-setting/update', [PickingListSettingController::class, 'update'])->name('picking_sequence.update');
     });
 
 });

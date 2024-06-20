@@ -149,13 +149,14 @@
                 <input type="hidden" name="column_order" value="">
             </div>
             <div class="modal-footer">
-                <button id="btnSave" type="submit" class="btn btn-primary customBtnSave">Update</button>
+                <button id="btnUpdate" type="submit" class="btn btn-primary customBtnSave">Update</button>
             </div>
         </div>
     </section>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+  
     <x-slot name="script">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
         <script>
             document.addEventListener("DOMContentLoaded", function() {
                 let lists = document.getElementsByClassName("list");
@@ -163,8 +164,11 @@
                 let leftBox = document.getElementById("leftBox");
                 let sortableItem = document.getElementById("sortableItem");
                 let rightBoxLabel = document.getElementById("rightBoxLabel");
-                let DragFromLeftBox = false; //flag to track whether the dragged item coming from the left box
-
+                let DragFromLeftBox = false; // flag to track whether the dragged item is coming from the left box
+        
+                // Load and display existing picking sequence
+                loadAndDisplayPickingSequence();
+        
                 for (let list of lists) {
                     list.addEventListener("dragstart", function(e) {
                         DragFromLeftBox = true;
@@ -172,22 +176,21 @@
                         e.dataTransfer.setData("list-id", list.getAttribute("data-list-id"));
                     });
                 }
-
+        
                 rightBox.addEventListener("dragover", function(e) {
                     e.preventDefault();
                 });
-
+        
                 rightBox.addEventListener("drop", function(e) {
                     e.preventDefault();
-
+        
                     if (DragFromLeftBox) {
                         let data = e.dataTransfer.getData("text/plain");
                         let listId = e.dataTransfer.getData("list-id");
-
+        
                         // Check if the item already exists in the right box
-                        let existingItem = document.querySelector(
-                            `#sortableItem .list[data-list-id="${listId}"]`);
-
+                        let existingItem = document.querySelector(`#sortableItem .list[data-list-id="${listId}"]`);
+        
                         if (!existingItem) {
                             // Create a new item if it doesn't exist in the right box
                             let draggedItem = document.createElement("div");
@@ -195,46 +198,43 @@
                             draggedItem.innerText = data;
                             draggedItem.setAttribute("draggable", "true");
                             draggedItem.setAttribute("data-list-id", listId);
-
+        
                             // Add remove button
                             let removeButton = document.createElement("i");
                             removeButton.className = "bx bx-x-circle remove-btn";
                             removeButton.addEventListener("click", function() {
                                 sortableItem.removeChild(draggedItem);
-                                let originalItem = document.querySelector(
-                                    `#leftBox .list[data-list-id="${listId}"]`);
+                                let originalItem = document.querySelector(`#leftBox .list[data-list-id="${listId}"]`);
                                 if (originalItem) {
-                                    originalItem.style.display =
-                                        "block"; // Show the original item in the left box
+                                    originalItem.style.display = "block"; // Show the original item in the left box
                                 }
                                 updateColumnOrder();
                                 updateRightBoxLabel();
                             });
-
+        
                             // Append remove button to dragged item
                             draggedItem.appendChild(removeButton);
-
+        
                             // Append dragged item to sortable box
                             sortableItem.appendChild(draggedItem);
-
+        
                             // Hide the original item in the left box
-                            let originalItem = document.querySelector(
-                                `#leftBox .list[data-list-id="${listId}"]`);
+                            let originalItem = document.querySelector(`#leftBox .list[data-list-id="${listId}"]`);
                             if (originalItem) {
                                 originalItem.style.display = "none";
                             }
-
+        
                             // Update the order of column IDs
                             updateColumnOrder();
                             updateRightBoxLabel();
                         }
-
+        
                         // Reset the flag
                         DragFromLeftBox = false;
                     }
                 });
-                
-                //update comment
+        
+                // Update right box label
                 function updateRightBoxLabel() {
                     let draggedItems = document.querySelectorAll("#sortableItem .list");
                     if (draggedItems.length > 0) {
@@ -243,30 +243,131 @@
                         rightBoxLabel.style.display = "none";
                     }
                 }
-
+        
                 // Initialize SortableJS on the sortable box
                 new Sortable(sortableItem, {
                     animation: 80,
-                    handle: '.list', //only handle the class list
+                    handle: '.list', // only handle the class list
                     onEnd: function() {
                         updateColumnOrder();
                     }
                 });
-
+        
                 function updateColumnOrder() {
                     let columnOrder = [];
                     let draggedItems = document.querySelectorAll("#sortableItem .list");
-
+        
                     for (let draggedItem of draggedItems) {
                         let listId = draggedItem.getAttribute("data-list-id");
                         columnOrder.push(listId);
                     }
-                    
+        
                     // Store the order in a hidden input field or send it directly to the server
                     document.querySelector("input[name='column_order']").value = JSON.stringify(columnOrder);
                 }
+        
+                // Handle form submission
+                $("#btnUpdate").on("click", function(e) {
+                    e.preventDefault();
+                    let columnOrder = JSON.parse(document.querySelector("input[name='column_order']").value);
+                    let csrfToken = $("meta[name='csrf-token']").attr("content");
+        
+                    // Prepare the data to be sent to the server
+                    let data = {
+                        column_order: columnOrder,
+                    };
+        
+                    // Use AJAX to send the data to a Laravel route
+                    $.ajax({
+                        url: '{{ route("picking_sequence.update") }}',
+                        method: 'POST',
+                        data: data,
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        success: function(response) {
+                            console.log(response);
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Done!',
+                                text: 'Picking Sequence Updated Successfully',
+                            }).then(function() {
+                                // Reload the picking sequence
+                                displayUpdatedPickingSequence(response.pickingSequences);
+                            });
+                        },
+                        error: function(error) {
+                            console.error(error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: error.responseJSON.message || 'Something went wrong.',
+                            }).then(function() {
+                                // Refresh the page
+                                location.reload();
+                            });
+                        }
+                    });
+                });
+        
+                // Function to load and display the existing picking sequence
+                function loadAndDisplayPickingSequence() {
+                    $.ajax({
+                        url: '{{ route("picking_list_setting.index") }}',
+                        method: 'GET',
+                        success: function(response) {
+                            displayUpdatedPickingSequence(response.pickingSequences);
+                        },
+                        error: function(error) {
+                            console.error("Error loading picking sequences:", error);
+                        }
+                    });
+                }
+        
+                // Function to update the right box with the updated sequence
+                function displayUpdatedPickingSequence(pickingSequences) {
+                    sortableItem.innerHTML = ''; // Clear existing items
+        
+                    // Display the picking sequence in the right box
+                    pickingSequences.forEach(function(sequence) {
+                        let product = document.querySelector(`#leftBox .list[data-list-id="${sequence.product_id}"]`);
+                        if (product) {
+                            let clonedItem = product.cloneNode(true);
+                            clonedItem.className = 'list';
+                            clonedItem.setAttribute('draggable', 'true');
+                            clonedItem.setAttribute('data-list-id', sequence.product_id);
+                            clonedItem.style.display = "block"; // Ensure the item is displayed
+        
+                            // Add remove button
+                            let removeButton = document.createElement("i");
+                            removeButton.className = "bx bx-x-circle remove-btn";
+                            removeButton.addEventListener("click", function() {
+                                sortableItem.removeChild(clonedItem);
+                                product.style.display = "block"; // Show the original item in the left box
+                                updateColumnOrder();
+                                updateRightBoxLabel();
+                            });
+        
+                            // Append remove button to cloned item
+                            clonedItem.appendChild(removeButton);
+        
+                            // Append cloned item to sortable box
+                            sortableItem.appendChild(clonedItem);
+        
+                            // Hide the original item in the left box
+                            product.style.display = "none";
+                        }
+                    });
+        
+                    // Update the order of column IDs
+                    updateColumnOrder();
+                    updateRightBoxLabel();
+                }
             });
         </script>
+        
+
+
     </x-slot>
 
 </x-layout>
