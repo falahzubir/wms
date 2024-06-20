@@ -911,7 +911,6 @@ class ShippingController extends Controller
     {
         $request->validate([
             'tracking_id' => 'required|exists:shippings,tracking_number',
-            'shipping_id' => 'required|exists:shippings,id',
             'attempt_status' => 'required|string',
             'description' => 'required|string',
             'attempt_time' => 'required|date',
@@ -920,7 +919,7 @@ class ShippingController extends Controller
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
 
         if ($shipping) {
-            if (set_shipping_events($request->shipping_id, $request->attempt_status, $request->description, $request->attempt_time)) {
+            if (set_shipping_events($shipping->id, $request->attempt_status, $request->description, $request->attempt_time)) {
                 if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
                     return response()->json(['success' => 'ok']);
                 } else {
