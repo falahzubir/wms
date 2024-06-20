@@ -911,10 +911,10 @@ class ShippingController extends Controller
     {
         $request->validate([
             'tracking_id' => 'required|exists:shippings,tracking_number',
-            'shipping_id' => 'required|exists:shippings,id', // Add validation for shipping_id
-            'attempt_status' => 'required|string', // Validate status
-            'description' => 'required|string', // Validate description
-            'attempt_time' => 'required|date', // Validate dateTime
+            'shipping_id' => 'required|exists:shippings,id',
+            'attempt_status' => 'required|string',
+            'description' => 'required|string',
+            'attempt_time' => 'required|date',
         ]);
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
