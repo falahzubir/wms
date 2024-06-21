@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('shipping_id');
             $table->foreign('shipping_id')->references('id')->on('shippings');
-            $table->integer('attempt_status');
+            $table->string('attempt_status');
             $table->string('description');
             $table->datetime('attempt_time');
             $table->timestamps();
