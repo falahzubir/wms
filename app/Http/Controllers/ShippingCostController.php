@@ -29,13 +29,21 @@ class ShippingCostController extends Controller
 
     public function store_state_group(Request $request)
     {
+        $stateNames = State::pluck('name', 'id')->toArray();
+        $customAttributes = [];
+        foreach ($request->input('states') as $key => $stateId) {
+            $customAttributes["states.$key"] = $stateNames[$stateId] ?? "State $key";
+        }
+
         $request->validate([
             'name' => 'required',
+            'states' => 'required|array|min:1',
             'states.*' => [
                 'required',
                 Rule::unique('group_state_lists', 'state_id')->whereNull('deleted_at')
             ],
-        ]);
+        ]
+        , [], $customAttributes);
 
         $stateGroup = StateGroup::create([
             'name' => $request->name
@@ -56,13 +64,20 @@ class ShippingCostController extends Controller
 
     public function update_state_group(Request $request)
     {
+        $stateNames = State::pluck('name', 'id')->toArray();
+        $customAttributes = [];
+        foreach ($request->input('states') as $key => $stateId) {
+            $customAttributes["states.$key"] = $stateNames[$stateId] ?? "State $key";
+        }
+
         $request->validate([
             'name' => 'required',
+            'states' => 'required|array|min:1',
             'states.*' => [
                 'required',
                 Rule::unique('group_state_lists', 'state_id')->whereNull('deleted_at')->ignore($request->id, 'state_group_id')
             ],
-        ]);
+        ], [], $customAttributes);
 
         $stateGroup = StateGroup::find($request->id);
         $stateGroup->update([
