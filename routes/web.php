@@ -205,6 +205,13 @@ Route::middleware(['auth'])->group(function() {
         Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
     });
 
+    Route::prefix('state-group')->group(function() {
+        Route::get('/', fn () => view('state_group.list', [
+            'title' => 'List of State Group',
+            'states' => \App\Models\State::select('id', 'name')->get()
+        ]))->name('state_group.list');
+    });
+
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::put('/', [SettingsController::class, 'update'])->name('update');
