@@ -3,7 +3,11 @@
 <x-layout :title="$title">
     <style>
         .ts-control {
-            border:none;
+            border: none;
+        }
+
+        .customBtnSave {
+            background-color: #7166e0;
         }
     </style>
     <section class="section">
@@ -11,7 +15,8 @@
             <section id="searchForm" class="mb-3">
                 <form action="" method="get">
                     <div class="d-flex gap-2">
-                        <input type="text" class="flex-grow-1 form-control" name="search" placeholder="Search">
+                        <input type="text" class="flex-grow-1 form-control" name="search" placeholder="Search"
+                            value="{{ request('search') }}">
                         <button type="submit" class="btn btn-primary">Submit</button>
                     </div>
                 </form>
@@ -25,37 +30,49 @@
                 <table class="table">
                     <thead>
                         <tr class="text-center align-middle">
-                            <th>#</th>
+                            <th id="number-text">#</th>
                             <th>Action</th>
                             <th>State Group</th>
                             <th>State</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- @foreach ($stateGroups as $stateGroup) --}}
-                        <tr class="text-center align-middle">
-                            <td>1</td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button class="btn btn-danger p-1 px-2" onclick="deleteStateGroup(1)"><i class="bi bi-trash"></i></button>
-                                    <button class="btn btn-warning p-1 px-2" onclick="editStateGroup(1)"><i class="bi bi-pencil"></i></button>
-                                </div>
-                            </td>
-                            <td>Penisular Malaysia</td>
-                            <td>
-                                Johor Johor, Kedah Kedah, Kelantan Kelantan, Melaka Melaka, Pahang Pahang, Perak Negeri
-                                Perak, Perlis Perlis, Pulau Pinang Pulau Pinang, Selangor Selangor, Negeri Sembilan
-                                Negeri Sembilan, Terengganu Terengganu
-                            </td>
-                        </tr>
-                        {{-- @endforeach --}}
+                        @forelse ($stateGroups as $stateGroup)
+                            <tr class="text-center align-middle" id="stateGroup-{{ $stateGroup->id }}">
+                                <td>
+                                    {{ $loop->iteration + $stateGroups->firstItem() - 1 }}
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-danger p-1 px-2"
+                                            onclick="deleteStateGroup({{ $stateGroup->id }})"><i
+                                                class="bi bi-trash"></i></button>
+                                        <button class="btn btn-warning p-1 px-2"
+                                            onclick="editStateGroup({{ $stateGroup->id }})"><i
+                                                class="bi bi-pencil"></i></button>
+                                    </div>
+                                </td>
+                                <td>{{ $stateGroup->name }}</td>
+                                <td>
+                                    {{ $stateGroup->group_state_lists->pluck('state_name')->join(', ') }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr class="text-center align-middle">
+                                <td colspan="4">No data available</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
+                <div class="d-flex">
+                    {{ $stateGroups->links() }}
+                </div>
             </section>
         </div>
     </section>
 
-    <div class="modal fade" id="addStateGroupModal" tabindex="-1" aria-labelledby="addStateGroupModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addStateGroupModal" tabindex="-1" aria-labelledby="addStateGroupModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header justify-content-center">
@@ -78,8 +95,8 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" onclick="storeGroup()" class="btn btn-primary customBtnSave">Save</button>
                 </div>
             </div>
         </div>
@@ -90,14 +107,15 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header justify-content-center">
-                    <h1 class="modal-title fs-5" id="updateStateGroupModalLabel"><strong>Update State Group</strong></h1>
+                    <h1 class="modal-title fs-5" id="updateStateGroupModalLabel"><strong>Update State Group</strong>
+                    </h1>
                 </div>
                 <div class="modal-body d-flex flex-column gap-3">
                     ...
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary customBtnSave">Save</button>
                 </div>
             </div>
         </div>
@@ -112,14 +130,49 @@
                 modal.show();
             }
 
+            function storeGroup() {
+                let addGroupModal = $('#addStateGroupModal');
+                let name = addGroupModal.find('#stateGroupName').val();
+                let states = addGroupModal.find('#state-filter').val();
+
+                axios.post('/api/state-group/store', {
+                        name: name,
+                        states: states,
+                        _token: '{{ csrf_token() }}'
+                    })
+                    .then(response => {
+                        if (response.data.status == 'success') {
+                            addGroupModal.modal('hide');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'State Group created successfully!',
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        if (error.response.status === 422) {
+                            let errors = error.response.data.errors;
+                            displayErrors(errors);
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                error.response.data.message,
+                                'error'
+                            )
+                        }
+                    });
+            }
+
             const states = @json($states);
 
             //onload
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 initite_tomsel();
             });
 
-            function initite_tomsel(cls = 'tomsel'){
+            function initite_tomsel(cls = 'tomsel') {
                 document.querySelectorAll('.' + cls).forEach(el => {
                     let settings = {
                         plugins: {
@@ -135,20 +188,42 @@
 
             function deleteStateGroup(id) {
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
+                    title: 'Delete State Group?',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#a5a5a5',
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire(
-                            'Deleted!',
-                            'Your file has been deleted.',
-                            'success'
-                        )
+
+                        axios.post(`/api/state-group/delete/${id}`, {
+                                _token: '{{ csrf_token() }}'
+                            })
+                            .then(response => {
+                                if (response.data.status == 'success') {
+                                    document.getElementById(`stateGroup-${id}`).remove();
+                                    //rebuild the page number
+
+                                    Swal.fire(
+                                        'State Group deleted successfully!',
+                                        '',
+                                        'success'
+                                    )
+                                }
+                            })
+                            .catch(error => {
+                                if (error.response.status === 422) {
+                                    let errors = error.response.data.errors;
+                                    displayErrors(errors);
+                                } else {
+                                    Swal.fire(
+                                        'Error!',
+                                        error.response.data.message,
+                                        'error'
+                                    )
+                                }
+                            });
                     }
                 })
             }
@@ -156,7 +231,7 @@
             function editStateGroup(id) {
 
                 let stateGroupName = 'Penisular Malaysia';
-                let stateGroupStates = [1,2,3,4];
+                let stateGroupStates = [1, 2, 3, 4];
 
                 let html = `<div>
                         <label for="stateGroupName" class="form-label fs-6"><strong>State Group Name:</strong></label>
@@ -180,6 +255,19 @@
                 modal.show();
             }
 
+            const displayErrors = (errors) => {
+                let message = [];
+                for (let field in errors) {
+                    let errorMessage = errors[field][0];
+                    message.push(errorMessage);
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    html: message.join('<br>'),
+                })
+            }
         </script>
     </x-slot>
 

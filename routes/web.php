@@ -21,6 +21,7 @@ use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TemplateSettingController;
 use App\Http\Controllers\CustomTemplateController;
+use App\Http\Controllers\ShippingCostController;
 use App\Models\Company;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
@@ -206,10 +207,7 @@ Route::middleware(['auth'])->group(function() {
     });
 
     Route::prefix('state-group')->group(function() {
-        Route::get('/', fn () => view('state_group.list', [
-            'title' => 'List of State Group',
-            'states' => \App\Models\State::select('id', 'name')->get()
-        ]))->name('state_group.list');
+        Route::get('/', [ShippingCostController::class, 'state_group'])->name('state_group.list');
     });
 
     Route::prefix('settings')->name('settings.')->group(function () {
