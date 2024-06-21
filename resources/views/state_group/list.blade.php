@@ -208,14 +208,13 @@
                             })
                             .then(response => {
                                 if (response.data.status == 'success') {
-                                    document.getElementById(`stateGroup-${id}`).remove();
-                                    //rebuild the page number
 
-                                    Swal.fire(
-                                        'State Group deleted successfully!',
-                                        '',
-                                        'success'
-                                    )
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'State Group deleted successfully!',
+                                    }).then(() => {
+                                        window.location.reload();
+                                    });
                                 }
                             })
                             .catch(error => {
