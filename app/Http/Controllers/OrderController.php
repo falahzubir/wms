@@ -1130,6 +1130,7 @@ class OrderController extends Controller
             'return-completed' => 7, // Assuming the same template_type for 'returned' and 'return-completed'
             'overall' => 8,
             'rejected' => 9,
+            'attempt-order-list' => 10,
         ];
 
         // Check if the status is a valid key in the mapping

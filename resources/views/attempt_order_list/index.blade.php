@@ -88,6 +88,8 @@
 
                                         {{-- Customer Info --}}
                                         <td class="text-start" style="width: 400px;">
+                                            <input type="hidden" name="check_order" value="{{ $order->id }}">
+
                                             <div><strong>{{ $order->customer->name }}</strong></div>
                                             <div>
                                                 <p class="mb-0">{{ $order->customer->phone }}</p>
@@ -161,16 +163,33 @@
                                         {{-- Delivery Attempt Status --}}
                                         <td>
                                             @foreach ($order->shippings as $shipping)
+                                                @php
+                                                    // Filter events with specific attempt_status values
+                                                    $filteredEvents = $shipping->events->whereIn('attempt_status', [
+                                                        77090,
+                                                        77098,
+                                                        77101,
+                                                        77102,
+                                                        77171,
+                                                        77191,
+                                                    ]);
+
+                                                    // Count the filtered events
+                                                    $attemptCount = $filteredEvents->count();
+                                                @endphp
+
                                                 @foreach ($shipping->events as $event)
-                                                   <div>
+                                                    <div>
                                                         <i class="bi bi-stopwatch-fill"></i>
                                                         {{ \Carbon\Carbon::parse($event->attempt_time)->format('d/m/Y H:i') }}
-                                                   </div>
-                                                   <div>
-                                                        <i class="bi bi-exclamation-circle-fill"></i>
-                                                        {{ $event->description }}
-                                                   </div>
+                                                    </div>
                                                 @endforeach
+
+                                                @if ($attemptCount > 0)
+                                                    <div>
+                                                        {{ ordinalSuffix($attemptCount) }} attempt was <strong class="text-danger">unsuccessful</strong>
+                                                    </div>
+                                                @endif
                                             @endforeach
                                         </td>
 
@@ -210,6 +229,102 @@
     </section>
 
     <x-slot name="script">
-        <script></script>
+        <script>
+            document.querySelector('#download-order-btn').onclick = function() {
+
+                // Get url segment
+                const urlSegments = window.location.pathname.split('/');
+                const status = urlSegments[2];
+
+                fetch(`/orders/get_template_main?status=${status}`)
+                    .then(response => response.json())
+                    .then(options => {
+                        Swal.fire({
+                            title: 'Download CSV',
+                            html: `
+                            <div class="row">
+                                <div class="col-4 mt-2">
+                                    <label>Choose Template</label>
+                                </div>
+                                <div class="col-8">
+                                    <select id="template-select" class="form-select">
+                                        ${options.map(option => `<option value="${option.value}">${option.label}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                        `,
+                            width: '50%',
+                            showCancelButton: true,
+                            cancelButtonText: 'Cancel',
+                            confirmButtonText: 'Download',
+                            preConfirm: () => {
+                                const templateSelect = document.getElementById('template-select');
+                                const chosenTemplate = templateSelect.value;
+
+                                const inputElements = [].slice.call(document.querySelectorAll(
+                                    '.check-order'));
+                                let checkedValue = inputElements.filter(chk => chk.checked).length;
+
+                                if (checkedValue == 0) {
+                                    Swal.fire({
+                                        title: 'No order selected!',
+                                        html: `<div>Are you sure to download {{ isset($orders) ? $orders->total() : 0 }} order(s).</div>
+                                            <div class="text-danger"><small>Note: This will take a while to process.</small></div>`,
+                                        icon: 'warning',
+                                        confirmButtonText: 'Download',
+                                        showCancelButton: true,
+                                        cancelButtonText: 'Cancel',
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            let checkedOrder = [];
+                                            inputElements.forEach(input => {
+                                                if (input.checked) {
+                                                    checkedOrder.push(input.value);
+                                                }
+                                            });
+                                            download_csv(checkedOrder, chosenTemplate);
+                                        }
+                                    });
+                                } else {
+                                    let checkedOrder = [];
+                                    inputElements.forEach(input => {
+                                        if (input.checked) {
+                                            checkedOrder.push(input.value);
+                                        }
+                                    });
+                                    download_csv(checkedOrder, chosenTemplate);
+                                }
+                            },
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching template options:', error);
+                    });
+            };
+
+            function download_csv(checkedOrder, chosenTemplate) {
+                // const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
+                // const param_obj = queryStringToJSON(params);
+
+                axios.post('/api/download-order-csv', {
+                        order_ids: checkedOrder,
+                        template_id: chosenTemplate,
+                    })
+                    .then(function(response) {
+                        // handle success, close or download
+                        if (response != null && response.data != null) {
+                            let a = document.createElement('a');
+                            a.download = response.data.file_name;
+                            a.target = '_blank';
+                            a.href = window.location.origin + "/storage/" + response.data.file_name;
+                            a.click();
+                        }
+                    })
+                    .catch(function(error) {
+                        // handle error
+                        console.log(error);
+                    })
+            }
+        </script>
     </x-slot>
 </x-layout>
