@@ -393,39 +393,39 @@
                             </ul>
                         @endcan
                     </li>
+
+                    @can('shipping_cost.view')
+                    <li>
+                        <a class="nav-link collapsed" data-bs-target="#components-nav-shipping-cost" data-bs-toggle="collapse" href="#">
+                            <i class="bi bi-circle"></i>
+                            <span>Shipping Cost</span><i class="bi bi-chevron-down ms-auto"></i>
+                        </a>
+                        <ul id="components-nav-shipping-cost" class=" {{ Route::current()->getName() != 'state_group.list' ? 'collapsed' : '' }} ">
+                            @can('state_group.list')
+                                <li>
+                                    <a class="{{ Route::current()->getName() != 'state_group.list' ? 'collapsed' : '' }}"
+                                        href="{{ route('state_group.list') }}">
+                                        <i class="bi bi-circle"></i>
+                                        <span>State Group List</span>
+                                    </a>
+                                </li>
+                            @endcan
+                            @can('weight_category.list')
+                                <li>
+                                    <a class=" {{ Route::current()->getName() != 'orders.scan_setting' ? 'collapsed' : '' }}"
+                                        href="{{ route('orders.scan_setting') }}">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Weight Category List</span>
+                                    </a>
+                                </li>
+                            @endcan
+                        </ul>
+                    </li><!-- End Components Nav -->
+                    @endcan
+
                 </ul>
             </li><!-- End Components Nav -->
         @endcan
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" data-bs-target="#components-nav-scan" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-circle"></i>
-                <span>Shipping Cost</span><i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="components-nav-scan"
-                class="nav-content {{ Route::current()->getName() != 'state_group.list' ? 'collapsed' : '' }} "
-                data-bs-parent="#sidebar-nav">
-                @can('view.scan_parcel')
-                    <li>
-                        <a class="nav-link {{ Route::current()->getName() != 'state_group.list' ? 'collapsed' : '' }}"
-                            href="{{ route('state_group.list') }}">
-                            <i class="bi bi-circle"></i>
-                            <span>State Group List</span>
-                        </a>
-                    </li>
-                @endcan
-                @can('view.scan_setting')
-                    <li>
-                        <a class="nav-link {{ Route::current()->getName() != 'orders.scan_setting' ? 'collapsed' : '' }}"
-                            href="{{ route('orders.scan_setting') }}">
-                            <i class="bi bi-circle"></i>
-                            <span>Weight Category List</span>
-                        </a>
-                    </li>
-                @endcan
-            </ul>
-        </li><!-- End Components Nav -->
-
         {{-- <li class="nav-item">
             <a class="nav-link collapsed" href="users-profile.html">
                 <i class="bi bi-person"></i>

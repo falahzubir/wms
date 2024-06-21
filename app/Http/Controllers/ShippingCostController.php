@@ -53,6 +53,37 @@ class ShippingCostController extends Controller
         ]);
     }
 
+    public function update_state_group(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'states' => [
+                'required',
+                Rule::unique('group_state_lists', 'state_id')->whereNull('deleted_at')->ignore($request->id)
+            ],
+        ]);
+
+        $stateGroup = StateGroup::find($request->id);
+        $stateGroup->update([
+            'name' => $request->name
+        ]);
+
+        $groupStateLists = GroupStateList::where('state_group_id', $request->id);
+        $groupStateLists->delete();
+
+        foreach ($request->states as $state) {
+            GroupStateList::create([
+                'state_group_id' => $stateGroup->id,
+                'state_id' => $state
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'State Group updated successfully'
+        ]);
+    }
+
     public function delete_state_group($id)
     {
         // dd($id);

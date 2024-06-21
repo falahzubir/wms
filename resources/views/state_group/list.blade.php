@@ -23,7 +23,9 @@
             </section>
             <section id="addStateGroup" class="mb-3">
                 <div>
+                    @can('state_group.create')
                     <button class="btn btn-primary" onclick="addStateGroup()"><strong>+</strong></button>
+                    @endcan
                 </div>
             </section>
             <section id="stateGroupList">
@@ -44,12 +46,16 @@
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-center gap-2">
+                                        @can('state_group.delete')
                                         <button class="btn btn-danger p-1 px-2"
                                             onclick="deleteStateGroup({{ $stateGroup->id }})"><i
                                                 class="bi bi-trash"></i></button>
+                                        @endcan
+                                        @can('state_group.edit')
                                         <button class="btn btn-warning p-1 px-2"
-                                            onclick="editStateGroup({{ $stateGroup->id }})"><i
+                                            onclick="editStateGroup('{{ $stateGroup->id }}','{{ $stateGroup->name }}', '{{ json_encode($stateGroup->group_state_lists->pluck('state_id')) }}')"><i
                                                 class="bi bi-pencil"></i></button>
+                                        @endcan
                                     </div>
                                 </td>
                                 <td>{{ $stateGroup->name }}</td>
@@ -115,7 +121,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary customBtnSave">Save</button>
+                    <button type="button" onclick="updateGroup()" class="btn btn-primary customBtnSave">Save</button>
                 </div>
             </div>
         </div>
@@ -228,12 +234,12 @@
                 })
             }
 
-            function editStateGroup(id) {
-
-                let stateGroupName = 'Penisular Malaysia';
-                let stateGroupStates = [1, 2, 3, 4];
+            function editStateGroup(id, name, state_ids) {
+                let stateGroupName = name;
+                let stateGroupStates = JSON.parse(state_ids);
 
                 let html = `<div>
+                        <input type="hidden" id="updateStateGroupId" value="${id}">
                         <label for="stateGroupName" class="form-label fs-6"><strong>State Group Name:</strong></label>
                         <input type="text" class="form-control" id="updateStateGroupName" name="stateGroupName" value="${stateGroupName}">
                     </div>
@@ -253,6 +259,44 @@
                     keyboard: false
                 });
                 modal.show();
+            }
+
+            function updateGroup()
+            {
+                let updateGroupModal = $('#updateStateGroupModal');
+                let id = updateGroupModal.find('#updateStateGroupId').val();
+                let name = updateGroupModal.find('#updateStateGroupName').val();
+                let states = updateGroupModal.find('#updateStates').val();
+
+                axios.post('/api/state-group/update', {
+                        id: id,
+                        name: name,
+                        states: states,
+                        _token: '{{ csrf_token() }}'
+                    })
+                    .then(response => {
+                        if (response.data.status == 'success') {
+                            updateGroupModal.modal('hide');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'State Group updated successfully!',
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        if (error.response.status === 422) {
+                            let errors = error.response.data.errors;
+                            displayErrors(errors);
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                error.response.data.message,
+                                'error'
+                            )
+                        }
+                    });
             }
 
             const displayErrors = (errors) => {

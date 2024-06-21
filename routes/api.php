@@ -172,5 +172,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
 Route::prefix('state-group')->group(function() {
     Route::post('store', [ShippingCostController::class, 'store_state_group']);
+    Route::post('update', [ShippingCostController::class, 'update_state_group']);
     Route::post('delete/{id}', [ShippingCostController::class, 'delete_state_group']);
 });

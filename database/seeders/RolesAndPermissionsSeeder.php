@@ -80,6 +80,14 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view.courier_setting']);
         Permission::firstOrCreate(['name' => 'view.selected_coverage']);
 
+        //state group permission
+        Permission::firstOrCreate(['name' => 'shipping_cost.view']);
+        Permission::firstOrCreate(['name' => 'state_group.list']);
+        Permission::firstOrCreate(['name' => 'state_group.create']);
+        Permission::firstOrCreate(['name' => 'state_group.edit']);
+        Permission::firstOrCreate(['name' => 'state_group.delete']);
+        Permission::firstOrCreate(['name' => 'weight_category.list']);
+
         // create roles and assign created permissions
         $role = Role::firstOrCreate(['name' => 'IT_Admin']);
         $role->givePermissionTo(Permission::all());
