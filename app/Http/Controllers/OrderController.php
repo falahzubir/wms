@@ -981,7 +981,7 @@ class OrderController extends Controller
 
         // Set cURL options
         curl_setopt_array($curl, [
-            // CURLOPT_URL => 'http://localhost/bos/wms/get_staff_name',
+            // CURLOPT_URL => 'http://localhost/bos/wms/get_staff_name', // Test
             CURLOPT_URL => $curl_url,
             CURLOPT_RETURNTRANSFER => true, // Return response as a string
             CURLOPT_HTTPHEADER => [ // Set headers if needed

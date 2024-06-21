@@ -147,6 +147,9 @@
                                             case 9:
                                                 $templateTypeLabels[] = 'Reject List';
                                                 break;
+                                            case 10:
+                                                $templateTypeLabels[] = 'Attempt Order List';
+                                                break;
                                             // Add more cases if needed
                                         }
                                     }
@@ -207,8 +210,9 @@
                             <option value="5">In Transit List</option>
                             <option value="6">Delivered List</option>
                             <option value="7">Return List</option>
-                            <option value="9">Reject List</option>
                             <option value="8">Overall List</option>
+                            <option value="9">Reject List</option>
+                            <option value="10">Attempt Order List</option>
                         </select>
                     </div>
 
@@ -278,8 +282,9 @@
                             <option value="5">In Transit List</option>
                             <option value="6">Delivered List</option>
                             <option value="7">Return List</option>
-                            <option value="9">Reject List</option>
                             <option value="8">Overall List</option>
+                            <option value="9">Reject List</option>
+                            <option value="10">Attempt Order List</option>
                         </select>
                     </div>
 
