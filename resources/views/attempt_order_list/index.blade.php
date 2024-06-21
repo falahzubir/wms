@@ -62,8 +62,9 @@
                     {{-- Button --}}
                     <div class="card-title text-end">
                         @can('order.download')
-                            <button class="btn btn-secondary" id="download-order-btn"><i class="bi bi-cloud-download"></i>
-                                Download CSV</button>
+                            <a href="{{ route('download_csv', Request::query()) }}" class="btn btn-secondary">
+                                <i class="bi bi-cloud-download"></i> Download CSV
+                            </a>
                         @endcan
                     </div>
 
@@ -217,71 +218,6 @@
     </section>
 
     <x-slot name="script">
-        <script>
-            document.querySelector('#download-order-btn').onclick = function() {
-                // Get url segment
-                const urlSegments = window.location.pathname.split('/');
-                const status = urlSegments[2];
 
-                fetch(`/orders/get_template_main?status=${status}`)
-                    .then(response => response.json())
-                    .then(options => {
-                        // Collect all order_ids from hidden inputs
-                        const orderIds = Array.from(document.querySelectorAll('input[name="check_order"]'))
-                            .map(input => input.value);
-
-                        Swal.fire({
-                            title: 'Download CSV',
-                            html: `
-                                <div class="row">
-                                    <div class="col-4 mt-2">
-                                        <label>Choose Template</label>
-                                    </div>
-                                    <div class="col-8">
-                                        <select id="template-select" class="form-select">
-                                            ${options.map(option => `<option value="${option.value}">${option.label}</option>`).join('')}
-                                        </select>
-                                    </div>
-                                </div>
-                            `,
-                            width: '50%',
-                            showCancelButton: true,
-                            cancelButtonText: 'Cancel',
-                            confirmButtonText: 'Download',
-                            preConfirm: () => {
-                                const templateSelect = document.getElementById('template-select');
-                                const chosenTemplate = templateSelect.value;
-
-                                // Call download_csv function with orderIds and chosenTemplate
-                                download_csv(orderIds, chosenTemplate);
-                            },
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error fetching template options:', error);
-                    });
-            };
-
-            function download_csv(orderIds, chosenTemplate) {
-                axios.post('/api/download-order-csv', {
-                        order_ids: orderIds,
-                        template_id: chosenTemplate,
-                    })
-                    .then(function(response) {
-                        // handle success, close or download
-                        if (response != null && response.data != null) {
-                            let a = document.createElement('a');
-                            a.download = response.data.file_name;
-                            a.target = '_blank';
-                            a.href = window.location.origin + "/storage/" + response.data.file_name;
-                            a.click();
-                        }
-                    })
-                    .catch(function(error) {
-                        // handle error
-                        console.log(error);
-                    })
-            }
-        </script>
     </x-slot>
 </x-layout>

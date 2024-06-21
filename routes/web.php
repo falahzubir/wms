@@ -69,6 +69,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/get_template_main', [OrderController::class, 'get_template_main']);
         Route::get('/attempt-order-list', [AttemptOrderListController::class, 'index'])->name('attempt_order_list');
         Route::post('/attempt-order-list/filter', [AttemptOrderListController::class, 'filter'])->name('attempt_order_list.filter');
+        Route::get('/download-csv', [AttemptOrderListController::class, 'downloadCSV'])->name('download_csv'); // This only for Attempt Order List
         Route::get('/test', [OrderController::class, 'test']);
     });
 

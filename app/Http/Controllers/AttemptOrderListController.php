@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Shipping;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttemptOrderListController extends Controller
 {
@@ -49,5 +50,175 @@ class AttemptOrderListController extends Controller
     {
         // Redirect to index with query parameters
         return redirect()->route('attempt_order_list', $request->all());
+    }
+
+    public function downloadCSV(Request $request)
+    {
+        $shippings = $this->getDataForCSV($request);
+        $date = date('YmdHis');
+
+        // Generate CSV file
+        $response = new StreamedResponse(function () use ($shippings) {
+            $handle = fopen('php://output', 'w');
+
+            // Add headers
+            fputcsv($handle, [
+                'Business Unit',
+                'Order ID',
+                'Courier',
+                'Purchase Type',
+                'Tracking Number',
+                'Shipping Date',
+                'Postcode',
+                'State',
+                'Pickup Date',
+                'Pickup Time',
+                'Pickup Day',
+                'Start Date',
+                'First Attempt Date',
+                'Failed 1st Attempt Date & Time',
+                'First Attempt Status',
+                '2nd Attempt Date',
+                'Failed 2nd Attempt Date & Time',
+                '2nd Attempt Status',
+                '3rd Attempt Date',
+                'Failed 3rd Attempt Date & Time',
+                '3rd Attempt Status',
+                'Delivery Date',
+                'Number Attempt',
+                'City',
+            ]);
+
+            // Add data
+            foreach ($shippings as $shipping) {
+                $events = $shipping->events;
+
+                // You may need to define how to extract the specific event details you want.
+                // This example assumes you are looking for descriptions and dates of attempts.
+                $firstAttemptDate = '-';
+                $firstAttemptDescription = '-';
+                $firstAttemptDateAndTime = '-';
+                $secondAttemptDate = '-';
+                $secondAttemptDescription = '-';
+                $secondAttemptDateAndTime = '-';
+                $thirdAttemptDate = '-';
+                $thirdAttemptDescription = '-';
+                $thirdAttemptDateAndTime = '-';
+
+                if ($events->count() > 0) {
+                    $firstEvent = $events->get(0);
+                    $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y');
+                    $firstAttemptDescription = $firstEvent->description ?? '-';
+                    $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y h:i A');
+
+                    if ($events->count() > 1) {
+                        $secondEvent = $events->get(1);
+                        $secondAttemptDate = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y');
+                        $secondAttemptDescription = $secondEvent->description ?? '-';
+                        $secondAttemptDateAndTime = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y h:i A');
+
+                        if ($events->count() > 2) {
+                            $thirdEvent = $events->get(2);
+                            $thirdAttemptDate = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y');
+                            $thirdAttemptDescription = $thirdEvent->description ?? '-';
+                            $thirdAttemptDateAndTime = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y h:i A');
+                        }
+                    }
+                }
+
+                fputcsv($handle, [
+                    $shipping->order->company->code ?? '',
+                    $shipping->order->id ?? '',
+                    $shipping->order->courier->name ?? '',
+                    $shipping->order->purchase_type ?? '',
+                    $shipping->tracking_number ?? '',
+                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
+                    $shipping->order->customer->postcode ?? '',
+                    MY_STATES[$shipping->order->customer->state] ?? '',
+                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
+                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('h:i A'),
+                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('D'),
+                    $firstAttemptDate,
+                    $firstAttemptDate,
+                    $firstAttemptDateAndTime,  // Failed 1st Attempt Date & Time placeholder
+                    $firstAttemptDescription,
+                    $secondAttemptDate,
+                    $secondAttemptDateAndTime,  // Failed 2nd Attempt Date & Time placeholder
+                    $secondAttemptDescription,
+                    $thirdAttemptDate,
+                    $thirdAttemptDateAndTime,  // Failed 3rd Attempt Date & Time placeholder
+                    $thirdAttemptDescription,
+                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
+                    $shipping->events->count() ?? '',
+                    $shipping->order->customer->city ?? ''
+                ]);
+            }
+
+            fclose($handle);
+        });
+
+        // Set headers for download
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $date . '_attempt_order_list.csv"');
+
+        return $response;
+    }
+
+    // Method to fetch data based on existing filter logic
+    private function getDataForCSV(Request $request)
+    {
+        // Start with the Shipping model
+        $query = Shipping::with(['order.customer', 'order.courier', 'order.company', 'events'])
+            ->whereHas('order', function ($query) use ($request) {
+                // Apply search query if present
+                if ($request->filled('search')) {
+                    $searchTerm = $request->search;
+                    $query->where(function ($subQuery) use ($searchTerm) {
+                        $subQuery->where('tracking_number', 'like', '%' . $searchTerm . '%')
+                            ->orWhereHas('customer', function ($query) use ($searchTerm) {
+                                $query->where('phone', 'like', '%' . $searchTerm . '%');
+                            })
+                            ->orWhereHas('courier', function ($query) use ($searchTerm) {
+                                $query->where('name', 'like', '%' . $searchTerm . '%');
+                            });
+                    });
+                }
+
+                // Apply date filters and status for order logs
+                if ($request->filled('date_from') && $request->filled('date_to')) {
+                    $query->whereHas('logs', function ($subQuery) use ($request) {
+                        $subQuery->whereBetween('created_at', [
+                            $request->date_from,
+                            $request->date_to
+                        ])->where('order_status_id', 5);
+                    });
+                }
+            });
+
+        return $query->get();
+    }
+
+    // Method to get the delivery status
+    private function getDeliveryStatus($shipping)
+    {
+        $hasUnsuccessfulAttempts = $shipping->events
+            ->whereIn('attempt_status', [
+                77090,
+                77098,
+                77101,
+                77102,
+                77171,
+                77191,
+                'EM013',
+                'EM014',
+                'EM080',
+                'EM093',
+                'EM094',
+                'EM095',
+                'EM115',
+            ])
+            ->isNotEmpty();
+
+        return $hasUnsuccessfulAttempts ? 'Unsuccessful' : 'Delivered';
     }
 }
