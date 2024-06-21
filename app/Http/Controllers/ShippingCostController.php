@@ -7,6 +7,7 @@ use App\Models\StateGroup;
 use App\Models\GroupStateList;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Database\Query\Builder;
 
 class ShippingCostController extends Controller
 {
@@ -30,7 +31,7 @@ class ShippingCostController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'states' => [
+            'states.*' => [
                 'required',
                 Rule::unique('group_state_lists', 'state_id')->whereNull('deleted_at')
             ],
@@ -57,9 +58,9 @@ class ShippingCostController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'states' => [
+            'states.*' => [
                 'required',
-                Rule::unique('group_state_lists', 'state_id')->whereNull('deleted_at')->ignore($request->id)
+                Rule::unique('group_state_lists', 'state_id')->whereNull('deleted_at')->ignore($request->id, 'state_group_id')
             ],
         ]);
 

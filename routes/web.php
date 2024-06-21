@@ -207,7 +207,7 @@ Route::middleware(['auth'])->group(function() {
     });
 
     Route::prefix('state-group')->group(function() {
-        Route::get('/', [ShippingCostController::class, 'state_group'])->name('state_group.list');
+        Route::get('/', [ShippingCostController::class, 'state_group'])->name('state_group.list')->middleware('can:state_group.list');
     });
 
     Route::prefix('settings')->name('settings.')->group(function () {
