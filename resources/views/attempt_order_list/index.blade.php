@@ -80,27 +80,28 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if ($orders->count())
-                                @foreach ($orders as $key => $order)
+                            @if ($shippings->count())
+                                @foreach ($shippings as $key => $shipping)
                                     <tr style="font-size: 0.8rem;">
                                         {{-- Row Numbers --}}
-                                        <td scope="row" class="text-center">{{ $key + $orders->firstItem() }}</td>
+                                        <td scope="row" class="text-center">{{ $key + $shippings->firstItem() }}</td>
 
                                         {{-- Customer Info --}}
                                         <td class="text-start" style="width: 400px;">
-                                            <input type="hidden" name="check_order" value="{{ $order->id }}">
+                                            <input type="hidden" name="check_order" value="{{ $shipping->order->id }}">
 
-                                            <div><strong>{{ $order->customer->name }}</strong></div>
+                                            <div><strong>{{ $shipping->order->customer->name }}</strong></div>
                                             <div>
-                                                <p class="mb-0">{{ $order->customer->phone }}</p>
-                                                <p class="mb-0">{{ $order->customer->phone_2 }}</p>
+                                                <p class="mb-0">{{ $shipping->order->customer->phone }}</p>
+                                                <p class="mb-0">{{ $shipping->order->customer->phone_2 }}</p>
                                             </div>
                                             <div>
-                                                <span class="customer-address">{{ $order->customer->address }}</span>,
-                                                {{ $order->customer->postcode }},
-                                                {{ $order->customer->city }},
-                                                {{ MY_STATES[$order->customer->state] ?? '' }},
-                                                {{ COUNTRY_ID[$order->customer->country] }}
+                                                <span
+                                                    class="customer-address">{{ $shipping->order->customer->address }}</span>,
+                                                {{ $shipping->order->customer->postcode }},
+                                                {{ $shipping->order->customer->city }},
+                                                {{ MY_STATES[$shipping->order->customer->state] ?? '' }},
+                                                {{ COUNTRY_ID[$shipping->order->customer->country] }}
                                             </div>
                                         </td>
 
@@ -108,86 +109,66 @@
                                         <td>
                                             {{-- Order Number --}}
                                             <div>
-                                                @isset($order->sales_id)
+                                                @isset($shipping->order->sales_id)
                                                     <i class="bi bi-box-seam"></i>
                                                     <span role="button" class="order-num text-primary"
-                                                        data-sales-id="{{ $order->sales_id }}"
-                                                        data-order-num="{{ order_num_format($order) }}"
+                                                        data-sales-id="{{ $shipping->order->sales_id }}"
+                                                        data-order-num="{{ order_num_format($shipping->order) }}"
                                                         title="Double Click to Copy">
-                                                        <strong>{{ order_num_format($order) }}</strong>
+                                                        <strong>{{ order_num_format($shipping->order) }}</strong>
                                                     </span>
                                                 @endisset
                                             </div>
 
                                             {{-- Tracking Number --}}
-                                            @isset($order->shippings)
-                                                @if ($order->items->sum('quantity') > MAXIMUM_QUANTITY_PER_BOX)
-                                                    <!-- check if order has more than 40 quantity-->
-                                                    @isset($order->shippings->first()->tracking_number)
-                                                        <!-- check if order has at least 1 CN -->
-                                                        @foreach ($order->shippings as $shipping)
-                                                            <div>
-                                                                <i class="bi bi-truck"></i>
-                                                                <span class="text-success"
-                                                                    data-tracking="{{ $shipping->tracking_number }}">
-                                                                    {{ $shipping->tracking_number }}
-                                                                </span>
-                                                            </div>
-                                                        @endforeach
-                                                    @endisset
-                                                @else
-                                                    @foreach ($order->shippings as $shipping)
-                                                        <div>
-                                                            <i class="bi bi-truck"></i>
-                                                            <span class="text-success"
-                                                                data-tracking="{{ $shipping->tracking_number }}">
-                                                                {{ $shipping->tracking_number }}
-                                                            </span>
-                                                        </div>
-                                                    @endforeach
-                                                @endif
-                                            @endisset
-
-                                            {{-- Product --}}
                                             <div>
-                                                @isset($order->items)
+                                                <i class="bi bi-truck"></i>
+                                                <span class="text-success"
+                                                    data-tracking="{{ $shipping->tracking_number }}">
+                                                    {{ $shipping->tracking_number }}
+                                                </span>
+                                            </div>
+
+                                            {{-- Products --}}
+                                            <div>
+                                                @foreach ($shipping->order->items as $product)
                                                     <i class="bi bi-bag"></i>
-                                                    @foreach ($order->items as $product)
-                                                        {{ $product->product->name }}<strong>[{{ $product->quantity }}]</strong>
-                                                        <br>
-                                                    @endforeach
-                                                @endisset
+                                                    {{ $product->product->name }}<strong>[{{ $product->quantity }}]</strong>
+                                                    <br>
+                                                @endforeach
                                             </div>
                                         </td>
 
                                         {{-- Delivery Attempt Status --}}
                                         <td>
-                                            @foreach ($order->shippings as $shipping)
-                                                @php
-                                                    // Filter events with specific attempt_status values
-                                                    $filteredEvents = $shipping->events->whereIn('attempt_status', [
-                                                        77090,
-                                                        77098,
-                                                        77101,
-                                                        77102,
-                                                        77171,
-                                                        77191,
-                                                    ]);
+                                            @foreach ($shipping->events as $event)
+                                                <div>
+                                                    <i class="bi bi-stopwatch-fill"></i>
+                                                    {{ \Carbon\Carbon::parse($event->attempt_time)->format('d/m/Y H:i') }}
+                                                </div>
 
-                                                    // Count the filtered events
-                                                    $attemptCount = $filteredEvents->count();
+                                                @php
+                                                    // Check if any of the specified attempt_status values are present
+                                                    $hasUnsuccessfulAttempts = $shipping->events
+                                                        ->whereIn('attempt_status', [
+                                                            77090,
+                                                            77098,
+                                                            77101,
+                                                            77102,
+                                                            77171,
+                                                            77191,
+                                                        ])
+                                                        ->isNotEmpty();
                                                 @endphp
 
-                                                @foreach ($shipping->events as $event)
+                                                @if ($hasUnsuccessfulAttempts)
                                                     <div>
-                                                        <i class="bi bi-stopwatch-fill"></i>
-                                                        {{ \Carbon\Carbon::parse($event->attempt_time)->format('d/m/Y H:i') }}
+                                                        {{ ordinalSuffix($shipping->events->count()) }} attempt was
+                                                        <strong class="text-danger">unsuccessful</strong>
                                                     </div>
-                                                @endforeach
-
-                                                @if ($attemptCount > 0)
+                                                @else
                                                     <div>
-                                                        {{ ordinalSuffix($attemptCount) }} attempt was <strong class="text-danger">unsuccessful</strong>
+                                                        Item <strong class="text-success">delivered</strong>
                                                     </div>
                                                 @endif
                                             @endforeach
@@ -195,12 +176,12 @@
 
                                         {{-- Courier --}}
                                         <td class="text-center">
-                                            <p class="mb-0">{{ $order->courier->name }}</p>
+                                            <p class="mb-0">{{ $shipping->order->courier->name }}</p>
                                         </td>
 
-                                        {{-- BU --}}
+                                        {{-- Company --}}
                                         <td class="text-center">
-                                            <p class="mb-0">{{ $order->company->code }}</p>
+                                            <p class="mb-0">{{ $shipping->order->company->code }}</p>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -208,7 +189,7 @@
                                 <tr>
                                     <td colspan="100%" class="text-center">
                                         <div class="alert alert-warning" role="alert">
-                                            No order found!
+                                            No shipping found!
                                         </div>
                                     </td>
                                 </tr>
@@ -217,10 +198,10 @@
                     </table>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            Showing {{ $orders->firstItem() }} to {{ $orders->lastItem() }} of
-                            {{ $orders->total() }} orders
+                            Showing {{ $shippings->firstItem() }} to {{ $shippings->lastItem() }} of
+                            {{ $shippings->total() }} orders
                         </div>
-                        {{ $orders->withQueryString()->links() }}
+                        {{ $shippings->withQueryString()->links() }}
                     </div>
                     <!-- End Table -->
                 </div>
