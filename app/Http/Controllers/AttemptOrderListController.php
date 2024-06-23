@@ -231,28 +231,4 @@ class AttemptOrderListController extends Controller
 
         return $query->get();
     }
-
-    // Method to get the delivery status
-    private function getDeliveryStatus($shipping)
-    {
-        $hasUnsuccessfulAttempts = $shipping->events
-            ->whereIn('attempt_status', [
-                77090,
-                77098,
-                77101,
-                77102,
-                77171,
-                77191,
-                'EM013',
-                'EM014',
-                'EM080',
-                'EM093',
-                'EM094',
-                'EM095',
-                'EM115',
-            ])
-            ->isNotEmpty();
-
-        return $hasUnsuccessfulAttempts ? 'Unsuccessful' : 'Delivered';
-    }
 }
