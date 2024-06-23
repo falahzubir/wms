@@ -75,7 +75,7 @@
                                 <th scope="col" class="text-center">#</th>
                                 <th scope="col">Customer Info</th>
                                 <th scope="col">Product Info</th>
-                                <th scope="col">Delivery Attempt Status</th>
+                                <th scope="col" style="width: 250px;">Delivery Attempt Status</th>
                                 <th scope="col" class="text-center">Courier</th>
                                 <th scope="col">BU</th>
                             </tr>
@@ -123,11 +123,19 @@
 
                                             {{-- Tracking Number --}}
                                             <div>
-                                                <i class="bi bi-truck"></i>
-                                                <span class="text-success"
-                                                    data-tracking="{{ $shipping->tracking_number }}">
-                                                    {{ $shipping->tracking_number }}
-                                                </span>
+                                                @if ($shipping->order->courier->code == 'dhl-ecommerce')
+                                                    <i class="bi bi-truck"></i>
+                                                    <a class="text-success"
+                                                        href="https://www.dhl.com/us-en/home/tracking/tracking-ecommerce.html?submit=1&tracking-id={{ $shipping->tracking_number }}">{{ $shipping->tracking_number }}</a>
+                                                @elseif ($shipping->order->courier->code == 'poslaju')
+                                                    <i class="bi bi-truck"></i>
+                                                    <a class="text-success"
+                                                        href="https://tracking.pos.com.my/tracking/{{ $shipping->tracking_number }}">{{ $shipping->tracking_number }}</a>
+                                                @else
+                                                    <i class="bi bi-truck"></i>
+                                                    <a class="text-success"
+                                                        href="https://www.tracking.my/">{{ $shipping->tracking_number }}</a>
+                                                @endif
                                             </div>
 
                                             {{-- Products --}}
@@ -142,44 +150,58 @@
 
                                         {{-- Delivery Attempt Status --}}
                                         <td>
-                                            @foreach ($shipping->events as $event)
+                                            @php
+                                                // Retrieve the latest event based on attempt_time
+                                                $latestEvent = $shipping->events->sortByDesc('attempt_time')->first();
+
+                                                // Count of all events for the current shipping
+                                                $eventCount = $shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->count();
+
+                                                // Check if any of the specified attempt_status values are present
+                                                $attempt = $shipping->events
+                                                    ->whereIn('attempt_status', [77090, 'EM013', 'EM080'])
+                                                    ->isNotEmpty();
+
+                                                $reason = $shipping->events
+                                                    ->whereIn('attempt_status', [
+                                                        77098,
+                                                        77101,
+                                                        77102,
+                                                        77171,
+                                                        77191,
+                                                        'EM014',
+                                                        'EM093',
+                                                        'EM094',
+                                                        'EM095',
+                                                        'EM115',
+                                                    ])
+                                                    ->isNotEmpty();
+                                            @endphp
+
+                                            @if ($latestEvent)
                                                 <div>
                                                     <i class="bi bi-stopwatch-fill"></i>
-                                                    {{ \Carbon\Carbon::parse($event->attempt_time)->format('d/m/Y H:i') }}
+                                                    {{ \Carbon\Carbon::parse($latestEvent->attempt_time)->format('d/m/Y H:i') }}
                                                 </div>
 
-                                                @php
-                                                    // Check if any of the specified attempt_status values are present
-                                                    $hasUnsuccessfulAttempts = $shipping->events
-                                                        ->whereIn('attempt_status', [
-                                                            77090,
-                                                            77098,
-                                                            77101,
-                                                            77102,
-                                                            77171,
-                                                            77191,
-                                                            'EM013',
-                                                            'EM014',
-                                                            'EM080',
-                                                            'EM093',
-                                                            'EM094',
-                                                            'EM095',
-                                                            'EM115',
-                                                        ])
-                                                        ->isNotEmpty();
-                                                @endphp
-
-                                                @if ($hasUnsuccessfulAttempts)
+                                                @if ($attempt)
                                                     <div>
-                                                        {{ ordinalSuffix($shipping->events->count()) }} attempt was
+                                                        {{ ordinalSuffix($eventCount) }} attempt was
                                                         <strong class="text-danger">unsuccessful</strong>
                                                     </div>
+
+                                                    @if ($reason)
+                                                        <div>
+                                                            <i class="bi bi-exclamation-circle-fill"></i>
+                                                            {{ $latestEvent->description }}
+                                                        </div>
+                                                    @endif
                                                 @else
                                                     <div>
                                                         Item <strong class="text-success">delivered</strong>
                                                     </div>
                                                 @endif
-                                            @endforeach
+                                            @endif
                                         </td>
 
                                         {{-- Courier --}}

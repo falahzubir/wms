@@ -91,37 +91,55 @@ class AttemptOrderListController extends Controller
 
             // Add data
             foreach ($shippings as $shipping) {
-                $events = $shipping->events;
+                // Retrieve events with specific attempt statuses
+                $events = $shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->sortByDesc('attempt_time');
 
-                // You may need to define how to extract the specific event details you want.
-                // This example assumes you are looking for descriptions and dates of attempts.
-                $firstAttemptDate = '-';
-                $firstAttemptDescription = '-';
-                $firstAttemptDateAndTime = '-';
-                $secondAttemptDate = '-';
-                $secondAttemptDescription = '-';
-                $secondAttemptDateAndTime = '-';
-                $thirdAttemptDate = '-';
-                $thirdAttemptDescription = '-';
-                $thirdAttemptDateAndTime = '-';
+                // Retrieve reasons with specific attempt statuses
+                $reason = $shipping->events->whereIn('attempt_status', [
+                    77098,
+                    77101,
+                    77102,
+                    77171,
+                    77191,
+                    'EM014',
+                    'EM093',
+                    'EM094',
+                    'EM095',
+                    'EM115',
+                ])->sortByDesc('attempt_time');
 
+                // Initialize default values
+                $firstAttemptDate = '';
+                $firstAttemptDescription = '';
+                $firstAttemptDateAndTime = '';
+                $secondAttemptDate = '';
+                $secondAttemptDescription = '';
+                $secondAttemptDateAndTime = '';
+                $thirdAttemptDate = '';
+                $thirdAttemptDescription = '';
+                $thirdAttemptDateAndTime = '';
+
+                // Retrieve and process events and reasons
                 if ($events->count() > 0) {
-                    $firstEvent = $events->get(0);
+                    $firstEvent = $events->first();
+                    $firstReason = $reason->first();
                     $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y');
-                    $firstAttemptDescription = $firstEvent->description ?? '-';
-                    $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y h:i A');
+                    $firstAttemptDescription = $firstReason->description ?? '';
+                    $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstReason->attempt_time)->format('d/m/Y h:i A');
 
                     if ($events->count() > 1) {
-                        $secondEvent = $events->get(1);
+                        $secondEvent = $events->skip(1)->first();
+                        $secondReason = $reason->skip(1)->first();
                         $secondAttemptDate = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y');
-                        $secondAttemptDescription = $secondEvent->description ?? '-';
-                        $secondAttemptDateAndTime = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y h:i A');
+                        $secondAttemptDescription = $secondReason->description ?? '';
+                        $secondAttemptDateAndTime = \Carbon\Carbon::parse($secondReason->attempt_time)->format('d/m/Y h:i A');
 
                         if ($events->count() > 2) {
-                            $thirdEvent = $events->get(2);
+                            $thirdEvent = $events->skip(2)->first();
+                            $thirdReason = $reason->skip(2)->first();
                             $thirdAttemptDate = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y');
-                            $thirdAttemptDescription = $thirdEvent->description ?? '-';
-                            $thirdAttemptDateAndTime = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y h:i A');
+                            $thirdAttemptDescription = $thirdReason->description ?? '';
+                            $thirdAttemptDateAndTime = \Carbon\Carbon::parse($thirdReason->attempt_time)->format('d/m/Y h:i A');
                         }
                     }
                 }
@@ -149,7 +167,7 @@ class AttemptOrderListController extends Controller
                     $thirdAttemptDateAndTime,  // Failed 3rd Attempt Date & Time placeholder
                     $thirdAttemptDescription,
                     \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
-                    $shipping->events->count() ?? '',
+                    $events->count() ?? '',
                     $shipping->order->customer->city ?? ''
                 ]);
             }
