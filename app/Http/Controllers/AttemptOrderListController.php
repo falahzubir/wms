@@ -144,11 +144,27 @@ class AttemptOrderListController extends Controller
                     }
                 }
 
+                // Purchase Type
+                switch ($shipping->order->purchase_type) {
+                    case '1':
+                        $purchaseType = 'COD';
+                        break;
+                    case '2':
+                        $purchaseType = 'Paid';
+                        break;
+                    case '3':
+                        $purchaseType = 'Installment';
+                        break;
+                    default:
+                        $purchaseType = '';
+                        break;
+                }
+
                 fputcsv($handle, [
                     $shipping->order->company->code ?? '',
                     $shipping->order->id ?? '',
                     $shipping->order->courier->name ?? '',
-                    $shipping->order->purchase_type ?? '',
+                    $purchaseType,
                     $shipping->tracking_number ?? '',
                     \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
                     $shipping->order->customer->postcode ?? '',
