@@ -412,8 +412,8 @@
                             @endcan
                             @can('weight_category.list')
                                 <li>
-                                    <a class=" {{ Route::current()->getName() != 'orders.scan_setting' ? 'collapsed' : '' }}"
-                                        href="{{ route('orders.scan_setting') }}">
+                                    <a class=" {{ Route::current()->getName() != 'weight-category.list' ? 'collapsed' : '' }}"
+                                        href="{{ route('weight-category.list') }}">
                                         <i class="bi bi-circle"></i>
                                         <span>Weight Category List</span>
                                     </a>

@@ -86,7 +86,12 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'state_group.create']);
         Permission::firstOrCreate(['name' => 'state_group.edit']);
         Permission::firstOrCreate(['name' => 'state_group.delete']);
+
+        //weight category permission
         Permission::firstOrCreate(['name' => 'weight_category.list']);
+        Permission::firstOrCreate(['name' => 'weight_category.create']);
+        Permission::firstOrCreate(['name' => 'weight_category.edit']);
+        Permission::firstOrCreate(['name' => 'weight_category.delete']);
 
         // create roles and assign created permissions
         $role = Role::firstOrCreate(['name' => 'IT_Admin']);
