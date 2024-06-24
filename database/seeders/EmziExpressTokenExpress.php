@@ -14,21 +14,24 @@ class EmziExpressTokenExpress extends Seeder
      */
     public function run(): void
     {
-        $emziExpressQiti = AccessToken::where('type', 'emzi-express')->where('company_id', 3)->first();
+        if(app()->environment() != 'production'){
 
-        if (!$emziExpressQiti) {
-            $emziExpressQiti = AccessToken::create([
-                'type' => 'emzi-express',
-                'client_id' => 'd566bd05-0924-438d-b64b-33e5f576bcf3',
-                'company_id' => 3, #qiti
-                'name' => 'Emzi Express Authentification',
-                'token' => 'eyJ0eXA',
-                'additional_data' => ([
-                    'email' => 'emziqiti@gmail.com',
-                ]),
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
+            $emziExpressQiti = AccessToken::where('type', 'emzi-express')->where('company_id', 3)->first();
+            
+            if (!$emziExpressQiti) {
+                $emziExpressQiti = AccessToken::create([
+                    'type' => 'emzi-express',
+                    'client_id' => 'd566bd05-0924-438d-b64b-33e5f576bcf3',
+                    'company_id' => 3, #qiti
+                    'name' => 'Emzi Express Authentification',
+                    'token' => 'eyJ0eXA',
+                    'additional_data' => ([
+                        'email' => 'emziqiti@gmail.com',
+                    ]),
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+            }
         }
 
         $emziExpressEH = AccessToken::where('type', 'emzi-express')->where('company_id', 1)->first();

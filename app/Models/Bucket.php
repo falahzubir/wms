@@ -27,6 +27,6 @@ class Bucket extends Model
 
     public function processingOrders()
     {
-        return $this->hasMany(Order::class)->where('status', ORDER_STATUS_PROCESSING);
+        return $this->hasMany(Order::class)->where('status', ORDER_STATUS_PROCESSING)->where('is_active', 1);
     }
 }
