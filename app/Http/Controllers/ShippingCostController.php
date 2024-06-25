@@ -172,7 +172,7 @@ class ShippingCostController extends Controller
             'price' => 'required|numeric|gt:0',
         ],
         [
-            'weight_category_id.unique' => 'The courier or state group already exists for this weight category'
+            'weight_category_id.unique' => 'The courier or state group already exists for this Shipping cost'
         ]);
         $shippingCost = ShippingCost::create([
             'weight_category_id' => $request->weight_category_id,
@@ -183,7 +183,7 @@ class ShippingCostController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Weight Category created successfully'
+            'message' => 'Shipping cost created successfully'
         ]);
     }
 
@@ -202,7 +202,7 @@ class ShippingCostController extends Controller
             'price' => 'required|numeric|gt:0',
         ],
         [
-            'weight_category_id.unique' => 'The courier or state group already exists for this weight category'
+            'weight_category_id.unique' => 'The courier or state group already exists for this Shipping cost'
         ]);
 
         $shippingCost = ShippingCost::find($request->id);
@@ -215,7 +215,7 @@ class ShippingCostController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Weight Category updated successfully'
+            'message' => 'Shipping cost updated successfully'
         ]);
     }
 
@@ -226,7 +226,7 @@ class ShippingCostController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Weight Category deleted successfully'
+            'message' => 'Shipping cost deleted successfully'
         ]);
     }
 }

@@ -341,7 +341,7 @@
                             addWeightCategoryModal.modal('hide');
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Weight category created successfully!',
+                                title: 'Shipping cost created successfully!',
                             }).then(() => {
                                 window.location.reload();
                             });
@@ -400,7 +400,7 @@
                             editWeightCategoryModal.modal('hide');
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Weight category updated successfully!',
+                                title: 'Shipping cost updated successfully!',
                             }).then(() => {
                                 window.location.reload();
                             });
@@ -438,7 +438,7 @@
                                 if (response.data.status == 'success') {
                                     Swal.fire({
                                         icon: 'success',
-                                        title: 'Weight category deleted successfully!',
+                                        title: 'Shipping cost deleted successfully!',
                                     }).then(() => {
                                         window.location.reload();
                                     });
