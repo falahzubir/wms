@@ -105,8 +105,6 @@ class ShippingCostController extends Controller
 
     public function delete_state_group($id)
     {
-        // dd($id);
-        //delete state group
         $stateGroup = StateGroup::find($id);
         $stateGroup->delete();
         //delete group state list
@@ -158,7 +156,7 @@ class ShippingCostController extends Controller
             ],
             'courier_id' => 'required',
             'state_group_id' => 'required',
-            'price' => 'required|numeric',
+            'price' => 'required|numeric|gt:0',
         ],
         [
             'weight_category_id.unique' => 'The courier or state group already exists for this weight category'
@@ -188,7 +186,7 @@ class ShippingCostController extends Controller
             ],
             'courier_id' => 'required',
             'state_group_id' => 'required',
-            'price' => 'required|numeric',
+            'price' => 'required|numeric|gt:0',
         ],
         [
             'weight_category_id.unique' => 'The courier or state group already exists for this weight category'

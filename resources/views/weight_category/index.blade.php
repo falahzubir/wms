@@ -170,14 +170,14 @@
                     <div>
                         <label for="weightRange" class="form-label fs-6"><strong>Weight Range:</strong></label>
                         <div class="input-group">
-                            <input type="text" name="min_weight" class="form-control" placeholder="0.0"/>
+                            <input type="text" name="min_weight" class="form-control" placeholder="0.0"/ disabled/>
                             <span class="input-group-text">kg</span>
 
                             <div class="mx-2 align-self-center">
                                 <span>-</span>
                             </div>
 
-                            <input type="text" name="max_weight" class="form-control" placeholder="0.0"/>
+                            <input type="text" name="max_weight" class="form-control" placeholder="0.0"/ disabled/>
                             <span class="input-group-text">kg</span>
                         </div>
                     </div>
@@ -248,14 +248,14 @@
                     <div>
                         <label for="weightRange" class="form-label fs-6"><strong>Weight Range:</strong></label>
                         <div class="input-group">
-                            <input type="text" name="min_weight" class="form-control" placeholder="0.0"/>
+                            <input type="text" name="min_weight" class="form-control" placeholder="0.0"/ disabled/>
                             <span class="input-group-text">kg</span>
 
                             <div class="mx-2 align-self-center">
                                 <span>-</span>
                             </div>
 
-                            <input type="text" name="max_weight" class="form-control" placeholder="0.0"/>
+                            <input type="text" name="max_weight" class="form-control" placeholder="0.0"/ disabled/>
                             <span class="input-group-text">kg</span>
                         </div>
                     </div>
