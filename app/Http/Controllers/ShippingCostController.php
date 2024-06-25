@@ -39,7 +39,10 @@ class ShippingCostController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|unique:state_groups',
+            'name' => [
+                'required',
+                Rule::unique('state_groups', 'name')->whereNull('deleted_at')
+            ],
             'states' => 'required|array|min:1',
             'states.*' => [
                 'required',
@@ -74,7 +77,10 @@ class ShippingCostController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|unique:state_groups,name,' . $request->id,
+            'name' => [
+                'required',
+                Rule::unique('state_groups', 'name')->whereNull('deleted_at')->ignore($request->id)
+            ],
             'states' => 'required|array|min:1',
             'states.*' => [
                 'required',
@@ -110,6 +116,9 @@ class ShippingCostController extends Controller
         //delete group state list
         $groupStateLists = GroupStateList::where('state_group_id', $id);
         $groupStateLists->delete();
+        //delete shipping cost
+        $shippingCosts = ShippingCost::where('state_group_id', $id);
+        $shippingCosts->delete();
 
         return response()->json([
             'status' => 'success',
