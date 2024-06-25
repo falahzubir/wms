@@ -21,6 +21,17 @@
                     </div>
                     <div class="row">
                         <div class="col-md-3 mt-3">
+                            <label class="fw-bold pb-2" for="weight-category">Weight Category</label>
+                            <select name="weight_category[]" class="form-control tomsel" id="weight-category" multiple>
+                                <option value="">Select Weight Category</option>
+                                @foreach ($weightCategories as $category)
+                                <option value="{{ $category->id }}" @if (in_array($category->id, request('weight_category', []))) selected @endif>
+                                    {{ $category->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3 mt-3">
                             <label class="fw-bold pb-2" for="courier">Courier</label>
                             <select name="courier[]" class="form-control tomsel" id="courier" multiple>
                                 <option value="">Select Courier</option>
@@ -272,7 +283,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" onclick="updateWeightCategory()" class="btn btn-primary customBtnSave">Save</button>
+                    <button type="button" onclick="updateWeightCategory()" class="btn btn-primary customBtnSave">Update</button>
                 </div>
             </div>
         </div>
@@ -295,7 +306,15 @@
 
             function addWeightCategory()
             {
-                $('#addWeightCategory').modal('show');
+                //reset all input
+                let addWeightCategoryModal = $('#addWeightCategory');
+                addWeightCategoryModal.find('#weightCategoryID').val('');
+                addWeightCategoryModal.find('#courier-filter').val('');
+                addWeightCategoryModal.find('#stateGroup-filter').val('');
+                addWeightCategoryModal.find('input[name="min_weight"]').val('');
+                addWeightCategoryModal.find('input[name="max_weight"]').val('');
+                addWeightCategoryModal.find('#price').val('');
+                addWeightCategoryModal.modal('show');
             }
 
             function storeWeightCategory()

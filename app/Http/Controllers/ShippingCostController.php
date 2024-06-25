@@ -126,6 +126,10 @@ class ShippingCostController extends Controller
             $query->whereHas('weight_category', function (Builder $query) use ($search) {
                 $query->where('name', 'like', '%' . $search . '%');
             });
+        })->when(isset($search), function ($query) {
+            $query->orWhere('price', 'like', '%' . request('search') . '%');
+        })->when(request('weight_category'), function ($query) {
+            $query->whereIN('weight_category_id', request('weight_category'));
         })->when(request('courier'), function ($query) {
             $query->whereIN('courier_id', request('courier'));
         })->when(request('state_group_id'), function ($query) {
@@ -135,7 +139,7 @@ class ShippingCostController extends Controller
         $shippingCosts = $shippingCosts->paginate(10);
 
         return view('weight_category.index', [
-            'title' => 'List of Weight Category',
+            'title' => 'List of Shipping Cost',
             'shippingCosts' => $shippingCosts,
             'couriers' => Courier::all(),
             'stateGroups' => StateGroup::all(),
