@@ -139,7 +139,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header justify-content-center">
-                    <h1 class="modal-title fs-5" id="addWeightCategoryLabel"><strong>Create Weight Category</strong></h1>
+                    <h1 class="modal-title fs-5" id="addWeightCategoryLabel"><strong>Create Shipping Cost</strong></h1>
                 </div>
                 <div class="modal-body d-flex flex-column gap-3">
                     <div>
@@ -216,7 +216,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header justify-content-center">
-                    <h1 class="modal-title fs-5" id="editWeightCategoryLabel"><strong>Create Weight Category</strong></h1>
+                    <h1 class="modal-title fs-5" id="editWeightCategoryLabel"><strong>Update Shipping Cost</strong></h1>
                 </div>
                 <div class="modal-body d-flex flex-column gap-3">
                     <div>
@@ -423,7 +423,7 @@
             function deleteShippingCost(id)
             {
                 Swal.fire({
-                    title: 'Delete weight category?',
+                    title: 'Delete shipping cost?',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
