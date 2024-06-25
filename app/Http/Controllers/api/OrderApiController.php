@@ -51,6 +51,7 @@ class OrderApiController extends Controller
                 $json['sales_id'] = $order->sales_id;
                 $json['reason_reject'] = $request->input("reject_reason"); // 1-Phone, 2-Address, 3-Product(Qty), 4-Product(Other), 5-Change Purchase Type
                 $json['approval_remark_textarea'] = $request->input("reason") . " - " . config("app.name");
+                $json['data_to_be_send_to_websocket'] = $request->data_to_be_send_to_websocket;
                 $response = Http::withHeaders([
                     "Signature" => hash_hmac('sha256', json_encode($json), env('WEBHOOK_CLIENT_SECRET')),
                     'Content-Type' => 'application/json'
