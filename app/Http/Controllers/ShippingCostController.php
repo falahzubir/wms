@@ -39,7 +39,7 @@ class ShippingCostController extends Controller
         }
 
         $request->validate([
-            'name' => 'required',
+            'name' => 'required|unique:state_groups',
             'states' => 'required|array|min:1',
             'states.*' => [
                 'required',
@@ -74,7 +74,7 @@ class ShippingCostController extends Controller
         }
 
         $request->validate([
-            'name' => 'required',
+            'name' => 'required|unique:state_groups,name,' . $request->id,
             'states' => 'required|array|min:1',
             'states.*' => [
                 'required',
