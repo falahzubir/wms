@@ -390,7 +390,8 @@ Trait TiktokTrait
 
             // Download file from the provided URL
             $fileUrl = $response['data']['doc_url'];
-            $fileContent = file_get_contents($fileUrl);
+            // $fileContent = file_get_contents($fileUrl);
+            $fileContent = Http::get($fileUrl)->body();
 
 
             // Save the file to storage
@@ -412,7 +413,7 @@ Trait TiktokTrait
 
             return json_encode([
                 'code' => 500,
-                'message' => 'Failed to download file (2)'
+                'message' => json_encode($th)
             ]);
         }
 
