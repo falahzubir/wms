@@ -251,6 +251,12 @@ Route::middleware(['auth', 'role:admin'])->group(function() {
 
 //migration for dev purpose only
 Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
+    //is environment not production
+    if (\Illuminate\Support\Facades\App::environment(['local', 'staging'])) {
+        Route::get('info', function () {
+            return phpinfo();
+        });
+    }
     Route::get('run-migration', function () {
         // if(config('app.env')=="local"){
             Artisan::call('migrate', ['--force' => true]);
