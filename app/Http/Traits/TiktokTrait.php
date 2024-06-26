@@ -388,17 +388,24 @@ Trait TiktokTrait
                 ]);
             }
 
-            // Download file from the provided URL
+            $context = stream_context_create([
+                'http' => [
+                    'user_agent' => 'GuzzleHttp/7',
+                ],
+            ]);
+            // URL of the file you want to download
             $fileUrl = $response['data']['doc_url'];
-            $fileContent = file_get_contents($fileUrl);
-            // $fileContent = Http::get($fileUrl)->body();
-
+            // Get the file content
+            $fileContent = file_get_contents($fileUrl, false, $context);
 
             // Save the file to storage
             $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['order_id'] . '.pdf';
             $file_path = storage_path('app/public/' . $file_name);
 
-            // file_put_contents($file_path, $fileContent);
+            // Set the appropriate headers for a PDF file
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="' . $file_name . '"');
+
             Storage::put('public/'.$file_name, $fileContent);
 
             return json_encode([
