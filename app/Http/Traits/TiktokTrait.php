@@ -390,7 +390,6 @@ Trait TiktokTrait
 
             // Download file from the provided URL
             $fileUrl = $response['data']['doc_url'];
-            dd($fileUrl);
             $fileContent = file_get_contents($fileUrl);
 
 
