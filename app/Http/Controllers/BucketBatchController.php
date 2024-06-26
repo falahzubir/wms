@@ -82,7 +82,6 @@ class BucketBatchController extends Controller
             }
         }
     
-        // Rearrange products based on picking sequence
         $arrangedProducts = [];
         foreach ($pickingSequences as $productId) {
             if (isset($products[$productId])) {
