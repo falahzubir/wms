@@ -24,7 +24,8 @@ class AttemptOrderListController extends Controller
                             })
                             ->orWhereHas('courier', function ($query) use ($searchTerm) {
                                 $query->where('name', 'like', '%' . $searchTerm . '%');
-                            });
+                            })
+                            ->orWhere('sales_id', 'like', '%' . $searchTerm . '%');
                     });
                 }
 
