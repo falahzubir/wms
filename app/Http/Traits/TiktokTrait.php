@@ -390,8 +390,8 @@ Trait TiktokTrait
 
             // Download file from the provided URL
             $fileUrl = $response['data']['doc_url'];
-            // $fileContent = file_get_contents($fileUrl);
-            $fileContent = Http::get($fileUrl)->body();
+            $fileContent = file_get_contents($fileUrl);
+            // $fileContent = Http::get($fileUrl)->body();
 
 
             // Save the file to storage
