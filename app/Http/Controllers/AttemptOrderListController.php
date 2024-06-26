@@ -163,7 +163,7 @@ class AttemptOrderListController extends Controller
 
                 fputcsv($handle, [
                     $shipping->order->company->code ?? '',
-                    $shipping->order->id ?? '',
+                    $shipping->order->sales_id ?? '',
                     $shipping->order->courier->name ?? '',
                     $purchaseType,
                     $shipping->tracking_number ?? '',
