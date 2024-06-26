@@ -9,21 +9,23 @@ use Illuminate\Support\Facades\DB;
 
 class PickingListSettingController extends Controller
 {
-    public function index() {
-        $products = Product::all();
-        $pickingSequences = PickingSequence::whereNull('deleted_at')->orderBy('sequence')->get();
-
-        if (request()->ajax()) {
+    public function index(Request $request)
+    {
+        if ($request->ajax()) {
+            $pickingSequences = PickingSequence::whereNull('deleted_at')->orderBy('sequence')->get();
             return response()->json(['pickingSequences' => $pickingSequences]);
         }
-
-        return view('picking_list_setting/index', [
+    
+        $products = Product::active()->get();
+        $pickingSequences = PickingSequence::whereNull('deleted_at')->orderBy('sequence')->get();
+    
+        return view('picking_list_setting.index', [
             'title' => 'Picking List Product Sequence',
             'products' => $products,
             'pickingSequences' => $pickingSequences,
         ]);
     }
-
+    
     public function update(Request $request) {
 
         $columnOrder = $request->input('column_order');

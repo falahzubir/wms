@@ -48,12 +48,9 @@ class BucketBatchController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-     public function download_pl(BucketBatch $batch)
+    public function download_pl(BucketBatch $batch)
     {
-        // Fetch the picking sequence settings
         $pickingSequences = PickingSequence::whereNull('deleted_at')->orderBy('sequence')->pluck('product_id')->toArray();
-    
-        // Fetch orders and their items
         $orders = Order::with(['items', 'items.product'])->where('bucket_batch_id', $batch->id)->get();
     
         $products = [];
@@ -66,10 +63,10 @@ class BucketBatchController extends Controller
                     $products[$item->product_id] = [
                         'loose' => 0,
                         'box' => 0,
-                        'code' => $item->product->code // Using product->code for display
+                        'code' => $item->product->code
                     ];
                 }
-
+    
                 if ($order->items->sum('quantity') < BOX_MINIMUM_QUANTITY) {
                     $products[$item->product_id]['loose'] += $item->quantity;
                     $total_products['loose'] += $item->quantity;
@@ -89,21 +86,32 @@ class BucketBatchController extends Controller
         $arrangedProducts = [];
         foreach ($pickingSequences as $productId) {
             if (isset($products[$productId])) {
-                $arrangedProducts[$products[$productId]['code']] = $products[$productId];
+                if (isset($arrangedProducts[$products[$productId]['code']])) {
+                    $arrangedProducts[$products[$productId]['code']]['loose'] += $products[$productId]['loose'];
+                    $arrangedProducts[$products[$productId]['code']]['box'] += $products[$productId]['box'];
+                } else {
+                    $arrangedProducts[$products[$productId]['code']] = $products[$productId];
+                }
                 unset($products[$productId]);
             }
         }
+    
         // Add remaining products not in the picking sequence
         foreach ($products as $productId => $productData) {
-            $arrangedProducts[$productData['code']] = $productData;
+            if (isset($arrangedProducts[$productData['code']])) {
+                $arrangedProducts[$productData['code']]['loose'] += $productData['loose'];
+                $arrangedProducts[$productData['code']]['box'] += $productData['box'];
+            } else {
+                $arrangedProducts[$productData['code']] = $productData;
+            }
         }
     
         $response = Excel::download(new PickingListExport($arrangedProducts, $total_products, $total_parcels), 'picking_list_' . get_picking_batch($batch->id, '_') .'.csv', \Maatwebsite\Excel\Excel::CSV, [
-                    'Content-Type' => 'text/csv',
-                ]);
-                ob_end_clean();
-
-                return $response;
+            'Content-Type' => 'text/csv',
+        ]);
+        ob_end_clean();
+    
+        return $response;
     }
     
     

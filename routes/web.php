@@ -223,10 +223,11 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
     });
 
-     Route::prefix('picking_list_setting')->group(function() {
-     Route::get('/', [PickingListSettingController::class, 'index'])->name('picking_list_setting.index');
-     Route::post('/picking-list-setting/update', [PickingListSettingController::class, 'update'])->name('picking_sequence.update');
-    });
+        Route::prefix('picking_list_setting')->group(function() {
+        Route::get('/', [PickingListSettingController::class, 'index'])->name('picking_list_setting.index');
+        Route::post('/update', [PickingListSettingController::class, 'update'])->name('picking_sequence.update');
+        Route::get('/get', [PickingListSettingController::class, 'index'])->name('picking_sequence.get'); // AJAX endpoint
+    }); 
 
 });
 
