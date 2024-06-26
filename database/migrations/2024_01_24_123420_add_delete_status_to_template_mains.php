@@ -13,9 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('template_mains', function (Blueprint $table) {
-            $table->integer('delete_status')->default(0);
-        });
+        if (!Schema::hasColumn('template_mains', 'delete_status')) {
+            Schema::table('template_mains', function (Blueprint $table) {
+                $table->integer('delete_status')->default(0);
+            });
+        }
     }
 
     /**
