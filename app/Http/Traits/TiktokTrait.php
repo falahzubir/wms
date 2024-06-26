@@ -315,14 +315,14 @@ Trait TiktokTrait
             $fileContent = Http::get($fileUrl)->body();
 
             // Save the file to storage
-            $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['ordersn'] . '.pdf';
+            $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['order_id'] . '.pdf';
             $file_path = storage_path('app/public/' . $file_name);
 
             // file_put_contents($file_path, $fileContent);
             Storage::put('public/'.$file_name, $fileContent);
 
             // * convert pdf version to 1.4 using ghostscript
-            $new_file_name = 'tiktok/'.Carbon::now()->format('YmdHis').'_'.$params['ordersn'].'.pdf';
+            $new_file_name = 'tiktok/'.Carbon::now()->format('YmdHis').'_'.$params['order_id'].'.pdf';
             $new_file_path = storage_path('app/public/'.$new_file_name);
             $exec = 'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile='.$new_file_path.' '.$file_path;
             shell_exec($exec);
@@ -366,14 +366,14 @@ Trait TiktokTrait
             'app_key' => TIKTOK_APP_KEY,
             'timestamp' => $timestamp,
             'shop_id' => $shop_id,
-            'order_id' => $params['ordersn'],
+            'order_id' => $params['order_id'],
             'document_type' => 'SHIPPING_LABEL'
             // Include all the necessary parameters for signing
         ];
 
         $sign = self::getSign($info_sign, TIKTOK_APP_SECRET, $action);
 
-        $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&order_id='.$params['ordersn'].'&document_type=SHIPPING_LABEL';
+        $curl_url = $url.$action.'?'.'app_key='.TIKTOK_APP_KEY.'&access_token='.$token.'&sign='.$sign.'&timestamp='.$timestamp.'&shop_id='.$shop_id.'&order_id='.$params['order_id'].'&document_type=SHIPPING_LABEL';
 
         $response = Http::get("$curl_url");
 
@@ -390,11 +390,12 @@ Trait TiktokTrait
 
             // Download file from the provided URL
             $fileUrl = $response['data']['doc_url'];
-            $fileContent = file_get_contents($fileUrl);
+            // $fileContent = file_get_contents($fileUrl);
+            $fileContent = Http::get($fileUrl)->body();
 
 
             // Save the file to storage
-            $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['ordersn'] . '.pdf';
+            $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['order_id'] . '.pdf';
             $file_path = storage_path('app/public/' . $file_name);
 
             // file_put_contents($file_path, $fileContent);
@@ -412,7 +413,7 @@ Trait TiktokTrait
 
             return json_encode([
                 'code' => 500,
-                'message' => 'Failed to download file (2)'
+                'message' => json_encode($th)
             ]);
         }
 
