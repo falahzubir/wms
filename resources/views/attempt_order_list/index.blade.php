@@ -123,11 +123,11 @@
 
                                             {{-- Tracking Number --}}
                                             <div>
-                                                @if ($shipping->order->courier->code == 'dhl-ecommerce')
+                                                @if ($shipping->order->courier->code == 'dhl-ecommerce' || $shipping->order->courier->code == 'dhl')
                                                     <i class="bi bi-truck"></i>
                                                     <a class="text-success"
                                                         href="https://www.dhl.com/us-en/home/tracking/tracking-ecommerce.html?submit=1&tracking-id={{ $shipping->tracking_number }}">{{ $shipping->tracking_number }}</a>
-                                                @elseif ($shipping->order->courier->code == 'poslaju')
+                                                @elseif ($shipping->order->courier->code == 'poslaju' || $shipping->order->courier->code == 'posmalaysia')
                                                     <i class="bi bi-truck"></i>
                                                     <a class="text-success"
                                                         href="https://tracking.pos.com.my/tracking/{{ $shipping->tracking_number }}">{{ $shipping->tracking_number }}</a>
