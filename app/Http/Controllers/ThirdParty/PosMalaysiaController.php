@@ -503,7 +503,7 @@ class PosMalaysiaController extends ShippingController
 
     private function save_connote($request, $order, $shipping, $mult = false)
     {
-        $product_list = $this->generate_product_description($order->id);
+        // $product_list = $this->generate_product_description($order->id);
         $error = [];
         if(isset($request['pdf']) && $request['pdf'] != null){
 
@@ -551,7 +551,8 @@ class PosMalaysiaController extends ShippingController
                     }
                 }
                 // save path to shipping
-                $shipping->update(['attachment' => "pos_labels/".$fileName, 'packing_attachment' => $product_list]);
+                // $shipping->update(['attachment' => "pos_labels/".$fileName, 'packing_attachment' => $product_list]);
+                $shipping->update(['attachment' => "pos_labels/".$fileName]);
 
             } else {
                 // Handle the error, e.g., invalid base64 string

@@ -24,4 +24,9 @@ class Shipping extends Model
     {
         return $query->where('status', 1);
     }
+
+    public function events()
+    {
+        return $this->hasMany(ShippingEvent::class);
+    }
 }

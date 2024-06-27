@@ -1408,7 +1408,7 @@
                 }
             @endif
 
-            // download csv f1
+            // download csv
             @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
                 document.querySelector('#download-order-btn').onclick = function() {
 
