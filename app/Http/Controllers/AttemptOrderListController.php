@@ -135,27 +135,43 @@ class AttemptOrderListController extends Controller
                 if ($events->count() > 0) {
                     $firstEvent = $events->first();
                     $firstReason = $reasons->first();
-                    $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y');
-                    $firstAttemptDescription = $firstReason->description ?? '';
-                    $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstReason->attempt_time)->format('d/m/Y h:i A');
-
+                    
+                    // Ensure $firstReason is not null before accessing properties
+                    if (!is_null($firstReason)) {
+                        $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y') ?? '';
+                        $firstAttemptDescription = $firstReason->description ?? '';
+                        $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                    } else {
+                        $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y') ?? '';
+                        $firstAttemptDescription = $firstEvent->description ?? '';
+                        $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y h:i A') ?? '';
+                    }
+                    
                     if ($events->count() > 1) {
                         $secondEvent = $events->skip(1)->first();
                         $secondReason = $reasons->skip(1)->first();
-                        $secondAttemptDate = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y');
-                        $secondAttemptDescription = $secondReason->description ?? '';
-                        $secondAttemptDateAndTime = \Carbon\Carbon::parse($secondReason->attempt_time)->format('d/m/Y h:i A');
+                        
+                        // Ensure $secondReason is not null before accessing properties
+                        if (!is_null($secondReason)) {
+                            $secondAttemptDate = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y') ?? '';
+                            $secondAttemptDescription = $secondReason->description ?? '';
+                            $secondAttemptDateAndTime = \Carbon\Carbon::parse($secondReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                        }
 
                         if ($events->count() > 2) {
                             $thirdEvent = $events->skip(2)->first();
                             $thirdReason = $reasons->skip(2)->first();
-                            $thirdAttemptDate = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y');
-                            $thirdAttemptDescription = $thirdReason->description ?? '';
-                            $thirdAttemptDateAndTime = \Carbon\Carbon::parse($thirdReason->attempt_time)->format('d/m/Y h:i A');
+                            
+                            // Ensure $thirdReason is not null before accessing properties
+                            if (!is_null($thirdReason)) {
+                                $thirdAttemptDate = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y') ?? '';
+                                $thirdAttemptDescription = $thirdReason->description ?? '';
+                                $thirdAttemptDateAndTime = \Carbon\Carbon::parse($thirdReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                            }
                         }
                     }
                 }
-
+                
                 // Purchase Type
                 switch ($order->purchase_type) {
                     case '1':
