@@ -91,7 +91,7 @@
                                         <td class="text-start" style="width: 400px;">
                                             <input type="hidden" name="check_order" value="{{ $event->shipping->order->id }}">
 
-                                            <div><strong>{{ $event->shipping->order->customer->name }}</strong></div>
+                                            <div><strong>{{ $shipping->order->customer->name }}</strong></div>
                                             <div>
                                                 <p class="mb-0">{{ $event->shipping->order->customer->phone }}</p>
                                                 <p class="mb-0">{{ $event->shipping->order->customer->phone_2 }}</p>
