@@ -13,18 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('template_columns', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('column_position');
-            $table->timestamps();
-            $table->datetime('deleted_at')->nullable();
-            $table->unsignedBigInteger('template_main_id');
-            $table->unsignedBigInteger('column_main_id');
+        if (!Schema::hasTable('template_columns')) {
+            Schema::create('template_columns', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('column_position');
+                $table->timestamps();
+                $table->datetime('deleted_at')->nullable();
+                $table->unsignedBigInteger('template_main_id');
+                $table->unsignedBigInteger('column_main_id');
 
-            // Foreign key constraints
-            $table->foreign('template_main_id')->references('id')->on('template_mains')->onDelete('cascade');
-            $table->foreign('column_main_id')->references('id')->on('column_mains')->onDelete('cascade');
-        });
+                // Foreign key constraints
+                $table->foreign('template_main_id')->references('id')->on('template_mains')->onDelete('cascade');
+                $table->foreign('column_main_id')->references('id')->on('column_mains')->onDelete('cascade');
+            });
+        }
     }
 
     /**

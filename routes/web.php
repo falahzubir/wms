@@ -1,13 +1,15 @@
 <?php
 
-use App\Http\Controllers\AlternativePostcodeController;
 use App\Http\Controllers\AccessTokenController;
+use App\Http\Controllers\AlternativePostcodeController;
+use App\Http\Controllers\AttemptOrderListController;
 use App\Http\Controllers\BucketAutomationController;
 use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CourierController;
+use App\Http\Controllers\CustomTemplateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationalModelController;
@@ -18,13 +20,13 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\TemplateSettingController;
-use App\Http\Controllers\CustomTemplateController;
 use App\Http\Controllers\ShippingCostController;
+use App\Http\Controllers\UserController;
 use App\Models\Company;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +68,9 @@ Route::middleware(['auth'])->group(function() {
         Route::post('change-postcode', [OrderController::class, 'change_postcode'])->name('orders.change_postcode');
         Route::get('bucket-batch/{batch}', [OrderController::class, 'bucket_batch'])->name('orders.bucket_batch');
         Route::get('/get_template_main', [OrderController::class, 'get_template_main']);
+        Route::get('/attempt-order-list', [AttemptOrderListController::class, 'index'])->name('attempt_order_list');
+        Route::post('/attempt-order-list/filter', [AttemptOrderListController::class, 'filter'])->name('attempt_order_list.filter');
+        Route::get('/download-csv', [AttemptOrderListController::class, 'downloadCSV'])->name('download_csv'); // This only for Attempt Order List
         Route::get('/test', [OrderController::class, 'test']);
     });
 
