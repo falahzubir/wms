@@ -893,21 +893,19 @@ class ShippingController extends Controller
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
 
-        set_shipping_events($request->shipping_id, $request->attempt_status, $request->description, $request->attempt_time);
-
         if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "First Milestone from Phantom")) {
             return response()->json(['success' => 'ok']);
         } else {
-            return response()->json(['error' => 'error']);
+            return response()->json(['error' => 'Failed to update order status'], 500);
         }
     }
 
     /**
-     * Update order to shipping on delivered milestone.
+     * Update shipping_events and order_logs.
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function delivered_milestone(Request $request)
+    public function attempt_order_list(Request $request)
     {
         $request->validate([
             'tracking_id' => 'required|exists:shippings,tracking_number',
@@ -920,7 +918,7 @@ class ShippingController extends Controller
 
         if ($shipping) {
             if (set_shipping_events($shipping->id, $request->attempt_status, $request->description, $request->attempt_time)) {
-                if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
+                if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "Attempt Order List")) {
                     return response()->json(['success' => 'ok']);
                 } else {
                     return response()->json(['error' => 'Failed to update order status'], 500);
@@ -930,6 +928,26 @@ class ShippingController extends Controller
             }
         } else {
             return response()->json(['error' => 'Shipping not found'], 404);
+        }
+    }
+
+    /**
+     * Update order to shipping on delivered milestone.
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function delivered_milestone(Request $request)
+    {
+        $request->validate([
+            'tracking_id' => 'required|exists:shippings,tracking_number',
+        ]);
+
+        $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
+        
+        if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
+            return response()->json(['success' => 'ok']);
+        } else {
+            return response()->json(['error' => 'Failed to update order status'], 500);
         }
     }
 
