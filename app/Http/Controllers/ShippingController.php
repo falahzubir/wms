@@ -26,6 +26,11 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\ShippingDocumentTemplate;
 use Karriere\PdfMerge\PdfMerge as PDFMerger;
 use App\Http\Controllers\api\ShippingApiController;
+use App\Models\Product;
+use App\Models\ShippingCost;
+use App\Models\ShippingProduct;
+use App\Models\GroupStateList;
+use App\Models\WeightCategory;
 
 class ShippingController extends Controller
 {
@@ -237,6 +242,8 @@ class ShippingController extends Controller
 
             foreach ($orders_dhl as $order) {
 
+                //calculate total weight product
+                $shipping_cost_id = $this->get_shipping_cost_id($order);
                 $package_description = "";
                 foreach ($order->items as $items) {
                     $package_description .= $items->product->name . ", ";
@@ -319,7 +326,7 @@ class ShippingController extends Controller
 
             $response = Http::withBody($json, 'application/json')->post($url);
 
-            $dhl_store = $this->dhl_store($orders_dhl, $response);
+            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost_id);
 
             if ($dhl_store != null) {
 
@@ -506,7 +513,7 @@ class ShippingController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function dhl_store($orders, $json)
+    public function dhl_store($orders, $json, $shipping_cost_id = null)
     {
         $data = [];
         $tracking_no[] = [];
@@ -559,6 +566,11 @@ class ShippingController extends Controller
             $data[$order->id]['shipment_number'] = shipment_num_format($order);
             $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
             $data[$order->id]['attachment'] = 'labels/' . shipment_num_format($order) . '.pdf';
+            if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+            {
+                $data[$order->id]['total_weight'] = $shipping_cost_id['total_weight'];
+                $data[$order->id]['shipping_cost_id'] = $shipping_cost_id['shipping_cost_id'];
+            }
             // $data[$order->id]['packing_attachment'] = $product_list;
             //store label to storage
             Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($content[shipment_num_format($order)]));
@@ -566,6 +578,9 @@ class ShippingController extends Controller
         }
 
         Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+
+        //insert product_shipping
+        $this->store_shipping_products($orders);
     }
 
     /**
@@ -2098,6 +2113,70 @@ class ShippingController extends Controller
             'message' => $message,
             'data' => $CNS ?? ''
         ], 200);
+    }
+
+    public function get_shipping_cost_id($order)
+    {
+        $courier_id = $order->courier_id;
+        $state_id = $order->customer->state;
+        $product_weight = 0;
+        foreach($order->items as $item)
+        {
+            $weight = Product::where('id', $item['product_id'])->first()->weight;
+
+            $product_weight += $item['quantity'] * $weight;
+        }
+        $weight_category_id = WeightCategory::where('min_weight', '<=', $product_weight)->where('max_weight', '>=', $product_weight)->first()->id;
+        $state_group_id = GroupStateList::where('state_id', $state_id)->first()->state_group_id;
+
+        //get shipping cost
+        $shipping_cost = ShippingCost::when(isset($weight_category_id), function($query) use ($weight_category_id) {
+            return $query->where('weight_category_id', $weight_category_id);
+        })
+        ->when(isset($courier_id), function($query) use ($courier_id) {
+            return $query->where('courier_id', $courier_id);
+        })
+        ->when(isset($state_group_id), function($query) use ($state_group_id) {
+            return $query->where('state_group_id', $state_group_id);
+        })
+        ->first();
+
+        if($shipping_cost)
+        {
+            $shipping_cost_data['total_weight'] = $product_weight;
+            $shipping_cost_data['shipping_cost_id'] = $shipping_cost->id;
+            return $shipping_cost_data;
+        }
+        return false;
+
+    }
+
+    public function store_shipping_products($orders)
+    {
+        $shipping_products = [];
+
+        foreach($orders as $order)
+        {
+            //get shipping id
+            $shipping_id = Shipping::where('order_id', $order->id)->first()->id;
+
+            if(isset($shipping_id) && !empty($shipping_id))
+            {
+                //delete old shipping products
+                ShippingProduct::where('shipping_id', $shipping_id)->delete();
+                foreach($order->items as $item)
+                {
+                    $shipping_products[] = [
+                        'shipping_id' => $shipping_id,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ];
+                }
+            }
+        }
+        ShippingProduct::insert($shipping_products);
     }
 
 }
