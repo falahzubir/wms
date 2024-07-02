@@ -15,6 +15,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationalModelController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PickingListSettingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
@@ -227,6 +228,12 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
     });
 
+        Route::prefix('picking_list_setting')->group(function() {
+        Route::get('/', [PickingListSettingController::class, 'index'])->name('picking_list_setting.index');
+        Route::post('/update', [PickingListSettingController::class, 'update'])->name('picking_sequence.update');
+        Route::get('/get', [PickingListSettingController::class, 'index'])->name('picking_sequence.get'); // AJAX endpoint
+    }); 
+
 });
 
     Route::get("sdd_template",[SettingsController::class,'sdd_template_view']);
@@ -249,6 +256,12 @@ Route::middleware(['auth', 'role:admin'])->group(function() {
 
 //migration for dev purpose only
 Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
+    //is environment not production
+    if (\Illuminate\Support\Facades\App::environment(['local', 'staging'])) {
+        Route::get('info', function () {
+            return phpinfo();
+        });
+    }
     Route::get('run-migration', function () {
         // if(config('app.env')=="local"){
             Artisan::call('migrate', ['--force' => true]);

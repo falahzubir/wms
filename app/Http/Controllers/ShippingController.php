@@ -1885,8 +1885,12 @@ class ShippingController extends Controller
                         continue;
                     }
 
+                    //run back to get tracking number
+                    $order_details = TiktokTrait::getOrderDetails($additional_data);
+                    $detailsJson = json_decode($order_details, true);
+
                     $additional_data = json_encode([
-                        'ordersn' => $order->third_party_sn,
+                        'order_id' => $order->third_party_sn,
                         'shop_id' => $additional_data['shop_id'],
                         'package_number' => $detailsJson['data']['order_list'][0]['package_list'][0]['package_id'],
                         'tracking_no' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number']
@@ -1908,8 +1912,12 @@ class ShippingController extends Controller
                 }
                 else
                 {
+                    //run back to get tracking number
+                    $order_details = TiktokTrait::getOrderDetails($additional_data);
+                    $detailsJson = json_decode($order_details, true);
+
                     $additional_data = json_encode([
-                        'ordersn' => $order->third_party_sn,
+                        'order_id' => $order->third_party_sn,
                         'shop_id' => $additional_data['shop_id'],
                         'package_number' => $detailsJson['data']['order_list'][0]['package_list'][0]['package_id'],
                         'tracking_no' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number']
