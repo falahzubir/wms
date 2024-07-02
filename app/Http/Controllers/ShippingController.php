@@ -466,7 +466,7 @@ class ShippingController extends Controller
         ];
 
         // all parcel pieces
-        $remainCodAmmount = $order->purchase_type == 1 ? $order->total_price / 100 : null;
+        $remainCodAmmount = $order->purchase_type == 1 ? $order->total_price : null;
         foreach ($arr_data as $key => $cn) {
             $product_list[] = $this->generate_multiple_product_description($cn);
             $codAmmount = ($remainCodAmmount > MAX_DHL_COD_PER_PARCEL) ? MAX_DHL_COD_PER_PARCEL : $remainCodAmmount;
@@ -476,7 +476,7 @@ class ShippingController extends Controller
                     'weight' => get_order_weight($order, $cn),
                     'unit' => 'G'
                 ],
-                'codAmount' => $codAmmount == 0 ? null : $codAmmount,
+                'codAmount' => $codAmmount == 0 ? null : $codAmmount/100,
             ];
             $remainCodAmmount -= $codAmmount;
         }
