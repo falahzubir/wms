@@ -56,6 +56,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view.settings']);
         Permission::firstOrCreate(['name' => 'view.dashboard']);
         Permission::firstOrCreate(['name' => 'view.setting_bucket_automation']);
+        Permission::firstOrCreate(['name' => 'view.attempt_order_list']);
 
         //product permission
         Permission::firstOrCreate(['name' => 'product.list']);
@@ -79,6 +80,8 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view.shipping_doc_information']);
         Permission::firstOrCreate(['name' => 'view.courier_setting']);
         Permission::firstOrCreate(['name' => 'view.selected_coverage']);
+
+        Permission::firstOrCreate(['name' => 'view.picking_list_setting']);
 
         // create roles and assign created permissions
         $role = Role::firstOrCreate(['name' => 'IT_Admin']);

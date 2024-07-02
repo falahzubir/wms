@@ -73,6 +73,16 @@
             </li><!-- End Shipping List Nav -->
         @endcan
 
+        @can('view.attempt_order_list')
+            <li class="nav-item">
+                <a class="nav-link {{ Route::current()->getName() != 'attempt_order_list' ? 'collapsed' : '' }}"
+                    href="{{ route('attempt_order_list') }}">
+                    <i class="bi bi-journal-text"></i>
+                    <span>Attempt Order List</span>
+                </a>
+            </li><!-- End Attempt Order List Nav -->
+        @endcan
+
         @can('view.delivered_list')
             <li class="nav-item">
                 <a class="nav-link {{ Route::current()->getName() != 'orders.delivered' ? 'collapsed' : '' }}"
@@ -393,6 +403,14 @@
                             </ul>
                         @endcan
                     </li>
+                    @can('view.picking_list_setting')
+                    <li>
+                        <a href="{{ route('picking_list_setting.index') }}"
+                            {{ Route::current()->getName() == 'picking_list_setting.index' ? 'class=active' : '' }}>
+                            <i class="bi bi-circle"></i><span>Picking List Product Sequence</span>
+                        </a>
+                    </li>
+                @endcan
                 </ul>
             </li><!-- End Components Nav -->
         @endcan

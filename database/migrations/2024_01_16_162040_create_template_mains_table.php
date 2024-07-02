@@ -13,14 +13,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('template_mains', function (Blueprint $table) {
-            $table->id();
-            $table->string('template_name', 100);
-            $table->text('template_type');
-            $table->text('template_header');
-            $table->timestamps();
-            $table->datetime('deleted_at')->nullable();
-        });
+        if (!Schema::hasTable('template_mains')) {
+            Schema::create('template_mains', function (Blueprint $table) {
+                $table->id();
+                $table->string('template_name', 100);
+                $table->text('template_type');
+                $table->text('template_header');
+                $table->timestamps();
+                $table->datetime('deleted_at')->nullable();
+            });
+        }
     }
 
     /**
