@@ -240,10 +240,17 @@ class ShippingController extends Controller
                 $order_count[$company_id] = 0;
             }
 
+            $shipping_cost = [];
             foreach ($orders_dhl as $order) {
 
                 //calculate total weight product
                 $shipping_cost_id = $this->get_shipping_cost_id($order);
+                $shipping_cost[$order->id]['total_weight'] = 0;
+                $shipping_cost[$order->id]['shipping_cost_id'] = null;
+                if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+                {
+                    $shipping_cost[$order->id] = $shipping_cost_id;
+                }
                 $package_description = "";
                 foreach ($order->items as $items) {
                     $package_description .= $items->product->name . ", ";
@@ -325,8 +332,7 @@ class ShippingController extends Controller
             $json = json_encode($data);
 
             $response = Http::withBody($json, 'application/json')->post($url);
-
-            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost_id);
+            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost);
 
             if ($dhl_store != null) {
 
@@ -513,7 +519,7 @@ class ShippingController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function dhl_store($orders, $json, $shipping_cost_id = null)
+    public function dhl_store($orders, $json, $shipping_cost)
     {
         $data = [];
         $tracking_no[] = [];
@@ -566,11 +572,8 @@ class ShippingController extends Controller
             $data[$order->id]['shipment_number'] = shipment_num_format($order);
             $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
             $data[$order->id]['attachment'] = 'labels/' . shipment_num_format($order) . '.pdf';
-            if (isset($shipping_cost_id) && $shipping_cost_id !== false)
-            {
-                $data[$order->id]['total_weight'] = $shipping_cost_id['total_weight'];
-                $data[$order->id]['shipping_cost_id'] = $shipping_cost_id['shipping_cost_id'];
-            }
+            $data[$order->id]['total_weight'] = $shipping_cost[$order->id]['total_weight'];
+            $data[$order->id]['shipping_cost_id'] = $shipping_cost[$order->id]['shipping_cost_id'];
             // $data[$order->id]['packing_attachment'] = $product_list;
             //store label to storage
             Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($content[shipment_num_format($order)]));
@@ -2126,22 +2129,18 @@ class ShippingController extends Controller
 
             $product_weight += $item['quantity'] * $weight;
         }
-        $weight_category_id = WeightCategory::where('min_weight', '<=', $product_weight)->where('max_weight', '>=', $product_weight)->first()->id;
-        $state_group_id = GroupStateList::where('state_id', $state_id)->first()->state_group_id;
+        $weight_category = WeightCategory::where('min_weight', '<=', $product_weight)->where('max_weight', '>=', $product_weight)->first();
+        $state_group = GroupStateList::where('state_id', $state_id)->first();
 
         //get shipping cost
-        $shipping_cost = ShippingCost::when(isset($weight_category_id), function($query) use ($weight_category_id) {
-            return $query->where('weight_category_id', $weight_category_id);
-        })
-        ->when(isset($courier_id), function($query) use ($courier_id) {
-            return $query->where('courier_id', $courier_id);
-        })
-        ->when(isset($state_group_id), function($query) use ($state_group_id) {
-            return $query->where('state_group_id', $state_group_id);
-        })
-        ->first();
+        if ($weight_category && $courier_id && $state_group) {
+            $shipping_cost = ShippingCost::where('weight_category_id', $weight_category->id)
+            ->where('courier_id', $courier_id)
+            ->where('state_group_id', $state_group->state_group_id)
+            ->first();
+        }
 
-        if($shipping_cost)
+        if(isset($shipping_cost))
         {
             $shipping_cost_data['total_weight'] = $product_weight;
             $shipping_cost_data['shipping_cost_id'] = $shipping_cost->id;
