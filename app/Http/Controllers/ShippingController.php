@@ -2075,6 +2075,19 @@ class ShippingController extends Controller
             $generateCN = EmziExpressTrait::generateCN($accessToken->token, $jsonSend);
             if(isset($generateCN['shipmentItems'][0]['trackingNumber']) && isset($generateCN['shipmentItems'][0]['labels']))
             {
+
+                //calculate total weight product
+                $shipping_cost_id = $this->get_shipping_cost_id($order);
+                $shipping_cost_data['total_weight'] = 0;
+                $shipping_cost_data['shipping_cost_id'] = null;
+                if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+                {
+                    $shipping_cost_data['total_weight'] = $shipping_cost_id['total_weight'];
+                    $shipping_cost_data['shipping_cost_id'] = $shipping_cost_id['shipping_cost_id'];
+                }
+
+                $shipping->total_weight = $shipping_cost_data['total_weight'];
+                $shipping->shipping_cost_id = $shipping_cost_data['shipping_cost_id'];
                 $shipping->tracking_number = $generateCN['shipmentItems'][0]['trackingNumber'] ?? '';
                 $shipping->attachment = 'labels/' . shipment_num_format($order) . '.pdf';
                 $shipping->packing_attachment = $product_list;
@@ -2091,6 +2104,9 @@ class ShippingController extends Controller
             }
 
         }
+
+        //store shipping products
+        $this->store_shipping_products($order_ex);
 
         if(count($CNS) > 0)
         {

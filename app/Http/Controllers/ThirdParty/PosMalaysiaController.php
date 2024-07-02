@@ -189,6 +189,9 @@ class PosMalaysiaController extends ShippingController
             if($order->purchase_type == PURCHASE_TYPE_COD && $order->total_price == 0){
                 $order->purchase_type = PURCHASE_TYPE_PAID;
             }
+
+            //calculate total weight product
+            $shipping_cost_id = $this->get_shipping_cost_id($order);
             foreach($order->shippings as $shipping){
                 $json_data = [
                     'subscriptionCode' => $order->company->posmalaysia_subscribtion_code,
@@ -253,57 +256,15 @@ class PosMalaysiaController extends ShippingController
 
                 $request = Http::withToken($bearer->token, 'Bearer')->post($this->posmalaysia_download_connote, $json_data)->json();
 
-                $save = $this->save_connote($request, $order, $shipping);
+                $save = $this->save_connote($request, $order, $shipping, false, $shipping_cost_id);
 
                 if($save !== true){
                     $error[] = $save;
                 }
-                // if(isset($request['pdf']) && $request['pdf'] != null){
-
-                //     $context = stream_context_create([
-                //         'http' => [
-                //             'user_agent' => 'GuzzleHttp/7',
-                //         ],
-                //     ]);
-
-                //     // URL of the file you want to download
-                //     $fileUrl = $request['pdf'];
-
-                //     // Get the file content
-                //     $fileContent = file_get_contents($fileUrl, false, $context);
-
-                //     if ($fileContent !== false) {
-                //         // echo base64_encode($fileContent);
-                //         // Specify the file name with the .pdf extension
-                //         $fileName = shipment_num_format($order) . '.pdf';
-                //         $filePath = storage_path('app/public/pos_labels/' . $fileName);
-
-                //         // Set the appropriate headers for a PDF file
-                //         header('Content-Type: application/pdf');
-                //         header('Content-Disposition: attachment; filename="' . $fileName . '"');
-
-                //         //create folder if not exist
-                //         if (!file_exists(storage_path('app/public/pos_labels'))) {
-                //             mkdir(storage_path('app/public/pos_labels'), 0777, true);
-                //         }
-
-                //         // Save the file
-                //         file_put_contents($filePath, $fileContent);
-
-                //         // save path to shipping
-                //         $shipping->update(['attachment' => "pos_labels/".$fileName]);
-                //         set_order_status($order, ORDER_STATUS_PACKING, 'Connote downloaded successfully', auth()->user()->id ?? 1);
-
-                //     } else {
-                //         // Handle the error, e.g., invalid base64 string
-                //         $error[] = 'Error decoding the base64 content.';
-                //     }
-                // }
-                // else{
-                //     $error[] = 'Error downloading the connote.';
-                // }
             }
         }
+        //insert product_shipping
+        $this->store_shipping_products($orders_pos);
 
         if(count($error) > 0){
             return response([
@@ -501,7 +462,7 @@ class PosMalaysiaController extends ShippingController
 
     }
 
-    private function save_connote($request, $order, $shipping, $mult = false)
+    private function save_connote($request, $order, $shipping, $mult = false, $shipping_cost_id)
     {
         // $product_list = $this->generate_product_description($order->id);
         $error = [];
@@ -552,7 +513,14 @@ class PosMalaysiaController extends ShippingController
                 }
                 // save path to shipping
                 // $shipping->update(['attachment' => "pos_labels/".$fileName, 'packing_attachment' => $product_list]);
-                $shipping->update(['attachment' => "pos_labels/".$fileName]);
+                $shipping_cost['total_weight'] = 0;
+                $shipping_cost['shipping_cost_id'] = null;
+                if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+                {
+                    $shipping_cost['total_weight'] = $shipping_cost_id['total_weight'];
+                    $shipping_cost['shipping_cost_id'] = $shipping_cost_id['shipping_cost_id'];
+                }
+                $shipping->update(['attachment' => "pos_labels/".$fileName,  'total_weight' => $shipping_cost['total_weight'], 'shipping_cost_id' => $shipping_cost['shipping_cost_id']]);
 
             } else {
                 // Handle the error, e.g., invalid base64 string
