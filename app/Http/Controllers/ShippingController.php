@@ -356,11 +356,11 @@ class ShippingController extends Controller
      * @request $order
      * @return $response
      */
-    public function dhl_label_single(Request $request)
+    public function dhl_label_single($order_id, $arr_data)
     {
         $order = Order::with([
             'customer', 'items', 'items.product', 'company', 'company.access_tokens'
-        ])->where('id', $request->order_id)->where('courier_id', DHL_ID)->first();
+        ])->where('id', $order_id)->where('courier_id', DHL_ID)->first();
 
         if (!$order) {
             return response()->json([
@@ -370,33 +370,23 @@ class ShippingController extends Controller
         }
 
         $url = $this->dhl_label_url;
-        //check first token expiry date
+
         $shipingApiController = new ShippingApiController();
         $access_token = $shipingApiController->checkExpiryTokenDHL([$order->company_id]);
 
-        // $access_token = AccessToken::with(['company'])->where('company_id', $order->company_id)->where('type', 'dhl')->first();
+        $remainCodAmmount = $order->purchase_type == 1 ? $order->total_price / 100 : null;
 
-        $total_price = $order->total_price > 0 ? $order->total_price / 100 : null;
-        $second_phone_num = '';
-        if ($order->company_id == 2) {
-            //If secondary phone number existed
-            if ($order->customer->phone_2 != null) {
-                $second_phone_num = $order->customer->phone_2 . "(HQ NO: 60122843214)";
-            }
-            //if not existed
-            else {
-                $second_phone_num = "(HQ NO: 60122843214)";
-            }
-        } else {
-            //If secondary phone number existed
-            if ($order->customer->phone_2 != null) {
-                $second_phone_num = $order->customer->phone_2 . '(PIC:' . $order->sold_by . ')';
-            }
-            //if not existed
-            else {
-                $second_phone_num = '(PIC:' . $order->sold_by . ')';
-            }
+        if(count($arr_data) > 1) {
+            $mult = "true";
         }
+        else{
+            $mult = "false";
+        }
+
+        $company_name = ($order->operational_model_id == OP_BLAST_ID && $mult) ? "EMZI BLAST" : $access_token->company->name;
+        $pickup_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_pickup_account_blast : $access_token->additional_data->dhl_pickup_account;
+        $soldto_account = ($order->operational_model_id == OP_BLAST_ID && $mult) ? $access_token->additional_data->dhl_sold_to_account_blast : $access_token->additional_data->dhl_sold_to_account;
+
         $data = [
             'labelRequest' => [
                 'hdr' => [
@@ -410,12 +400,11 @@ class ShippingController extends Controller
                     'shipmentItems' =>  [
                         0 => [
                             'consigneeAddress' => [
-                                'companyName' => get_shipping_remarks($order),
+                                // 'companyName' => get_shipping_remarks($order),
                                 'name' => $order->customer->name,
                                 'address1' => $order->customer->address,
                                 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
-                                // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
-                                'address3' => $second_phone_num,
+                                'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
                                 'city' => $order->customer->city,
                                 'state' => MY_STATES[$order->customer->state],
                                 'country' => "MY",
@@ -426,7 +415,7 @@ class ShippingController extends Controller
                                 'idNumber' => null,
                                 'idType' => null,
                             ],
-                            'shipmentID' => shipment_num_format($order, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
+                            'shipmentID' => shipment_num_format($order), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
                             'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
                             'deliveryConfirmationNo' => null, //not used
                             'packageDesc' => substr($this->package_description($order), 0, 50), // required
@@ -440,22 +429,22 @@ class ShippingController extends Controller
                             'customerReference2' => null, //optional
                             'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
                             'contentIndicator' => null, //mandatory if product include lithium battery
-                            'codValue' => $order->purchase_type == 1 ? $total_price : null, //optional
+                            'codValue' => $codAmmount = $order->purchase_type == 1 ? $order->total_price / 100 : null, //optional
                             'insuranceValue' => null, //optional
                             'freightCharge' => null, //optional
                             'totalValue' => null, //optional for domestic
                             'currency' => "MYR", //3-char currency code
                             'remarks' => get_shipping_remarks($order), //optional
                             'deliveryOption' => "C", //only C is supported
-                            'isMult' => "true", //true: multiple pieces, false: single piece
+                            'isMult' => $mult, //true: multiple pieces, false: single piece
                         ],
                     ],
-                    'pickupAccountId' => $access_token->additional_data->dhl_pickup_account, //mandatory
-                    'soldToAccountId' => $access_token->additional_data->dhl_sold_to_account, //mandatory
+                    'pickupAccountId' => $pickup_account, //mandatory
+                    'soldToAccountId' => $soldto_account, //mandatory
                     'inlineLabelReturn' => "Y", //mandatory
                     'handoverMethod' => 1, //optional - 01 for drop off, 02 for pickup
                     'pickupAddress' => [
-                        'name' => substr($access_token->company->contact_person, 0, 50), //mandatory contact person name
+                        'name' => substr($company_name, 0, 50), //mandatory contact person name
                         'address1' => $access_token->company->address, //mandatory company name
                         'address2' => $access_token->company->address2 ?? null, //optional
                         'address3' => $access_token->company->address3 ?? null, //optional
@@ -477,16 +466,17 @@ class ShippingController extends Controller
         ];
 
         // all parcel pieces
-        $remainCodAmmount = $order->purchase_type == 1 ? $order->total_price / 100 : null;
-        for ($i = 0; $i < $request->parcel_count; $i++) {
+        $remainCodAmmount = $order->purchase_type == 1 ? $order->total_price : null;
+        foreach ($arr_data as $key => $cn) {
+            $product_list[] = $this->generate_multiple_product_description($cn);
             $codAmmount = ($remainCodAmmount > MAX_DHL_COD_PER_PARCEL) ? MAX_DHL_COD_PER_PARCEL : $remainCodAmmount;
-            $data['labelRequest']['bd']['shipmentItems'][0]['shipmentPieces'][$i] = [
-                'pieceID' => $i + 1,
+            $data['labelRequest']['bd']['shipmentItems'][0]['shipmentPieces'][$key] = [
+                'pieceID' => $key + 1,
                 'announcedWeight' => [
-                    'weight' => round($request->parcel_weight * 1000),
+                    'weight' => get_order_weight($order, $cn),
                     'unit' => 'G'
                 ],
-                'codAmount' => $codAmmount == 0 ? null : $codAmmount,
+                'codAmount' => $codAmmount == 0 ? null : $codAmmount/100,
             ];
             $remainCodAmmount -= $codAmmount;
         }
@@ -494,9 +484,12 @@ class ShippingController extends Controller
         $data = json_encode($data);
 
         $response = Http::withBody($data, 'application/json')->post($url);
-        $this->dhl_store_single($order, $response);
+        $this->dhl_store_single($order, $response, $product_list);
 
-        return true;
+        return response([
+            'status' => 'success',
+            'message' => 'CN generated successfully',
+        ]);
     }
 
     /**
@@ -574,7 +567,7 @@ class ShippingController extends Controller
      * @param  object $order, $json
      * @return \Illuminate\Http\Response
      */
-    public function dhl_store_single($order, $json)
+    public function dhl_store_single($order, $json, $product_descs)
     {
         $json = json_decode($json);
         $shipment_num = $json->labelResponse->bd->labels[0]->shipmentID;
@@ -586,13 +579,16 @@ class ShippingController extends Controller
             $data[$i]['shipment_number'] = $shipment_num . '-' . $piece->shipmentPieceID;
             $data[$i]['created_by'] = auth()->user()->id ?? 1;
             $data[$i]['attachment'] = 'labels/' . $shipment_num . '-' . $piece->shipmentPieceID . '.pdf';
+            $data[$i]['packing_attachment'] = $product_descs[$i];
             // store label to storage
+            if (Storage::exists('public/labels/' . $shipment_num . '-' . $piece->shipmentPieceID . '.pdf')) {
+                Storage::delete('public/labels/' . $shipment_num . '-' . $piece->shipmentPieceID . '.pdf');
+            }
             Storage::put('public/labels/' . $shipment_num . '-' . $piece->shipmentPieceID . '.pdf', base64_decode($piece->content));
             $i++;
         }
-        set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL, multiple parcel");
-
         Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+        set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL, multiple parcel");
     }
 
     public function download_cn(Request $request)
@@ -1034,7 +1030,7 @@ class ShippingController extends Controller
 
         // for now support only dhl-ecommerce and posmalaysia
         if($request->input('courier_id') == DHL_ID){
-            return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+            return $this->dhl_label_single($order_id, $array_data); // for dhl orders
         }
         elseif($request->input('courier_id') == POSMALAYSIA_ID){
             $posmalaysia = new \App\Http\Controllers\ThirdParty\PosMalaysiaController();
