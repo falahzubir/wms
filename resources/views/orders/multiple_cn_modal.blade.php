@@ -82,14 +82,16 @@
             return;
         }
 
-        if(_order.total_price > {{ MAX_DHL_COD_PER_PARCEL}}){
-            Swal.fire({
-                title: 'Error!',
-                text: 'DHL COD amount exceed limit',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            })
-            return;
+        if(_order.purchase_type == {{ PURCHASE_TYPE_COD }} && _order.courier_id == {{ DHL_ID }}){
+            if(_order.total_price > {{ MAX_DHL_COD_PER_PARCEL}}){
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'DHL COD amount exceed limit',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                })
+                return;
+            }
         }
         const myModal = new bootstrap.Modal('#multiple-cn-modal', {
             backdrop: 'static',
