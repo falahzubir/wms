@@ -294,6 +294,7 @@
             let weightCategories = @json($weightCategories);
             document.querySelectorAll('.tomsel').forEach((el) => {
                 let settings = {
+                    maxOptions: 500,
                     plugins: {
                         remove_button: {
                             title: 'Remove this item',
