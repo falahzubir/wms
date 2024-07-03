@@ -327,16 +327,31 @@ class PosMalaysiaController extends ShippingController
             $connote_array = explode('|', $gen_connote['ConnoteNo']);
 
             foreach($data as $key => $value){
-                $shippings[] = [
+
+                //calculate total weight product
+                $total_weight = 0;
+                $shipping_cost_id = null;
+                $shipping_cost_data[$key] = $this->get_shipping_cost_multiple($order, $value);
+                if (isset($shipping_cost_data[$key]) && $shipping_cost_data[$key] !== false)
+                {
+                    $total_weight = $shipping_cost_data[$key]['total_weight'];
+                    $shipping_cost_id = $shipping_cost_data[$key]['shipping_cost_id'];
+                }
+                $shippings = [
                     'order_id' => $order->id,
                     'tracking_number' => $connote_array[$key],
                     'shipment_number' => shipment_num_format_mult($order, $key),
                     'courier' => 'posmalaysia',
                     'created_by' => auth()->user()->id ?? 1,
+                    'total_weight' => $total_weight,
+                    'shipping_cost_id' => $shipping_cost_id,
                 ];
-            }
 
-            Shipping::insert($shippings);
+                Shipping::create($shippings);
+
+                //insert product_shipping
+                $this->store_shipping_products_multiple($order, $value);
+            }
         }
         else{
             $connote_array = $order->shippings->pluck('tracking_number')->toArray();
@@ -441,7 +456,7 @@ class PosMalaysiaController extends ShippingController
         // dd($shipping);
         $request = Http::withToken($bearer->token, 'Bearer')->post($this->posmalaysia_download_connote, $json_data)->json();
 
-        $save = $this->save_connote($request, $order, $shipping, true);
+        $save = $this->save_connote($request, $order, $shipping, true, false); #false cause when mutliple, shipping cost is not calculated on below
 
         if($save !== true){
             $error[] = $save;
@@ -519,8 +534,10 @@ class PosMalaysiaController extends ShippingController
                 {
                     $shipping_cost['total_weight'] = $shipping_cost_id['total_weight'];
                     $shipping_cost['shipping_cost_id'] = $shipping_cost_id['shipping_cost_id'];
+                    $shipping->update(['attachment' => "pos_labels/".$fileName,  'total_weight' => $shipping_cost['total_weight'], 'shipping_cost_id' => $shipping_cost['shipping_cost_id']]);
+                }else{
+                    $shipping->update(['attachment' => "pos_labels/".$fileName]);
                 }
-                $shipping->update(['attachment' => "pos_labels/".$fileName,  'total_weight' => $shipping_cost['total_weight'], 'shipping_cost_id' => $shipping_cost['shipping_cost_id']]);
 
             } else {
                 // Handle the error, e.g., invalid base64 string
