@@ -403,6 +403,36 @@
                             </ul>
                         @endcan
                     </li>
+
+                    @can('shipping_cost.view')
+                    <li>
+                        <a class="nav-link collapsed" data-bs-target="#components-nav-shipping-cost" data-bs-toggle="collapse" href="#">
+                            <i class="bi bi-circle"></i>
+                            <span>Shipping Cost</span><i class="bi bi-chevron-down ms-auto"></i>
+                        </a>
+                        <ul id="components-nav-shipping-cost" class=" {{ Route::current()->getName() != 'state_group.list' ? 'collapsed' : '' }} ">
+                            @can('state_group.list')
+                                <li>
+                                    <a class="{{ Route::current()->getName() != 'state_group.list' ? 'collapsed' : '' }}"
+                                        href="{{ route('state_group.list') }}">
+                                        <i class="bi bi-circle"></i>
+                                        <span>State Group List</span>
+                                    </a>
+                                </li>
+                            @endcan
+                            @can('weight_category.list')
+                                <li>
+                                    <a class=" {{ Route::current()->getName() != 'weight-category.list' ? 'collapsed' : '' }}"
+                                        href="{{ route('weight-category.list') }}">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Weight Category List</span>
+                                    </a>
+                                </li>
+                            @endcan
+                        </ul>
+                    </li><!-- End Components Nav -->
+                    @endcan
+
                     @can('view.picking_list_setting')
                     <li>
                         <a href="{{ route('picking_list_setting.index') }}"
@@ -410,11 +440,10 @@
                             <i class="bi bi-circle"></i><span>Picking List Product Sequence</span>
                         </a>
                     </li>
-                @endcan
+                    @endcan
                 </ul>
             </li><!-- End Components Nav -->
         @endcan
-
         {{-- <li class="nav-item">
             <a class="nav-link collapsed" href="users-profile.html">
                 <i class="bi bi-person"></i>

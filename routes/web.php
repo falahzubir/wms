@@ -22,6 +22,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\TemplateSettingController;
+use App\Http\Controllers\ShippingCostController;
 use App\Http\Controllers\UserController;
 use App\Models\Company;
 use App\Models\Setting;
@@ -209,6 +210,14 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/get_columns/{id}', [CustomTemplateController::class, 'getColumns']);
         Route::post('update_template', [CustomTemplateController::class, 'updateTemplate'])->name('custom_template_setting.update');
         Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
+    });
+
+    Route::prefix('state-group')->group(function() {
+        Route::get('/', [ShippingCostController::class, 'state_group'])->name('state_group.list')->middleware('can:state_group.list');
+    });
+
+    Route::prefix('weight-categories')->group(function() {
+        Route::get('/', [ShippingCostController::class, 'weight_category'])->name('weight-category.list')->middleware('can:weight_category.list');
     });
 
     Route::prefix('settings')->name('settings.')->group(function () {
