@@ -169,6 +169,36 @@
                                 -
                             @endif
                         </td>
+                    @elseif ($column->column_name == "state_group")
+                        @if ($order->shippings->isNotEmpty())
+                            <td>{{ $order->shippings()->latest()->first()->shipping_cost->state_groups->name }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
+                    @elseif ($column->column_name == "total_weight")
+                        @if ($order->shippings->isNotEmpty())
+                            <td>{{ $order->shippings()->latest()->first()->total_weight }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
+                    @elseif ($column->column_name == "weight_category")
+                        @if ($order->shippings->isNotEmpty())
+                            <td>{{ $order->shippings()->latest()->first()->shipping_cost->weight_category->name }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
+                    @elseif ($column->column_name == "shipping_cost")
+                        @if ($order->shippings->isNotEmpty())
+                            <td>{{ $order->shippings()->latest()->first()->shipping_cost->price/100 }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
+                    @elseif ($column->column_name == "shipping_cost_product_quantity")
+                        @if ($order->shippings->isNotEmpty())
+                            <td>{{ $order->shippings()->latest()->first()->shipping_product->pluck('quantity')->sum() }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
                     @else
                         <td>{{ $order->{$column->column_name} ?? '' }}</td>
                     @endif
