@@ -36,15 +36,20 @@ class AttemptOrderListController extends Controller
                     });
                 }
 
-                // Apply date filters and status for order logs
+                // Apply date filters for order logs if present
                 if ($request->filled('date_from') && $request->filled('date_to')) {
                     $query->whereHas('logs', function ($subQuery) use ($request) {
                         $subQuery->whereBetween('created_at', [
                             $request->date_from,
                             $request->date_to
-                        ])->where('order_status_id', 5);
+                        ]);
                     });
                 }
+            })
+            // Always filter shipping events by related order logs where status = 1
+            ->whereHas('shipping.order.logs', function ($query) {
+                $query->where('status', 1)
+                    ->whereIn('order_status_id', [5, 6]);
             })
             ->paginate(10);
 
@@ -257,9 +262,14 @@ class AttemptOrderListController extends Controller
                         $subQuery->whereBetween('created_at', [
                             $request->date_from,
                             $request->date_to
-                        ])->where('order_status_id', 5);
+                        ]);
                     });
                 }
+            })
+            // Always filter shipping events by related order logs where status = 1
+            ->whereHas('shipping.order.logs', function ($query) {
+                $query->where('status', 1)
+                    ->whereIn('order_status_id', [5, 6]);
             });
 
         return $shippingEvents->get();
