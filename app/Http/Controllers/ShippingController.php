@@ -270,7 +270,7 @@ class ShippingController extends Controller
                     }
                     $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
                         'consigneeAddress' => [
-                            'companyName' => get_shipping_remarks($order),
+                            // 'companyName' => get_shipping_remarks($order),
                             // 'name' => $order->customer->name,
                             'name' => substr($order->customer->name, 0, 30),
                             'address1' => $order->customer->address,
@@ -1113,7 +1113,7 @@ class ShippingController extends Controller
                         'shipmentItems' =>  [
                             0 => [
                                 'consigneeAddress' => [
-                                    'companyName' => get_shipping_remarks($order, $cn), //will return desc based on modal value inserted e.g NLC[40]SH FOC[1]
+                                    // 'companyName' => get_shipping_remarks($order, $cn), //will return desc based on modal value inserted e.g NLC[40]SH FOC[1]
                                     'name' => $order->customer->name,
                                     'address1' => $order->customer->address,
                                     'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
