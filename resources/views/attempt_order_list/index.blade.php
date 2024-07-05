@@ -192,7 +192,7 @@
                                                     <i class="bi bi-stopwatch-fill"></i>
                                                     {{ \Carbon\Carbon::parse($latestEvent->attempt_time)->format('d/m/Y H:i') }}
                                                 </div>
-
+                                                
                                                 @if ($latestLog && $latestLog->order_status_id == 6)
                                                     <div>
                                                         Item <strong class="text-success">delivered</strong>
