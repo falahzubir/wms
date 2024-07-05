@@ -188,17 +188,22 @@
                                             @endphp
 
                                             @if ($latestEvent)
-                                                <div>
-                                                    <i class="bi bi-stopwatch-fill"></i>
-                                                    {{ \Carbon\Carbon::parse($latestEvent->attempt_time)->format('d/m/Y H:i') }}
-                                                </div>
-                                                
                                                 @if ($latestLog && $latestLog->order_status_id == 6)
+                                                    <div>
+                                                        <i class="bi bi-stopwatch-fill"></i>
+                                                        {{ \Carbon\Carbon::parse($latestLog->created_at)->format('d/m/Y H:i') }}
+                                                    </div>
+
                                                     <div>
                                                         Item <strong class="text-success">delivered</strong>
                                                     </div>
                                                 @else
                                                     @if ($attempt)
+                                                        <div>
+                                                            <i class="bi bi-stopwatch-fill"></i>
+                                                            {{ \Carbon\Carbon::parse($latestEvent->attempt_time)->format('d/m/Y H:i') }}
+                                                        </div>
+
                                                         <div>
                                                             {{ ordinalSuffix($eventCount) }} attempt was
                                                             <strong class="text-danger">unsuccessful</strong>
