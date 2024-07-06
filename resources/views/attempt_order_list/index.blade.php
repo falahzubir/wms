@@ -159,7 +159,10 @@
                                                     ->first();
 
                                                 // Retrieve the latest log based on created_at
-                                                $latestLog = $event->shipping->order->logs->sortByDesc('created_at')->first();
+                                                $latestLog = $event->shipping->order->logs
+                                                    ->whereIn('order_status_id', [5, 6])
+                                                    ->sortByDesc('created_at')
+                                                    ->first();
 
                                                 // Count of all events for the current shipping
                                                 $eventCount = $event->shipping->events

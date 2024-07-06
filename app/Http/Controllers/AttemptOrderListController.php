@@ -50,6 +50,13 @@ class AttemptOrderListController extends Controller
                     });
                 }
             })
+            // Always filter shipping events by related order logs where status = 1
+            ->whereHas('shipping.order.logs', function ($query) {
+                $query->where(function ($subQuery) {
+                    $subQuery->where('order_status_id', 6)
+                        ->orWhere('order_status_id', 5);
+                });
+            })
             ->paginate(10);
         
         return view('attempt_order_list.index', [
