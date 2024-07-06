@@ -36,23 +36,22 @@ class AttemptOrderListController extends Controller
                     });
                 }
 
-                // Apply date filters for order logs if present
+                // Apply date filters for the first log entry of each order if present
                 if ($request->filled('date_from') && $request->filled('date_to')) {
-                    $query->whereHas('logs', function ($subQuery) use ($request) {
-                        $subQuery->whereBetween('created_at', [
-                            $request->date_from,
-                            $request->date_to
-                        ]);
+                    $dateFrom = \Carbon\Carbon::parse($request->date_from)->startOfDay();
+                    $dateTo = \Carbon\Carbon::parse($request->date_to)->endOfDay();
+
+                    $query->whereHas('logs', function ($subQuery) use ($dateFrom, $dateTo) {
+                        $subQuery->whereRaw('order_logs.id IN (SELECT MAX(id) FROM order_logs GROUP BY order_id)')
+                            ->whereBetween('created_at', [
+                                $dateFrom,
+                                $dateTo
+                            ]);
                     });
                 }
             })
-            // Always filter shipping events by related order logs where status = 1
-            ->whereHas('shipping.order.logs', function ($query) {
-                $query->where('status', 1)
-                    ->whereIn('order_status_id', [5, 6]);
-            })
             ->paginate(10);
-
+        
         return view('attempt_order_list.index', [
             'title' => 'Attempt Order List',
             'shippingEvents' => $shippingEvents
