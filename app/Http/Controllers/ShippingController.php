@@ -1304,7 +1304,10 @@ class ShippingController extends Controller
         $order->bucket_batch_id = null;
         $order->save();
 
-        //delete all shipping
+        //delete all shipping and shipping products
+        foreach ($order->shippings as $shipping) {
+            $shipping->shipping_product()->delete();
+        }
         $order->shippings()->delete();
 
         //set order status to pending
