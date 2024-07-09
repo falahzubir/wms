@@ -97,6 +97,11 @@
             color: #fff;
         }
 
+        .swal2-emzi-express {
+            background-color: #CD5802;
+            color: #fff;
+        }
+
         .swal2-styled.swal2-custom {
             border: 0;
             border-radius: .25em;
@@ -309,7 +314,7 @@
                                                 @if (Route::is('orders.pending') || Route::is('orders.processing') || Route::is('orders.packing'))
                                                     @can('order.reject')
                                                         <button class="btn btn-danger p-0 px-1 m-1"><i class="bx bx-trash"
-                                                                onclick="reject_order({{ $order->id }})"></i></button>
+                                                                onclick="reject_order({{ $order->id }},{{ $order->sales_id }})"></i></button>
                                                     @endcan
                                                 @endif
                                                 @if (Route::is('orders.returned'))
@@ -319,10 +324,12 @@
                                                 @endif
                                                 {{-- add shipping number modal --}}
                                                 @if (Route::is('orders.processing'))
-                                                   {{-- @if($order->is_multiple_carton) --}}
-                                                        <button class="btn btn-warning p-0 px-1 m-1" onclick="multiple_cn({order:`{{ $order }}`,ref_no:`{{ order_num_format($order) }}`, courier_id: `{{$order->courier_id}}`})"></>
-                                                            <i class="bi bi-file-earmark-ruled"></i>
-                                                        </button>
+                                                    {{-- @if ($order->is_multiple_carton) --}}
+                                                    <button class="btn btn-warning p-0 px-1 m-1"
+                                                        onclick="multiple_cn({order:`{{ $order }}`,ref_no:`{{ order_num_format($order) }}`})">
+                                                        </>
+                                                        <i class="bi bi-file-earmark-ruled"></i>
+                                                    </button>
                                                     {{-- @endif --}}
                                                     {{-- @empty($order->shippings) --}}
                                                     @can('tracking.update')
@@ -942,7 +949,8 @@
                 'dhl-ecommerce': 'DHL Ecommerce',
                 'posmalaysia': 'POS Malaysia',
                 'shopee': 'Shopee',
-                'tiktok': 'TikTok'
+                'tiktok': 'TikTok',
+                'emzi-express' : 'EMZI Express'
             };
 
             document.querySelector('#filter-order').onclick = function() {
@@ -1107,9 +1115,9 @@
                 } else {
                     el.parentElement.querySelector('input[type="number"]').value = parseInt(val) - 1; //set value
                     document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) +
-                    1; //set remaining order
+                        1; //set remaining order
                     el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) -
-                    1); //set data attribute
+                        1); //set data attribute
                 }
             }
 
@@ -1119,10 +1127,10 @@
 
                 if (remainingOrder != 0) {
                     document.querySelector('#remainingOrderPending').innerHTML = parseInt(remainingOrder) -
-                    1; //set remaining order
+                        1; //set remaining order
                     el.parentElement.querySelector('input[type="number"]').value = parseInt(val) + 1; //set value
                     el.parentElement.querySelector('input[type="number"]').setAttribute('data-value', parseInt(val) +
-                    1); //set data attribute
+                        1); //set data attribute
                 } else {
                     return; //stop function
                 }
@@ -1270,9 +1278,9 @@
                     <div class="swal2-loader"></div>
                     ${Object.keys(generate_cn_couriers).map((key) => {
                         return `<button type="button" class="swal2-custom swal2-${key} swal2-styled" style="display: inline-block;"
-                                    aria-label="" onclick="conformationDownloadCN('${key}', '${checkedValue}')" >
-                                    ${generate_cn_couriers[key]}
-                                    </button>`;
+                                                    aria-label="" onclick="conformationDownloadCN('${key}', '${checkedValue}')" >
+                                                    ${generate_cn_couriers[key]}
+                                                    </button>`;
                     }).join('')}
                     </div>
                 </div>
@@ -1400,7 +1408,7 @@
                 }
             @endif
 
-            // download csv f1
+            // download csv
             @if (in_array(ACTION_DOWNLOAD_ORDER, $actions))
                 document.querySelector('#download-order-btn').onclick = function() {
 
@@ -1585,9 +1593,9 @@
                         <div class="swal2-loader"></div>
                         ${Object.keys(arrange_shipment_platform).map((key) => {
                             return `<button type="button" class="swal2-custom swal2-${key} swal2-styled" style="display: inline-block;"
-                                        aria-label="" onclick="confirmationArrange('${key}', '${checkedOrder}')" >
-                                        ${arrange_shipment_platform[key]}
-                                        </button>`;
+                                                        aria-label="" onclick="confirmationArrange('${key}', '${checkedOrder}')" >
+                                                        ${arrange_shipment_platform[key]}
+                                                        </button>`;
                         }).join('')}
                         </div>
                     </div>
@@ -2027,21 +2035,34 @@
                         // always executed
                     });
             }
+            let ws;
+            document.addEventListener("DOMContentLoaded", function() {
+                ws = io('https://websocketnew.groobok.com'); //live (need domain instead of ip address)
+                // ws = io('http://152.42.168.240:3000'); //development (need ip addrrss instead)
+                // ws = new WebSocket('ws://206.189.144.234:8080');
 
-            function reject_order(orderId) {
-                console.log(213);
+                // Event listener for when the connection is established
+                ws.on('connect', function() {
+                    console.log('Connected to Socket.IO server');
+                });
+
+                console.log(ws);
+            })
+            const optionsMap = {
+                1: 'Phone',
+                2: 'Address',
+                3: 'Product(Quantity)',
+                4: 'Product(Others)',
+                5: 'Change Purchase Type'
+            };
+
+            function reject_order(orderId, sales_id) {
                 Swal.fire({
                     title: 'Are you sure to reject this order?',
                     html: `You are about to reject order ${orderId}.`,
                     icon: 'warning',
                     input: 'select',
-                    inputOptions: {
-                        1: 'Phone',
-                        2: 'Address',
-                        3: 'Product(Quantity)',
-                        4: 'Product(Others)',
-                        5: 'Change Purchase Type'
-                    },
+                    inputOptions: optionsMap,
                     inputPlaceholder: 'Select a reason',
                     inputValidator: (value) => {
                         return new Promise((resolve) => {
@@ -2073,40 +2094,55 @@
                         })
 
                         if (reason) {
+                            const data_to_be_send_to_websocket = {
+                                type: 'notification',
+                                order_id: orderId,
+                                sales_id: sales_id,
+                                reason: optionsMap[result.value],
+                                reason_value: result.value,
+                                remark: reason
+                            };
+                            // console.log(result.value);
+                            // console.log(data_to_be_send_to_websocket);
+
                             axios.post('/api/orders/reject', {
-                                    order_id: orderId,
-                                    reason,
-                                    reject_reason
-                                })
-                                .then(function(response) {
-                                    // handle success, close or download
-                                    if (response.status == 200) {
-                                        Swal.fire({
-                                                title: 'Success!',
-                                                text: "Order rejected.",
-                                                icon: 'success',
-                                                confirmButtonText: 'OK'
-                                            })
-                                            .then((result) => {
-                                                if (result.isConfirmed) {
-                                                    location.reload();
-                                                }
-                                            })
-                                    } else {
-                                        Swal.fire({
-                                            title: 'Error!',
-                                            text: "Something went wrong.",
-                                            icon: 'error',
+                                order_id: orderId,
+                                reason,
+                                reject_reason,
+                                data_to_be_send_to_websocket
+                            }).then(function(response) {
+                                // handle success, close or download
+                                if (response.status == 200) {
+                                    // Sending the message as JSON
+                                    ws.emit('wms_data', JSON.stringify(data_to_be_send_to_websocket));
+                                    Swal.fire({
+                                            title: 'Success!',
+                                            text: "Order rejected.",
+                                            icon: 'success',
                                             confirmButtonText: 'OK'
                                         })
-                                        return;
-                                    }
-                                })
-                                .catch(function(error) {
-                                    // handle error
-                                    console.log(error);
-                                })
+                                        .then((result) => {
+                                            if (result.isConfirmed) {
+                                                location.reload();
+                                            }
+                                        })
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: "Something went wrong.",
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    })
+                                    return;
+                                }
+                            }).catch(function(error) {
+                                // handle error
+                                console.log(error);
+                            })
                         }
+
+
+
                     }
 
                 })

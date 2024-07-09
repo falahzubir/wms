@@ -1,5 +1,6 @@
 import './bootstrap';
-
+import { io } from 'socket.io-client';
+window.io = io;
 import Swal from 'sweetalert2';
 
 window.Swal = Swal;
