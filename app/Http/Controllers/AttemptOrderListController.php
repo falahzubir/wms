@@ -4,16 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Shipping;
+use App\Models\ShippingEvent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttemptOrderListController extends Controller
 {
     public function index(Request $request)
     {
-        // Start with the Shipping model
-        $shippings = Shipping::with(['order.customer', 'order.courier', 'events'])
-            ->whereHas('order', function ($query) use ($request) {
+        // Start with the ShippingEvent model
+        $shippingEvents = ShippingEvent::with(['shipping.order.customer', 'shipping.order.courier'])
+            ->whereIn('id', function ($query) {
+                $query->select(DB::raw('MAX(id)'))
+                    ->from('shipping_events')
+                    ->groupBy('shipping_id');
+            })
+            ->whereHas('shipping.order', function ($query) use ($request) {
                 // Apply search query if present
                 if ($request->filled('search')) {
                     $searchTerm = $request->search;
@@ -43,7 +50,7 @@ class AttemptOrderListController extends Controller
 
         return view('attempt_order_list.index', [
             'title' => 'Attempt Order List',
-            'shippings' => $shippings
+            'shippingEvents' => $shippingEvents
         ]);
     }
 
@@ -55,11 +62,12 @@ class AttemptOrderListController extends Controller
 
     public function downloadCSV(Request $request)
     {
-        $shippings = $this->getDataForCSV($request);
+        // Fetch data for CSV
+        $shippingEvents = $this->getDataForCSV($request);
         $date = date('YmdHis');
 
         // Generate CSV file
-        $response = new StreamedResponse(function () use ($shippings) {
+        $response = new StreamedResponse(function () use ($shippingEvents) {
             $handle = fopen('php://output', 'w');
 
             // Add headers
@@ -90,13 +98,16 @@ class AttemptOrderListController extends Controller
                 'City',
             ]);
 
-            // Add data
-            foreach ($shippings as $shipping) {
+            // Add data rows
+            foreach ($shippingEvents as $event) {
+                $shipping = $event->shipping;
+                $order = $shipping->order;
+
                 // Retrieve events with specific attempt statuses
                 $events = $shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->sortByDesc('attempt_time');
 
                 // Retrieve reasons with specific attempt statuses
-                $reason = $shipping->events->whereIn('attempt_status', [
+                $reasons = $shipping->events->whereIn('attempt_status', [
                     77098,
                     77101,
                     77102,
@@ -123,30 +134,46 @@ class AttemptOrderListController extends Controller
                 // Retrieve and process events and reasons
                 if ($events->count() > 0) {
                     $firstEvent = $events->first();
-                    $firstReason = $reason->first();
-                    $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y');
-                    $firstAttemptDescription = $firstReason->description ?? '';
-                    $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstReason->attempt_time)->format('d/m/Y h:i A');
-
+                    $firstReason = $reasons->first();
+                    
+                    // Ensure $firstReason is not null before accessing properties
+                    if (!is_null($firstReason)) {
+                        $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y') ?? '';
+                        $firstAttemptDescription = $firstReason->description ?? '';
+                        $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                    } else {
+                        $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y') ?? '';
+                        $firstAttemptDescription = $firstEvent->description ?? '';
+                        $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y h:i A') ?? '';
+                    }
+                    
                     if ($events->count() > 1) {
                         $secondEvent = $events->skip(1)->first();
-                        $secondReason = $reason->skip(1)->first();
-                        $secondAttemptDate = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y');
-                        $secondAttemptDescription = $secondReason->description ?? '';
-                        $secondAttemptDateAndTime = \Carbon\Carbon::parse($secondReason->attempt_time)->format('d/m/Y h:i A');
+                        $secondReason = $reasons->skip(1)->first();
+                        
+                        // Ensure $secondReason is not null before accessing properties
+                        if (!is_null($secondReason)) {
+                            $secondAttemptDate = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y') ?? '';
+                            $secondAttemptDescription = $secondReason->description ?? '';
+                            $secondAttemptDateAndTime = \Carbon\Carbon::parse($secondReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                        }
 
                         if ($events->count() > 2) {
                             $thirdEvent = $events->skip(2)->first();
-                            $thirdReason = $reason->skip(2)->first();
-                            $thirdAttemptDate = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y');
-                            $thirdAttemptDescription = $thirdReason->description ?? '';
-                            $thirdAttemptDateAndTime = \Carbon\Carbon::parse($thirdReason->attempt_time)->format('d/m/Y h:i A');
+                            $thirdReason = $reasons->skip(2)->first();
+                            
+                            // Ensure $thirdReason is not null before accessing properties
+                            if (!is_null($thirdReason)) {
+                                $thirdAttemptDate = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y') ?? '';
+                                $thirdAttemptDescription = $thirdReason->description ?? '';
+                                $thirdAttemptDateAndTime = \Carbon\Carbon::parse($thirdReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                            }
                         }
                     }
                 }
-
+                
                 // Purchase Type
-                switch ($shipping->order->purchase_type) {
+                switch ($order->purchase_type) {
                     case '1':
                         $purchaseType = 'COD';
                         break;
@@ -162,30 +189,30 @@ class AttemptOrderListController extends Controller
                 }
 
                 fputcsv($handle, [
-                    $shipping->order->company->code ?? '',
-                    $shipping->order->sales_id ?? '',
-                    $shipping->order->courier->name ?? '',
+                    $order->company->code ?? '',
+                    $order->sales_id ?? '',
+                    $order->courier->name ?? '',
                     $purchaseType,
                     $shipping->tracking_number ?? '',
                     \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
-                    $shipping->order->customer->postcode ?? '',
-                    MY_STATES[$shipping->order->customer->state] ?? '',
+                    $order->customer->postcode ?? '',
+                    MY_STATES[$order->customer->state] ?? '',
                     \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
                     \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('h:i A'),
                     \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('D'),
                     $firstAttemptDate,
                     $firstAttemptDate,
-                    $firstAttemptDateAndTime,  // Failed 1st Attempt Date & Time placeholder
+                    $firstAttemptDateAndTime,
                     $firstAttemptDescription,
                     $secondAttemptDate,
-                    $secondAttemptDateAndTime,  // Failed 2nd Attempt Date & Time placeholder
+                    $secondAttemptDateAndTime,
                     $secondAttemptDescription,
                     $thirdAttemptDate,
-                    $thirdAttemptDateAndTime,  // Failed 3rd Attempt Date & Time placeholder
+                    $thirdAttemptDateAndTime,
                     $thirdAttemptDescription,
                     \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
-                    $events->count() ?? '',
-                    $shipping->order->customer->city ?? ''
+                    $events->count(),
+                    $order->customer->city ?? ''
                 ]);
             }
 
@@ -202,9 +229,13 @@ class AttemptOrderListController extends Controller
     // Method to fetch data based on existing filter logic
     private function getDataForCSV(Request $request)
     {
-        // Start with the Shipping model
-        $query = Shipping::with(['order.customer', 'order.courier', 'order.company', 'events'])
-            ->whereHas('order', function ($query) use ($request) {
+        $shippingEvents = ShippingEvent::with(['shipping.order.customer', 'shipping.order.courier'])
+            ->whereIn('id', function ($query) {
+                $query->select(DB::raw('MAX(id)'))
+                    ->from('shipping_events')
+                    ->groupBy('shipping_id');
+            })
+            ->whereHas('shipping.order', function ($query) use ($request) {
                 // Apply search query if present
                 if ($request->filled('search')) {
                     $searchTerm = $request->search;
@@ -215,7 +246,8 @@ class AttemptOrderListController extends Controller
                             })
                             ->orWhereHas('courier', function ($query) use ($searchTerm) {
                                 $query->where('name', 'like', '%' . $searchTerm . '%');
-                            });
+                            })
+                            ->orWhere('sales_id', 'like', '%' . $searchTerm . '%');
                     });
                 }
 
@@ -230,6 +262,6 @@ class AttemptOrderListController extends Controller
                 }
             });
 
-        return $query->get();
+        return $shippingEvents->get();
     }
 }
