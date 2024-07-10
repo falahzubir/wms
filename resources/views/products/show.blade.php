@@ -257,7 +257,7 @@
                         {{-- input group --}}
                         <div class="input-group">
                             <input type="text" name="product_weight" class="form-control" placeholder=""
-                                value="{{ $product->detail->weight ?? old('product_weight') }}" required>
+                                value="{{ $product->weight/1000 ?? old('product_weight') }}" required>
                             <span class="input-group-text">kg</span>
                         </div>
                     </div>
