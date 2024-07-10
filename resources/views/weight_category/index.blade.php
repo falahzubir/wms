@@ -103,7 +103,7 @@
                                     {{ $shipping_cost->weight_category->weight_range }}
                                 </td>
                                 <td>
-                                    RM {{ number_format($shipping_cost->price/1000,2) }}
+                                    RM {{ number_format($shipping_cost->price/100,2) }}
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-center gap-2">
