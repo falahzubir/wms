@@ -121,7 +121,7 @@
                                 @endif
                             </td>
                         @elseif ($column->column_name == "state_group")
-                            <td>-</td>
+                            <td>{{ getStateGroup($order->customer->state) }}</td>
                         @elseif ($column->column_name == "total_weight")
                             <td>-</td>
                         @elseif ($column->column_name == "weight_category")
@@ -259,14 +259,10 @@
                                 @endif
                             </td>
                         @elseif ($column->column_name == "state_group")
-                            @if (isset($shipping->shipping_cost->state_groups))
-                                <td>{{ $shipping->shipping_cost->state_groups->name }}</td>
-                            @else
-                                <td>-</td>
-                            @endif
+                            <td>{{ getStateGroup($order->customer->state) }}</td>
                         @elseif ($column->column_name == "total_weight")
                             @if (isset($shipping->total_weight))
-                                <td>{{ $shipping->total_weight }}</td>
+                                <td>{{ $shipping->total_weight }}g</td>
                             @else
                                 <td>-</td>
                             @endif
