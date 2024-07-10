@@ -371,7 +371,7 @@
                 editWeightCategoryModal.find('#stateGroup-filter').val(state_group_id);
                 //run onchange function to set min and max weight
                 selectionWeightID(editWeightCategoryModal.find('#weightCategoryID')[0],'edit');
-                editWeightCategoryModal.find('#price').val((price/1000).toFixed(2));
+                editWeightCategoryModal.find('#price').val((price/100).toFixed(2));
                 editWeightCategoryModal.modal('show');
             }
 
