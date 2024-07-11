@@ -957,7 +957,7 @@ class ShippingController extends Controller
         ]);
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
-        
+
         if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
             return response()->json(['success' => 'ok']);
         } else {
@@ -1048,6 +1048,10 @@ class ShippingController extends Controller
 
         // for now support only dhl-ecommerce and posmalaysia
         if($request->input('courier_id') == DHL_ID){
+            if(count($array_data) === 1)
+            {
+                return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+            }
             return $this->dhl_label_single($order_id, $array_data); // for dhl orders
         }
         elseif($request->input('courier_id') == POSMALAYSIA_ID){
