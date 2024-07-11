@@ -7,7 +7,7 @@ use App\Models\PaymentType;
 use App\Models\ShippingEvent;
 use App\Models\State;
 use App\Models\User;
-
+use App\Models\StateGroup;
 
 if (!function_exists('currency')) {
     /**
@@ -462,5 +462,18 @@ if (!function_exists('ordinalSuffix')) {
             }
         }
         return $num . 'th';
+    }
+}
+
+if (!function_exists('getStateGroup')) {
+    function getStateGroup($state_id) {
+        $group_state_list = StateGroup::with(['group_state_lists'])->whereHas('group_state_lists', function($query) use ($state_id) {
+            $query->where('state_id', $state_id);
+        })->first();
+        if ($group_state_list) {
+            return $group_state_list->name;
+        } else {
+            return null;
+        }
     }
 }

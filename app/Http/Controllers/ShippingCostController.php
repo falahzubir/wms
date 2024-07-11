@@ -178,7 +178,7 @@ class ShippingCostController extends Controller
             'weight_category_id' => $request->weight_category_id,
             'courier_id' => $request->courier_id,
             'state_group_id' => $request->state_group_id,
-            'price' => $request->price * 1000
+            'price' => $request->price * 100
         ]);
 
         return response()->json([
@@ -210,7 +210,7 @@ class ShippingCostController extends Controller
             'weight_category_id' => $request->weight_category_id,
             'courier_id' => $request->courier_id,
             'state_group_id' => $request->state_group_id,
-            'price' => $request->price * 1000
+            'price' => $request->price * 100
         ]);
 
         return response()->json([
