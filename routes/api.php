@@ -21,6 +21,7 @@ use App\Http\Controllers\ThirdParty\PosMalaysiaController;
 use App\Http\Controllers\CourierServiceLevelAgreementController;
 use App\Http\Controllers\FixcodeController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ShippingCostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -168,4 +169,16 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::prefix('fixcode')->group(function () {
     Route::get('processing-date/{company_id}', [FixcodeController::class, 'processing_date']);
     });
+});
+
+Route::prefix('state-group')->group(function() {
+    Route::post('store', [ShippingCostController::class, 'store_state_group'])->middleware('can:state_group.create');
+    Route::post('update', [ShippingCostController::class, 'update_state_group'])->middleware('can:state_group.edit');
+    Route::post('delete/{id}', [ShippingCostController::class, 'delete_state_group'])->middleware('can:state_group.delete');
+});
+
+Route::prefix('weight-category')->group(function() {
+    Route::post('store', [ShippingCostController::class, 'store_weight_category'])->middleware('can:weight_category.create');
+    Route::post('update', [ShippingCostController::class, 'update_weight_category'])->middleware('can:weight_category.edit');
+    Route::post('delete/{id}', [ShippingCostController::class, 'delete_weight_category'])->middleware('can:weight_category.delete');
 });

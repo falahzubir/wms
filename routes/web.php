@@ -15,12 +15,14 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationalModelController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PickingListSettingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\TemplateSettingController;
+use App\Http\Controllers\ShippingCostController;
 use App\Http\Controllers\UserController;
 use App\Models\Company;
 use App\Models\Setting;
@@ -210,6 +212,14 @@ Route::middleware(['auth'])->group(function() {
         Route::delete('delete_template', [CustomTemplateController::class, 'deleteTemplate'])->name('custom_template_setting.delete');
     });
 
+    Route::prefix('state-group')->group(function() {
+        Route::get('/', [ShippingCostController::class, 'state_group'])->name('state_group.list')->middleware('can:state_group.list');
+    });
+
+    Route::prefix('weight-categories')->group(function() {
+        Route::get('/', [ShippingCostController::class, 'weight_category'])->name('weight-category.list')->middleware('can:weight_category.list');
+    });
+
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::put('/', [SettingsController::class, 'update'])->name('update');
@@ -226,6 +236,12 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/ship_doc_desc/form',[SettingsController::class,'sdd_form'])->name('sdd_form');
         Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
     });
+
+        Route::prefix('picking_list_setting')->group(function() {
+        Route::get('/', [PickingListSettingController::class, 'index'])->name('picking_list_setting.index');
+        Route::post('/update', [PickingListSettingController::class, 'update'])->name('picking_sequence.update');
+        Route::get('/get', [PickingListSettingController::class, 'index'])->name('picking_sequence.get'); // AJAX endpoint
+    }); 
 
 });
 
@@ -249,6 +265,12 @@ Route::middleware(['auth', 'role:admin'])->group(function() {
 
 //migration for dev purpose only
 Route::middleware(['auth', 'role:IT_Admin'])->group(function() {
+    //is environment not production
+    if (\Illuminate\Support\Facades\App::environment(['local', 'staging'])) {
+        Route::get('info', function () {
+            return phpinfo();
+        });
+    }
     Route::get('run-migration', function () {
         // if(config('app.env')=="local"){
             Artisan::call('migrate', ['--force' => true]);
