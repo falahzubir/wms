@@ -1424,47 +1424,122 @@ class ShippingController extends Controller
         return true;
     }
 
+
+
     public function sort_order_to_download($order_ids)
     {
-        $newOrders = [];
-        // $order_ids = [17849,17848,17842,17840,17839,17836,17835,17834,17833,17826];
+        // Fetch the product counts per order
+        $product_count = OrderItem::select('order_id', DB::raw('COUNT(DISTINCT product_id) as product_count'))
+            ->whereIn('order_id', $order_ids)
+            ->groupBy('order_id')
+            ->pluck('product_count', 'order_id')->toArray();
+
+        // Sort $order_ids by the count of distinct products in ascending order
+        uasort($product_count, function ($a, $b) {
+            return $a <=> $b;
+        });
+
+        // Get sorted order_ids based on their product counts
+        $sorted_order = array_keys($product_count);
+
+
+        // Fetch more detailed data for these sorted orders
         $orders = OrderItem::with(['order', 'product'])
-            ->whereIn('order_id', $order_ids)->where('status', IS_ACTIVE)
+            ->whereIn('order_id', $sorted_order)
+            ->where('status', IS_ACTIVE)
             ->where('is_foc', IS_INACTIVE)
+            ->orderByRaw("FIELD(order_id, " . implode(',', $sorted_order) . ")") // Ensures the order of orders is as per $sorted_order
             ->get();
 
-        // [x] GROUPING BY SINGLE OR MARRIED (IGNORE FOC)
+        $newOrders = [];
 
-        // [x] Single
-        // [x] GROUP BY PRODUCT (IGNORE FOC)
-        foreach ($orders->where("marital_status", "single")->groupBy("product.name") as $product_name => $item) {
-            // [x] SORT BY QUANTITY ASC ^
-            foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
-                // logger($order_id->quantity);
+        // Group orders by marital status and preserve the sorted order
+        $single_order = $orders->filter(function ($order) {
+            return $order->marital_status == "single";
+        })->sortBy(function ($order) use ($sorted_order) {
+            return array_search($order->order_id, $sorted_order);
+        });
+
+        $married_order = $orders->filter(function ($order) {
+            return $order->marital_status == "married";
+        })->sortBy(function ($order) use ($sorted_order) {
+            return array_search($order->order_id, $sorted_order);
+        });
+
+        // Process single orders
+        foreach ($single_order->groupBy("product.name") as $product_name => $item) {
+            // Directly use the sorted order of order_ids
+            foreach ($item->sortBy(function ($order) use ($sorted_order) {
+                return array_search($order->order_id, $sorted_order);
+            })->pluck("order_id") as $order_id) {
                 $newOrders[] = $order_id;
             }
         }
 
-        // [x] Married
-        // [x] GROUP BY PRODUCT (IGNORE FOC)
-        foreach ($orders->where("marital_status", "married")->groupBy("product.name") as $product_name => $item) {
-            // [x] SORT BY QUANTITY ASC ^
-            foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
+        // Process married orders
+        foreach ($married_order->groupBy("product.name") as $product_name => $item) {
+            // Directly use the sorted order of order_ids
+            foreach ($item->sortBy(function ($order) use ($sorted_order) {
+                return array_search($order->order_id, $sorted_order);
+            })->pluck("order_id") as $order_id) {
                 $newOrders[] = $order_id;
             }
         }
-
         //  array diff newOrders and order_ids
         $diff = array_diff($order_ids, $newOrders);
 
         if (!empty($diff)) {
             foreach ($diff as $order_id) {
-                $newOrders[] = (int)$order_id;
+                $newOrders[] = (int) $order_id;
             }
         }
 
         return $newOrders;
     }
+
+
+    // public function sort_order_to_download($order_ids)
+    // {
+    //     $newOrders = [];
+    //     // $order_ids = [17849,17848,17842,17840,17839,17836,17835,17834,17833,17826];
+    //     $orders = OrderItem::with(['order', 'product'])
+    //         ->whereIn('order_id', $order_ids)->where('status', IS_ACTIVE)
+    //         ->where('is_foc', IS_INACTIVE)
+    //         ->get();
+
+    //     // [x] GROUPING BY SINGLE OR MARRIED (IGNORE FOC)
+
+    //     // [x] Single
+    //     // [x] GROUP BY PRODUCT (IGNORE FOC)
+    //     foreach ($orders->where("marital_status", "single")->groupBy("product.name") as $product_name => $item) {
+    //         // [x] SORT BY QUANTITY ASC ^
+    //         foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
+    //             // logger($order_id->quantity);
+    //             $newOrders[] = $order_id;
+    //         }
+    //     }
+
+    //     // [x] Married
+    //     // [x] GROUP BY PRODUCT (IGNORE FOC)
+    //     foreach ($orders->where("marital_status", "married")->groupBy("product.name") as $product_name => $item) {
+    //         // [x] SORT BY QUANTITY ASC ^
+    //         foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
+    //             $newOrders[] = $order_id;
+    //         }
+    //     }
+
+    //     //  array diff newOrders and order_ids
+    //     $diff = array_diff($order_ids, $newOrders);
+
+    //     if (!empty($diff)) {
+    //         foreach ($diff as $order_id) {
+    //             $newOrders[] = (int)$order_id;
+    //         }
+    //     }
+
+    //     return $newOrders;
+    // }
+
 
     public function generateShopeeCN($orderIds)
     {
