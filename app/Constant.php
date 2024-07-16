@@ -96,6 +96,7 @@ if(!defined('ACTION_UPLOAD_TRACKING_BULK')) define('ACTION_UPLOAD_TRACKING_BULK'
 if(!defined('ACTION_APPROVE_AS_SHIPPED')) define('ACTION_APPROVE_AS_SHIPPED', 'approve-as-shipped');
 if(!defined('ACTION_DOWNLOAD_CLAIM')) define('ACTION_DOWNLOAD_CLAIM', 'download-claim');
 if(!defined('ACTION_ARRANGE_SHIPMENT')) define('ACTION_ARRANGE_SHIPMENT', 'arrange-shipment');
+if(!defined('ACTION_GENERATE_PACKING')) define('ACTION_GENERATE_PACKING', 'download-order');
 
 // box minimum quantity
 if(!defined('BOX_MINIMUM_QUANTITY')) define('BOX_MINIMUM_QUANTITY', 5);

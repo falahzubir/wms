@@ -262,6 +262,17 @@
                                         class="bi bi-file-earmark-ruled"></i> Generate CN</button>
                             @endcan
                         @endif
+                        {{-- @if (in_array(ACTION_GENERATE_PACKING, $actions)) --}}
+                            @can('order.download')
+                                <button class="btn btn-teal" id="generate-packing-btn"><i
+                                        class="bi bi-file-earmark-ruled"></i>
+                                    Generate Packing</button>
+
+                                {{-- <a href="{{ route('generate_packing', Request::query()) }}" class="btn btn-teal">
+                                    <i class="bi bi-file-earmark-ruled"></i> Generate Packing
+                                </a> --}}
+                            @endcan
+                        {{-- @endif --}}
                         @if (in_array(ACTION_UPLOAD_TRACKING_BULK, $actions))
                             @can('tracking.upload')
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal"
@@ -306,8 +317,16 @@
                                 @foreach ($orders as $key => $order)
                                     <tr style="font-size: 0.8rem;">
                                         <th scope="row">{{ $key + $orders->firstItem() }}</th>
-                                        <td><input onclick="removeOldTicked()" type="checkbox" name="check_order[]"
+                                        {{-- <td><input onclick="removeOldTicked()" type="checkbox" name="check_order[]"
                                                 class="check-order" id="" value="{{ $order->id }}">
+                                        </td> --}}
+                                        <td>
+                                            <input onclick="removeOldTicked(this)" type="checkbox" name="check_order[]"
+                                                class="check-order" id="order-{{ $order->id }}" value="{{ $order->id }}">
+                                            <input type="hidden" name="shipping_attachment[]" class="shipping-attachment" 
+                                                id="attachment-{{ $order->id }}" value="{{ $order->shippings->first()->attachment ?? '' }}">
+                                            <input type="hidden" name="shipping_bucket_batch[]" class="shipping-bucket" 
+                                                id="bucket-{{ $order->id }}" value="{{ $order->bucket_batch_id ?? '' }}">
                                         </td>
                                         <td>
                                             <div class="d-flex">
@@ -997,8 +1016,20 @@
                 }
             @endif
 
-            const removeOldTicked = () => {
-                checkedOrder = []; //reset array
+            const removeOldTicked = (checkbox) => {
+                const orderId = checkbox.value;
+                const attachmentElement = document.querySelector(`#attachment-${orderId}`);
+                const bucketElement = document.querySelector(`#bucket-${orderId}`);
+
+                if (checkbox.checked) {
+                    checkedOrder.push({ 
+                        orderId: orderId, 
+                        attachment: attachmentElement.value, 
+                        bucket: bucketElement.value 
+                    });
+                } else {
+                    checkedOrder = checkedOrder.filter(order => order.orderId !== orderId);
+                }
             }
 
             const selectCategory = (el) => {
@@ -2630,6 +2661,90 @@
                             window.location.href = `/orders/overall?ids=${ids}`;
                         }
                     })
+            }
+
+            document.querySelector('#generate-packing-btn').onclick = function() {
+                const inputElements = Array.from(document.querySelectorAll('.check-order'));
+                let selectedOrders = inputElements.filter(chk => chk.checked).map(chk => chk.value);
+
+                // If user not check any box
+                if (selectedOrders.length === 0) {
+                    Swal.fire({
+                        title: 'No order selected!',
+                        text: "Please select at least one order to generate packing.",
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Confirmation to generate packing
+                Swal.fire({
+                    title: 'Are you sure to generate packing list?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, generate it!',
+                    footer: 'Note: Picking and Consignment Notes must be generated first'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        let invalidAttachments = checkedOrder.filter(order => order.attachment === '').map(order => order.orderId);
+                        let invalidBuckets = checkedOrder.filter(order => order.bucket === '').map(order => order.orderId);
+
+                        if (invalidAttachments.length > 0) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: "Please generate consignment notes first",
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                            return;
+                        } else if (invalidBuckets.length > 0) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: "Please assign bucket batch first",
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                            return;
+                        } else {
+                            axios.post('{{ route("generate_packing") }}', {
+                                orders: selectedOrders,
+                                shippingDetails: checkedOrder
+                            }, {
+                                responseType: 'blob' // Important for downloading files
+                            })
+                            .then(response => {
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: 'Packing list generated successfully.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then((result) => {
+                                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.setAttribute('download', 'generate_packing.csv'); // Filename
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                });
+                            })
+                            .catch(error => {
+                                console.error('There was an error!', error);
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'There was an error generating the packing list.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            });
+                        }
+
+                    }
+                });
             }
         </script>
 

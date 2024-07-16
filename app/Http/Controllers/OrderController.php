@@ -3,27 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Exports\OrderExport;
+use App\Http\Traits\ApiTrait;
+use App\Http\Traits\BucketTrait;
+use App\Models\AlternativePostcode;
+use App\Models\CategoryMain;
 use App\Models\Company;
 use App\Models\Courier;
 use App\Models\Customer;
 use App\Models\OperationalModel;
 use App\Models\Order;
+use App\Models\OrderEvent;
 use App\Models\OrderItem;
-use App\Models\Product;
-use App\Models\Shipping;
 use App\Models\OrderLog;
+use App\Models\Product;
+use App\Models\Setting;
+use App\Models\Shipping;
+use App\Models\TemplateMain;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Route;
-use App\Http\Traits\ApiTrait;
-use App\Http\Traits\BucketTrait;
-use App\Models\OrderEvent;
-use App\Models\AlternativePostcode;
-use App\Models\CategoryMain;
-use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
-use App\Models\TemplateMain;
+use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
@@ -1155,6 +1156,64 @@ class OrderController extends Controller
             // Handle the case where the status is not recognized
             return response()->json(['error' => 'Invalid status'], 400);
         }
+    }
+
+    // Generate Packing
+    public function generate_packing(Request $request)
+    {
+        // Validate the request to ensure orders are provided
+        $request->validate([
+            'orders' => 'required|array'
+        ]);
+
+        $orders = $request->input('orders');
+
+        // Fetch data for Generate Packing based on selected orders
+        $data = $this->get_generate_packing_data($orders);
+
+        // Generate Packing
+        $response = new StreamedResponse(function () use ($data) {
+            $handle = fopen('php://output', 'w');
+
+            // Add headers
+            fputcsv($handle, [
+                'Product',
+                'Order(s)',
+            ]);
+
+            $productCounts = [];
+
+            // Add data rows
+            foreach ($data as $row) {
+                $products = $row->items ? $row->items->map(function($item) {
+                    return $item->product->code . ' [' . $item->quantity . ']';
+                })->implode(', ') : '';
+
+                if (isset($productCounts[$products])) {
+                    $productCounts[$products]++;
+                } else {
+                    $productCounts[$products] = 1;
+                }
+            }
+
+            // Write the aggregated data to the CSV
+            foreach ($productCounts as $productCode => $count) {
+                fputcsv($handle, [
+                    $productCode,
+                    $count,
+                ]);
+            }
+
+            fclose($handle);
+        });
+
+        return $response;
+    }
+
+    private function get_generate_packing_data(array $orders)
+    {
+        // Fetch orders based on the selected order IDs and load related items and products
+        return Order::whereIn('id', $orders)->with(['items.product'])->get();
     }
 
 }
