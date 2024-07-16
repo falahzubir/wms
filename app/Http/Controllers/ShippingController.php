@@ -1433,69 +1433,73 @@ class ShippingController extends Controller
             ->whereIn('order_id', $order_ids)
             ->groupBy('order_id')
             ->pluck('product_count', 'order_id')->toArray();
-
+ 
         // Sort $order_ids by the count of distinct products in ascending order
         uasort($product_count, function ($a, $b) {
             return $a <=> $b;
         });
-
-        // Get sorted order_ids based on their product counts
+    
+        // Get sorted order_ids based on their product count
         $sorted_order = array_keys($product_count);
-
-
-        // Fetch more detailed data for these sorted orders
+    
         $orders = OrderItem::with(['order', 'product'])
             ->whereIn('order_id', $sorted_order)
             ->where('status', IS_ACTIVE)
-            ->where('is_foc', IS_INACTIVE)
+            ->where('is_foc', IS_INACTIVE) 
             ->orderByRaw("FIELD(order_id, " . implode(',', $sorted_order) . ")") // Ensures the order of orders is as per $sorted_order
             ->get();
-
+    
         $newOrders = [];
-
+    
         // Group orders by marital status and preserve the sorted order
         $single_order = $orders->filter(function ($order) {
             return $order->marital_status == "single";
         })->sortBy(function ($order) use ($sorted_order) {
             return array_search($order->order_id, $sorted_order);
         });
-
+    
         $married_order = $orders->filter(function ($order) {
             return $order->marital_status == "married";
         })->sortBy(function ($order) use ($sorted_order) {
             return array_search($order->order_id, $sorted_order);
         });
 
+
         // Process single orders
-        foreach ($single_order->groupBy("product.name") as $product_name => $item) {
-            // Directly use the sorted order of order_ids
-            foreach ($item->sortBy(function ($order) use ($sorted_order) {
-                return array_search($order->order_id, $sorted_order);
-            })->pluck("order_id") as $order_id) {
-                $newOrders[] = $order_id;
+        foreach ($single_order->groupBy(function ($order) use ($product_count) {
+            return $product_count[$order->order_id];
+        }) as $product_count => $group) {
+            foreach ($group->groupBy("product.name") as $product_name => $item) {
+                // Sort by quantity within each product name group
+                foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
+                    $newOrders[] = $order_id;
+                }
             }
         }
-
+    
         // Process married orders
-        foreach ($married_order->groupBy("product.name") as $product_name => $item) {
-            // Directly use the sorted order of order_ids
-            foreach ($item->sortBy(function ($order) use ($sorted_order) {
-                return array_search($order->order_id, $sorted_order);
-            })->pluck("order_id") as $order_id) {
-                $newOrders[] = $order_id;
+        foreach ($married_order->groupBy(function ($order) use ($product_count) {
+            return $product_count[$order->order_id];
+        }) as $product_count => $group) {
+            foreach ($group->groupBy("product.name") as $product_name => $item) {
+                // Sort by quantity within each product name group
+                foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
+                    $newOrders[] = $order_id;
+                }
             }
         }
-        //  array diff newOrders and order_ids
+    
+          //  array diff newOrders and order_ids
         $diff = array_diff($order_ids, $newOrders);
-
+    
         if (!empty($diff)) {
             foreach ($diff as $order_id) {
-                $newOrders[] = (int) $order_id;
+                $newOrders[] = (int)$order_id;
             }
         }
-
         return $newOrders;
     }
+    
 
 
     // public function sort_order_to_download($order_ids)
