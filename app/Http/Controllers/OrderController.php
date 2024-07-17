@@ -1213,7 +1213,13 @@ class OrderController extends Controller
     private function get_generate_packing_data(array $orders)
     {
         // Fetch orders based on the selected order IDs and load related items and products
-        return Order::whereIn('id', $orders)->with(['items.product'])->get();
+        return Order::whereIn('id', $orders)
+            ->whereNotNull('bucket_batch_id')
+            ->whereHas('shippings', function ($query) {
+                $query->whereNotNull('attachment');
+            })
+            ->with(['items.product'])
+            ->get();
     }
 
 }
