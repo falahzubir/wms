@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('dhl-token:cron')->everySixHours();
         $schedule->command('posmalaysia-token:cron')->everySixHours();
         $schedule->command('send-shipping:cron')->everyFiveMinutes();
+        $schedule->command('app:retrieve-processing-order')->everyFiveMinutes();
     }
 
     /**
