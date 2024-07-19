@@ -103,7 +103,7 @@
                                     {{ $shipping_cost->weight_category->weight_range }}
                                 </td>
                                 <td>
-                                    RM {{ number_format($shipping_cost->price/1000,2) }}
+                                    RM {{ number_format($shipping_cost->price/100,2) }}
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-center gap-2">
@@ -371,7 +371,7 @@
                 editWeightCategoryModal.find('#stateGroup-filter').val(state_group_id);
                 //run onchange function to set min and max weight
                 selectionWeightID(editWeightCategoryModal.find('#weightCategoryID')[0],'edit');
-                editWeightCategoryModal.find('#price').val((price/1000).toFixed(2));
+                editWeightCategoryModal.find('#price').val((price/100).toFixed(2));
                 editWeightCategoryModal.modal('show');
             }
 

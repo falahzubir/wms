@@ -29,4 +29,14 @@ class Shipping extends Model
     {
         return $this->hasMany(ShippingEvent::class);
     }
+
+    public function shipping_product()
+    {
+        return $this->hasMany(ShippingProduct::class);
+    }
+
+    public function shipping_cost()
+    {
+        return $this->belongsTo(ShippingCost::class);
+    }
 }
