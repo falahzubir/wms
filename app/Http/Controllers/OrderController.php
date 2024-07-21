@@ -129,6 +129,10 @@ class OrderController extends Controller
             }
         }
 
+        if (!in_array(ORDER_FILTER_SALES_TYPE, $exclude)) {
+            $filter_data['sales_type'] = SALES_TYPE;
+        }
+
         return (object) $filter_data;
     }
 

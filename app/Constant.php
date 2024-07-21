@@ -125,6 +125,7 @@ if(!defined('ORDER_FILTER_STATE')) define('ORDER_FILTER_STATE', 9);
 if(!defined('ORDER_FILTER_PLATFORM')) define('ORDER_FILTER_PLATFORM', 10);
 if(!defined('ORDER_FILTER_STATUS')) define('ORDER_FILTER_STATUS', 11);
 if(!defined('ORDER_FILTER_BUCKET_CATEGORY')) define('ORDER_FILTER_BUCKET_CATEGORY', 12);
+if(!defined('ORDER_FILTER_SALES_TYPE')) define('ORDER_FILTER_SALES_TYPE', 13);
 
 // date types
 if(!defined('ORDER_DATE_TYPES')) define('ORDER_DATE_TYPES', [
@@ -210,3 +211,14 @@ if(!defined('SETTING_DATA_TYPE_JSON')) define('SETTING_DATA_TYPE_JSON', 'json');
 
 if(!defined('TIKTOK_APP_KEY')) define('TIKTOK_APP_KEY', '68r1ubo74bujf');
 if(!defined('TIKTOK_APP_SECRET')) define('TIKTOK_APP_SECRET', 'f0e77dbfcdce30efe2b144dc0ebc99c1b35499e5');
+
+if(!defined('SALES_TYPE')) define('SALES_TYPE', [
+    1 => 'From Campaign',
+    2 => 'Repeat Order',
+    3 => 'Direct Order',
+    4 => 'Clone Order',
+    5 => 'Affiliate',
+    6 => 'Gift Order',
+    7 => 'Event Order',
+    8 => 'Repost Order'
+]);
