@@ -97,23 +97,23 @@ class ShippingController extends Controller
 
         $data['created_by'] = auth()->user()->id ?? 1;
 
-        switch($request->input('type')):
-            case('dhl-ecommerce'):
+        switch ($request->input('type')):
+            case ('dhl-ecommerce'):
                 return $this->dhl_label($request->order_ids);
                 break;
-            case('shopee'):
+            case ('shopee'):
                 return $this->generateShopeeCN($request->order_ids);
                 break;
-            case('tiktok'):
+            case ('tiktok'):
                 return $this->generateTiktokCN($request->order_ids);
                 break;
-            case('posmalaysia'):
+            case ('posmalaysia'):
                 return $this->posmalaysia_cn($request->order_ids);
                 break;
-            case('ninjavan'):
+            case ('ninjavan'):
                 return $this->ninjavan_cn($request->order_ids);
                 break;
-            case('emzi-express'):
+            case ('emzi-express'):
                 return $this->emzi_express_cn($request->order_ids);
                 break;
             default:
@@ -179,14 +179,17 @@ class ShippingController extends Controller
 
         // filter only selected order shipping not exists
         $orders_dhl = Order::doesntHave('shippings')->with([
-            'customer', 'items', 'items.product', 'company',
+            'customer',
+            'items',
+            'items.product',
+            'company',
             'company.access_tokens' => function ($query) {
                 $query->where('type', 'dhl');
             }
         ])->whereIn('id', $order_ids)->where('courier_id', DHL_ID)->get();
         if (count($orders_dhl) == 0) {
-                return 0;
-            }
+            return 0;
+        }
 
         $companies = Order::select('company_id')->distinct()->whereIn('id', $order_ids)->get()->pluck('company_id'); //temporary, need to check if all orders are from same company
 
@@ -332,14 +335,19 @@ class ShippingController extends Controller
             }
         }
 
-        if (($failer = Order::doesntHave('shippings')->with([
-            'customer', 'items', 'items.product', 'company',
-            'company.access_tokens' => function ($query) {
-                $query->where('type', 'dhl');
-            }
-        ])->whereIn('id', $order_ids)
-            ->where('courier_id', DHL_ID)
-            ->count()) > 0) {
+        if (
+            ($failer = Order::doesntHave('shippings')->with([
+                'customer',
+                'items',
+                'items.product',
+                'company',
+                'company.access_tokens' => function ($query) {
+                    $query->where('type', 'dhl');
+                }
+            ])->whereIn('id', $order_ids)
+                ->where('courier_id', DHL_ID)
+                ->count()) > 0
+        ) {
             return response([
                 "error" => $failer . " order fail to generate cn.",
                 "all_fail" => $orders_dhl->count() == $failer
@@ -359,7 +367,11 @@ class ShippingController extends Controller
     public function dhl_label_single($order_id, $arr_data)
     {
         $order = Order::with([
-            'customer', 'items', 'items.product', 'company', 'company.access_tokens'
+            'customer',
+            'items',
+            'items.product',
+            'company',
+            'company.access_tokens'
         ])->where('id', $order_id)->where('courier_id', DHL_ID)->first();
 
         if (!$order) {
@@ -376,10 +388,9 @@ class ShippingController extends Controller
 
         $remainCodAmmount = $order->purchase_type == 1 ? $order->total_price / 100 : null;
 
-        if(count($arr_data) > 1) {
+        if (count($arr_data) > 1) {
             $mult = "true";
-        }
-        else{
+        } else {
             $mult = "false";
         }
 
@@ -397,7 +408,7 @@ class ShippingController extends Controller
                     "messageLanguage" => "en"
                 ],
                 'bd' => [
-                    'shipmentItems' =>  [
+                    'shipmentItems' => [
                         0 => [
                             'consigneeAddress' => [
                                 // 'companyName' => get_shipping_remarks($order),
@@ -476,7 +487,7 @@ class ShippingController extends Controller
                     'weight' => get_order_weight($order, $cn),
                     'unit' => 'G'
                 ],
-                'codAmount' => $codAmmount == 0 ? null : $codAmmount/100,
+                'codAmount' => $codAmmount == 0 ? null : $codAmmount / 100,
             ];
             $remainCodAmmount -= $codAmmount;
         }
@@ -595,10 +606,10 @@ class ShippingController extends Controller
     {
         $sorted_order_id = $this->sort_order_to_download($request->order_ids);
 
-        $attachments = Shipping::select('attachment','packing_attachment', "order_id")->active()->whereIn('order_id', $sorted_order_id)->get()
+        $attachments = Shipping::select('attachment', 'packing_attachment', "order_id")->active()->whereIn('order_id', $sorted_order_id)->get()
             ->sortBy(function ($model) use ($sorted_order_id) {
-            return array_search($model->order_id, $sorted_order_id);
-        });
+                return array_search($model->order_id, $sorted_order_id);
+            });
 
         if ($attachments->count() == 0) {
             return response()->json(['status' => false, 'error' => 'No attachment found']);
@@ -636,8 +647,7 @@ class ShippingController extends Controller
 
             $pdf->add(storage_path('app/public/' . $attach));
 
-            if($request->inc_packing_list && !empty($packing_attach))
-            {
+            if ($request->inc_packing_list && !empty($packing_attach)) {
                 if (!file_exists(storage_path('app/public/' . $packing_attach))) {
                     continue;
                 }
@@ -657,8 +667,8 @@ class ShippingController extends Controller
         $filename = 'CN_' . date('Ymd_His') . '.pdf';
         $pdf->merge(public_path('generated_labels/' . $filename));
 
-        if(!file_exists(public_path('generated_labels/' . $filename))){
-            return response()->json(['status' => false,'error' => 'Error in generating PDF']);
+        if (!file_exists(public_path('generated_labels/' . $filename))) {
+            return response()->json(['status' => false, 'error' => 'Error in generating PDF']);
         }
 
         return response()->json(['download_url' => '/generated_labels/' . $filename]);
@@ -670,27 +680,27 @@ class ShippingController extends Controller
         $operational_model_id = $order->operational_model_id;
         $platform_id = $order->payment_type;
         $shipping_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())
-        ->where('end_date', '>=', Carbon::now())
-        ->when(!empty($operational_model_id), function ($query) use ($operational_model_id) {
-            $query->where('operational_model_id', 'like', '%' . $operational_model_id . '%');
-        })
-        ->when(!empty($platform_id), function ($query) use ($platform_id) {
-            $query->where('platform', 'like', '%' . $platform_id . '%');
-        })
-        ->first();
+            ->where('end_date', '>=', Carbon::now())
+            ->when(!empty($operational_model_id), function ($query) use ($operational_model_id) {
+                $query->where('operational_model_id', 'like', '%' . $operational_model_id . '%');
+            })
+            ->when(!empty($platform_id), function ($query) use ($platform_id) {
+                $query->where('platform', 'like', '%' . $platform_id . '%');
+            })
+            ->first();
 
         if (!$shipping_docs) {
             $shipping_docs = ShippingDocumentTemplate::where('start_date', '<=', Carbon::now())
-            ->where('end_date', '>=', Carbon::now())
-            ->where(function ($query) {
-                $query->whereNull('platform')
-                    ->orWhere('platform', '=' , ''); // Check for empty string
-            })
-            ->where(function ($query) {
-                $query->whereNull('operational_model_id')
-                    ->orWhere('operational_model_id', '=' , ''); // Check for empty string
-            })
-            ->first();
+                ->where('end_date', '>=', Carbon::now())
+                ->where(function ($query) {
+                    $query->whereNull('platform')
+                        ->orWhere('platform', '=', ''); // Check for empty string
+                })
+                ->where(function ($query) {
+                    $query->whereNull('operational_model_id')
+                        ->orWhere('operational_model_id', '=', ''); // Check for empty string
+                })
+                ->first();
 
             if (!$shipping_docs) {
                 return null;
@@ -704,12 +714,12 @@ class ShippingController extends Controller
     {
         $addon_url = '';
         $order = Order::with(['items', 'items.product', 'shippings', 'customer'])->find($order_id);
-        $path = 'product_desc/' .Carbon::now()->format('Ymd_His').'_'.$order_id . '_product_description.pdf';
+        $path = 'product_desc/' . Carbon::now()->format('Ymd_His') . '_' . $order_id . '_product_description.pdf';
 
         try {
             $ship_docs = $this->checking_shipping_docs($order_id);
-            if($ship_docs != null){
-                if($ship_docs->additional_detail != null){
+            if ($ship_docs != null) {
+                if ($ship_docs->additional_detail != null) {
 
                     $additional_details = json_decode($ship_docs->additional_detail, true);
                     switch ($additional_details) {
@@ -751,7 +761,7 @@ class ShippingController extends Controller
 
         $items = OrderItem::with(['product'])->whereIn('id', $orderItems)->get();
         foreach ($items as $key => $value) {
-            $total_price = $value->price/$value->quantity;
+            $total_price = $value->price / $value->quantity;
             $items[$key]->quantity = $quantity[$key];
             $items[$key]->price = $total_price * $quantity[$key];
         }
@@ -759,8 +769,8 @@ class ShippingController extends Controller
         $order_id = $items[0]->order_id;
         $order = Order::with(['items', 'items.product', 'shippings', 'customer'])->find($order_id);
         $ship_docs = $this->checking_shipping_docs($order_id);
-        if($ship_docs != null){
-            if($ship_docs->additional_detail != null){
+        if ($ship_docs != null) {
+            if ($ship_docs->additional_detail != null) {
                 $additional_details = json_decode($ship_docs->additional_detail, true);
                 switch ($additional_details) {
                     case in_array('1', $additional_details):
@@ -778,7 +788,7 @@ class ShippingController extends Controller
             }
         }
 
-        $path = 'product_desc/' .Carbon::now()->format('Ymd_His').'_'.$order_id . '_product_description.pdf';
+        $path = 'product_desc/' . Carbon::now()->format('Ymd_His') . '_' . $order_id . '_product_description.pdf';
 
         try {
             $pdf = PDF::view('pdf_template.shipping_description_document_template_multiple', compact('items', 'ship_docs', 'addon_url'));
@@ -939,7 +949,7 @@ class ShippingController extends Controller
         ]);
 
         $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
-        
+
         if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
             return response()->json(['success' => 'ok']);
         } else {
@@ -1029,10 +1039,9 @@ class ShippingController extends Controller
         $array_data = ($request->input('cn_data'));
 
         // for now support only dhl-ecommerce and posmalaysia
-        if($request->input('courier_id') == DHL_ID){
+        if ($request->input('courier_id') == DHL_ID) {
             return $this->dhl_label_single($order_id, $array_data); // for dhl orders
-        }
-        elseif($request->input('courier_id') == POSMALAYSIA_ID){
+        } elseif ($request->input('courier_id') == POSMALAYSIA_ID) {
             $posmalaysia = new \App\Http\Controllers\ThirdParty\PosMalaysiaController();
             return $posmalaysia->generate_connote_multiple($order_id, $array_data); // for posmalaysia orders
         }
@@ -1051,7 +1060,11 @@ class ShippingController extends Controller
     public function dhl_label_mult_cn($order_id, $array_data)
     {
         $order = Order::with([
-            'customer', 'items', 'items.product', 'company', 'company.access_tokens'
+            'customer',
+            'items',
+            'items.product',
+            'company',
+            'company.access_tokens'
         ])->where('id', $order_id)->where('courier_id', DHL_ID)->first();
 
         if (!$order) {
@@ -1110,7 +1123,7 @@ class ShippingController extends Controller
                         "messageLanguage" => "en"
                     ],
                     'bd' => [
-                        'shipmentItems' =>  [
+                        'shipmentItems' => [
                             0 => [
                                 'consigneeAddress' => [
                                     // 'companyName' => get_shipping_remarks($order, $cn), //will return desc based on modal value inserted e.g NLC[40]SH FOC[1]
@@ -1194,7 +1207,8 @@ class ShippingController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'CN generated successfully.'
-        ]);;
+        ]);
+        ;
     }
 
     /**
@@ -1307,7 +1321,10 @@ class ShippingController extends Controller
     {
         $ids = $request->order_ids;
         $orders = Order::with([
-            'customer', 'items', 'items.product', 'company',
+            'customer',
+            'items',
+            'items.product',
+            'company',
             'company.access_tokens' => function ($query) {
                 $query->where('type', 'dhl');
             }
@@ -1351,14 +1368,19 @@ class ShippingController extends Controller
             ]);
         }
 
-        if (($failer = Order::doesntHave('shippings')->with([
-            'customer', 'items', 'items.product', 'company',
-            'company.access_tokens' => function ($query) {
-                $query->where('type', 'dhl');
-            }
-        ])->whereIn('id', $ids)
-            ->where('courier_id', DHL_ID)
-            ->count()) > 0) {
+        if (
+            ($failer = Order::doesntHave('shippings')->with([
+                'customer',
+                'items',
+                'items.product',
+                'company',
+                'company.access_tokens' => function ($query) {
+                    $query->where('type', 'dhl');
+                }
+            ])->whereIn('id', $ids)
+                ->where('courier_id', DHL_ID)
+                ->count()) > 0
+        ) {
             return response([
                 "error" => $failer . " order fail to generate cn.",
                 "all_fail" => $orders->count() == $failer
@@ -1425,81 +1447,79 @@ class ShippingController extends Controller
     }
 
 
-
     public function sort_order_to_download($order_ids)
     {
         // Fetch the product counts per order
-        $product_count = OrderItem::select('order_id', DB::raw('COUNT(DISTINCT product_id) as product_count'))
+        $product_counts = OrderItem::select('order_id', DB::raw('COUNT(DISTINCT product_id) as product_count'))
             ->whereIn('order_id', $order_ids)
             ->groupBy('order_id')
             ->pluck('product_count', 'order_id')->toArray();
- 
+
         // Sort $order_ids by the count of distinct products in ascending order
-        uasort($product_count, function ($a, $b) {
+        uasort($product_counts, function ($a, $b) {
             return $a <=> $b;
         });
-    
+
         // Get sorted order_ids based on their product count
-        $sorted_order = array_keys($product_count);
-    
+        $sorted_order_ids = array_keys($product_counts);
+
         $orders = OrderItem::with(['order', 'product'])
-            ->whereIn('order_id', $sorted_order)
+            ->whereIn('order_id', $sorted_order_ids)
             ->where('status', IS_ACTIVE)
-            ->where('is_foc', IS_INACTIVE) 
-            ->orderByRaw("FIELD(order_id, " . implode(',', $sorted_order) . ")") // Ensures the order of orders is as per $sorted_order
+            ->where('is_foc', IS_INACTIVE)
+            ->orderByRaw("FIELD(order_id, " . implode(',', $sorted_order_ids) . ")") // Ensures the order of orders is as per $sorted_order_ids
             ->get();
-    
+
         $newOrders = [];
-    
+
         // Group orders by marital status and preserve the sorted order
-        $single_order = $orders->filter(function ($order) {
+        $single_orders = $orders->filter(function ($order) {
             return $order->marital_status == "single";
-        })->sortBy(function ($order) use ($sorted_order) {
-            return array_search($order->order_id, $sorted_order);
-        });
-    
-        $married_order = $orders->filter(function ($order) {
-            return $order->marital_status == "married";
-        })->sortBy(function ($order) use ($sorted_order) {
-            return array_search($order->order_id, $sorted_order);
+        })->sortBy(function ($order) use ($sorted_order_ids) {
+            return array_search($order->order_id, $sorted_order_ids);
         });
 
+        $married_orders = $orders->filter(function ($order) {
+            return $order->marital_status == "married";
+        })->sortBy(function ($order) use ($sorted_order_ids) {
+            return array_search($order->order_id, $sorted_order_ids);
+        });
 
         // Process single orders
-        foreach ($single_order->groupBy(function ($order) use ($product_count) {
-            return $product_count[$order->order_id];
-        }) as $product_count => $group) {
-            foreach ($group->groupBy("product.name") as $product_name => $item) {
+        foreach ($single_orders->groupBy(function ($order) use ($product_counts) {
+            return $product_counts[$order->order_id] ?? 0; // Default to 0 if not set
+        }) as $count => $group) {
+            foreach ($group->groupBy("product.name") as $product_name => $items) {
                 // Sort by quantity within each product name group
-                foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
+                foreach ($items->sortBy("quantity")->pluck("order_id") as $order_id) {
                     $newOrders[] = $order_id;
                 }
             }
         }
-    
+
         // Process married orders
-        foreach ($married_order->groupBy(function ($order) use ($product_count) {
-            return $product_count[$order->order_id];
-        }) as $product_count => $group) {
-            foreach ($group->groupBy("product.name") as $product_name => $item) {
+        foreach ($married_orders->groupBy(function ($order) use ($product_counts) {
+            return $product_counts[$order->order_id] ?? 0; // Default to 0 if not set
+        }) as $count => $group) {
+            foreach ($group->groupBy("product.name") as $product_name => $items) {
                 // Sort by quantity within each product name group
-                foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
+                foreach ($items->sortBy("quantity")->pluck("order_id") as $order_id) {
                     $newOrders[] = $order_id;
                 }
             }
         }
-    
-          //  array diff newOrders and order_ids
-        $diff = array_diff($order_ids, $newOrders);
-    
-        if (!empty($diff)) {
-            foreach ($diff as $order_id) {
-                $newOrders[] = (int)$order_id;
-            }
+
+        // Check for any missing order IDs
+        $missing_order_ids = array_diff($order_ids, $newOrders);
+
+        // Add missing orders to the newOrders array
+        foreach ($missing_order_ids as $order_id) {
+            $newOrders[] = (int) $order_id;
         }
+
         return $newOrders;
     }
-    
+
 
 
     // public function sort_order_to_download($order_ids)
@@ -1548,22 +1568,20 @@ class ShippingController extends Controller
     public function generateShopeeCN($orderIds)
     {
         $orders = Order::with(['shippings'])
-        ->select('payment_type','id')
-        ->whereIn('id', $orderIds)
-        ->where('payment_type', 22)
-        ->get();
+            ->select('payment_type', 'id')
+            ->whereIn('id', $orderIds)
+            ->where('payment_type', 22)
+            ->get();
 
         $order = [];
         $CNS = [];
         $message = '';
 
-        foreach($orders as $key => $value)
-        {
+        foreach ($orders as $key => $value) {
             $product_list = $this->generate_product_description($value->id);
             $order[$key]['id'] = $value->id;
 
-            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->first()->tracking_number))
-            {
+            if (isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings->first()->tracking_number)) {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
                 $order[$key]['error']['message'][] = 'No Tracking Number Found';
                 continue;
@@ -1575,8 +1593,7 @@ class ShippingController extends Controller
             $getShippingDocumentParameter = ShopeeTrait::getShippingDocumentParameter($order[$key]['additional_data']);
             $jsonGetShippingDocumentParameter = json_decode($getShippingDocumentParameter, true);
 
-            if(empty($jsonGetShippingDocumentParameter['error']))
-            {
+            if (empty($jsonGetShippingDocumentParameter['error'])) {
                 $order[$key]['additional_data']['shipping_document_type'] = $jsonGetShippingDocumentParameter['response']['result_list'][0]['suggest_shipping_document_type'];
 
                 ############################################
@@ -1585,16 +1602,14 @@ class ShippingController extends Controller
                 $getCreateShippingDocument = ShopeeTrait::createShippingDocument($order[$key]['additional_data']);
                 $jsonGetCreateShippingDocument = json_decode($getCreateShippingDocument, true);
 
-                if(empty($jsonGetCreateShippingDocument['error']))
-                {
+                if (empty($jsonGetCreateShippingDocument['error'])) {
                     ###############################################
                     ###### start get shipping document result #####
                     ###############################################
                     $getShippingDocument = ShopeeTrait::getShippingDocumentResult($order[$key]['additional_data']);
                     $jsonGetShippingDocument = json_decode($getShippingDocument, true);
 
-                    if(empty($jsonGetShippingDocument['error']))
-                    {
+                    if (empty($jsonGetShippingDocument['error'])) {
                         $order[$key]['additional_data']['shipping_document_status'] = $jsonGetShippingDocument['response']['result_list'][0]['status'];
 
                         #######################################
@@ -1602,8 +1617,7 @@ class ShippingController extends Controller
                         #######################################
                         $getDownloadShippingDocument = ShopeeTrait::downloadShippingDocument($order[$key]['additional_data']);
 
-                        if($getDownloadShippingDocument)
-                        {
+                        if ($getDownloadShippingDocument) {
                             //save to shippings table
                             $shipping = Shipping::where('order_id', $value->id)->first();
                             $shipping->attachment = $getDownloadShippingDocument;
@@ -1613,36 +1627,28 @@ class ShippingController extends Controller
                             $order[$key]['attachment'] = $getDownloadShippingDocument;
                             $CNS['order_ids'][] = $value->id;
                             $CNS['attachment'][] = $getDownloadShippingDocument;
-                        }
-                        else
-                        {
+                        } else {
                             $order[$key]['error']['type'][] = 'downloadShippingDocument';
                             $order[$key]['error']['message'][] = 'Failed to download shipping document';
                         }
                         #####################################
                         ###### end generate_cn ##############
                         #####################################
-                    }
-                    else
-                    {
+                    } else {
                         $order[$key]['error']['type'][] = 'getShippingDocumentResult';
                         $order[$key]['error']['message'][] = $jsonGetShippingDocument['message'];
                     }
                     #############################################
                     ###### end get shipping document result ######
                     #############################################
-                }
-                else
-                {
+                } else {
                     $order[$key]['error']['type'][] = 'createShippingDocument';
                     $order[$key]['error']['message'][] = $jsonGetCreateShippingDocument['response']['result_list'][0]['fail_message'];
                 }
                 ##########################################
                 ###### end create shipping document ######
                 ##########################################
-            }
-            else
-            {
+            } else {
                 $order[$key]['error']['type'][] = 'generateShopeeCN';
                 $order[$key]['error']['message'][] = $jsonGetShippingDocumentParameter['message'];
             }
@@ -1651,8 +1657,7 @@ class ShippingController extends Controller
             #################################################
         }
 
-        if(isset($CNS) && count($CNS) > 0)
-        {
+        if (isset($CNS) && count($CNS) > 0) {
             return response()->json([
                 'success' => true,
                 'message' => 'Success',
@@ -1660,17 +1665,13 @@ class ShippingController extends Controller
             ], 200);
         }
 
-        $message .= "Success: ".count($CNS)." generated.<br>";
+        $message .= "Success: " . count($CNS) . " generated.<br>";
 
-        if(isset($order) && count($order) > 0)
-        {
-            foreach($order as $key => $value)
-            {
-                if(isset($value['error']['type']) && count($value['error']['type']) > 0)
-                {
-                    foreach($value['error']['type'] as $k => $v)
-                    {
-                        $message .= "Failed: Order ID ".$value['id']." - ".$value['error']['message'][$k]."<br>";
+        if (isset($order) && count($order) > 0) {
+            foreach ($order as $key => $value) {
+                if (isset($value['error']['type']) && count($value['error']['type']) > 0) {
+                    foreach ($value['error']['type'] as $k => $v) {
+                        $message .= "Failed: Order ID " . $value['id'] . " - " . $value['error']['message'][$k] . "<br>";
                     }
                 }
             }
@@ -1688,21 +1689,19 @@ class ShippingController extends Controller
     public function generateTiktokCN($orderIds)
     {
         $orders = Order::with(['shippings'])
-        ->select('payment_type','id')
-        ->whereIn('id', $orderIds)
-        ->where('payment_type', 23)
-        ->get();
+            ->select('payment_type', 'id')
+            ->whereIn('id', $orderIds)
+            ->where('payment_type', 23)
+            ->get();
 
         $order = [];
         $CNS = [];
         $message = '';
 
-        foreach($orders as $key => $value)
-        {
+        foreach ($orders as $key => $value) {
             $product_list = $this->generate_product_description($value->id);
             $order[$key]['id'] = $value->id;
-            if(isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings[0]->tracking_number))
-            {
+            if (isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings[0]->tracking_number)) {
                 $order[$key]['error']['type'][] = 'generateTiktokCN';
                 $order[$key]['error']['message'][] = 'No Tracking Number Found';
                 continue;
@@ -1714,8 +1713,7 @@ class ShippingController extends Controller
             $generateCN = TiktokTrait::generateCN($order[$key]['additional_data']);
             $generateCN = json_decode($generateCN, true);
 
-            if($generateCN['code'] != 0)
-            {
+            if ($generateCN['code'] != 0) {
                 $order[$key]['error']['type'][] = 'generateCN';
                 $order[$key]['error']['message'][] = $generateCN['message'];
                 continue;
@@ -1735,9 +1733,8 @@ class ShippingController extends Controller
             #################################################
         }
 
-        if(isset($CNS) && count($CNS) > 0)
-        {
-            $message .= "Success: ".count($CNS)." generated.<br>";
+        if (isset($CNS) && count($CNS) > 0) {
+            $message .= "Success: " . count($CNS) . " generated.<br>";
 
             return response()->json([
                 'success' => true,
@@ -1746,15 +1743,11 @@ class ShippingController extends Controller
             ], 200);
         }
 
-        if(isset($order) && count($order) > 0)
-        {
-            foreach($order as $key => $value)
-            {
-                if(isset($value['error']['type']) && count($value['error']['type']) > 0)
-                {
-                    foreach($value['error']['type'] as $k => $v)
-                    {
-                        $message .= "Failed: Order ID ".$value['id']." - ".$value['error']['message'][$k]."<br>";
+        if (isset($order) && count($order) > 0) {
+            foreach ($order as $key => $value) {
+                if (isset($value['error']['type']) && count($value['error']['type']) > 0) {
+                    foreach ($value['error']['type'] as $k => $v) {
+                        $message .= "Failed: Order ID " . $value['id'] . " - " . $value['error']['message'][$k] . "<br>";
                     }
                 }
             }
@@ -1783,14 +1776,13 @@ class ShippingController extends Controller
         $data['created_by'] = auth()->user()->id ?? 1;
 
         $orders = Order::with(['shippings'])
-        ->select('orders.payment_type','orders.id','orders.third_party_sn','couriers.code')
-        ->whereIn('orders.id', $data['order_ids'])
-        ->where('orders.payment_type', $platform)
-        ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
-        ->get();
+            ->select('orders.payment_type', 'orders.id', 'orders.third_party_sn', 'couriers.code')
+            ->whereIn('orders.id', $data['order_ids'])
+            ->where('orders.payment_type', $platform)
+            ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
+            ->get();
 
-        if(!count($orders) > 0)
-        {
+        if (!count($orders) > 0) {
             return response()->json([
                 'success' => false,
                 'message' => 'No order found',
@@ -1798,13 +1790,11 @@ class ShippingController extends Controller
             ], 200);
         }
 
-        if($platform == 22) #shopee only
+        if ($platform == 22) #shopee only
         {
-            foreach($orders as $order)
-            {
+            foreach ($orders as $order) {
                 //check third party sn
-                if(empty($order->third_party_sn))
-                {
+                if (empty($order->third_party_sn)) {
                     $responseFailed['order_id'][] = $order->id;
                     $responseFailed['message'][] = 'Third party sn not found';
                     continue;
@@ -1813,8 +1803,7 @@ class ShippingController extends Controller
                 //get order status
                 $order_details = ShopeeTrait::getOrderDetail($order->third_party_sn);
                 $detailsJson = json_decode($order_details, true);
-                if(!empty($detailsJson['error']))
-                {
+                if (!empty($detailsJson['error'])) {
                     $responseFailed['order_id'][] = $order->id;
                     $responseFailed['message'][] = $detailsJson['message'];
                     continue;
@@ -1822,20 +1811,17 @@ class ShippingController extends Controller
                 $order_status = $detailsJson['response']['order_list'][0]['order_status'];
 
                 //check order status to arrange shipment
-                if($order_status == 'READY_TO_SHIP')
-                {
+                if ($order_status == 'READY_TO_SHIP') {
                     //get time slot
                     $timeslot = ShopeeTrait::getShippingParameter($order->third_party_sn);
                     $timeslot = json_decode($timeslot, true);
-                    if(!empty($timeslot['error']))
-                    {
+                    if (!empty($timeslot['error'])) {
                         $responseFailed['order_id'][] = $order->id;
                         $responseFailed['message'][] = $timeslot['message'];
                         continue;
                     }
                     //check if no slot time found
-                    if(!isset($timeslot['response']['pickup']['address_list'][0]))
-                    {
+                    if (!isset($timeslot['response']['pickup']['address_list'][0])) {
                         $responseFailed['order_id'][] = $order->id;
                         $responseFailed['message'][] = 'No slot time found';
                         continue;
@@ -1855,10 +1841,9 @@ class ShippingController extends Controller
                         }
                     }
 
-                    $process = ShopeeTrait::shipOrder($order->third_party_sn,$availablePickupTimes[0]['pickup_time_id']);
+                    $process = ShopeeTrait::shipOrder($order->third_party_sn, $availablePickupTimes[0]['pickup_time_id']);
                     $processJson = json_decode($process, true);
-                    if(!empty($processJson['error']))
-                    {
+                    if (!empty($processJson['error'])) {
                         $responseFailed['order_id'][] = $order->id;
                         $responseFailed['message'][] = $processJson['message'];
                         continue;
@@ -1867,8 +1852,7 @@ class ShippingController extends Controller
                     //get tracking number
                     $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
                     $tracking_number = json_decode($tracking_number, true);
-                    if(!empty($tracking_number['error']))
-                    {
+                    if (!empty($tracking_number['error'])) {
                         $responseFailed['order_id'][] = $order->id;
                         $responseFailed['message'][] = $tracking_number['message'];
                         continue;
@@ -1879,27 +1863,26 @@ class ShippingController extends Controller
                         'tracking_no' => $tracking_number['response']['tracking_number'],
                     ]);
 
-                    Shipping::updateOrCreate([
-                        'order_id' => $order->id
-                    ],
-                    [
-                        'tracking_number' => $tracking_number['response']['tracking_number'],
-                        'courier' => $order->code,
-                        'created_by' => auth()->user()->id ?? 1,
-                        'additional_data' => $additional_data,
-                    ]);
+                    Shipping::updateOrCreate(
+                        [
+                            'order_id' => $order->id
+                        ],
+                        [
+                            'tracking_number' => $tracking_number['response']['tracking_number'],
+                            'courier' => $order->code,
+                            'created_by' => auth()->user()->id ?? 1,
+                            'additional_data' => $additional_data,
+                        ]
+                    );
 
                     $responseSuccess[] = $order->id;
                     //update order status to pending shipment
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
-                }
-                else
-                {
+                } else {
                     //get tracking number
                     $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
                     $tracking_number = json_decode($tracking_number, true);
-                    if(!empty($tracking_number['error']))
-                    {
+                    if (!empty($tracking_number['error'])) {
                         $responseFailed['order_id'][] = $order->id;
                         $responseFailed['message'][] = $tracking_number['message'];
                         continue;
@@ -1910,28 +1893,27 @@ class ShippingController extends Controller
                         'tracking_no' => $tracking_number['response']['tracking_number'],
                     ]);
 
-                    Shipping::updateOrCreate([
-                        'order_id' => $order->id
-                    ],
-                    [
-                        'tracking_number' => $tracking_number['response']['tracking_number'],
-                        'courier' => $order->code,
-                        'created_by' => auth()->user()->id ?? 1,
-                        'additional_data' => $additional_data,
-                    ]);
+                    Shipping::updateOrCreate(
+                        [
+                            'order_id' => $order->id
+                        ],
+                        [
+                            'tracking_number' => $tracking_number['response']['tracking_number'],
+                            'courier' => $order->code,
+                            'created_by' => auth()->user()->id ?? 1,
+                            'additional_data' => $additional_data,
+                        ]
+                    );
 
                     $responseProcessing[] = $order->id;
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
                 }
             }
-        }
-        elseif($platform == 23) #tiktok only
+        } elseif ($platform == 23) #tiktok only
         {
-            foreach($orders as $order)
-            {
+            foreach ($orders as $order) {
                 //check third party sn
-                if(empty($order->shippings->first()->additional_data))
-                {
+                if (empty($order->shippings->first()->additional_data)) {
                     $responseFailed['order_id'][] = $order->id;
                     $responseFailed['message'][] = 'Third party data not found';
                     continue;
@@ -1940,8 +1922,7 @@ class ShippingController extends Controller
                 $additional_data = json_decode($order->shippings->first()->additional_data, true);
                 $order_details = TiktokTrait::getOrderDetails($additional_data);
                 $detailsJson = json_decode($order_details, true);
-                if($detailsJson['code'] != 0)
-                {
+                if ($detailsJson['code'] != 0) {
                     $responseFailed['order_id'][] = $order->id;
                     $responseFailed['message'][] = $detailsJson['message'];
                     continue;
@@ -1949,12 +1930,10 @@ class ShippingController extends Controller
                 $order_status = $detailsJson['data']['order_list'][0]['order_status'];
 
                 //check order status to arrange shipment
-                if($order_status == '111')
-                {
+                if ($order_status == '111') {
                     $process = TikTokTrait::shipOrder($additional_data);
                     $processJson = json_decode($process, true);
-                    if($processJson['code'] != 0)
-                    {
+                    if ($processJson['code'] != 0) {
                         $responseFailed['order_id'][] = $order->id;
                         $responseFailed['message'][] = $processJson['message'];
                         continue;
@@ -1971,22 +1950,22 @@ class ShippingController extends Controller
                         'tracking_no' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number']
                     ]);
 
-                    Shipping::updateOrCreate([
-                        'order_id' => $order->id
-                    ],
-                    [
-                        'tracking_number' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number'],
-                        'courier' => $order->code,
-                        'created_by' => auth()->user()->id ?? 1,
-                        'additional_data' => $additional_data,
-                    ]);
+                    Shipping::updateOrCreate(
+                        [
+                            'order_id' => $order->id
+                        ],
+                        [
+                            'tracking_number' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number'],
+                            'courier' => $order->code,
+                            'created_by' => auth()->user()->id ?? 1,
+                            'additional_data' => $additional_data,
+                        ]
+                    );
 
                     $responseSuccess[] = $order->id;
                     //update order status to pending shipment
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
-                }
-                else
-                {
+                } else {
                     //run back to get tracking number
                     $order_details = TiktokTrait::getOrderDetails($additional_data);
                     $detailsJson = json_decode($order_details, true);
@@ -1998,23 +1977,23 @@ class ShippingController extends Controller
                         'tracking_no' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number']
                     ]);
 
-                    Shipping::updateOrCreate([
-                        'order_id' => $order->id
-                    ],
-                    [
-                        'tracking_number' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number'],
-                        'courier' => $order->code,
-                        'created_by' => auth()->user()->id ?? 1,
-                        'additional_data' => $additional_data,
-                    ]);
+                    Shipping::updateOrCreate(
+                        [
+                            'order_id' => $order->id
+                        ],
+                        [
+                            'tracking_number' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number'],
+                            'courier' => $order->code,
+                            'created_by' => auth()->user()->id ?? 1,
+                            'additional_data' => $additional_data,
+                        ]
+                    );
 
                     $responseProcessing[] = $order->id;
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
                 }
             }
-        }
-        else
-        {
+        } else {
             return response()->json([
                 'success' => false,
                 'message' => 'Platform not found',
@@ -2022,14 +2001,12 @@ class ShippingController extends Controller
             ], 200);
         }
 
-        $message .= "Success: ".count($responseSuccess)." order.<br>Already Processed/Shipped: ".count($responseProcessing)." orders.<br>";
+        $message .= "Success: " . count($responseSuccess) . " order.<br>Already Processed/Shipped: " . count($responseProcessing) . " orders.<br>";
 
-        if(isset($responseFailed['order_id']) && count($responseFailed['order_id']) > 0)
-        {
-           foreach($responseFailed['order_id'] as $key => $value)
-           {
-               $message .= "Failed: Order ID ".$value." - ".$responseFailed['message'][$key]."<br>";
-           }
+        if (isset($responseFailed['order_id']) && count($responseFailed['order_id']) > 0) {
+            foreach ($responseFailed['order_id'] as $key => $value) {
+                $message .= "Failed: Order ID " . $value . " - " . $responseFailed['message'][$key] . "<br>";
+            }
         }
 
         return response()->json([
@@ -2048,18 +2025,16 @@ class ShippingController extends Controller
 
         // filter only selected order shipping not exists
         $order_ex = Order::with(['customer.states', 'items', 'items.product', 'company'])
-        ->whereIn('id', $order_ids)
-        ->whereDoesntHave('shippings', function ($query) {
-            $query->where('courier', EMZIEXPRESS_ID);
-        })
-        ->get();
-        if(count($order_ex) == 0)
-        {
+            ->whereIn('id', $order_ids)
+            ->whereDoesntHave('shippings', function ($query) {
+                $query->where('courier', EMZIEXPRESS_ID);
+            })
+            ->get();
+        if (count($order_ex) == 0) {
             return 0;
         }
 
-        foreach ($order_ex as $key => $order)
-        {
+        foreach ($order_ex as $key => $order) {
             $product_list = $this->generate_product_description($order->id);
             //check first access token
             $accessToken = EmziExpressTrait::checkAccessToken($order->company->id);
@@ -2148,8 +2123,7 @@ class ShippingController extends Controller
             $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
 
             $generateCN = EmziExpressTrait::generateCN($accessToken->token, $jsonSend);
-            if(isset($generateCN['shipmentItems'][0]['trackingNumber']) && isset($generateCN['shipmentItems'][0]['labels']))
-            {
+            if (isset($generateCN['shipmentItems'][0]['trackingNumber']) && isset($generateCN['shipmentItems'][0]['labels'])) {
                 $shipping->tracking_number = $generateCN['shipmentItems'][0]['trackingNumber'] ?? '';
                 $shipping->attachment = 'labels/' . shipment_num_format($order) . '.pdf';
                 $shipping->packing_attachment = $product_list;
@@ -2159,16 +2133,13 @@ class ShippingController extends Controller
 
                 $CNS['order_ids'][] = $order->id;
                 $CNS['attachment'][] = $shipping->attachment;
-            }
-            else
-            {
+            } else {
                 $errors[] = $generateCN;
             }
 
         }
 
-        if(count($CNS) > 0)
-        {
+        if (count($CNS) > 0) {
             return response()->json([
                 'success' => true,
                 'message' => 'Success',
@@ -2176,13 +2147,11 @@ class ShippingController extends Controller
             ], 200);
         }
 
-        $message .= "Success: ".count($CNS)." generated.<br>";
+        $message .= "Success: " . count($CNS) . " generated.<br>";
 
-        if(count($errors) > 0)
-        {
-            foreach($errors as $error)
-            {
-                $message .= "Failed: ".$error['message']."<br>";
+        if (count($errors) > 0) {
+            foreach ($errors as $error) {
+                $message .= "Failed: " . $error['message'] . "<br>";
             }
         }
 
