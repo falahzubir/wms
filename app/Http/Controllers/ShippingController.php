@@ -2159,4 +2159,36 @@ class ShippingController extends Controller
         ], 200);
     }
 
+    public function get_shipping_cost_id($order)
+    {
+        $courier_id = $order->courier_id;
+        $state_id = $order->customer->state;
+        $product_weight = 0;
+        foreach($order->items as $item)
+        {
+            $weight = Product::where('id', $item['product_id'])->first()->weight;
+
+            $product_weight += $item['quantity'] * $weight;
+        }
+        $weight_category = WeightCategory::where('min_weight', '<=', $product_weight)->where('max_weight', '>=', $product_weight)->first();
+        $state_group = GroupStateList::where('state_id', $state_id)->first();
+
+        //get shipping cost
+        if ($weight_category && $courier_id && $state_group) {
+            $shipping_cost = ShippingCost::where('weight_category_id', $weight_category->id)
+            ->where('courier_id', $courier_id)
+            ->where('state_group_id', $state_group->state_group_id)
+            ->first();
+        }
+
+        if(isset($shipping_cost))
+        {
+            $shipping_cost_data['total_weight'] = $product_weight;
+            $shipping_cost_data['shipping_cost_id'] = $shipping_cost->id;
+            return $shipping_cost_data;
+        }
+        return false;
+
+    }
+
 }
