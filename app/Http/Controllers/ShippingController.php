@@ -26,6 +26,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\ShippingDocumentTemplate;
 use Karriere\PdfMerge\PdfMerge as PDFMerger;
 use App\Http\Controllers\api\ShippingApiController;
+use App\Models\Product;
+use App\Models\WeightCategory;
+use App\Models\GroupStateList;
+use App\Models\ShippingCost;
 
 class ShippingController extends Controller
 {
