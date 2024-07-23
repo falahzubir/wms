@@ -54,7 +54,7 @@ class Order extends Model
 
     public function logs()
     {
-        return $this->hasMany(OrderLog::class);
+        return $this->hasMany(OrderLog::class)->where('status', IS_ACTIVE);
     }
 
     public function company()
