@@ -262,17 +262,13 @@
                                         class="bi bi-file-earmark-ruled"></i> Generate CN</button>
                             @endcan
                         @endif
-                        {{-- @if (in_array(ACTION_GENERATE_PACKING, $actions)) --}}
-                            @can('order.download')
+                        @if (in_array(ACTION_GENERATE_PACKING, $actions))
+                            @can('permission.generate_packing')
                                 <button class="btn btn-teal" id="generate-packing-btn"><i
                                         class="bi bi-file-earmark-ruled"></i>
                                     Generate Packing</button>
-
-                                {{-- <a href="{{ route('generate_packing', Request::query()) }}" class="btn btn-teal">
-                                    <i class="bi bi-file-earmark-ruled"></i> Generate Packing
-                                </a> --}}
                             @endcan
-                        {{-- @endif --}}
+                        @endif
                         @if (in_array(ACTION_UPLOAD_TRACKING_BULK, $actions))
                             @can('tracking.upload')
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal"
@@ -1018,15 +1014,19 @@
 
             const removeOldTicked = (checkbox) => {
                 const orderId = checkbox.value;
-                const shippingIdElement = document.querySelector(`#shipping-${orderId}`);
+                const shippingIdElement = document.querySelector(`#attachment-${orderId}`);
                 const bucketElement = document.querySelector(`#bucket-${orderId}`);
 
                 if (checkbox.checked) {
-                    checkedOrder.push({
-                        orderId,
-                        attachment: shippingIdElement ? shippingIdElement.value : '',
-                        bucket: bucketElement ? bucketElement.value : ''
-                    });
+                    // Check if orderId already exists in checkedOrder
+                    const exists = checkedOrder.some(order => order.orderId === orderId);
+                    if (!exists) {
+                        checkedOrder.push({
+                            orderId,
+                            attachment: shippingIdElement ? shippingIdElement.value : '',
+                            bucket: bucketElement ? bucketElement.value : ''
+                        });
+                    }
                 } else {
                     checkedOrder = checkedOrder.filter(order => order.orderId !== orderId);
                 }
@@ -1053,8 +1053,13 @@
                 let html = '';
 
                 let formData = new FormData(document.querySelector('#search-form'));
+                
+                // Extract only the unique orderId values from the checkedOrder array
+                let orderIds = [...new Set(checkedOrder.map(item => item.orderId))].filter(orderId => orderId !== undefined);
+
                 formData.append('category_id', categoryBucket);
-                formData.append('order_ids', checkedOrder);
+                formData.append('order_ids', orderIds);
+
                 let response = await axios.post('/api/buckets/get-bucket-by-category', formData).then(res => {
 
                     let totalOrder = res.data.totalOrder;
@@ -2663,101 +2668,103 @@
                     })
             }
 
-            document.querySelector('#generate-packing-btn').onclick = function() {
-                const inputElements = Array.from(document.querySelectorAll('.check-order'));
-                let selectedOrders = inputElements.filter(chk => chk.checked).map(chk => chk.value);
+            @if (in_array(ACTION_GENERATE_PACKING, $actions))
+                document.querySelector('#generate-packing-btn').onclick = function() { 
+                    const inputElements = Array.from(document.querySelectorAll('.check-order'));
+                    let selectedOrders = inputElements.filter(chk => chk.checked).map(chk => chk.value);
 
-                // If no orders are selected
-                if (selectedOrders.length === 0) {
-                    Swal.fire({
-                        title: 'No order selected!',
-                        text: "Please select at least one order to generate packing.",
-                        icon: 'warning',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
-                }
-
-                // Check for valid attachments and bucket batch IDs
-                let invalidAttachments = selectedOrders.filter(orderId => {
-                    const shippingIdElement = document.querySelector(`#shipping-${orderId}`);
-                    return !shippingIdElement || shippingIdElement.value === '';
-                });
-
-                let invalidBuckets = selectedOrders.filter(orderId => {
-                    const bucketElement = document.querySelector(`#bucket-${orderId}`);
-                    return !bucketElement || bucketElement.value === '';
-                });
-
-                // Confirmation to generate packing
-                Swal.fire({
-                    title: 'Are you sure to generate packing list?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, generate it!',
-                    footer: 'Note: Picking and Consignment Notes must be generated first'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        if (invalidAttachments.length > 0) {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: "Please generate consignment notes first",
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                            return;
-                        }
-
-                        if (invalidBuckets.length > 0) {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: "Please assign bucket batch first",
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                            return;
-                        }
-
-                        axios.post('{{ route("generate_packing") }}', {
-                            orders: selectedOrders,
-                            shippingDetails: selectedOrders.map(orderId => ({
-                                orderId,
-                                attachment: document.querySelector(`#shipping-${orderId}`).value,
-                                bucket: document.querySelector(`#bucket-${orderId}`).value
-                            }))
-                        }, {
-                            responseType: 'blob' // Important for downloading files
-                        })
-                        .then(response => {
-                            Swal.fire({
-                                title: 'Success!',
-                                text: 'Packing list generated successfully.',
-                                icon: 'success',
-                                confirmButtonText: 'OK'
-                            }).then(() => {
-                                const url = window.URL.createObjectURL(new Blob([response.data]));
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.setAttribute('download', 'generate_packing.csv'); // Filename
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                            });
-                        })
-                        .catch(error => {
-                            console.error('There was an error!', error);
-                            Swal.fire({
-                                title: 'Error!',
-                                text: 'There was an error generating the packing list.',
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
+                    // If no orders are selected
+                    if (selectedOrders.length === 0) {
+                        Swal.fire({
+                            title: 'No order selected!',
+                            text: "Please select at least one order to generate packing.",
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
                         });
+                        return;
                     }
-                });
-            }
+
+                    // Check for valid attachments and bucket batch IDs
+                    let invalidAttachments = selectedOrders.filter(orderId => {
+                        const shippingIdElement = document.querySelector(`#shipping-${orderId}`);
+                        return !shippingIdElement || shippingIdElement.value === '';
+                    });
+
+                    let invalidBuckets = selectedOrders.filter(orderId => {
+                        const bucketElement = document.querySelector(`#bucket-${orderId}`);
+                        return !bucketElement || bucketElement.value === '';
+                    });
+
+                    // Confirmation to generate packing
+                    Swal.fire({
+                        title: 'Are you sure to generate packing list?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, generate it!',
+                        footer: 'Note: Picking and Consignment Notes must be generated first'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (invalidAttachments.length > 0) {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Please generate consignment notes first",
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                                return;
+                            }
+
+                            if (invalidBuckets.length > 0) {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: "Please assign bucket batch first",
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                                return;
+                            }
+
+                            axios.post('{{ route("generate_packing") }}', {
+                                orders: selectedOrders,
+                                shippingDetails: selectedOrders.map(orderId => ({
+                                    orderId,
+                                    attachment: document.querySelector(`#shipping-${orderId}`).value,
+                                    bucket: document.querySelector(`#bucket-${orderId}`).value
+                                }))
+                            }, {
+                                responseType: 'blob' // Important for downloading files
+                            })
+                            .then(response => {
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: 'Packing list generated successfully.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.setAttribute('download', 'generate_packing.csv'); // Filename
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                });
+                            })
+                            .catch(error => {
+                                console.error('There was an error!', error);
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'There was an error generating the packing list.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            });
+                        }
+                    });
+                }
+            @endif
         </script>
 
     </x-slot>

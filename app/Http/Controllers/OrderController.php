@@ -202,7 +202,7 @@ class OrderController extends Controller
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING, ACTION_GENERATE_PACKING],
         ]);
     }
 
@@ -1172,7 +1172,7 @@ class OrderController extends Controller
         $data = $this->get_generate_packing_data($orders);
 
         // Generate Packing
-        $response = new StreamedResponse(function () use ($data) {
+        $response = new StreamedResponse(function () use ($data, $orders) {
             $handle = fopen('php://output', 'w');
 
             // Add headers
@@ -1206,6 +1206,11 @@ class OrderController extends Controller
 
             fclose($handle);
         });
+
+        // Set order status for each order
+        foreach ($orders as $order) {
+            $this->set_order_status($order, ORDER_STATUS_PACKING, "Generate packing list");
+        }
 
         return $response;
     }
