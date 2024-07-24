@@ -1044,7 +1044,11 @@ class ShippingController extends Controller
         $array_data = ($request->input('cn_data'));
 
         // for now support only dhl-ecommerce and posmalaysia
-        if ($request->input('courier_id') == DHL_ID) {
+        if($request->input('courier_id') == DHL_ID){
+            if(count($array_data) === 1)
+            {
+                return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+            }
             return $this->dhl_label_single($order_id, $array_data); // for dhl orders
         } elseif ($request->input('courier_id') == POSMALAYSIA_ID) {
             $posmalaysia = new \App\Http\Controllers\ThirdParty\PosMalaysiaController();
