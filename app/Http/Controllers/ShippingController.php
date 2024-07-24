@@ -916,7 +916,7 @@ class ShippingController extends Controller
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function attempt_order_list(Request $request)
+    public function attempt_order_milestone(Request $request)
     {
         $request->validate([
             'tracking_id' => 'required|exists:shippings,tracking_number',
