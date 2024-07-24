@@ -1044,7 +1044,11 @@ class ShippingController extends Controller
         $array_data = ($request->input('cn_data'));
 
         // for now support only dhl-ecommerce and posmalaysia
-        if ($request->input('courier_id') == DHL_ID) {
+        if($request->input('courier_id') == DHL_ID){
+            if(count($array_data) === 1)
+            {
+                return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+            }
             return $this->dhl_label_single($order_id, $array_data); // for dhl orders
         } elseif ($request->input('courier_id') == POSMALAYSIA_ID) {
             $posmalaysia = new \App\Http\Controllers\ThirdParty\PosMalaysiaController();
@@ -1305,7 +1309,10 @@ class ShippingController extends Controller
         $order->bucket_batch_id = null;
         $order->save();
 
-        //delete all shipping
+        //delete all shipping and shipping products
+        foreach ($order->shippings as $shipping) {
+            $shipping->shipping_product()->delete();
+        }
         $order->shippings()->delete();
 
         //set order status to pending
@@ -1451,77 +1458,46 @@ class ShippingController extends Controller
         return true;
     }
 
+
     public function sort_order_to_download($order_ids)
     {
-        // Fetch the product counts per order
+        $newOrders = [];
+
+        $orders = OrderItem::with(['order', 'product'])
+            ->whereIn('order_id', $order_ids)
+            ->where('status', IS_ACTIVE)
+            ->where('is_foc', IS_INACTIVE)
+            ->get();
+
         $product_counts = OrderItem::select('order_id', DB::raw('COUNT(DISTINCT product_id) as product_count'))
             ->whereIn('order_id', $order_ids)
             ->groupBy('order_id')
             ->pluck('product_count', 'order_id')->toArray();
 
-        // Sort $order_ids by the count of distinct products in ascending order
-        uasort($product_counts, function ($a, $b) {
-            return $a <=> $b;
-        });
+        // Group by product name
+        foreach ($orders->groupBy('product.name') as $product_name => $items) {
+            // Sort the group by product count and quantity
+            $sortedItems = $items->sortBy(function ($item) use ($product_counts) {
+                return [$product_counts[$item->order_id], $item->quantity];
+            });
 
-        // Get sorted order_ids based on their product count
-        $sorted_order_ids = array_keys($product_counts);
-
-        $orders = OrderItem::with(['order', 'product'])
-            ->whereIn('order_id', $sorted_order_ids)
-            ->where('status', IS_ACTIVE)
-            ->where('is_foc', IS_INACTIVE)
-            ->orderByRaw("FIELD(order_id, " . implode(',', $sorted_order_ids) . ")") // Ensures the order of orders is as per $sorted_order_ids
-            ->get();
-
-        $newOrders = [];
-
-        // Group orders by marital status and preserve the sorted order
-        $single_orders = $orders->filter(function ($order) {
-            return $order->marital_status == "single";
-        })->sortBy(function ($order) use ($sorted_order_ids) {
-            return array_search($order->order_id, $sorted_order_ids);
-        });
-
-        $married_orders = $orders->filter(function ($order) {
-            return $order->marital_status == "married";
-        })->sortBy(function ($order) use ($sorted_order_ids) {
-            return array_search($order->order_id, $sorted_order_ids);
-        });
-
-        // Process single orders
-        foreach ($single_orders->groupBy(function ($order) use ($product_counts) {
-            return $product_counts[$order->order_id] ?? 0; // Default to 0 if not set
-        }) as $count => $group) {
-            foreach ($group->groupBy("product.name") as $product_name => $items) {
-                foreach ($items->sortBy("quantity")->pluck("order_id") as $order_id) {
-                    $newOrders[] = $order_id;
-                }
+            // Collect order IDs
+            foreach ($sortedItems->pluck('order_id') as $order_id) {
+                $newOrders[] = $order_id;
             }
         }
 
-        // Process married orders
-        foreach ($married_orders->groupBy(function ($order) use ($product_counts) {
-            return $product_counts[$order->order_id] ?? 0; // Default to 0 if not set
-        }) as $count => $group) {
-            foreach ($group->groupBy("product.name") as $product_name => $items) {
-                foreach ($items->sortBy("quantity")->pluck("order_id") as $order_id) {
-                    $newOrders[] = $order_id;
-                }
+        // array diff newOrders and order_ids
+        $diff = array_diff($order_ids, $newOrders);
+
+        if (!empty($diff)) {
+            foreach ($diff as $order_id) {
+                $newOrders[] = (int)$order_id;
             }
-        }
-
-        // Check for any missing order IDs
-        $missing_order_ids = array_diff($order_ids, $newOrders);
-
-        // Add missing orders to the newOrders array
-        foreach ($missing_order_ids as $order_id) {
-            $newOrders[] = (int) $order_id;
         }
 
         return $newOrders;
     }
-
 
 
     // public function sort_order_to_download($order_ids)
