@@ -1209,7 +1209,7 @@ class OrderController extends Controller
 
         // Set order status for each order
         foreach ($orders as $order) {
-            $this->set_order_status($order, ORDER_STATUS_PACKING, "Generate packing list");
+            set_order_status($order, ORDER_STATUS_PACKING, "Generate packing list");
         }
 
         return $response;
