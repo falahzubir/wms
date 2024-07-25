@@ -2686,7 +2686,7 @@
 
                     // Check for valid attachments and bucket batch IDs
                     let invalidAttachments = selectedOrders.filter(orderId => {
-                        const shippingIdElement = document.querySelector(`#shipping-${orderId}`);
+                        const shippingIdElement = document.querySelector(`#attachment-${orderId}`);
                         return !shippingIdElement || shippingIdElement.value === '';
                     });
 
@@ -2730,7 +2730,7 @@
                                 orders: selectedOrders,
                                 shippingDetails: selectedOrders.map(orderId => ({
                                     orderId,
-                                    attachment: document.querySelector(`#shipping-${orderId}`).value,
+                                    attachment: document.querySelector(`#attachment-${orderId}`).value,
                                     bucket: document.querySelector(`#bucket-${orderId}`).value
                                 }))
                             }, {

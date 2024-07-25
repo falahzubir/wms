@@ -273,7 +273,7 @@ class PosMalaysiaController extends ShippingController
             ]);
         }
 
-        set_order_status_bulk($orders_pos, ORDER_STATUS_PACKING, 'Connote downloaded successfully');
+        set_order_status_bulk($orders_pos, ORDER_STATUS_PROCESSING, 'Connote downloaded successfully');
 
         return response([
             'status' => 'success',
@@ -468,7 +468,7 @@ class PosMalaysiaController extends ShippingController
             ], 400);
         }
 
-        set_order_status($order, ORDER_STATUS_PACKING, 'Connote downloaded successfully', auth()->user()->id ?? 1);
+        set_order_status($order, ORDER_STATUS_PROCESSING, 'Connote downloaded successfully', auth()->user()->id ?? 1);
 
         return response()->json([
             'status' => 'success',

@@ -1208,8 +1208,14 @@ class OrderController extends Controller
         });
 
         // Set order status for each order
-        foreach ($orders as $order) {
-            set_order_status($order, ORDER_STATUS_PACKING, "Generate packing list");
+        foreach ($orders as $orderId) {
+            $order = Order::find($orderId); // Fetch the order object by its ID
+            if ($order) {
+                set_order_status($order, ORDER_STATUS_PACKING, "Generate packing list");
+            } else {
+                // Handle the case where the order is not found (optional)
+                Log::warning("Order with ID $orderId not found.");
+            }
         }
 
         return $response;
