@@ -1309,7 +1309,10 @@ class ShippingController extends Controller
         $order->bucket_batch_id = null;
         $order->save();
 
-        //delete all shipping
+        //delete all shipping and shipping products
+        foreach ($order->shippings as $shipping) {
+            $shipping->shipping_product()->delete();
+        }
         $order->shippings()->delete();
 
         //set order status to pending
@@ -1459,31 +1462,31 @@ class ShippingController extends Controller
     public function sort_order_to_download($order_ids)
     {
         $newOrders = [];
-        
+
         $orders = OrderItem::with(['order', 'product'])
             ->whereIn('order_id', $order_ids)
             ->where('status', IS_ACTIVE)
             ->where('is_foc', IS_INACTIVE)
             ->get();
-    
+
         $product_counts = OrderItem::select('order_id', DB::raw('COUNT(DISTINCT product_id) as product_count'))
             ->whereIn('order_id', $order_ids)
             ->groupBy('order_id')
             ->pluck('product_count', 'order_id')->toArray();
-    
+
         // Group by product name
         foreach ($orders->groupBy('product.name') as $product_name => $items) {
             // Sort the group by product count and quantity
             $sortedItems = $items->sortBy(function ($item) use ($product_counts) {
                 return [$product_counts[$item->order_id], $item->quantity];
             });
-    
+
             // Collect order IDs
             foreach ($sortedItems->pluck('order_id') as $order_id) {
                 $newOrders[] = $order_id;
             }
         }
-    
+
         // array diff newOrders and order_ids
         $diff = array_diff($order_ids, $newOrders);
 
