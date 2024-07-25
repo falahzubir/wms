@@ -80,7 +80,7 @@ Route::prefix('shippings')->group(function () {
     Route::post('check-multiple-parcels', [ShippingController::class, 'check_multiple_parcels']);
     Route::post('update-tracking', [ShippingController::class, 'update_bulk_tracking']);
     Route::post('first-milestone', [ShippingController::class, 'first_milestone']);
-    Route::post('attempt-order-list', [ShippingController::class, 'attempt_order_list']);
+    Route::post('attempt-order-milestone', [ShippingController::class, 'attempt_order_milestone']);
     Route::post('delivered-milestone', [ShippingController::class, 'delivered_milestone']);
     Route::post('return-ongoing-milestone', [ShippingController::class, 'return_ongoing_milestone']);
     Route::post('return-delivered-milestone', [ShippingController::class, 'return_delivered_milestone']);

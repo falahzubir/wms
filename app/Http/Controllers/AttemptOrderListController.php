@@ -115,7 +115,7 @@ class AttemptOrderListController extends Controller
                 $order = $shipping->order;
 
                 // Retrieve events with specific attempt statuses
-                $events = $shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->sortByDesc('attempt_time');
+                $events = $shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->sortBy('created_at');
 
                 // Retrieve reasons with specific attempt statuses
                 $reasons = $shipping->events->whereIn('attempt_status', [
@@ -129,7 +129,7 @@ class AttemptOrderListController extends Controller
                     'EM094',
                     'EM095',
                     'EM115',
-                ])->sortByDesc('attempt_time');
+                ])->sortBy('created_at');
 
                 // Initialize default values
                 $firstAttemptDate = '';
