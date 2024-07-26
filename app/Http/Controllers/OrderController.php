@@ -1159,68 +1159,6 @@ class OrderController extends Controller
     }
 
     // Generate Packing
-    // public function generate_packing(Request $request)
-    // {
-    //     // Validate the request to ensure orders are provided
-    //     $request->validate([
-    //         'orders' => 'required|array'
-    //     ]);
-
-    //     $orders = $request->input('orders');
-
-    //     // Fetch data for Generate Packing based on selected orders
-    //     $data = $this->get_generate_packing_data($orders);
-
-    //     // Generate Packing
-    //     $response = new StreamedResponse(function () use ($data, $orders) {
-    //         $handle = fopen('php://output', 'w');
-
-    //         // Add headers
-    //         fputcsv($handle, [
-    //             'Product',
-    //             'Order(s)',
-    //         ]);
-
-    //         $productCounts = [];
-
-    //         // Add data rows
-    //         foreach ($data as $row) {
-    //             $products = $row->items ? $row->items->map(function($item) {
-    //                 return $item->product->code . ' [' . $item->quantity . ']';
-    //             })->implode(', ') : '';
-
-    //             if (isset($productCounts[$products])) {
-    //                 $productCounts[$products]++;
-    //             } else {
-    //                 $productCounts[$products] = 1;
-    //             }
-    //         }
-
-    //         // Write the aggregated data to the CSV
-    //         foreach ($productCounts as $productCode => $count) {
-    //             fputcsv($handle, [
-    //                 $productCode,
-    //                 $count,
-    //             ]);
-    //         }
-
-    //         fclose($handle);
-    //     });
-
-    //     // Set order status for each order
-    //     foreach ($orders as $orderId) {
-    //         $order = Order::find($orderId); // Fetch the order object by its ID
-    //         if ($order) {
-    //             set_order_status($order, ORDER_STATUS_PACKING, "Generate packing list");
-    //         } else {
-    //             // Handle the case where the order is not found (optional)
-    //             Log::warning("Order with ID $orderId not found.");
-    //         }
-    //     }
-
-    //     return $response;
-    // }
-
     public function generate_packing(Request $request)
     {
         // Validate the request to ensure orders are provided
@@ -1244,6 +1182,7 @@ class OrderController extends Controller
             ]);
 
             $productCounts = [];
+            $productOrder = [];
 
             // Add data rows
             foreach ($data as $row) {
@@ -1255,19 +1194,26 @@ class OrderController extends Controller
                     $productCounts[$products]++;
                 } else {
                     $productCounts[$products] = 1;
+                    $productOrder[] = $products; // Record the order in which the products are first encountered
                 }
             }
 
-            // Sort and group products by single or married
+            // Function to extract the quantity from the product code
+            $extractQuantity = function($productCode) {
+                preg_match('/\[(\d+)\]/', $productCode, $matches);
+                return $matches ? (int)$matches[1] : 0;
+            };
+
+            // Sort and group products by single or married, then by first encounter order, then by quantity
             $singleProducts = [];
             $marriedProducts = [];
-            
+
             foreach ($productCounts as $productCode => $count) {
                 // Check if the product is single or married
                 $coreProducts = array_filter(explode(', ', $productCode), function($product) {
                     return stripos($product, 'FOC') === false;
                 });
-                
+
                 if (count($coreProducts) == 1) {
                     $singleProducts[$productCode] = $count;
                 } else {
@@ -1275,20 +1221,29 @@ class OrderController extends Controller
                 }
             }
 
-            // Write the single products to the CSV first
-            foreach ($singleProducts as $productCode => $count) {
-                fputcsv($handle, [
-                    $productCode,
-                    $count,
-                ]);
+            // Sort products by the order they were first encountered and by quantity within each product group
+            usort($productOrder, function($a, $b) use ($extractQuantity) {
+                return $extractQuantity($a) <=> $extractQuantity($b);
+            });
+
+            // Write the single products to the CSV first, in the order they were first encountered and by quantity
+            foreach ($productOrder as $productCode) {
+                if (isset($singleProducts[$productCode])) {
+                    fputcsv($handle, [
+                        $productCode,
+                        $singleProducts[$productCode],
+                    ]);
+                }
             }
 
-            // Write the married products to the CSV next
-            foreach ($marriedProducts as $productCode => $count) {
-                fputcsv($handle, [
-                    $productCode,
-                    $count,
-                ]);
+            // Write the married products to the CSV next, in the order they were first encountered and by quantity
+            foreach ($productOrder as $productCode) {
+                if (isset($marriedProducts[$productCode])) {
+                    fputcsv($handle, [
+                        $productCode,
+                        $marriedProducts[$productCode],
+                    ]);
+                }
             }
 
             fclose($handle);
