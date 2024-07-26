@@ -262,7 +262,7 @@
                                         class="bi bi-file-earmark-ruled"></i> Generate CN</button>
                             @endcan
                         @endif
-                        @if (in_array(ACTION_GENERATE_PACKING, $actions))
+                        @if (in_array(ACTION_GENERATE_PACKING, $actions)) 
                             @can('permission.generate_packing')
                                 <button class="btn btn-teal" id="generate-packing-btn"><i
                                         class="bi bi-file-earmark-ruled"></i>
@@ -2750,6 +2750,7 @@
                                     document.body.appendChild(link);
                                     link.click();
                                     document.body.removeChild(link);
+                                    location.reload(); // Reload the page
                                 });
                             })
                             .catch(error => {

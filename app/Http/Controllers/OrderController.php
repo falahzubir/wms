@@ -1159,6 +1159,68 @@ class OrderController extends Controller
     }
 
     // Generate Packing
+    // public function generate_packing(Request $request)
+    // {
+    //     // Validate the request to ensure orders are provided
+    //     $request->validate([
+    //         'orders' => 'required|array'
+    //     ]);
+
+    //     $orders = $request->input('orders');
+
+    //     // Fetch data for Generate Packing based on selected orders
+    //     $data = $this->get_generate_packing_data($orders);
+
+    //     // Generate Packing
+    //     $response = new StreamedResponse(function () use ($data, $orders) {
+    //         $handle = fopen('php://output', 'w');
+
+    //         // Add headers
+    //         fputcsv($handle, [
+    //             'Product',
+    //             'Order(s)',
+    //         ]);
+
+    //         $productCounts = [];
+
+    //         // Add data rows
+    //         foreach ($data as $row) {
+    //             $products = $row->items ? $row->items->map(function($item) {
+    //                 return $item->product->code . ' [' . $item->quantity . ']';
+    //             })->implode(', ') : '';
+
+    //             if (isset($productCounts[$products])) {
+    //                 $productCounts[$products]++;
+    //             } else {
+    //                 $productCounts[$products] = 1;
+    //             }
+    //         }
+
+    //         // Write the aggregated data to the CSV
+    //         foreach ($productCounts as $productCode => $count) {
+    //             fputcsv($handle, [
+    //                 $productCode,
+    //                 $count,
+    //             ]);
+    //         }
+
+    //         fclose($handle);
+    //     });
+
+    //     // Set order status for each order
+    //     foreach ($orders as $orderId) {
+    //         $order = Order::find($orderId); // Fetch the order object by its ID
+    //         if ($order) {
+    //             set_order_status($order, ORDER_STATUS_PACKING, "Generate packing list");
+    //         } else {
+    //             // Handle the case where the order is not found (optional)
+    //             Log::warning("Order with ID $orderId not found.");
+    //         }
+    //     }
+
+    //     return $response;
+    // }
+
     public function generate_packing(Request $request)
     {
         // Validate the request to ensure orders are provided
@@ -1196,8 +1258,33 @@ class OrderController extends Controller
                 }
             }
 
-            // Write the aggregated data to the CSV
+            // Sort and group products by single or married
+            $singleProducts = [];
+            $marriedProducts = [];
+            
             foreach ($productCounts as $productCode => $count) {
+                // Check if the product is single or married
+                $coreProducts = array_filter(explode(', ', $productCode), function($product) {
+                    return stripos($product, 'FOC') === false;
+                });
+                
+                if (count($coreProducts) == 1) {
+                    $singleProducts[$productCode] = $count;
+                } else {
+                    $marriedProducts[$productCode] = $count;
+                }
+            }
+
+            // Write the single products to the CSV first
+            foreach ($singleProducts as $productCode => $count) {
+                fputcsv($handle, [
+                    $productCode,
+                    $count,
+                ]);
+            }
+
+            // Write the married products to the CSV next
+            foreach ($marriedProducts as $productCode => $count) {
                 fputcsv($handle, [
                     $productCode,
                     $count,
