@@ -1182,7 +1182,6 @@ class OrderController extends Controller
             ]);
 
             $productCounts = [];
-            $productOrder = [];
 
             // Add data rows
             foreach ($data as $row) {
@@ -1194,7 +1193,6 @@ class OrderController extends Controller
                     $productCounts[$products]++;
                 } else {
                     $productCounts[$products] = 1;
-                    $productOrder[] = $products; // Record the order in which the products are first encountered
                 }
             }
 
@@ -1204,44 +1202,62 @@ class OrderController extends Controller
                 return $matches ? (int)$matches[1] : 0;
             };
 
-            // Sort and group products by single or married, then by first encounter order, then by quantity
-            $singleProducts = [];
-            $marriedProducts = [];
+            // Function to extract the core product codes from the product code string
+            $extractCoreProducts = function($productCode) {
+                $coreProducts = [];
+                preg_match_all('/(\w+) \[\d+\]/', $productCode, $matches);
+                if ($matches && isset($matches[1])) {
+                    $coreProducts = $matches[1];
+                }
+                return $coreProducts;
+            };
 
-            foreach ($productCounts as $productCode => $count) {
-                // Check if the product is single or married
-                $coreProducts = array_filter(explode(', ', $productCode), function($product) {
-                    return stripos($product, 'FOC') === false;
+            // Group and sort products by the number of products and then by core product codes and quantity
+            $sortedProducts = function($products) use ($extractCoreProducts, $extractQuantity) {
+                $groupedProducts = [];
+
+                // Group products by their core product codes
+                foreach ($products as $productCode => $count) {
+                    $coreProducts = $extractCoreProducts($productCode);
+                    $numProducts = count($coreProducts);
+                    $primaryProduct = $coreProducts[0] ?? '';
+                    $secondaryProduct = $coreProducts[1] ?? '';
+                    $tertiaryProduct = $coreProducts[2] ?? '';
+
+                    $groupKey = $numProducts . '|' . $primaryProduct . '|' . $secondaryProduct . '|' . $tertiaryProduct;
+
+                    if (!isset($groupedProducts[$groupKey])) {
+                        $groupedProducts[$groupKey] = [];
+                    }
+                    $groupedProducts[$groupKey][] = [
+                        'productCode' => $productCode,
+                        'count' => $count,
+                        'quantity' => $extractQuantity($productCode)
+                    ];
+                }
+
+                // Sort each group by number of products first, then primary, secondary, and tertiary products
+                uksort($groupedProducts, function($a, $b) {
+                    list($numA, $primaryA, $secondaryA, $tertiaryA) = explode('|', $a);
+                    list($numB, $primaryB, $secondaryB, $tertiaryB) = explode('|', $b);
+
+                    if ($primaryA == $primaryB) {
+                        return $numA <=> $numB;
+                    }
+                    return strcmp($primaryA, $primaryB);
                 });
 
-                if (count($coreProducts) == 1) {
-                    $singleProducts[$productCode] = $count;
-                } else {
-                    $marriedProducts[$productCode] = $count;
-                }
-            }
+                return $groupedProducts;
+            };
 
-            // Sort products by the order they were first encountered and by quantity within each product group
-            usort($productOrder, function($a, $b) use ($extractQuantity) {
-                return $extractQuantity($a) <=> $extractQuantity($b);
-            });
+            $sortedProducts = $sortedProducts($productCounts);
 
-            // Write the single products to the CSV first, in the order they were first encountered and by quantity
-            foreach ($productOrder as $productCode) {
-                if (isset($singleProducts[$productCode])) {
+            // Write the sorted products to the CSV
+            foreach ($sortedProducts as $group) {
+                foreach ($group as $product) {
                     fputcsv($handle, [
-                        $productCode,
-                        $singleProducts[$productCode],
-                    ]);
-                }
-            }
-
-            // Write the married products to the CSV next, in the order they were first encountered and by quantity
-            foreach ($productOrder as $productCode) {
-                if (isset($marriedProducts[$productCode])) {
-                    fputcsv($handle, [
-                        $productCode,
-                        $marriedProducts[$productCode],
+                        $product['productCode'],
+                        $product['count'],
                     ]);
                 }
             }
