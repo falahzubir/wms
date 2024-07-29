@@ -262,7 +262,7 @@
                                         class="bi bi-file-earmark-ruled"></i> Generate CN</button>
                             @endcan
                         @endif
-                        @if (in_array(ACTION_GENERATE_PACKING, $actions)) 
+                        @if (in_array(ACTION_GENERATE_PACKING, $actions))
                             @can('permission.generate_packing')
                                 <button class="btn btn-teal" id="generate-packing-btn"><i
                                         class="bi bi-file-earmark-ruled"></i>
@@ -319,9 +319,9 @@
                                         <td>
                                             <input onclick="removeOldTicked(this)" type="checkbox" name="check_order[]"
                                                 class="check-order" id="order-{{ $order->id }}" value="{{ $order->id }}">
-                                            <input type="hidden" name="shipping_attachment[]" class="shipping-attachment" 
+                                            <input type="hidden" name="shipping_attachment[]" class="shipping-attachment"
                                                 id="attachment-{{ $order->id }}" value="{{ $order->shippings->first()->attachment ?? '' }}">
-                                            <input type="hidden" name="shipping_bucket_batch[]" class="shipping-bucket" 
+                                            <input type="hidden" name="shipping_bucket_batch[]" class="shipping-bucket"
                                                 id="bucket-{{ $order->id }}" value="{{ $order->bucket_batch_id ?? '' }}">
                                         </td>
                                         <td>
@@ -1053,7 +1053,7 @@
                 let html = '';
 
                 let formData = new FormData(document.querySelector('#search-form'));
-                
+
                 // Extract only the unique orderId values from the checkedOrder array
                 let orderIds = [...new Set(checkedOrder.map(item => item.orderId))].filter(orderId => orderId !== undefined);
 
@@ -1743,7 +1743,7 @@
                             cancelButtonText: 'Ok',
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                download_cn(checkedOrder, inc_packing_list_result)
+                                download_cn(checkedOrder, inc_packing_list_result, true);
                             } else {
                                 location.reload();
                             }
@@ -2017,7 +2017,7 @@
                     })
             }
 
-            function download_cn(checkedOrder, inc_packing_list_result) {
+            function download_cn(checkedOrder, inc_packing_list_result, reload = false) {
                 axios({
                         url: '/api/download-consignment-note',
                         method: 'POST',
@@ -2055,7 +2055,11 @@
                             footer: '<small class="text-danger">Please enable popup if required</small>',
                             allowOutsideClick: false,
                             icon: 'success',
-                        });
+                        }).then((result) => {
+                            if (result.isConfirmed && reload) {
+                                location.reload();
+                            }
+                        })
                     })
                     .catch(function(error) {
                         // handle error
@@ -2669,7 +2673,7 @@
             }
 
             @if (in_array(ACTION_GENERATE_PACKING, $actions))
-                document.querySelector('#generate-packing-btn').onclick = function() { 
+                document.querySelector('#generate-packing-btn').onclick = function() {
                     const inputElements = Array.from(document.querySelectorAll('.check-order'));
                     let selectedOrders = inputElements.filter(chk => chk.checked).map(chk => chk.value);
 
