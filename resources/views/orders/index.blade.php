@@ -256,7 +256,7 @@
                             <button class="btn btn-info" id="add-to-bucket-btn"><i class="bi bi-basket"></i> Add to
                                 Bucket</button>
                         @endif
-                        @if (in_array(ACTION_GENERATE_CN, $actions))
+                        @if (in_array(ACTION_GENERATE_CN, $actions)) 
                             @can('consignment_note.generate')
                                 <button class="btn btn-warning" id="generate-cn-btn"><i
                                         class="bi bi-file-earmark-ruled"></i> Generate CN</button>
@@ -950,7 +950,8 @@
                 'posmalaysia': 'POS Malaysia',
                 'shopee': 'Shopee',
                 'tiktok': 'TikTok',
-                'emzi-express' : 'EMZI Express'
+                'emzi-express' : 'EMZI Express',
+                'nv-int' : 'NinjaVan International'
             };
 
             document.querySelector('#filter-order').onclick = function() {
@@ -1230,7 +1231,7 @@
                 });
             }
 
-            // generate shipping label
+            // generate shipping label 
             @if (in_array(ACTION_GENERATE_CN, $actions))
                 document.querySelector('#generate-cn-btn').onclick = async function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));

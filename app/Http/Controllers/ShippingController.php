@@ -121,6 +121,9 @@ class ShippingController extends Controller
             case ('emzi-express'):
                 return $this->emzi_express_cn($request->order_ids);
                 break;
+            case ('nv-int'):
+                return $this->ninjavan_international($request->order_ids);
+                break;
             default:
                 return response()->json([
                     'status' => 'error',
@@ -2114,6 +2117,186 @@ class ShippingController extends Controller
             } else {
                 $errors[] = $generateCN;
             }
+
+        }
+
+        if (count($CNS) > 0) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Success',
+                'data' => $CNS
+            ], 200);
+        }
+
+        $message .= "Success: " . count($CNS) . " generated.<br>";
+
+        if (count($errors) > 0) {
+            foreach ($errors as $error) {
+                $message .= "Failed: " . $error['message'] . "<br>";
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'data' => $CNS ?? ''
+        ], 200);
+    }
+
+    public function ninjavan_international($order_ids)
+    {
+        $order = [];
+        $CNS = [];
+        $message = '';
+        $errors = [];
+
+        // filter only selected order shipping not exists
+        $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])
+            ->whereIn('id', $order_ids)
+            ->whereDoesntHave('shippings', function ($query) {
+                $query->where('courier', NINJAVAN_INTERNATIONAL_ID);
+            })
+            ->get();
+
+        if (count($order_ninja) == 0) {
+            return 0;
+        }
+
+        // dd($order_ids);
+
+        foreach ($order_ninja as $key => $order) {
+            $product_list = $this->generate_product_description($order->id);
+
+            //check first access token
+            // $accessToken = EmziExpressTrait::checkAccessToken($order->company->id);
+
+            // Create shipping first
+            $shipping = new Shipping();
+            $shipping->shipment_number = shipment_num_format($order);
+            $shipping->order_id = $order->id;
+            $shipping->courier = NINJAVAN_INTERNATIONAL_ID;
+            $shipping->created_by = auth()->user()->id ?? 1;
+            $shipping->save();
+
+            # Shipment details
+            $shipmentID = $shipping->shipment_number ?? '';
+            $shipmentRemarks = get_shipping_remarks($order) ?? '';
+            $itemDescription = get_shipping_remarks($order) ?? '';
+            $totalWeight = get_order_weight($order) / 1000 ?? '';
+            $codValue = $order->purchase_type == PURCHASE_TYPE_PAID ? '0' : $order->total_price / 100 ?? '0';
+
+            # JSON structure
+            $jsonArray = [
+                "service_type" => "International",
+                "international" => [
+                    "portation" => "Export",
+                    "service_code" => "SGMY-A-S-1"
+                ],
+                "customs_declaration" => [
+                    "goods_currency" => "SGD",
+                    "battery_type" => "No Battery",
+                    "battery_packing" => "No Battery",
+                    "trade_terms" => "DDU",
+                    "is_gst_included_in_goods_value" => false,
+                    "gst_registration_number" => ""
+                ],
+                "service_level" => "Standard",
+                "requested_tracking_number" => "NVTESTB",
+                "reference" => [
+                    "merchant_order_number" => "720171"
+                ],
+                "from" => [
+                    "name" => "EMZI FULFILLMENT",
+                    "phone_number" => "60195687313",
+                    "email" => "customerservice.elsb@emzi.com.my",
+                    "address" => [
+                        "address1" => "EMZI FULLFILLMENT, KOMPLEKS SP PLAZA, JALAN IBRAHIM, SUNGAI PETANI 08000 Sungai Petani, Kedah",
+                        "address2" => "",
+                        "city" => "Sungai Petani",
+                        "state" => "Kedah",
+                        "address_type" => "office",
+                        "country" => "MY",
+                        "postcode" => "08000"
+                    ]
+                ],
+                "to" => [
+                    "name" => $order->customer->name ?? '',
+                    "phone_number" => $order->customer->phone ?? '',
+                    "email" => $order->customer->email ?? '',
+                    "address" => [
+                        "address1" => $order->customer->address ?? '',
+                        "address2" => $order->customer->address2 ?? '',
+                        "city" => $order->customer->city ?? '',
+                        "state" => $order->customer->states->name ?? '',
+                        "country" => "SG",
+                        "postcode" => $order->customer->postcode ?? ''
+                    ]
+                ],
+                "parcel_job" => [
+                    "is_pickup_required" => false,
+                    "delivery_instructions" => "If recipient is not around, leave parcel in power riser B.",
+                    "delivery_start_date" => "2024-07-29",
+                    "delivery_timeslot" => [
+                        "start_time" => "09:00",
+                        "end_time" => "12:00",
+                        "timezone" => "Asia/Singapore"
+                    ],
+                    "dimensions" => [
+                        "weight" => 1.5
+                    ],
+                    "items" => [
+                        [
+                            "item_description" => "Susu Sacha Inchi",
+                            "native_item_description" => "Susu Sacha Inchi",
+                            "unit_value" => 0.00,
+                            "unit_weight" => 0.25,
+                            "product_url" => "https://www.product.url/12345.pdf",
+                            "invoice_url" => "https://www.invoice.url/12345.pdf",
+                            "hs_code" => 543111,
+                            "made_in_country" => "MY"
+                        ],
+                        [
+                            "item_description" => "Olive Tin",
+                            "native_item_description" => "Olive Tin",
+                            "unit_value" => 240.00,
+                            "unit_weight" => 1.5,
+                            "product_url" => "https://www.product.url/12346.pdf",
+                            "invoice_url" => "https://www.invoice.url/12346.pdf",
+                            "hs_code" => 543111,
+                            "made_in_country" => "MY"
+                        ]
+                    ]
+                ]
+            ];
+
+            $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
+
+            $generateCN = NinjaVanInternationalTrait::generateCN($jsonSend);
+
+            if (isset($generateCN['tracking_number'])) {
+                
+                $shipping->tracking_number = $generateCN['tracking_number'] ?? '';
+                $shipping->attachment = 'labels/' . shipment_num_format($order) . '.pdf';
+                $shipping->packing_attachment = $product_list;
+
+                // Handle the labels field if it exists and is base64 encoded
+                if (isset($generateCN['labels'])) {
+                    Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($generateCN['labels']));
+                }
+
+                // Set the order status
+                set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by NinjaVan International");
+                $shipping->save();
+
+                // Add order id and attachment to CNS array
+                $CNS['order_ids'][] = $order->id;
+                $CNS['attachment'][] = $shipping->attachment;
+
+            } else {
+                // Add error handling for the API response
+                $errors[] = $generateCN;
+            }
+
 
         }
 
