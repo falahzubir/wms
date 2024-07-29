@@ -982,8 +982,6 @@
                         keyboard: false
                     });
 
-                    checkedOrder = []; // Reset array
-
                     document.querySelector('#category-id').value = "";
                     document.querySelector('#submit-bucket-category').disabled = true;
                     if (checkedOrder.length == 0) {
