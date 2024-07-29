@@ -982,11 +982,7 @@
                         keyboard: false
                     });
 
-                    inputElements.forEach(input => {
-                        if (input.checked) {
-                            checkedOrder.push(input.value);
-                        }
-                    });
+                    checkedOrder = []; // Reset array
 
                     document.querySelector('#category-id').value = "";
                     document.querySelector('#submit-bucket-category').disabled = true;
@@ -1002,6 +998,19 @@
                             reverseButtons: true
                         }).then((result) => {
                             if (result.isConfirmed) {
+                                // Select all orders if no checkboxes are checked
+                                inputElements.forEach(input => {
+                                    const orderId = input.value;
+                                    const shippingIdElement = document.querySelector(`#attachment-${orderId}`);
+                                    const bucketElement = document.querySelector(`#bucket-${orderId}`);
+
+                                    checkedOrder.push({
+                                        orderId,
+                                        attachment: shippingIdElement ? shippingIdElement.value : '',
+                                        bucket: bucketElement ? bucketElement.value : ''
+                                    });
+                                });
+
                                 modalOne.show();
                             }
                         })
