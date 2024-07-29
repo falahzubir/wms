@@ -155,7 +155,7 @@
                                             @php
                                                 // Retrieve the latest event based on attempt_time
                                                 $latestEvent = $event->shipping->events
-                                                    ->sortByDesc('attempt_time')
+                                                    ->sortByDesc('created_at')
                                                     ->first();
 
                                                 // Retrieve the latest log based on created_at
