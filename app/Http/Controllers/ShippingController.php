@@ -2085,6 +2085,7 @@ class ShippingController extends Controller
                     [
                         "receiverAddress" => $receiverAddress,
                         "returnAddress" => $pickupAddress,
+                        "shipmentPrefix" => $order->company->code,
                         "shipmentID" => $shipmentID,
                         "shipmentRemarks" => $shipmentRemarks,
                         "itemDescription" => $itemDescription,
