@@ -2680,59 +2680,70 @@
                         if (result.isConfirmed) {
                             axios.post('{{ route("check_cn_generate_packing") }}', {
                                 order_ids: checkedOrder,
-                            }).then(response => {
+                            })
+                            .then(response => {
+                                console.log(response.data);
                                 
-                                console.log(response);
-                                if (response.data == 1) {
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: 'Please assign bucket batch first',
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    });
-                                    return;
-                                } else if (response.data == 2) {
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: 'Please generate consignment notes first',
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    });
-                                    return;
-                                } else {
-                                    axios.post('{{ route("generate_packing") }}', {
-                                        orders: checkedOrder,
-                                    }, {
-                                        responseType: 'blob' // Important for downloading files
-                                    })
-                                    .then(response => {
-                                        Swal.fire({
-                                            title: 'Success!',
-                                            text: 'Packing list generated successfully.',
-                                            icon: 'success',
-                                            confirmButtonText: 'OK'
-                                        }).then(() => {
-                                            const url = window.URL.createObjectURL(new Blob([response.data]));
-                                            const link = document.createElement('a');
-                                            link.href = url;
-                                            link.setAttribute('download', 'generate_packing.csv'); // Filename
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                            location.reload(); // Reload the page
-                                        });
-                                    })
-                                    .catch(error => {
-                                        console.error('There was an error!', error);
+                                // Assuming response.data has the format { data: 1 | 2 | 0 }
+                                switch(response.data.data) {
+                                    case 1:
                                         Swal.fire({
                                             title: 'Error!',
-                                            text: 'There was an error generating the packing list.',
+                                            text: 'Please assign bucket batch first',
                                             icon: 'error',
                                             confirmButtonText: 'OK'
                                         });
-                                    });
+                                        break;
+                                    case 2:
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: 'Please generate consignment notes first',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        });
+                                        break;
+                                    default:
+                                        axios.post('{{ route("generate_packing") }}', {
+                                            orders: checkedOrder,
+                                        }, {
+                                            responseType: 'blob' // Important for downloading files
+                                        })
+                                        .then(response => {
+                                            Swal.fire({
+                                                title: 'Success!',
+                                                text: 'Packing list generated successfully.',
+                                                icon: 'success',
+                                                confirmButtonText: 'OK'
+                                            }).then(() => {
+                                                const url = window.URL.createObjectURL(new Blob([response.data]));
+                                                const link = document.createElement('a');
+                                                link.href = url;
+                                                link.setAttribute('download', 'generate_packing.csv'); // Filename
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                document.body.removeChild(link);
+                                                location.reload(); // Reload the page
+                                            });
+                                        })
+                                        .catch(error => {
+                                            console.error('There was an error!', error);
+                                            Swal.fire({
+                                                title: 'Error!',
+                                                text: 'There was an error generating the packing list.',
+                                                icon: 'error',
+                                                confirmButtonText: 'OK'
+                                            });
+                                        });
                                 }
-                                
+                            })
+                            .catch(error => {
+                                console.error('There was an error!', error);
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'There was an error checking the orders.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
                             });
                         }
                     });
