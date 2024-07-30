@@ -967,7 +967,7 @@
 
             claim_type_click(document.querySelector('#claim_type'));
 
-            @if (in_array(ACTION_ADD_TO_BUCKET, $actions)) 
+            @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
                 document.querySelector('#add-to-bucket-btn').onclick = function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
 
@@ -995,6 +995,11 @@
                             reverseButtons: true
                         }).then((result) => {
                             if (result.isConfirmed) {
+                                // Select all order IDs
+                                inputElements.forEach(input => {
+                                    checkedOrder.push(input.value);
+                                });
+
                                 modalOne.show();
                             }
                         })
