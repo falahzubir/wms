@@ -313,12 +313,9 @@
                                 @foreach ($orders as $key => $order)
                                     <tr style="font-size: 0.8rem;">
                                         <th scope="row">{{ $key + $orders->firstItem() }}</th>
-                                        {{-- <td><input onclick="removeOldTicked()" type="checkbox" name="check_order[]"
-                                                class="check-order" id="" value="{{ $order->id }}">
-                                        </td> --}}
                                         <td>
                                             <input onclick="removeOldTicked()" type="checkbox" name="check_order[]"
-                                                class="check-order" id="order-{{ $order->id }}" value="{{ $order->id }}">
+                                                class="check-order" id="" value="{{ $order->id }}">
                                         </td>
                                         <td>
                                             <div class="d-flex">
@@ -970,7 +967,7 @@
 
             claim_type_click(document.querySelector('#claim_type'));
 
-            @if (in_array(ACTION_ADD_TO_BUCKET, $actions))
+            @if (in_array(ACTION_ADD_TO_BUCKET, $actions)) 
                 document.querySelector('#add-to-bucket-btn').onclick = function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
 
@@ -1242,7 +1239,7 @@
             }
 
             // generate shipping label
-            @if (in_array(ACTION_GENERATE_CN, $actions))
+            @if (in_array(ACTION_GENERATE_CN, $actions)) 
                 document.querySelector('#generate-cn-btn').onclick = async function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                     let checkedValue = inputElements.filter(chk => chk.checked).length;
@@ -2647,13 +2644,12 @@
                     })
             }
 
-            @if (in_array(ACTION_GENERATE_PACKING, $actions))
+            @if (in_array(ACTION_GENERATE_PACKING, $actions)) 
                 document.querySelector('#generate-packing-btn').onclick = function() {
-                    const inputElements = Array.from(document.querySelectorAll('.check-order'));
-                    let selectedOrders = inputElements.filter(chk => chk.checked).map(chk => chk.value);
+                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                    let checkedValue = inputElements.filter(chk => chk.checked).length;
 
-                    // If no orders are selected
-                    if (selectedOrders.length === 0) {
+                    if (checkedValue == 0) {
                         Swal.fire({
                             title: 'No order selected!',
                             text: "Please select at least one order to generate packing.",
@@ -2663,15 +2659,12 @@
                         return;
                     }
 
-                    // Check for valid attachments and bucket batch IDs
-                    let invalidAttachments = selectedOrders.filter(orderId => {
-                        const shippingIdElement = document.querySelector(`#attachment-${orderId}`);
-                        return !shippingIdElement || shippingIdElement.value === '';
-                    });
-
-                    let invalidBuckets = selectedOrders.filter(orderId => {
-                        const bucketElement = document.querySelector(`#bucket-${orderId}`);
-                        return !bucketElement || bucketElement.value === '';
+                    // Get checked order
+                    let checkedOrder = [];
+                    inputElements.forEach(input => {
+                        if (input.checked) {
+                            checkedOrder.push(input.value);
+                        }
                     });
 
                     // Confirmation to generate packing
@@ -2685,61 +2678,61 @@
                         footer: 'Note: Picking and Consignment Notes must be generated first'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            if (invalidAttachments.length > 0) {
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: "Please generate consignment notes first",
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                });
-                                return;
-                            }
-
-                            if (invalidBuckets.length > 0) {
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: "Please assign bucket batch first",
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                });
-                                return;
-                            }
-
-                            axios.post('{{ route("generate_packing") }}', {
-                                orders: selectedOrders,
-                                shippingDetails: selectedOrders.map(orderId => ({
-                                    orderId,
-                                    attachment: document.querySelector(`#attachment-${orderId}`).value,
-                                    bucket: document.querySelector(`#bucket-${orderId}`).value
-                                }))
-                            }, {
-                                responseType: 'blob' // Important for downloading files
-                            })
-                            .then(response => {
-                                Swal.fire({
-                                    title: 'Success!',
-                                    text: 'Packing list generated successfully.',
-                                    icon: 'success',
-                                    confirmButtonText: 'OK'
-                                }).then(() => {
-                                    const url = window.URL.createObjectURL(new Blob([response.data]));
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.setAttribute('download', 'generate_packing.csv'); // Filename
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    location.reload(); // Reload the page
-                                });
-                            })
-                            .catch(error => {
-                                console.error('There was an error!', error);
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: 'There was an error generating the packing list.',
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                });
+                            axios.post('{{ route("check_cn_generate_packing") }}', {
+                                order_ids: checkedOrder,
+                            }).then(response => {
+                                
+                                console.log(response);
+                                if (response.data == 1) {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: 'Please generate cn first',
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
+                                    return;
+                                } else if (response.data == 2) {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: 'Please generate cn first',
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
+                                    return;
+                                } else {
+                                    axios.post('{{ route("generate_packing") }}', {
+                                        orders: checkedOrder,
+                                    }, {
+                                        responseType: 'blob' // Important for downloading files
+                                    })
+                                    .then(response => {
+                                        Swal.fire({
+                                            title: 'Success!',
+                                            text: 'Packing list generated successfully.',
+                                            icon: 'success',
+                                            confirmButtonText: 'OK'
+                                        }).then(() => {
+                                            const url = window.URL.createObjectURL(new Blob([response.data]));
+                                            const link = document.createElement('a');
+                                            link.href = url;
+                                            link.setAttribute('download', 'generate_packing.csv'); // Filename
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                            location.reload(); // Reload the page
+                                        });
+                                    })
+                                    .catch(error => {
+                                        console.error('There was an error!', error);
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: 'There was an error generating the packing list.',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        });
+                                    });
+                                }
+                                
                             });
                         }
                     });
