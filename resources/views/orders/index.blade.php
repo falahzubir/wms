@@ -1015,24 +1015,8 @@
                 }
             @endif
 
-            const removeOldTicked = (checkbox) => {
-                const orderId = checkbox.value;
-                const shippingIdElement = document.querySelector(`#attachment-${orderId}`);
-                const bucketElement = document.querySelector(`#bucket-${orderId}`);
-
-                if (checkbox.checked) {
-                    // Check if orderId already exists in checkedOrder
-                    const exists = checkedOrder.some(order => order.orderId === orderId);
-                    if (!exists) {
-                        checkedOrder.push({
-                            orderId,
-                            attachment: shippingIdElement ? shippingIdElement.value : '',
-                            bucket: bucketElement ? bucketElement.value : ''
-                        });
-                    }
-                } else {
-                    checkedOrder = checkedOrder.filter(order => order.orderId !== orderId);
-                }
+            const removeOldTicked = () => {
+                checkedOrder = []; //reset array
             }
 
             const selectCategory = (el) => {
