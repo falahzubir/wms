@@ -2686,7 +2686,7 @@
                                 if (response.data == 1) {
                                     Swal.fire({
                                         title: 'Error!',
-                                        text: 'Please generate cn first',
+                                        text: 'Please assign bucket batch first',
                                         icon: 'error',
                                         confirmButtonText: 'OK'
                                     });
@@ -2694,7 +2694,7 @@
                                 } else if (response.data == 2) {
                                     Swal.fire({
                                         title: 'Error!',
-                                        text: 'Please generate cn first',
+                                        text: 'Please generate consignment notes first',
                                         icon: 'error',
                                         confirmButtonText: 'OK'
                                     });
