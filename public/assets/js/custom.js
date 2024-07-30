@@ -26,26 +26,11 @@ if (document.querySelector('#start-date')) {
 
 // select all checkboxes
 function toggleCheckboxes(source, cls) {
-    const checkboxes = document.querySelectorAll(`.${cls}`);
-    checkedOrder = []; // Reset array
-
-    for (let i = 0; i < checkboxes.length; i++) {
+    checkboxes = document.querySelectorAll(`.${cls}`);
+    for (var i = 0, n = checkboxes.length; i < n; i++) {
         checkboxes[i].checked = source.checked;
-
-        if (source.checked) {
-            const orderId = checkboxes[i].value;
-            const shippingIdElement = document.querySelector(
-                `#attachment-${orderId}`
-            );
-            const bucketElement = document.querySelector(`#bucket-${orderId}`);
-
-            checkedOrder.push({
-                orderId,
-                attachment: shippingIdElement ? shippingIdElement.value : "",
-                bucket: bucketElement ? bucketElement.value : "",
-            });
-        }
     }
+    checkedOrder = []; //reset array
 }
 
 function linkTrack(num) {

@@ -21,7 +21,7 @@
 
 <!-- Template Main JS File -->
 <script src="{{ asset('assets/js/main.js?=v0.02') }}"></script>
-<script src="{{ asset('assets/js/custom.js?=v0.02') }}"></script>
+<script src="{{ asset('assets/js/custom.js?=v0.03') }}"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 
 {{-- <script src="//www.tracking.my/track-button.js"></script> --}}

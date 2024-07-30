@@ -1158,6 +1158,38 @@ class OrderController extends Controller
         }
     }
 
+    // Check CN and bucket batch for generate packing
+    public function check_cn_generate_packing(Request $request)
+    {
+        // Validate the request to ensure orders are provided
+        $request->validate([
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'exists:orders,id'  // Ensure each order_id exists in the orders table
+        ]);
+
+        $order_ids = $request->input('order_ids');
+
+        // Check for orders with null bucket_batch_id
+        $bucket_batch_id = Order::whereIn('id', $order_ids)
+            ->whereNull('bucket_batch_id')
+            ->get();
+
+        if($bucket_batch_id->count() > 0){
+            return response()->json(['data' => 1]);
+        }
+
+        // Check for orders with null attachments
+        $attachment = Order::whereIn('id', $order_ids)
+            ->whereDoesntHave('shippings')
+            ->get();
+
+        if($attachment->count() > 0){
+            return response()->json(['data' => 2]);
+        }
+
+        return response()->json(['data' => 0]);
+    }
+
     // Generate Packing
     public function generate_packing(Request $request)
     {
