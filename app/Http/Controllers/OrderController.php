@@ -1175,12 +1175,9 @@ class OrderController extends Controller
             ->get();
 
         // Check for orders with null attachments
-        $attachment = Shipping::whereIn('order_id', $order_ids)
-            ->whereNull('attachment')
+        $attachment = Order::whereIn('order_id', $order_ids)
+            ->whereDoesntHave('shippings')
             ->get();
-
-        // Default response data
-        $data = 0;
 
         // Determine the value of $data based on the checks
         if ($bucket_batch_id->count() > 0) {
