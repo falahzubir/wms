@@ -317,12 +317,8 @@
                                                 class="check-order" id="" value="{{ $order->id }}">
                                         </td> --}}
                                         <td>
-                                            <input onclick="removeOldTicked(this)" type="checkbox" name="check_order[]"
+                                            <input onclick="removeOldTicked()" type="checkbox" name="check_order[]"
                                                 class="check-order" id="order-{{ $order->id }}" value="{{ $order->id }}">
-                                            <input type="hidden" name="shipping_attachment[]" class="shipping-attachment"
-                                                id="attachment-{{ $order->id }}" value="{{ $order->shippings->first()->attachment ?? '' }}">
-                                            <input type="hidden" name="shipping_bucket_batch[]" class="shipping-bucket"
-                                                id="bucket-{{ $order->id }}" value="{{ $order->bucket_batch_id ?? '' }}">
                                         </td>
                                         <td>
                                             <div class="d-flex">
