@@ -1040,13 +1040,8 @@
                 let html = '';
 
                 let formData = new FormData(document.querySelector('#search-form'));
-
-                // Extract only the unique orderId values from the checkedOrder array
-                let orderIds = [...new Set(checkedOrder.map(item => item.orderId))].filter(orderId => orderId !== undefined);
-
                 formData.append('category_id', categoryBucket);
-                formData.append('order_ids', orderIds);
-
+                formData.append('order_ids', checkedOrder);
                 let response = await axios.post('/api/buckets/get-bucket-by-category', formData).then(res => {
 
                     let totalOrder = res.data.totalOrder;
