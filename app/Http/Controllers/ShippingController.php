@@ -2166,9 +2166,6 @@ class ShippingController extends Controller
         foreach ($order_ninja as $key => $order) {
             $product_list = $this->generate_product_description($order->id);
 
-            //check first access token
-            // $accessToken = EmziExpressTrait::checkAccessToken($order->company->id);
-
             // Create shipping first
             $shipping = new Shipping();
             $shipping->shipment_number = shipment_num_format($order);
@@ -2188,6 +2185,21 @@ class ShippingController extends Controller
             $sgd_amount = ceil($sgd_amount); // Round up to the nearest integer
 
             $codValue = $order->purchase_type == PURCHASE_TYPE_PAID ? '0' : $sgd_amount;
+
+            // Create items array dynamically
+            $items = [];
+            foreach ($order->items as $product) {
+                $items[] = [
+                    "item_description" => $product->product->code . '[' . $product->quantity . ']',
+                    "native_item_description" => "N/A",
+                    "unit_value" => $codValue,
+                    "unit_weight" => $product->product->weight ?? 0,
+                    "product_url" => "https://www.product.url/12346.pdf",
+                    "invoice_url" => "https://www.invoice.url/12346.pdf",
+                    "hs_code" => 543111,
+                    "made_in_country" => "MY"
+                ];
+            }
 
             # JSON structure
             $jsonArray = [
@@ -2248,18 +2260,7 @@ class ShippingController extends Controller
                     "dimensions" => [
                         "weight" => 1.5
                     ],
-                    "items" => [
-                        [
-                            "item_description" => "Olive Tin",
-                            "native_item_description" => "Olive Tin",
-                            "unit_value" => $codValue,
-                            "unit_weight" => 1.5,
-                            "product_url" => "https://www.product.url/12346.pdf",
-                            "invoice_url" => "https://www.invoice.url/12346.pdf",
-                            "hs_code" => 543111,
-                            "made_in_country" => "MY"
-                        ]
-                    ]
+                    "items" => $items
                 ]
             ];
 
@@ -2290,8 +2291,6 @@ class ShippingController extends Controller
                 // Add error handling for the API response
                 $errors[] = $generateCN;
             }
-
-
         }
 
         if (count($CNS) > 0) {
@@ -2306,7 +2305,7 @@ class ShippingController extends Controller
 
         if (count($errors) > 0) {
             foreach ($errors as $error) {
-                $message .= "Failed: " . $error['message'] . "<br>";
+                $message .= "Failed: " . ($error['message'] ?? 'Unknown error') . "<br>";
             }
         }
 
