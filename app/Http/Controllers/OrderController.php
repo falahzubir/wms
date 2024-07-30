@@ -1174,19 +1174,20 @@ class OrderController extends Controller
             ->whereNull('bucket_batch_id')
             ->get();
 
+        if($bucket_batch_id->count() > 0){
+            return response()->json(['data' => 1]);
+        }
+
         // Check for orders with null attachments
-        $attachment = Order::whereIn('order_id', $order_ids)
+        $attachment = Order::whereIn('id', $order_ids)
             ->whereDoesntHave('shippings')
             ->get();
 
-        // Determine the value of $data based on the checks
-        if ($bucket_batch_id->count() > 0) {
-            $data = 1;
-        } elseif ($attachment->count() > 0) {
-            $data = 2;
+        if($attachment->count() > 0){
+            return response()->json(['data' => 2]);
         }
 
-        return response()->json(['data' => $data]);
+        return response()->json(['data' => 0]);
     }
 
     // Generate Packing
