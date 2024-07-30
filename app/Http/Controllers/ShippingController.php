@@ -2254,7 +2254,7 @@ class ShippingController extends Controller
                     "delivery_start_date" => "2024-07-30",
                     "delivery_timeslot" => [
                         "start_time" => "09:00",
-                        "end_time" => "12:00",
+                        "end_time" => "18:00",
                         "timezone" => "Asia/Singapore"
                     ],
                     "dimensions" => [
