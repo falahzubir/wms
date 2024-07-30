@@ -42,7 +42,7 @@ Trait NinjaVanInternationalTrait
     {
         // $ninjaVanUrl = app()->environment() != 'production' ? 'https://api.ninjavan.co/MY/4.2/orders' : 'https://api-sandbox.ninjavan.co/SG/4.2/orders';
         $ninjaVanUrl = "https://api-sandbox.ninjavan.co/SG/4.2/orders";
-        $token = "eTgeZh9N6qvi8psNysJ2GRH6AjflO5IA";
+        $token = "jUqvK6JA3akVO3nAatjfbDiEAZXlIJcm";
 
         $response = Http::withHeaders([
             'Accept' => 'application/json',

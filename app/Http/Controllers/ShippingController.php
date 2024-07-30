@@ -2,35 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\Company;
-use App\Models\OrderLog;
-use App\Models\Shipping;
-use App\Models\OrderItem;
-use Illuminate\Log\Logger;
-use App\Models\AccessToken;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use App\Http\Controllers\api\ShippingApiController;
+use App\Http\Traits\EmziExpressTrait;
+use App\Http\Traits\NinjaVanInternationalTrait;
 use App\Http\Traits\ShopeeTrait;
 use App\Http\Traits\TiktokTrait;
 use App\Imports\ShippingsImport;
-use Illuminate\Support\Facades\DB;
-use Spatie\LaravelPdf\Facades\Pdf;
-use Illuminate\Support\Facades\Log;
+use App\Models\AccessToken;
+use App\Models\Company;
+use App\Models\GroupStateList;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\OrderLog;
+use App\Models\Product;
+use App\Models\Shipping;
+use App\Models\ShippingCost;
 // use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+use App\Models\ShippingDocumentTemplate;
+use App\Models\ShippingProduct;
+use App\Models\WeightCategory;
+use Illuminate\Http\Request;
+use Illuminate\Log\Logger;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Karriere\PdfMerge\PdfMerge as PDFMerger;
 use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
-use App\Http\Traits\EmziExpressTrait;
-use Illuminate\Support\Facades\Storage;
-use App\Models\ShippingDocumentTemplate;
-use Karriere\PdfMerge\PdfMerge as PDFMerger;
-use App\Http\Controllers\api\ShippingApiController;
-use App\Models\Product;
-use App\Models\WeightCategory;
-use App\Models\GroupStateList;
-use App\Models\ShippingCost;
-use App\Models\ShippingProduct;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class ShippingController extends Controller
 {
@@ -2162,8 +2163,6 @@ class ShippingController extends Controller
             return 0;
         }
 
-        // dd($order_ids);
-
         foreach ($order_ninja as $key => $order) {
             $product_list = $this->generate_product_description($order->id);
 
@@ -2183,7 +2182,12 @@ class ShippingController extends Controller
             $shipmentRemarks = get_shipping_remarks($order) ?? '';
             $itemDescription = get_shipping_remarks($order) ?? '';
             $totalWeight = get_order_weight($order) / 1000 ?? '';
-            $codValue = $order->purchase_type == PURCHASE_TYPE_PAID ? '0' : $order->total_price / 100 ?? '0';
+
+            // Calculate amount into SG currency
+            $sgd_amount = (($order->total_price / 100) / 3.38) + 1;
+            $sgd_amount = ceil($sgd_amount); // Round up to the nearest integer
+
+            $codValue = $order->purchase_type == PURCHASE_TYPE_PAID ? '0' : $sgd_amount;
 
             # JSON structure
             $jsonArray = [
@@ -2201,9 +2205,9 @@ class ShippingController extends Controller
                     "gst_registration_number" => ""
                 ],
                 "service_level" => "Standard",
-                "requested_tracking_number" => "NVTESTB",
+                "requested_tracking_number" => "NV" . $order->id,
                 "reference" => [
-                    "merchant_order_number" => "720171"
+                    "merchant_order_number" => $order->sales_id
                 ],
                 "from" => [
                     "name" => "EMZI FULFILLMENT",
@@ -2235,7 +2239,7 @@ class ShippingController extends Controller
                 "parcel_job" => [
                     "is_pickup_required" => false,
                     "delivery_instructions" => "If recipient is not around, leave parcel in power riser B.",
-                    "delivery_start_date" => "2024-07-29",
+                    "delivery_start_date" => "2024-07-30",
                     "delivery_timeslot" => [
                         "start_time" => "09:00",
                         "end_time" => "12:00",
@@ -2246,19 +2250,9 @@ class ShippingController extends Controller
                     ],
                     "items" => [
                         [
-                            "item_description" => "Susu Sacha Inchi",
-                            "native_item_description" => "Susu Sacha Inchi",
-                            "unit_value" => 0.00,
-                            "unit_weight" => 0.25,
-                            "product_url" => "https://www.product.url/12345.pdf",
-                            "invoice_url" => "https://www.invoice.url/12345.pdf",
-                            "hs_code" => 543111,
-                            "made_in_country" => "MY"
-                        ],
-                        [
                             "item_description" => "Olive Tin",
                             "native_item_description" => "Olive Tin",
-                            "unit_value" => 240.00,
+                            "unit_value" => $codValue,
                             "unit_weight" => 1.5,
                             "product_url" => "https://www.product.url/12346.pdf",
                             "invoice_url" => "https://www.invoice.url/12346.pdf",
