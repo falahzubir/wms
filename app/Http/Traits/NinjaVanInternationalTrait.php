@@ -53,7 +53,7 @@ Trait NinjaVanInternationalTrait
             return $ninjaVanToken;
         } else {
             // Handle the error response
-            return response()->json($responseGet->json())->pluck('message');
+            return response()->json($responseGet->json());
         }
     }
 
