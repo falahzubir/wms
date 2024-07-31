@@ -78,7 +78,7 @@ Trait NinjaVanInternationalTrait
 
         return $response->json();
     }
-    
+
     public static function generateWayBill($trackingNumber, $company)
     {
         // Retrieve the valid access token
@@ -104,6 +104,6 @@ Trait NinjaVanInternationalTrait
             return response()->json(['error' => 'Failed to retrieve waybill'], $response->status());
         }
 
-        return $response; // Return the full response object to handle the PDF content outside
+        return $response;
     }
 }
