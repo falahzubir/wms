@@ -2189,7 +2189,7 @@ class ShippingController extends Controller
                 "service_type" => "International",
                 "international" => [
                     "portation" => "Export",
-                    "service_code" => app()->environment() == 'production' ? "MYSG-A-S-1" : "SGMY-A-S-1";
+                    "service_code" => app()->environment() == 'production' ? "MYSG-A-S-1" : "SGMY-A-S-1"
                 ],
                 "customs_declaration" => [
                     "goods_currency" => "SGD",
