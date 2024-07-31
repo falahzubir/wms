@@ -2200,8 +2200,7 @@ class ShippingController extends Controller
                     "gst_registration_number" => ""
                 ],
                 "service_level" => "Standard",
-                // "requested_tracking_number" => "NV" . $order->id,
-                "requested_tracking_number" => "NVTESTB14",
+                "requested_tracking_number" => "NV" . $order->id,
                 "reference" => [
                     "merchant_order_number" => $order->sales_id
                 ],
