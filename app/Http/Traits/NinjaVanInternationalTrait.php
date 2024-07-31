@@ -13,7 +13,7 @@ Trait NinjaVanInternationalTrait
     public static function checkAccessToken($company)
     {
         // Define the URL for the token request
-        $ninjaVanTokenUrl = 'https://api-sandbox.ninjavan.co/sg/2.0/oauth/access_token';
+        $ninjaVanTokenUrl = app()->environment() == 'production' ? 'https://api.ninjavan.co/my/2.0/oauth/access_token' : 'https://api-sandbox.ninjavan.co/sg/2.0/oauth/access_token';
         
         // Retrieve the existing access token record from the database
         $ninjaVanToken = AccessToken::where('type', 'nv-int')
@@ -62,8 +62,7 @@ Trait NinjaVanInternationalTrait
         // Retrieve the valid access token
         $accessToken = self::checkAccessToken($company);
 
-        // $ninjaVanUrl = app()->environment() != 'production' ? 'https://api.ninjavan.co/MY/4.2/orders' : 'https://api-sandbox.ninjavan.co/SG/4.2/orders';
-        $ninjaVanUrl = "https://api-sandbox.ninjavan.co/SG/4.2/orders";
+        $ninjaVanUrl = app()->environment() == 'production' ? 'https://api.ninjavan.co/my/4.2/orders' : 'https://api-sandbox.ninjavan.co/sg/4.2/orders';
 
         $response = Http::withHeaders([
             'Accept' => 'application/json',
@@ -85,7 +84,7 @@ Trait NinjaVanInternationalTrait
         $accessToken = self::checkAccessToken($company);
 
         // Define the URL for the waybill report request
-        $ninjaVanUrl = "https://api-sandbox.ninjavan.co/sg/2.0/reports/waybill";
+        $ninjaVanUrl = app()->environment() == 'production' ? 'https://api.ninjavan.co/my/2.0/reports/waybill' : 'https://api-sandbox.ninjavan.co/sg/2.0/reports/waybill';
 
         // Make the API request with the valid token
         $response = Http::withHeaders([
