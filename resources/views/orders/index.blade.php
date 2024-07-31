@@ -600,10 +600,7 @@
                         </div>
                         <div class="mb-3">
                             <!-- button submit show loading on submit -->
-                            <button type="submit" class="btn btn-primary mt-3" id="upload-csv-btn">
-                                <span class="spinner-border spinner-border-sm d-none" role="status"
-                                    aria-hidden="true"></span>
-                                <span class="d-none">Loading...</span>
+                            <button class="btn btn-primary mt-3" id="upload-csv-btn" onclick="this.disabled=true;this.innerText='Uploading...';this.form.submit();">
                                 <span class="d-inline">Upload CSV</span>
                             </button>
                         </div>
@@ -1244,7 +1241,7 @@
             }
 
             // generate shipping label
-            @if (in_array(ACTION_GENERATE_CN, $actions)) 
+            @if (in_array(ACTION_GENERATE_CN, $actions))
                 document.querySelector('#generate-cn-btn').onclick = async function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                     let checkedValue = inputElements.filter(chk => chk.checked).length;
@@ -2649,7 +2646,7 @@
                     })
             }
 
-            @if (in_array(ACTION_GENERATE_PACKING, $actions)) 
+            @if (in_array(ACTION_GENERATE_PACKING, $actions))
                 document.querySelector('#generate-packing-btn').onclick = function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                     let checkedValue = inputElements.filter(chk => chk.checked).length;
@@ -2688,7 +2685,7 @@
                             })
                             .then(response => {
                                 console.log(response.data);
-                                
+
                                 // Assuming response.data has the format { data: 1 | 2 | 0 }
                                 switch(response.data.data) {
                                     case 1:
