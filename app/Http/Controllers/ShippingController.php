@@ -2271,7 +2271,7 @@ class ShippingController extends Controller
                 if ($generateWayBill->status() == 200) {
                     // Save the PDF to a file
                     $pdfContent = $generateWayBill->body();
-                    $filePath = 'public/labels/' . shipment_num_format($order) . '.pdf';
+                    $filePath = 'labels/' . shipment_num_format($order) . '.pdf';
                     Storage::put($filePath, $pdfContent);
 
                     // Update the shipping details
