@@ -21,9 +21,9 @@ use App\Models\ShippingCost;
 use App\Models\ShippingDocumentTemplate;
 use App\Models\ShippingProduct;
 use App\Models\WeightCategory;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Log\Logger;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -2175,8 +2175,6 @@ class ShippingController extends Controller
             $shipping->save();
 
             # Shipment details
-            $shipmentID = $shipping->shipment_number ?? '';
-            $shipmentRemarks = get_shipping_remarks($order) ?? '';
             $itemDescription = get_shipping_remarks($order) ?? '';
             $totalWeight = get_order_weight($order) / 1000 ?? '';
 
@@ -2184,22 +2182,7 @@ class ShippingController extends Controller
             $sgd_amount = (($order->total_price / 100) / 3.38) + 1;
             $sgd_amount = ceil($sgd_amount); // Round up to the nearest integer
 
-            $codValue = $order->purchase_type == PURCHASE_TYPE_PAID ? '0' : $sgd_amount;
-
-            // Create items array dynamically
-            $items = [];
-            foreach ($order->items as $product) {
-                $items[] = [
-                    "item_description" => $product->product->code . '[' . $product->quantity . ']',
-                    "native_item_description" => "N/A",
-                    "unit_value" => $codValue,
-                    "unit_weight" => $product->product->weight ?? 0,
-                    "product_url" => "https://www.product.url/12346.pdf",
-                    "invoice_url" => "https://www.invoice.url/12346.pdf",
-                    "hs_code" => 543111,
-                    "made_in_country" => "MY"
-                ];
-            }
+            $codValue = $order->purchase_type == PURCHASE_TYPE_COD ? $sgd_amount : '0';
 
             # JSON structure
             $jsonArray = [
@@ -2217,7 +2200,8 @@ class ShippingController extends Controller
                     "gst_registration_number" => ""
                 ],
                 "service_level" => "Standard",
-                "requested_tracking_number" => "NV" . $order->id,
+                // "requested_tracking_number" => "NV" . $order->id,
+                "requested_tracking_number" => "NVTESTB14",
                 "reference" => [
                     "merchant_order_number" => $order->sales_id
                 ],
@@ -2250,42 +2234,62 @@ class ShippingController extends Controller
                 ],
                 "parcel_job" => [
                     "is_pickup_required" => false,
-                    "delivery_instructions" => "If recipient is not around, leave parcel in power riser B.",
-                    "delivery_start_date" => "2024-07-30",
+                    "delivery_instructions" => $order->sales_remarks ?? '',
+                    "delivery_start_date" => Carbon::now()->format('Y-m-d'),
                     "delivery_timeslot" => [
                         "start_time" => "09:00",
                         "end_time" => "18:00",
                         "timezone" => "Asia/Singapore"
                     ],
                     "dimensions" => [
-                        "weight" => 1.5
+                        "weight" => $totalWeight
                     ],
-                    "items" => $items
+                    "items" => [
+                        [
+                            "item_description" => $itemDescription,
+                            "native_item_description" => "N/A",
+                            "unit_value" => $codValue,
+                            "unit_weight" => $totalWeight,
+                            "product_url" => "https://www.product.url/12346.pdf",
+                            "invoice_url" => "https://www.invoice.url/12346.pdf",
+                            "hs_code" => 543111,
+                            "made_in_country" => "MY"
+                        ]
+                    ]
                 ]
             ];
 
             $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
 
-            $generateCN = NinjaVanInternationalTrait::generateCN($jsonSend);
+            $generateCN = NinjaVanInternationalTrait::generateCN($jsonSend, $order->company->id);
 
             if (isset($generateCN['tracking_number'])) {
-                
-                $shipping->tracking_number = $generateCN['tracking_number'] ?? '';
-                $shipping->attachment = 'labels/' . shipment_num_format($order) . '.pdf';
-                $shipping->packing_attachment = $product_list;
 
-                // Handle the labels field if it exists and is base64 encoded
-                if (isset($generateCN['labels'])) {
-                    Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($generateCN['labels']));
+                $generateWayBill = NinjaVanInternationalTrait::generateWayBill($generateCN['tracking_number'], $order->company->id);
+
+                // Check if the waybill generation was successful
+                if ($generateWayBill->status() == 200) {
+                    // Save the PDF to a file
+                    $pdfContent = $generateWayBill->body();
+                    $filePath = 'public/labels/' . shipment_num_format($order) . '.pdf';
+                    Storage::put($filePath, $pdfContent);
+
+                    // Update the shipping details
+                    $shipping->tracking_number = $generateCN['tracking_number'] ?? '';
+                    $shipping->attachment = $filePath;
+                    $shipping->packing_attachment = $product_list;
+
+                    // Set the order status
+                    set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by NinjaVan International");
+                    $shipping->save();
+
+                    // Add order id and attachment to CNS array
+                    $CNS['order_ids'][] = $order->id;
+                    $CNS['attachment'][] = $shipping->attachment;
+                } else {
+                    // Handle the error response from the waybill generation API
+                    $errors[] = $generateWayBill->json();
                 }
-
-                // Set the order status
-                set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by NinjaVan International");
-                $shipping->save();
-
-                // Add order id and attachment to CNS array
-                $CNS['order_ids'][] = $order->id;
-                $CNS['attachment'][] = $shipping->attachment;
 
             } else {
                 // Add error handling for the API response
