@@ -10,7 +10,11 @@
     <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse
         {{ request('companies') != null || request('couriers') != null ||
             request('purchase_types') != null || request('customer_types') != null ||
-            request('products') != null || request('op_models') != null || request('states') != null || request('platforms') != null || request('statuses') != null || request('events') !== null  ? 'show' : '' }}"
+            request('products') != null || request('op_models') != null ||
+            request('states') != null || request('platforms') != null ||
+            request('statuses') != null || request('events') !== null  ||
+            request('sales_types') != null || request('teams') != null
+            ? 'show' : '' }}"
         aria-labelledby="panelsStayOpen-headingOne">
         <div class="accordion-body">
             <div class="expand row">
