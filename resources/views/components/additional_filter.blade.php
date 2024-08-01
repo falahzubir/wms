@@ -42,10 +42,10 @@
                     </x-filter_select>
                 @endisset
                 @isset($filter_data->sales_type)
-                    <x-filter_select name="sales_type" label="Sales Type" id="sales-type-filter" class="col-4 mt-2">
+                    <x-filter_select name="sales_types" label="Sales Type" id="sales-type-filter" class="col-4 mt-2">
                         @foreach ($filter_data->sales_type as $id => $name)
                             <option value="{{ $id }}"
-                                {{ request('sales_type') != null ? (in_array($id, request('sales_type')) ? 'selected' : '') : '' }}>
+                                {{ request('sales_types') != null ? (in_array($id, request('sales_types')) ? 'selected' : '') : '' }}>
                                 {{ $name }}</option>
                         @endforeach
                     </x-filter_select>

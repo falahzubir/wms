@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Exports\OrderExport;
-use App\Http\Traits\ApiTrait;
 use App\Http\Traits\BucketTrait;
 use App\Models\AlternativePostcode;
 use App\Models\CategoryMain;
@@ -21,9 +20,9 @@ use App\Models\Shipping;
 use App\Models\TemplateMain;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
@@ -416,6 +415,7 @@ class OrderController extends Controller
         $data['payment_type'] = isset($webhook['payment_type']) ? $webhook['payment_type'] : null;
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
         $data['third_party_sn'] = $webhook['third_party_sn'] ?? null;
+        $data['sales_type'] = $webhook['sales_type'] ?? null;
         $data['is_active'] = IS_ACTIVE;
 
         $assigned_bucket = $this->assignBucket($data);
@@ -853,6 +853,10 @@ class OrderController extends Controller
 
         $orders->when($request->filled('statuses'), function ($query) use ($request) {
             $query->whereIn('status', $request->statuses);
+        });
+
+        $orders->when($request->filled('sales_types'), function ($query) use ($request) {
+            $query->whereIn('sales_type', $request->sales_types);
         });
 
         return $orders;
