@@ -262,6 +262,13 @@
                                         class="bi bi-file-earmark-ruled"></i> Generate CN</button>
                             @endcan
                         @endif
+                        @if (in_array(ACTION_GENERATE_PACKING, $actions))
+                            @can('permission.generate_packing')
+                                <button class="btn btn-teal" id="generate-packing-btn"><i
+                                        class="bi bi-file-earmark-ruled"></i>
+                                    Generate Packing</button>
+                            @endcan
+                        @endif
                         @if (in_array(ACTION_UPLOAD_TRACKING_BULK, $actions))
                             @can('tracking.upload')
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal"
@@ -306,7 +313,8 @@
                                 @foreach ($orders as $key => $order)
                                     <tr style="font-size: 0.8rem;">
                                         <th scope="row">{{ $key + $orders->firstItem() }}</th>
-                                        <td><input onclick="removeOldTicked()" type="checkbox" name="check_order[]"
+                                        <td>
+                                            <input onclick="removeOldTicked()" type="checkbox" name="check_order[]"
                                                 class="check-order" id="" value="{{ $order->id }}">
                                         </td>
                                         <td>
@@ -592,10 +600,7 @@
                         </div>
                         <div class="mb-3">
                             <!-- button submit show loading on submit -->
-                            <button type="submit" class="btn btn-primary mt-3" id="upload-csv-btn">
-                                <span class="spinner-border spinner-border-sm d-none" role="status"
-                                    aria-hidden="true"></span>
-                                <span class="d-none">Loading...</span>
+                            <button class="btn btn-primary mt-3" id="upload-csv-btn" onclick="this.disabled=true;this.innerText='Uploading...';this.form.submit();">
                                 <span class="d-inline">Upload CSV</span>
                             </button>
                         </div>
@@ -987,6 +992,11 @@
                             reverseButtons: true
                         }).then((result) => {
                             if (result.isConfirmed) {
+                                // Select all order IDs
+                                inputElements.forEach(input => {
+                                    checkedOrder.push(input.value);
+                                });
+
                                 modalOne.show();
                             }
                         })
@@ -1707,7 +1717,7 @@
                             cancelButtonText: 'Ok',
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                download_cn(checkedOrder, inc_packing_list_result)
+                                download_cn(checkedOrder, inc_packing_list_result, true);
                             } else {
                                 location.reload();
                             }
@@ -1981,7 +1991,7 @@
                     })
             }
 
-            function download_cn(checkedOrder, inc_packing_list_result) {
+            function download_cn(checkedOrder, inc_packing_list_result, reload = false) {
                 axios({
                         url: '/api/download-consignment-note',
                         method: 'POST',
@@ -2019,7 +2029,11 @@
                             footer: '<small class="text-danger">Please enable popup if required</small>',
                             allowOutsideClick: false,
                             icon: 'success',
-                        });
+                        }).then((result) => {
+                            if (result.isConfirmed && reload) {
+                                location.reload();
+                            }
+                        })
                     })
                     .catch(function(error) {
                         // handle error
@@ -2631,6 +2645,112 @@
                         }
                     })
             }
+
+            @if (in_array(ACTION_GENERATE_PACKING, $actions))
+                document.querySelector('#generate-packing-btn').onclick = function() {
+                    const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
+                    let checkedValue = inputElements.filter(chk => chk.checked).length;
+
+                    if (checkedValue == 0) {
+                        Swal.fire({
+                            title: 'No order selected!',
+                            text: "Please select at least one order to generate packing.",
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Get checked order
+                    let checkedOrder = [];
+                    inputElements.forEach(input => {
+                        if (input.checked) {
+                            checkedOrder.push(input.value);
+                        }
+                    });
+
+                    // Confirmation to generate packing
+                    Swal.fire({
+                        title: 'Are you sure to generate packing list?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, generate it!',
+                        footer: 'Note: Picking and Consignment Notes must be generated first'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            axios.post('{{ route("check_cn_generate_packing") }}', {
+                                order_ids: checkedOrder,
+                            })
+                            .then(response => {
+                                console.log(response.data);
+
+                                // Assuming response.data has the format { data: 1 | 2 | 0 }
+                                switch(response.data.data) {
+                                    case 1:
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: 'Please assign bucket batch first',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        });
+                                        break;
+                                    case 2:
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: 'Please generate consignment notes first',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        });
+                                        break;
+                                    default:
+                                        axios.post('{{ route("generate_packing") }}', {
+                                            orders: checkedOrder,
+                                        }, {
+                                            responseType: 'blob' // Important for downloading files
+                                        })
+                                        .then(response => {
+                                            Swal.fire({
+                                                title: 'Success!',
+                                                text: 'Packing list generated successfully.',
+                                                icon: 'success',
+                                                confirmButtonText: 'OK'
+                                            }).then(() => {
+                                                const url = window.URL.createObjectURL(new Blob([response.data]));
+                                                const link = document.createElement('a');
+                                                link.href = url;
+                                                link.setAttribute('download', 'generate_packing.csv'); // Filename
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                document.body.removeChild(link);
+                                                location.reload(); // Reload the page
+                                            });
+                                        })
+                                        .catch(error => {
+                                            console.error('There was an error!', error);
+                                            Swal.fire({
+                                                title: 'Error!',
+                                                text: 'There was an error generating the packing list.',
+                                                icon: 'error',
+                                                confirmButtonText: 'OK'
+                                            });
+                                        });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('There was an error!', error);
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'There was an error checking the orders.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            });
+                        }
+                    });
+                }
+            @endif
         </script>
 
     </x-slot>

@@ -85,11 +85,13 @@
                                 @foreach ($shippingEvents as $key => $event)
                                     <tr style="font-size: 0.8rem;">
                                         {{-- Row Numbers --}}
-                                        <td scope="row" class="text-center">{{ $key + $shippingEvents->firstItem() }}</td>
+                                        <td scope="row" class="text-center">{{ $key + $shippingEvents->firstItem() }}
+                                        </td>
 
                                         {{-- Customer Info --}}
                                         <td class="text-start" style="width: 400px;">
-                                            <input type="hidden" name="check_order" value="{{ $event->shipping->order->id }}">
+                                            <input type="hidden" name="check_order"
+                                                value="{{ $event->shipping->order->id }}">
 
                                             <div><strong>{{ $event->shipping->order->customer->name }}</strong></div>
                                             <div>
@@ -125,13 +127,16 @@
                                             <div>
                                                 @if ($event->shipping->order->courier->code == 'dhl-ecommerce' || $event->shipping->order->courier->code == 'dhl')
                                                     <i class="bi bi-truck"></i>
-                                                    <a class="text-success" href="https://www.dhl.com/us-en/home/tracking/tracking-ecommerce.html?submit=1&tracking-id={{ $event->shipping->tracking_number }}">{{ $event->shipping->tracking_number }}</a>
+                                                    <a class="text-success"
+                                                        href="https://www.dhl.com/us-en/home/tracking/tracking-ecommerce.html?submit=1&tracking-id={{ $event->shipping->tracking_number }}">{{ $event->shipping->tracking_number }}</a>
                                                 @elseif ($event->shipping->order->courier->code == 'poslaju' || $event->shipping->order->courier->code == 'posmalaysia')
                                                     <i class="bi bi-truck"></i>
-                                                    <a class="text-success" href="https://tracking.pos.com.my/tracking/{{ $event->shipping->tracking_number }}">{{ $event->shipping->tracking_number }}</a>
+                                                    <a class="text-success"
+                                                        href="https://tracking.pos.com.my/tracking/{{ $event->shipping->tracking_number }}">{{ $event->shipping->tracking_number }}</a>
                                                 @else
                                                     <i class="bi bi-truck"></i>
-                                                    <a class="text-success" href="https://www.tracking.my/">{{ $event->shipping->tracking_number }}</a>
+                                                    <a class="text-success"
+                                                        href="https://www.tracking.my/">{{ $event->shipping->tracking_number }}</a>
                                                 @endif
                                             </div>
 
@@ -149,39 +154,71 @@
                                         <td>
                                             @php
                                                 // Retrieve the latest event based on attempt_time
-                                                $latestEvent = $event->shipping->events->sortByDesc('attempt_time')->first();
+                                                $latestEvent = $event->shipping->events
+                                                    ->sortByDesc('created_at')
+                                                    ->first();
+
+                                                // Retrieve the latest log based on created_at
+                                                $latestLog = $event->shipping->order->logs
+                                                    ->whereIn('order_status_id', [5, 6])
+                                                    ->sortByDesc('created_at')
+                                                    ->first();
 
                                                 // Count of all events for the current shipping
-                                                $eventCount = $event->shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->count();
+                                                $eventCount = $event->shipping->events
+                                                    ->whereIn('attempt_status', [77090, 'EM013', 'EM080'])
+                                                    ->count();
 
                                                 // Check if any of the specified attempt_status values are present
-                                                $attempt = $event->shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->isNotEmpty();
+                                                $attempt = $event->shipping->events
+                                                    ->whereIn('attempt_status', [77090, 'EM013', 'EM080'])
+                                                    ->isNotEmpty();
 
-                                                $reason = $event->shipping->events->whereIn('attempt_status', [77098, 77101, 77102, 77171, 77191, 'EM014', 'EM093', 'EM094', 'EM095', 'EM115'])->isNotEmpty();
+                                                $reason = $event->shipping->events
+                                                    ->whereIn('attempt_status', [
+                                                        77098,
+                                                        77101,
+                                                        77102,
+                                                        77171,
+                                                        77191,
+                                                        'EM014',
+                                                        'EM093',
+                                                        'EM094',
+                                                        'EM095',
+                                                        'EM115',
+                                                    ])
+                                                    ->isNotEmpty();
                                             @endphp
 
                                             @if ($latestEvent)
-                                                <div>
-                                                    <i class="bi bi-stopwatch-fill"></i>
-                                                    {{ \Carbon\Carbon::parse($latestEvent->attempt_time)->format('d/m/Y H:i') }}
-                                                </div>
-
-                                                @if ($attempt)
+                                                @if ($latestLog && $latestLog->order_status_id == 6)
                                                     <div>
-                                                        {{ ordinalSuffix($eventCount) }} attempt was
-                                                        <strong class="text-danger">unsuccessful</strong>
+                                                        <i class="bi bi-stopwatch-fill"></i>
+                                                        {{ \Carbon\Carbon::parse($latestLog->created_at)->format('d/m/Y H:i') }}
                                                     </div>
 
-                                                    @if ($reason)
-                                                        <div>
-                                                            <i class="bi bi-exclamation-circle-fill"></i>
-                                                            {{ $latestEvent->description }}
-                                                        </div>
-                                                    @endif
-                                                @else
                                                     <div>
                                                         Item <strong class="text-success">delivered</strong>
                                                     </div>
+                                                @else
+                                                    @if ($attempt)
+                                                        <div>
+                                                            <i class="bi bi-stopwatch-fill"></i>
+                                                            {{ \Carbon\Carbon::parse($latestEvent->attempt_time)->format('d/m/Y H:i') }}
+                                                        </div>
+
+                                                        <div>
+                                                            {{ ordinalSuffix($eventCount) }} attempt was
+                                                            <strong class="text-danger">unsuccessful</strong>
+                                                        </div>
+
+                                                        @if ($reason)
+                                                            <div>
+                                                                <i class="bi bi-exclamation-circle-fill"></i>
+                                                                {{ $latestEvent->description }}
+                                                            </div>
+                                                        @endif
+                                                    @endif
                                                 @endif
                                             @endif
                                         </td>
