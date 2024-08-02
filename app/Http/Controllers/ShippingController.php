@@ -243,8 +243,17 @@ class ShippingController extends Controller
                 $order_count[$company_id] = 0;
             }
 
+            $shipping_cost = [];
             foreach ($orders_dhl as $order) {
 
+                //calculate total weight product
+                $shipping_cost_id = $this->get_shipping_cost_id($order);
+                $shipping_cost[$order->id]['total_weight'] = 0;
+                $shipping_cost[$order->id]['shipping_cost_id'] = null;
+                if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+                {
+                    $shipping_cost[$order->id] = $shipping_cost_id;
+                }
                 $package_description = "";
                 foreach ($order->items as $items) {
                     $package_description .= $items->product->name . ", ";
@@ -327,7 +336,7 @@ class ShippingController extends Controller
 
             $response = Http::withBody($json, 'application/json')->post($url);
 
-            $dhl_store = $this->dhl_store($orders_dhl, $response);
+            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost);
 
             if ($dhl_store != null) {
 
@@ -515,7 +524,7 @@ class ShippingController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function dhl_store($orders, $json)
+    public function dhl_store($orders, $json, $shipping_cost)
     {
         $data = [];
         $tracking_no[] = [];
@@ -568,6 +577,9 @@ class ShippingController extends Controller
             $data[$order->id]['shipment_number'] = shipment_num_format($order);
             $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
             $data[$order->id]['attachment'] = 'labels/' . shipment_num_format($order) . '.pdf';
+            $data[$order->id]['total_weight'] = $shipping_cost[$order->id]['total_weight'];
+            $data[$order->id]['shipping_cost_id'] = $shipping_cost[$order->id]['shipping_cost_id'];
+            
             // $data[$order->id]['packing_attachment'] = $product_list;
             //store label to storage
             Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($content[shipment_num_format($order)]));
@@ -1120,7 +1132,16 @@ class ShippingController extends Controller
 
         foreach ($array_data as $key => $cn) {
 
-            $product_list = $this->generate_multiple_product_description($cn);
+            //calculate total weight product
+            $shipping_cost_id = $this->get_shipping_cost_multiple($order, $cn);
+            $shipping_cost[$order->id]['total_weight'] = 0;
+            $shipping_cost[$order->id]['shipping_cost_id'] = null;
+            if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+            {
+                $shipping_cost[$order->id] = $shipping_cost_id;
+            }
+            // $product_list = $this->generate_multiple_product_description($cn);
+            $product_list = '';
             //calculate COD amount
             $codAmmount = ($remainCodAmmount > MAX_DHL_COD_PER_PARCEL) ? MAX_DHL_COD_PER_PARCEL : $remainCodAmmount;
             $remainCodAmmount -= $codAmmount;
@@ -1207,7 +1228,7 @@ class ShippingController extends Controller
 
             $response = Http::withBody($data, 'application/json')->post($url);
             // $dhl_store = ['test'];
-            $dhl_store = $this->dhl_store_for_mult($order, $response, $key, $product_list);
+            $dhl_store = $this->dhl_store_for_mult($order, $response, $key, $product_list, $cn, $shipping_cost);
         }
         if (!empty($dhl_store)) {
             return response()->json([
@@ -1230,7 +1251,7 @@ class ShippingController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function dhl_store_for_mult($order, $json, $num_cn, $product_list)
+    public function dhl_store_for_mult($order, $json, $num_cn, $product_list , $cn, $shipping_cost)
     {
         $data = [];
         $tracking_no[] = [];
@@ -1263,6 +1284,8 @@ class ShippingController extends Controller
         $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
         $data[$order->id]['attachment'] = 'labels/' . shipment_num_format_mult($order, $num_cn) . '.pdf';
         $data[$order->id]['packing_attachment'] = $product_list;
+        $data[$order->id]['total_weight'] = $shipping_cost[$order->id]['total_weight'];
+        $data[$order->id]['shipping_cost_id'] = $shipping_cost[$order->id]['shipping_cost_id'];
 
         // store label to storage
         Storage::put('public/labels/' . shipment_num_format_mult($order, $num_cn) . '.pdf', base64_decode($content[shipment_num_format_mult($order, $num_cn)]));
@@ -2109,6 +2132,18 @@ class ShippingController extends Controller
 
             $generateCN = EmziExpressTrait::generateCN($accessToken->token, $jsonSend);
             if (isset($generateCN['shipmentItems'][0]['trackingNumber']) && isset($generateCN['shipmentItems'][0]['labels'])) {
+                //calculate total weight product
+                $shipping_cost_id = $this->get_shipping_cost_id($order);
+                $shipping_cost_data['total_weight'] = 0;
+                $shipping_cost_data['shipping_cost_id'] = null;
+                if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+                {
+                    $shipping_cost_data['total_weight'] = $shipping_cost_id['total_weight'];
+                    $shipping_cost_data['shipping_cost_id'] = $shipping_cost_id['shipping_cost_id'];
+                }
+
+                $shipping->total_weight = $shipping_cost_data['total_weight'];
+                $shipping->shipping_cost_id = $shipping_cost_data['shipping_cost_id'];
                 $shipping->tracking_number = $generateCN['shipmentItems'][0]['trackingNumber'] ?? '';
                 $shipping->attachment = 'labels/' . shipment_num_format($order) . '.pdf';
                 $shipping->packing_attachment = $product_list;
