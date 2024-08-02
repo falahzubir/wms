@@ -262,73 +262,71 @@ class ShippingController extends Controller
 
                 $total_price = $order->total_price > 0 ? $order->total_price / 100 : null;
 
-                if ($order->company_id == $access_token->company_id) {
-
-                    $second_phone_num = '';
-                    //if ED
-                    if ($order->company_id == 2) {
-                        //If secondary phone number existed
-                        if ($order->customer->phone_2 != null) {
-                            $second_phone_num = $order->customer->phone_2 . " (HQ NO: 60122843214)";
-                        }
-                        //if not existed
-                        else {
-                            $second_phone_num = "(HQ NO: 60122843214)";
-                        }
-                    } else {//if EH
-                        //If secondary phone number existed
-                        if ($order->customer->phone_2 != null) {
-                            $second_phone_num = $order->customer->phone_2 . ' (PIC: ' . $order->sold_by . ')';
-                        }
-                        //if not existed
-                        else {
-                            $second_phone_num = '(PIC: ' . $order->sold_by . ')';
-                        }
+                $second_phone_num = '';
+                //if ED
+                if ($order->company_id == 2) {
+                    //If secondary phone number existed
+                    if ($order->customer->phone_2 != null) {
+                        $second_phone_num = $order->customer->phone_2 . " (HQ NO: 60122843214)";
                     }
-                    $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
-                        'consigneeAddress' => [
-                            // 'companyName' => get_shipping_remarks($order),
-                            // 'name' => $order->customer->name,
-                            'name' => substr($order->customer->name, 0, 30),
-                            'address1' => $order->customer->address,
-                            // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
-                            'address2' => "-",
-                            // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
-                            'address3' => $second_phone_num,
-                            'city' => $order->customer->city,
-                            'state' => MY_STATES[$order->customer->state],
-                            'country' => "MY",
-                            'district' => $order->customer->district ?? null,
-                            'postCode' => $order->customer->postcode,
-                            'phone' => $order->customer->phone,
-                            'email' => $order->customer->email,
-                            'idNumber' => null,
-                            'idType' => null,
-                        ],
-                        'shipmentID' => shipment_num_format($order, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
-                        'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
-                        'deliveryConfirmationNo' => null, //not used
-                        'packageDesc' => substr($this->package_description($order), 0, 50), // required
-                        'totalWeight' => get_order_weight($order), // mandatory, optional if product code is PDR
-                        'totalWeightUOM' => "G",
-                        'dimensionUOM' => "cm", //mandatory if height, length, width is not null
-                        'height' => null, //mandatory if dimensionUOM is not null
-                        'length' => null, //mandatory if dimensionUOM is not null
-                        'width' => null, //mandatory if dimensionUOM is not null
-                        'customerReference1' => null, //optional
-                        'customerReference2' => null, //optional
-                        'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
-                        'contentIndicator' => null, //mandatory if product include lithium battery
-                        'codValue' => $order->purchase_type == 1 ? $total_price : null, //optional
-                        'insuranceValue' => null, //optional
-                        'freightCharge' => null, //optional
-                        'totalValue' => null, //optional for domestic
-                        'currency' => "MYR", //3-char currency code
-                        'remarks' => get_shipping_remarks($order), //optional
-                        'deliveryOption' => "C", //only C is supported
-                        'isMult' => "false", //true: multiple pieces, false: single piece
-                    ];
+                    //if not existed
+                    else {
+                        $second_phone_num = "(HQ NO: 60122843214)";
+                    }
+                } else {//if EH
+                    //If secondary phone number existed
+                    if ($order->customer->phone_2 != null) {
+                        $second_phone_num = $order->customer->phone_2 . ' (PIC: ' . $order->sold_by . ')';
+                    }
+                    //if not existed
+                    else {
+                        $second_phone_num = '(PIC: ' . $order->sold_by . ')';
+                    }
                 }
+                $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
+                    'consigneeAddress' => [
+                        // 'companyName' => get_shipping_remarks($order),
+                        // 'name' => $order->customer->name,
+                        'name' => substr($order->customer->name, 0, 30),
+                        'address1' => $order->customer->address,
+                        // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
+                        'address2' => "-",
+                        // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                        'address3' => $second_phone_num,
+                        'city' => $order->customer->city,
+                        'state' => MY_STATES[$order->customer->state],
+                        'country' => "MY",
+                        'district' => $order->customer->district ?? null,
+                        'postCode' => $order->customer->postcode,
+                        'phone' => $order->customer->phone,
+                        'email' => $order->customer->email,
+                        'idNumber' => null,
+                        'idType' => null,
+                    ],
+                    'shipmentID' => shipment_num_format($order, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
+                    'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
+                    'deliveryConfirmationNo' => null, //not used
+                    'packageDesc' => substr($this->package_description($order), 0, 50), // required
+                    'totalWeight' => get_order_weight($order), // mandatory, optional if product code is PDR
+                    'totalWeightUOM' => "G",
+                    'dimensionUOM' => "cm", //mandatory if height, length, width is not null
+                    'height' => null, //mandatory if dimensionUOM is not null
+                    'length' => null, //mandatory if dimensionUOM is not null
+                    'width' => null, //mandatory if dimensionUOM is not null
+                    'customerReference1' => null, //optional
+                    'customerReference2' => null, //optional
+                    'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
+                    'contentIndicator' => null, //mandatory if product include lithium battery
+                    'codValue' => $order->purchase_type == 1 ? $total_price : null, //optional
+                    'insuranceValue' => null, //optional
+                    'freightCharge' => null, //optional
+                    'totalValue' => null, //optional for domestic
+                    'currency' => "MYR", //3-char currency code
+                    'remarks' => get_shipping_remarks($order), //optional
+                    'deliveryOption' => "C", //only C is supported
+                    'isMult' => "false", //true: multiple pieces, false: single piece
+                ];
+
                 $order_count[$order->company_id]++;
             }
 
@@ -579,7 +577,7 @@ class ShippingController extends Controller
             $data[$order->id]['attachment'] = 'labels/' . shipment_num_format($order) . '.pdf';
             $data[$order->id]['total_weight'] = $shipping_cost[$order->id]['total_weight'];
             $data[$order->id]['shipping_cost_id'] = $shipping_cost[$order->id]['shipping_cost_id'];
-            
+
             // $data[$order->id]['packing_attachment'] = $product_list;
             //store label to storage
             Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($content[shipment_num_format($order)]));
