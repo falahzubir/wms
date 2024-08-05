@@ -57,7 +57,7 @@ Trait NinjaVanInternationalTrait
         }
     }
 
-    public static function generateCN($json, $company)
+    public static function createNinjaVanOrder($json, $company)
     {
         // Retrieve the valid access token
         $accessToken = self::checkAccessToken($company);
