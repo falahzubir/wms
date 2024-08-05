@@ -2263,8 +2263,14 @@ class ShippingController extends Controller
             $generateCN = NinjaVanInternationalTrait::generateCN($jsonSend, $order->company->id);
 
             if (isset($generateCN['tracking_number'])) {
+                // Get the tracking number
+                $trackingNumber = $generateCN['tracking_number'];
+                
+                // Delay for 5 seconds before generating the waybill (you can adjust the delay as needed)
+                sleep(5);
 
-                $generateWayBill = NinjaVanInternationalTrait::generateWayBill($generateCN['tracking_number'], $order->company->id);
+                // Generate the waybill
+                $generateWayBill = NinjaVanInternationalTrait::generateWayBill($trackingNumber, $order->company->id);
 
                 // Check if the waybill generation was successful
                 if ($generateWayBill->status() == 200) {
@@ -2274,7 +2280,7 @@ class ShippingController extends Controller
                     Storage::put($filePath, $pdfContent);
 
                     // Update the shipping details
-                    $shipping->tracking_number = $generateCN['tracking_number'] ?? '';
+                    $shipping->tracking_number = $trackingNumber;
                     $shipping->attachment = $filePath;
                     $shipping->packing_attachment = $product_list;
 
@@ -2289,7 +2295,6 @@ class ShippingController extends Controller
                     // Handle the error response from the waybill generation API
                     $errors[] = $generateWayBill->json();
                 }
-
             } else {
                 // Add error handling for the API response
                 $errors[] = $generateCN;
