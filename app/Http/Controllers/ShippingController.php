@@ -934,7 +934,7 @@ class ShippingController extends Controller
         $request->validate([
             'tracking_id' => 'required|exists:shippings,tracking_number',
             'attempt_status' => 'required|string',
-            'description' => 'required|string',
+            // 'description' => 'required|string',
             'attempt_time' => 'required|date',
         ]);
 
