@@ -5,11 +5,10 @@ namespace App\Http\Traits;
 use App\Models\AccessToken;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
-
+use Illuminate\Http\JsonResponse;
 
 Trait NinjaVanInternationalTrait
 {
-
     public static function checkAccessToken($company)
     {
         // Define the URL for the token request
@@ -29,8 +28,8 @@ Trait NinjaVanInternationalTrait
         $responseGet = Http::withHeaders([
             'Accept' => 'application/json',
         ])->post($ninjaVanTokenUrl, [
-            'client_id' => '03aa4db4a0404009a1141ce2658a1118',
-            'client_secret' => '4f51570f6868451bb9f4f836177ffd8d',
+            'client_id' => '4c7b667e220b424bb684a3b91bad9ce4',
+            'client_secret' => '5dbe0ca634264f07ae9de7fb1990467d',
             'grant_type' => 'client_credentials'
         ]);
 
@@ -43,17 +42,17 @@ Trait NinjaVanInternationalTrait
                 $ninjaVanToken->company_id = $company;
             }
             
-            $ninjaVanToken->client_id = '03aa4db4a0404009a1141ce2658a1118';
-            $ninjaVanToken->client_secret = '4f51570f6868451bb9f4f836177ffd8d';
+            $ninjaVanToken->client_id = '5dbe0ca634264f07ae9de7fb1990467d';
+            $ninjaVanToken->client_secret = '5dbe0ca634264f07ae9de7fb1990467d';
             $ninjaVanToken->name = 'NinjaVan International Authentication';
             $ninjaVanToken->token = $newTokenData['access_token'];
-            $ninjaVanToken->expires_at = Carbon::createFromTimestamp($newTokenData['expires'])->toDateTimeString(); // Convert to datetime format
+            $ninjaVanToken->expires_at = Carbon::now()->addSeconds($newTokenData['expires_in'])->toDateTimeString(); // Convert to datetime format
             $ninjaVanToken->save();
 
             return $ninjaVanToken;
         } else {
-            // Handle the error response
-            return response()->json($responseGet->json());
+            // Handle the error response by throwing an exception
+            throw new \Exception('Failed to retrieve NinjaVan access token: ' . $responseGet->body());
         }
     }
 
@@ -72,7 +71,7 @@ Trait NinjaVanInternationalTrait
         ->post($ninjaVanUrl);
 
         if($response->status() == 401){
-            return response()->json();
+            throw new \Exception('Unauthorized: ' . $response->body());
         }
 
         return $response->json();
@@ -96,11 +95,11 @@ Trait NinjaVanInternationalTrait
         ]);
 
         if ($response->status() == 401) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            throw new \Exception('Unauthorized: ' . $response->body());
         }
 
         if ($response->status() != 200) {
-            return response()->json(['error' => 'Failed to retrieve waybill'], $response->status());
+            throw new \Exception('Failed to retrieve waybill: ' . $response->body());
         }
 
         return $response;
