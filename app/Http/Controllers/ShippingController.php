@@ -2176,6 +2176,15 @@ class ShippingController extends Controller
                     ->where('end_date', '<=', $endOfMonth)
                     ->first();
 
+        if (!$rate) {
+            return response()->json([
+                'success' => false,
+                'title' => 'Exchange rate is outdated!',
+                'message' => 'Please contact the system administrator to update the exchange rate.',
+                'data' => []
+            ], 200);
+        }
+
         foreach ($order_ninja as $key => $order) {
             $product_list = $this->generate_product_description($order->id);
 

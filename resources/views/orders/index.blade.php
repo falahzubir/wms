@@ -1661,14 +1661,16 @@
                         }
 
                         if (!response.data.success) {
-                            // let message = response.data.error ?? response.data.message;
-                            let message = JSON.stringify(response.data);
+                            let title = response.data.title ?? 'Error!';
+                            let message = response.data.message ?? 'Fail to generate CN';
+                            
                             Swal.fire({
-                                title: 'Error!',
-                                html: `${message}` ?? "Fail to generate CN",
+                                title: title,
+                                html: message,
                                 icon: 'error',
                                 confirmButtonText: 'OK'
-                            })
+                            });
+
                             return;
                         }
 
