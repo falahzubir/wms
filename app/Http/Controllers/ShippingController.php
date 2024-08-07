@@ -2246,8 +2246,14 @@ class ShippingController extends Controller
             // Calculate amount into SG currency
             $sgd_amount = (($order->total_price / 100) / $rate->rate) + 1;
             $sgd_amount = ceil($sgd_amount); // Round up to the nearest integer
+            $sgd_amount = (int)$sgd_amount;
 
             $codValue = $order->purchase_type == PURCHASE_TYPE_COD ? $sgd_amount : '0';
+
+            // Store currency amount into orders table
+            $order = Order::findOrFail($order->id);
+            $order->currency_amount = $codValue;
+            $order->save();
 
             // JSON structure
             $jsonArray = [
@@ -2265,7 +2271,7 @@ class ShippingController extends Controller
                     "gst_registration_number" => ""
                 ],
                 "service_level" => "Standard",
-                "requested_tracking_number" => "NV" . $order->id,
+                "requested_tracking_number" => "NV" . $order->sales_id,
                 "reference" => [
                     "merchant_order_number" => $order->sales_id
                 ],
@@ -2297,6 +2303,8 @@ class ShippingController extends Controller
                     ]
                 ],
                 "parcel_job" => [
+                    "cash_on_delivery" => $codValue,
+                    "cash_on_delivery_currency" => "SGD",
                     "is_pickup_required" => false,
                     "delivery_instructions" => $order->sales_remarks ?? '',
                     "delivery_start_date" => Carbon::now()->format('Y-m-d'),
