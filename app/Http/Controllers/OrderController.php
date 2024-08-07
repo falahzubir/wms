@@ -3,27 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Exports\OrderExport;
+use App\Http\Traits\ApiTrait;
+use App\Http\Traits\BucketTrait;
+use App\Models\AlternativePostcode;
+use App\Models\CategoryMain;
 use App\Models\Company;
 use App\Models\Courier;
 use App\Models\Customer;
 use App\Models\OperationalModel;
 use App\Models\Order;
+use App\Models\OrderEvent;
 use App\Models\OrderItem;
-use App\Models\Product;
-use App\Models\Shipping;
 use App\Models\OrderLog;
+use App\Models\Product;
+use App\Models\Setting;
+use App\Models\Shipping;
+use App\Models\TemplateMain;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Route;
-use App\Http\Traits\ApiTrait;
-use App\Http\Traits\BucketTrait;
-use App\Models\OrderEvent;
-use App\Models\AlternativePostcode;
-use App\Models\CategoryMain;
-use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
-use App\Models\TemplateMain;
+use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
@@ -201,7 +202,7 @@ class OrderController extends Controller
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING, ACTION_GENERATE_PACKING],
         ]);
     }
 
@@ -1155,6 +1156,171 @@ class OrderController extends Controller
             // Handle the case where the status is not recognized
             return response()->json(['error' => 'Invalid status'], 400);
         }
+    }
+
+    // Check CN and bucket batch for generate packing
+    public function check_cn_generate_packing(Request $request)
+    {
+        // Validate the request to ensure orders are provided
+        $request->validate([
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'exists:orders,id'  // Ensure each order_id exists in the orders table
+        ]);
+
+        $order_ids = $request->input('order_ids');
+
+        // Check for orders with null bucket_batch_id
+        $bucket_batch_id = Order::whereIn('id', $order_ids)
+            ->whereNull('bucket_batch_id')
+            ->get();
+
+        if($bucket_batch_id->count() > 0){
+            return response()->json(['data' => 1]);
+        }
+
+        // Check for orders with null attachments
+        $attachment = Order::whereIn('id', $order_ids)
+            ->whereDoesntHave('shippings')
+            ->get();
+
+        if($attachment->count() > 0){
+            return response()->json(['data' => 2]);
+        }
+
+        return response()->json(['data' => 0]);
+    }
+
+    // Generate Packing
+    public function generate_packing(Request $request)
+    {
+        // Validate the request to ensure orders are provided
+        $request->validate([
+            'orders' => 'required|array'
+        ]);
+
+        $orders = $request->input('orders');
+
+        // Fetch data for Generate Packing based on selected orders
+        $data = $this->get_generate_packing_data($orders);
+
+        // Generate Packing
+        $response = new StreamedResponse(function () use ($data, $orders) {
+            $handle = fopen('php://output', 'w');
+
+            // Add headers
+            fputcsv($handle, [
+                'Product',
+                'Order(s)',
+            ]);
+
+            $productCounts = [];
+
+            // Add data rows
+            foreach ($data as $row) {
+                $products = $row->items ? $row->items->map(function($item) {
+                    return $item->product->code . ' [' . $item->quantity . ']';
+                })->implode(', ') : '';
+
+                if (isset($productCounts[$products])) {
+                    $productCounts[$products]++;
+                } else {
+                    $productCounts[$products] = 1;
+                }
+            }
+
+            // Function to extract the quantity from the product code
+            $extractQuantity = function($productCode) {
+                preg_match('/\[(\d+)\]/', $productCode, $matches);
+                return $matches ? (int)$matches[1] : 0;
+            };
+
+            // Function to extract the core product codes from the product code string
+            $extractCoreProducts = function($productCode) {
+                $coreProducts = [];
+                preg_match_all('/(\w+) \[\d+\]/', $productCode, $matches);
+                if ($matches && isset($matches[1])) {
+                    $coreProducts = $matches[1];
+                }
+                return $coreProducts;
+            };
+
+            // Group and sort products by the number of products and then by core product codes and quantity
+            $sortedProducts = function($products) use ($extractCoreProducts, $extractQuantity) {
+                $groupedProducts = [];
+
+                // Group products by their core product codes
+                foreach ($products as $productCode => $count) {
+                    $coreProducts = $extractCoreProducts($productCode);
+                    $numProducts = count($coreProducts);
+                    $primaryProduct = $coreProducts[0] ?? '';
+                    $secondaryProduct = $coreProducts[1] ?? '';
+                    $tertiaryProduct = $coreProducts[2] ?? '';
+
+                    $groupKey = $numProducts . '|' . $primaryProduct . '|' . $secondaryProduct . '|' . $tertiaryProduct;
+
+                    if (!isset($groupedProducts[$groupKey])) {
+                        $groupedProducts[$groupKey] = [];
+                    }
+                    $groupedProducts[$groupKey][] = [
+                        'productCode' => $productCode,
+                        'count' => $count,
+                        'quantity' => $extractQuantity($productCode)
+                    ];
+                }
+
+                // Sort each group by number of products first, then primary, secondary, and tertiary products
+                uksort($groupedProducts, function($a, $b) {
+                    list($numA, $primaryA, $secondaryA, $tertiaryA) = explode('|', $a);
+                    list($numB, $primaryB, $secondaryB, $tertiaryB) = explode('|', $b);
+
+                    if ($primaryA == $primaryB) {
+                        return $numA <=> $numB;
+                    }
+                    return strcmp($primaryA, $primaryB);
+                });
+
+                return $groupedProducts;
+            };
+
+            $sortedProducts = $sortedProducts($productCounts);
+
+            // Write the sorted products to the CSV
+            foreach ($sortedProducts as $group) {
+                foreach ($group as $product) {
+                    fputcsv($handle, [
+                        $product['productCode'],
+                        $product['count'],
+                    ]);
+                }
+            }
+
+            fclose($handle);
+        });
+
+        // Set order status for each order
+        foreach ($orders as $orderId) {
+            $order = Order::find($orderId); // Fetch the order object by its ID
+            if ($order) {
+                set_order_status($order, ORDER_STATUS_PACKING, "Generate packing list");
+            } else {
+                // Handle the case where the order is not found (optional)
+                Log::warning("Order with ID $orderId not found.");
+            }
+        }
+
+        return $response;
+    }
+
+    private function get_generate_packing_data(array $orders)
+    {
+        // Fetch orders based on the selected order IDs and load related items and products
+        return Order::whereIn('id', $orders)
+            ->whereNotNull('bucket_batch_id')
+            ->whereHas('shippings', function ($query) {
+                $query->whereNotNull('attachment');
+            })
+            ->with(['items.product'])
+            ->get();
     }
 
 }

@@ -40,6 +40,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'order.approve_for_shipping']);
         Permission::firstOrCreate(['name' => 'shipping.cancel']);
         Permission::firstOrCreate(['name' => 'operational_model.update']);
+        Permission::firstOrCreate(['name' => 'permission.generate_packing']);
 
         //view permission
         Permission::firstOrCreate(['name' => 'view.overall_list']);
