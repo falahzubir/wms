@@ -2248,11 +2248,9 @@ class ShippingController extends Controller
             $sgd_amount = ceil($sgd_amount); // Round up to the nearest integer
             $sgd_amount = (int)$sgd_amount;
 
-            $codValue = $order->purchase_type == PURCHASE_TYPE_COD ? $sgd_amount : '0';
-
             // Store currency amount into orders table
             $order = Order::findOrFail($order->id);
-            $order->currency_amount = $codValue;
+            $order->currency_amount = $sgd_amount;
             $order->save();
 
             // JSON structure
@@ -2303,8 +2301,6 @@ class ShippingController extends Controller
                     ]
                 ],
                 "parcel_job" => [
-                    "cash_on_delivery" => $codValue,
-                    "cash_on_delivery_currency" => "SGD",
                     "is_pickup_required" => false,
                     "delivery_instructions" => $order->sales_remarks ?? '',
                     "delivery_start_date" => Carbon::now()->format('Y-m-d'),
@@ -2320,7 +2316,7 @@ class ShippingController extends Controller
                         [
                             "item_description" => $itemDescription,
                             "native_item_description" => "N/A",
-                            "unit_value" => $codValue,
+                            "unit_value" => $sgd_amount,
                             "unit_weight" => $totalWeight,
                             "product_url" => "https://www.product.url/12346.pdf",
                             "invoice_url" => "https://www.invoice.url/12346.pdf",
@@ -2330,6 +2326,11 @@ class ShippingController extends Controller
                     ]
                 ]
             ];
+
+            if ($order->purchase_type == PURCHASE_TYPE_COD) {
+                $jsonArray['parcel_job']['cash_on_delivery'] = $sgd_amount;
+                $jsonArray['parcel_job']['cash_on_delivery_currency'] = "SGD";
+            }
 
             $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
 
