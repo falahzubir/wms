@@ -2245,7 +2245,7 @@ class ShippingController extends Controller
 
             // Calculate amount into SG currency
             $sgd_amount = (($order->total_price / 100) / $rate->rate) + 1;
-            $sgd_amount = ceil($sgd_amount); // Round up to the nearest integer
+            $sgd_amount = round($sgd_amount);
             $sgd_amount = (int)$sgd_amount;
 
             // Store currency amount into orders table
