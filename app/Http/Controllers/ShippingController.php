@@ -236,8 +236,17 @@ class ShippingController extends Controller
                 $order_count[$company_id] = 0;
             }
 
+            $shipping_cost = [];
             foreach ($orders_dhl as $order) {
 
+                //calculate total weight product
+                $shipping_cost_id = $this->get_shipping_cost_id($order);
+                $shipping_cost[$order->id]['total_weight'] = 0;
+                $shipping_cost[$order->id]['shipping_cost_id'] = null;
+                if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+                {
+                    $shipping_cost[$order->id] = $shipping_cost_id;
+                }
                 $package_description = "";
                 foreach ($order->items as $items) {
                     $package_description .= $items->product->name . ", ";
@@ -246,73 +255,71 @@ class ShippingController extends Controller
 
                 $total_price = $order->total_price > 0 ? $order->total_price / 100 : null;
 
-                if ($order->company_id == $access_token->company_id) {
-
-                    $second_phone_num = '';
-                    //if ED
-                    if ($order->company_id == 2) {
-                        //If secondary phone number existed
-                        if ($order->customer->phone_2 != null) {
-                            $second_phone_num = $order->customer->phone_2 . " (HQ NO: 60122843214)";
-                        }
-                        //if not existed
-                        else {
-                            $second_phone_num = "(HQ NO: 60122843214)";
-                        }
-                    } else {//if EH
-                        //If secondary phone number existed
-                        if ($order->customer->phone_2 != null) {
-                            $second_phone_num = $order->customer->phone_2 . ' (PIC: ' . $order->sold_by . ')';
-                        }
-                        //if not existed
-                        else {
-                            $second_phone_num = '(PIC: ' . $order->sold_by . ')';
-                        }
+                $second_phone_num = '';
+                //if ED
+                if ($order->company_id == 2) {
+                    //If secondary phone number existed
+                    if ($order->customer->phone_2 != null) {
+                        $second_phone_num = $order->customer->phone_2 . " (HQ NO: 60122843214)";
                     }
-                    $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
-                        'consigneeAddress' => [
-                            // 'companyName' => get_shipping_remarks($order),
-                            // 'name' => $order->customer->name,
-                            'name' => substr($order->customer->name, 0, 30),
-                            'address1' => $order->customer->address,
-                            // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
-                            'address2' => "-",
-                            // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
-                            'address3' => $second_phone_num,
-                            'city' => $order->customer->city,
-                            'state' => MY_STATES[$order->customer->state],
-                            'country' => "MY",
-                            'district' => $order->customer->district ?? null,
-                            'postCode' => $order->customer->postcode,
-                            'phone' => $order->customer->phone,
-                            'email' => $order->customer->email,
-                            'idNumber' => null,
-                            'idType' => null,
-                        ],
-                        'shipmentID' => shipment_num_format($order, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
-                        'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
-                        'deliveryConfirmationNo' => null, //not used
-                        'packageDesc' => substr($this->package_description($order), 0, 50), // required
-                        'totalWeight' => get_order_weight($order), // mandatory, optional if product code is PDR
-                        'totalWeightUOM' => "G",
-                        'dimensionUOM' => "cm", //mandatory if height, length, width is not null
-                        'height' => null, //mandatory if dimensionUOM is not null
-                        'length' => null, //mandatory if dimensionUOM is not null
-                        'width' => null, //mandatory if dimensionUOM is not null
-                        'customerReference1' => null, //optional
-                        'customerReference2' => null, //optional
-                        'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
-                        'contentIndicator' => null, //mandatory if product include lithium battery
-                        'codValue' => $order->purchase_type == 1 ? $total_price : null, //optional
-                        'insuranceValue' => null, //optional
-                        'freightCharge' => null, //optional
-                        'totalValue' => null, //optional for domestic
-                        'currency' => "MYR", //3-char currency code
-                        'remarks' => get_shipping_remarks($order), //optional
-                        'deliveryOption' => "C", //only C is supported
-                        'isMult' => "false", //true: multiple pieces, false: single piece
-                    ];
+                    //if not existed
+                    else {
+                        $second_phone_num = "(HQ NO: 60122843214)";
+                    }
+                } else {//if EH
+                    //If secondary phone number existed
+                    if ($order->customer->phone_2 != null) {
+                        $second_phone_num = $order->customer->phone_2 . ' (PIC: ' . $order->sold_by . ')';
+                    }
+                    //if not existed
+                    else {
+                        $second_phone_num = '(PIC: ' . $order->sold_by . ')';
+                    }
                 }
+                $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
+                    'consigneeAddress' => [
+                        // 'companyName' => get_shipping_remarks($order),
+                        // 'name' => $order->customer->name,
+                        'name' => substr($order->customer->name, 0, 30),
+                        'address1' => $order->customer->address,
+                        // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
+                        'address2' => "-",
+                        // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                        'address3' => $second_phone_num,
+                        'city' => $order->customer->city,
+                        'state' => MY_STATES[$order->customer->state],
+                        'country' => "MY",
+                        'district' => $order->customer->district ?? null,
+                        'postCode' => $order->customer->postcode,
+                        'phone' => $order->customer->phone,
+                        'email' => $order->customer->email,
+                        'idNumber' => null,
+                        'idType' => null,
+                    ],
+                    'shipmentID' => shipment_num_format($order, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
+                    'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
+                    'deliveryConfirmationNo' => null, //not used
+                    'packageDesc' => substr($this->package_description($order), 0, 50), // required
+                    'totalWeight' => get_order_weight($order), // mandatory, optional if product code is PDR
+                    'totalWeightUOM' => "G",
+                    'dimensionUOM' => "cm", //mandatory if height, length, width is not null
+                    'height' => null, //mandatory if dimensionUOM is not null
+                    'length' => null, //mandatory if dimensionUOM is not null
+                    'width' => null, //mandatory if dimensionUOM is not null
+                    'customerReference1' => null, //optional
+                    'customerReference2' => null, //optional
+                    'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
+                    'contentIndicator' => null, //mandatory if product include lithium battery
+                    'codValue' => $order->purchase_type == 1 ? $total_price : null, //optional
+                    'insuranceValue' => null, //optional
+                    'freightCharge' => null, //optional
+                    'totalValue' => null, //optional for domestic
+                    'currency' => "MYR", //3-char currency code
+                    'remarks' => get_shipping_remarks($order), //optional
+                    'deliveryOption' => "C", //only C is supported
+                    'isMult' => "false", //true: multiple pieces, false: single piece
+                ];
+
                 $order_count[$order->company_id]++;
             }
 
@@ -320,7 +327,7 @@ class ShippingController extends Controller
 
             $response = Http::withBody($json, 'application/json')->post($url);
 
-            $dhl_store = $this->dhl_store($orders_dhl, $response);
+            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost);
 
             if ($dhl_store != null) {
 
@@ -508,7 +515,7 @@ class ShippingController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function dhl_store($orders, $json)
+    public function dhl_store($orders, $json, $shipping_cost)
     {
         $data = [];
         $tracking_no[] = [];
@@ -561,6 +568,9 @@ class ShippingController extends Controller
             $data[$order->id]['shipment_number'] = shipment_num_format($order);
             $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
             $data[$order->id]['attachment'] = 'labels/' . shipment_num_format($order) . '.pdf';
+            $data[$order->id]['total_weight'] = $shipping_cost[$order->id]['total_weight'];
+            $data[$order->id]['shipping_cost_id'] = $shipping_cost[$order->id]['shipping_cost_id'];
+
             // $data[$order->id]['packing_attachment'] = $product_list;
             //store label to storage
             Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($content[shipment_num_format($order)]));
@@ -568,6 +578,9 @@ class ShippingController extends Controller
         }
 
         Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+
+        //insert product_shipping
+        $this->store_shipping_products($orders);
     }
 
     /**
@@ -914,7 +927,7 @@ class ShippingController extends Controller
         $request->validate([
             'tracking_id' => 'required|exists:shippings,tracking_number',
             'attempt_status' => 'required|string',
-            'description' => 'required|string',
+            // 'description' => 'required|string',
             'attempt_time' => 'required|date',
         ]);
 
@@ -1110,7 +1123,16 @@ class ShippingController extends Controller
 
         foreach ($array_data as $key => $cn) {
 
-            $product_list = $this->generate_multiple_product_description($cn);
+            //calculate total weight product
+            $shipping_cost_id = $this->get_shipping_cost_multiple($order, $cn);
+            $shipping_cost[$order->id]['total_weight'] = 0;
+            $shipping_cost[$order->id]['shipping_cost_id'] = null;
+            if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+            {
+                $shipping_cost[$order->id] = $shipping_cost_id;
+            }
+            // $product_list = $this->generate_multiple_product_description($cn);
+            $product_list = '';
             //calculate COD amount
             $codAmmount = ($remainCodAmmount > MAX_DHL_COD_PER_PARCEL) ? MAX_DHL_COD_PER_PARCEL : $remainCodAmmount;
             $remainCodAmmount -= $codAmmount;
@@ -1197,7 +1219,7 @@ class ShippingController extends Controller
 
             $response = Http::withBody($data, 'application/json')->post($url);
             // $dhl_store = ['test'];
-            $dhl_store = $this->dhl_store_for_mult($order, $response, $key, $product_list);
+            $dhl_store = $this->dhl_store_for_mult($order, $response, $key, $product_list, $cn, $shipping_cost);
         }
         if (!empty($dhl_store)) {
             return response()->json([
@@ -1220,7 +1242,7 @@ class ShippingController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function dhl_store_for_mult($order, $json, $num_cn, $product_list)
+    public function dhl_store_for_mult($order, $json, $num_cn, $product_list , $cn, $shipping_cost)
     {
         $data = [];
         $tracking_no[] = [];
@@ -1253,6 +1275,8 @@ class ShippingController extends Controller
         $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
         $data[$order->id]['attachment'] = 'labels/' . shipment_num_format_mult($order, $num_cn) . '.pdf';
         $data[$order->id]['packing_attachment'] = $product_list;
+        $data[$order->id]['total_weight'] = $shipping_cost[$order->id]['total_weight'];
+        $data[$order->id]['shipping_cost_id'] = $shipping_cost[$order->id]['shipping_cost_id'];
 
         // store label to storage
         Storage::put('public/labels/' . shipment_num_format_mult($order, $num_cn) . '.pdf', base64_decode($content[shipment_num_format_mult($order, $num_cn)]));
@@ -1260,6 +1284,9 @@ class ShippingController extends Controller
         set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL");
 
         Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+
+        //insert product_shipping
+        $this->store_shipping_products_multiple($order, $cn);
     }
 
     /**
@@ -2096,6 +2123,18 @@ class ShippingController extends Controller
 
             $generateCN = EmziExpressTrait::generateCN($accessToken->token, $jsonSend);
             if (isset($generateCN['shipmentItems'][0]['trackingNumber']) && isset($generateCN['shipmentItems'][0]['labels'])) {
+                //calculate total weight product
+                $shipping_cost_id = $this->get_shipping_cost_id($order);
+                $shipping_cost_data['total_weight'] = 0;
+                $shipping_cost_data['shipping_cost_id'] = null;
+                if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+                {
+                    $shipping_cost_data['total_weight'] = $shipping_cost_id['total_weight'];
+                    $shipping_cost_data['shipping_cost_id'] = $shipping_cost_id['shipping_cost_id'];
+                }
+
+                $shipping->total_weight = $shipping_cost_data['total_weight'];
+                $shipping->shipping_cost_id = $shipping_cost_data['shipping_cost_id'];
                 $shipping->tracking_number = $generateCN['shipmentItems'][0]['trackingNumber'] ?? '';
                 $shipping->attachment = 'labels/' . shipment_num_format($order) . '.pdf';
                 $shipping->packing_attachment = $product_list;
@@ -2110,6 +2149,9 @@ class ShippingController extends Controller
             }
 
         }
+
+        //store shipping products
+        $this->store_shipping_products($order_ex);
 
         if (count($CNS) > 0) {
             return response()->json([
