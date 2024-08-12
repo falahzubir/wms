@@ -24,6 +24,7 @@ use App\Models\WeightCategory;
 use App\Models\GroupStateList;
 use App\Models\ShippingCost;
 use App\Models\ShippingProduct;
+use Illuminate\Support\Facades\DB;
 
 class ShippingController extends Controller
 {
