@@ -10,7 +10,11 @@
     <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse
         {{ request('companies') != null || request('couriers') != null ||
             request('purchase_types') != null || request('customer_types') != null ||
-            request('products') != null || request('op_models') != null || request('states') != null || request('platforms') != null || request('statuses') != null || request('events') !== null  ? 'show' : '' }}"
+            request('products') != null || request('op_models') != null ||
+            request('states') != null || request('platforms') != null ||
+            request('statuses') != null || request('events') !== null  ||
+            request('sales_types') != null || request('teams') != null
+            ? 'show' : '' }}"
         aria-labelledby="panelsStayOpen-headingOne">
         <div class="accordion-body">
             <div class="expand row">
@@ -37,6 +41,15 @@
                         @foreach ($filter_data->states as $id => $name)
                             <option value="{{ $id }}"
                                 {{ request('states') != null ? (in_array($id, request('states')) ? 'selected' : '') : '' }}>
+                                {{ $name }}</option>
+                        @endforeach
+                    </x-filter_select>
+                @endisset
+                @isset($filter_data->sales_type)
+                    <x-filter_select name="sales_types" label="Sales Type" id="sales-type-filter" class="col-4 mt-2">
+                        @foreach ($filter_data->sales_type as $id => $name)
+                            <option value="{{ $id }}"
+                                {{ request('sales_types') != null ? (in_array($id, request('sales_types')) ? 'selected' : '') : '' }}>
                                 {{ $name }}</option>
                         @endforeach
                     </x-filter_select>
