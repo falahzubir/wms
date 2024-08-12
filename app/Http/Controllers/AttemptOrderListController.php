@@ -114,6 +114,12 @@ class AttemptOrderListController extends Controller
                 $shipping = $event->shipping;
                 $order = $shipping->order;
 
+                // Retrieve the `created_at` date from `order_logs` where `order_status_id` is 5
+                $shippingDate = $order->logs->where('order_status_id', ORDER_STATUS_SHIPPING)->sortByDesc('id')->first();
+
+                // Retrieve the `created_at` date from `order_logs` where `order_status_id` is 6
+                $deliveryDate = $order->logs->where('order_status_id', ORDER_STATUS_DELIVERED)->sortByDesc('id')->first();
+
                 // Retrieve events with specific attempt statuses
                 $events = $shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->sortBy('created_at');
 
@@ -200,30 +206,30 @@ class AttemptOrderListController extends Controller
                 }
 
                 fputcsv($handle, [
-                    $order->company->code ?? '',
-                    $order->sales_id ?? '',
-                    $order->courier->name ?? '',
-                    $purchaseType,
-                    $shipping->tracking_number ?? '',
-                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
-                    $order->customer->postcode ?? '',
-                    MY_STATES[$order->customer->state] ?? '',
-                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
-                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('h:i A'),
-                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('D'),
-                    $firstAttemptDate,
-                    $firstAttemptDate,
-                    $firstAttemptDateAndTime,
-                    $firstAttemptDescription,
-                    $secondAttemptDate,
-                    $secondAttemptDateAndTime,
-                    $secondAttemptDescription,
-                    $thirdAttemptDate,
-                    $thirdAttemptDateAndTime,
-                    $thirdAttemptDescription,
-                    \Carbon\Carbon::parse($shipping->dt_request_shipping)->format('d/m/Y'),
-                    $events->count(),
-                    $order->customer->city ?? ''
+                    $order->company->code ?? '', // Business Unit
+                    $order->sales_id ?? '', // Order ID
+                    $order->courier->name ?? '', // Courier
+                    $purchaseType, // Purchase Type
+                    $shipping->tracking_number ?? '', // Tracking Number
+                    $shippingDate->created_at->format('d/m/Y') ?? '', // Shipping Date
+                    $order->customer->postcode ?? '', // Postcode
+                    MY_STATES[$order->customer->state] ?? '', // State
+                    $shippingDate->created_at->format('d/m/Y') ?? '', // Pickup Date
+                    $shippingDate->created_at->format('h:i A') ?? '', // Pickup Time
+                    $shippingDate->created_at->format('D') ?? '', // Pickup Day
+                    $firstAttemptDate, // Start Date
+                    $firstAttemptDate, // First Attempt Date
+                    $firstAttemptDateAndTime, // Failed 1st Attempt Date & Time
+                    $firstAttemptDescription, // First Attempt Status
+                    $secondAttemptDate, // 2nd Attempt Date
+                    $secondAttemptDateAndTime, // Failed 2nd Attempt Date & Time
+                    $secondAttemptDescription, // 2nd Attempt Status
+                    $thirdAttemptDate, // 3rd Attempt Date
+                    $thirdAttemptDateAndTime, // Failed 3rd Attempt Date & Time
+                    $thirdAttemptDescription, // 3rd Attempt Status
+                    $shippingDate->created_at->format('d/m/Y') ?? '', // Delivery Date
+                    $events->count(), // Number Attempt
+                    $order->customer->city ?? '' // City
                 ]);
             }
 
