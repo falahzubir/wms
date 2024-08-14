@@ -143,6 +143,7 @@ if(!defined('CLAIM_DATE_TYPES')) define('CLAIM_DATE_TYPES', [
 if(!defined('DHL_ID')) define('DHL_ID',15);
 if(!defined('POSMALAYSIA_ID')) define('POSMALAYSIA_ID', 76);
 if(!defined('EMZIEXPRESS_ID')) define('EMZIEXPRESS_ID', 100);
+if(!defined('NINJAVAN_INTERNATIONAL_ID')) define('NINJAVAN_INTERNATIONAL_ID', 77);
 
 // courier id which will be auto shipping, other will have to set menually
 if(!defined('AUTO_SHIPPING_COURIER')) define('AUTO_SHIPPING_COURIER', [15]);
