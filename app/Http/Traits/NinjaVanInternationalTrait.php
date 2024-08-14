@@ -28,8 +28,8 @@ Trait NinjaVanInternationalTrait
         $responseGet = Http::withHeaders([
             'Accept' => 'application/json',
         ])->post($ninjaVanTokenUrl, [
-            'client_id' => '4c7b667e220b424bb684a3b91bad9ce4',
-            'client_secret' => '5dbe0ca634264f07ae9de7fb1990467d',
+            'client_id' => app()->environment() == 'production' ? 'f98f1ed2ce0c48a7bdbd7273e42c07fe' : '4c7b667e220b424bb684a3b91bad9ce4',
+            'client_secret' => app()->environment() == 'production' ? 'b67e92e050834beca6d4814518eb3c13' :'5dbe0ca634264f07ae9de7fb1990467d',
             'grant_type' => 'client_credentials'
         ]);
 
@@ -42,8 +42,8 @@ Trait NinjaVanInternationalTrait
                 $ninjaVanToken->company_id = $company;
             }
             
-            $ninjaVanToken->client_id = '5dbe0ca634264f07ae9de7fb1990467d';
-            $ninjaVanToken->client_secret = '5dbe0ca634264f07ae9de7fb1990467d';
+            $ninjaVanToken->client_id = app()->environment() == 'production' ? 'f98f1ed2ce0c48a7bdbd7273e42c07fe' : '5dbe0ca634264f07ae9de7fb1990467d';
+            $ninjaVanToken->client_secret = app()->environment() == 'production' ? 'b67e92e050834beca6d4814518eb3c13' : '5dbe0ca634264f07ae9de7fb1990467d';
             $ninjaVanToken->name = 'NinjaVan International Authentication';
             $ninjaVanToken->token = $newTokenData['access_token'];
             $ninjaVanToken->expires_at = Carbon::now()->addSeconds($newTokenData['expires_in'])->toDateTimeString(); // Convert to datetime format
