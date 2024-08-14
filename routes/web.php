@@ -222,6 +222,10 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/', [ShippingCostController::class, 'shipping_cost_list'])->name('shipping-cost.list')->middleware('can:shipping_cost.list');
     });
 
+    Route::prefix('weight-category')->group(function() {
+        Route::get('/', [ShippingCostController::class, 'weight_category'])->name('weight-category.list')->middleware('can:weight_category.list');
+    });
+
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::put('/', [SettingsController::class, 'update'])->name('update');

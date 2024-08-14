@@ -429,6 +429,15 @@
                                     </a>
                                 </li>
                             @endcan
+                            @can('weight_category.list')
+                                <li>
+                                    <a class=" {{ Route::current()->getName() != 'weight-category.list' ? 'collapsed' : '' }}"
+                                        href="{{ route('weight-category.list') }}">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Weight Category List</span>
+                                    </a>
+                                </li>
+                            @endcan
                         </ul>
                     </li><!-- End Components Nav -->
                     @endcan

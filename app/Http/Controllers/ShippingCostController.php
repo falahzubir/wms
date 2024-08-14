@@ -229,4 +229,68 @@ class ShippingCostController extends Controller
             'message' => 'Shipping cost deleted successfully'
         ]);
     }
+
+    public function weight_category()
+    {
+        // Get the search keyword
+        $search = request('search');
+
+        // Query WeightCategory model
+        $weightCategories = WeightCategory::query();
+
+        // Apply search filter for category name
+        $weightCategories = $weightCategories->when(isset($search), function ($query) use ($search) {
+            $query->where('name', 'like', '%' . $search . '%');
+        });
+
+        // Apply filters for weight_category_id (if applicable)
+        $weightCategories = $weightCategories->when(request('weight_category'), function ($query) {
+            $query->whereIn('id', request('weight_category'));
+        });
+
+        // Paginate the results
+        $weightCategories = $weightCategories->paginate(10);
+
+        // Return the view with filtered weight categories
+        return view('weight_category.index', [
+            'title' => 'List of Weight Category',
+            'weightCategories' => $weightCategories,
+        ]);
+    }
+
+    public function store_weight_category(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'category_name' => 'required',
+            'min_weight' => 'required|numeric',
+            'max_weight' => 'required|numeric',
+        ]);
+
+        // Check if the category name already exists
+        if (WeightCategory::where('name', $request->category_name)->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Category name already exists.'
+            ], 400);
+        }
+
+        // Convert min and max weight to grams
+        $minWeightInGrams = $request->min_weight * 1000;
+        $maxWeightInGrams = $request->max_weight * 1000;
+
+        // Create a new weight category
+        $weightCategory = WeightCategory::create([
+            'name' => $request->category_name,
+            'min_weight' => $minWeightInGrams,
+            'max_weight' => $maxWeightInGrams,
+        ]);
+
+        // Return a success response
+        return response()->json([
+            'status' => 'success',
+            'data' => $weightCategory,
+        ], 200);
+    }
+
 }
