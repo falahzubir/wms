@@ -66,7 +66,7 @@
         <div class="card p-3">
             <section id="addWeightCategoryButton" class="mb-3">
                 <div>
-                    @can('weight_category.create')
+                    @can('shipping_cost.create')
                     <button class="btn btn-primary" onclick="addWeightCategory()"><strong>+</strong></button>
                     @endcan
                 </div>
@@ -107,12 +107,12 @@
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-center gap-2">
-                                        @can('weight_category.delete')
+                                        @can('shipping_cost.delete')
                                         <button class="btn btn-danger p-1 px-2"
                                             onclick="deleteShippingCost({{ $shipping_cost->id }})"><i
                                                 class="bi bi-trash"></i></button>
                                         @endcan
-                                        @can('weight_category.edit')
+                                        @can('shipping_cost.edit')
                                         <button class="btn btn-warning p-1 px-2"
                                             onclick="editShippingCost('{{ $shipping_cost->id }}','{{ $shipping_cost->couriers->id }}','{{ $shipping_cost->state_groups->id }}','{{ $shipping_cost->weight_category->id }}', '{{ $shipping_cost->price }}')"><i
                                                 class="bi bi-pencil"></i></button>
@@ -328,7 +328,7 @@
                 let maxWeight = addWeightCategoryModal.find('input[name="max_weight"]').val();
                 let price = addWeightCategoryModal.find('#price').val();
 
-                axios.post('/api/weight-category/store', {
+                axios.post('/api/shipping-cost/store', {
                         weight_category_id: weight_category_id,
                         courier_id: courier,
                         state_group_id: stateGroup,
@@ -386,7 +386,7 @@
                 let maxWeight = editWeightCategoryModal.find('input[name="max_weight"]').val();
                 let price = editWeightCategoryModal.find('#price').val();
 
-                axios.post('/api/weight-category/update', {
+                axios.post('/api/shipping-cost/update', {
                         id: id,
                         weight_category_id: weight_category_id,
                         courier_id: courier,
@@ -432,7 +432,7 @@
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        axios.post(`/api/weight-category/delete/${id}`, {
+                        axios.post(`/api/shipping-cost/delete/${id}`, {
                                 _token: '{{ csrf_token() }}'
                             })
                             .then(response => {

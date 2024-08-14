@@ -126,7 +126,7 @@ class ShippingCostController extends Controller
         ]);
     }
 
-    public function weight_category()
+    public function shipping_cost_list()
     {
         $search = request('search');
         $shippingCosts = ShippingCost::with(['state_groups', 'couriers', 'weight_category']);
@@ -147,7 +147,7 @@ class ShippingCostController extends Controller
 
         $shippingCosts = $shippingCosts->paginate(10);
 
-        return view('weight_category.index', [
+        return view('shipping_cost.index', [
             'title' => 'List of Shipping Cost',
             'shippingCosts' => $shippingCosts,
             'couriers' => Courier::all(),
@@ -157,7 +157,7 @@ class ShippingCostController extends Controller
         ]);
     }
 
-    public function store_weight_category(Request $request)
+    public function store_shipping_cost_list(Request $request)
     {
         $request->validate([
             'weight_category_id' => [
@@ -187,7 +187,7 @@ class ShippingCostController extends Controller
         ]);
     }
 
-    public function update_weight_category(Request $request)
+    public function update_shipping_cost_list(Request $request)
     {
         $request->validate([
             'weight_category_id' => [
@@ -219,7 +219,7 @@ class ShippingCostController extends Controller
         ]);
     }
 
-    public function delete_weight_category($id)
+    public function delete_shipping_cost_list($id)
     {
         $shippingCost = ShippingCost::find($id);
         $shippingCost->delete();

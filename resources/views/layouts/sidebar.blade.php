@@ -420,12 +420,12 @@
                                     </a>
                                 </li>
                             @endcan
-                            @can('weight_category.list')
+                            @can('shipping_cost.list')
                                 <li>
-                                    <a class=" {{ Route::current()->getName() != 'weight-category.list' ? 'collapsed' : '' }}"
-                                        href="{{ route('weight-category.list') }}">
+                                    <a class=" {{ Route::current()->getName() != 'shipping-cost.list' ? 'collapsed' : '' }}"
+                                        href="{{ route('shipping-cost.list') }}">
                                         <i class="bi bi-circle"></i>
-                                        <span>Weight Category List</span>
+                                        <span>Shipping Cost List</span>
                                     </a>
                                 </li>
                             @endcan

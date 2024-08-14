@@ -218,8 +218,8 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/', [ShippingCostController::class, 'state_group'])->name('state_group.list')->middleware('can:state_group.list');
     });
 
-    Route::prefix('weight-categories')->group(function() {
-        Route::get('/', [ShippingCostController::class, 'weight_category'])->name('weight-category.list')->middleware('can:weight_category.list');
+    Route::prefix('shipping-cost')->group(function() {
+        Route::get('/', [ShippingCostController::class, 'shipping_cost_list'])->name('shipping-cost.list')->middleware('can:shipping_cost.list');
     });
 
     Route::prefix('settings')->name('settings.')->group(function () {
