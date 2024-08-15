@@ -271,7 +271,7 @@ class ShippingCostController extends Controller
         if (WeightCategory::where('name', $request->category_name)->exists()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Category name already exists.'
+                'message' => 'Weight category name already exists.'
             ], 400);
         }
 
@@ -293,4 +293,55 @@ class ShippingCostController extends Controller
         ], 200);
     }
 
+    public function update_weight_category(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'id' => 'required|exists:weight_categories,id',
+            'category_name' => 'required',
+            'min_weight' => 'required|numeric',
+            'max_weight' => 'required|numeric',
+        ]);
+
+        // Find the existing weight category by ID
+        $weightCategory = WeightCategory::find($request->id);
+
+        // Check if the category name already exists, but exclude the current record's name
+        if (WeightCategory::where('name', $request->category_name)->where('id', '!=', $weightCategory->id)->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Weight category name already exists.'
+            ], 400);
+        }
+
+        // Convert min and max weight to grams
+        $minWeightInGrams = $request->min_weight * 1000;
+        $maxWeightInGrams = $request->max_weight * 1000;
+
+        // Update the weight category
+        $weightCategory->update([
+            'name' => $request->category_name,
+            'min_weight' => $minWeightInGrams,
+            'max_weight' => $maxWeightInGrams
+        ]);
+
+        // Return a success response
+        return response()->json([
+            'status' => 'success',
+            'data' => $weightCategory,
+        ], 200);
+    }
+
+    public function delete_weight_category($id)
+    {
+        // Find the existing weight category by ID and perform delete
+        $weightCategory = WeightCategory::find($id);
+        $weightCategory->delete();
+
+        // Return a success response
+        return response()->json([
+            'status' => 'success',
+            'data' => $weightCategory,
+        ], 200);
+    }
 }

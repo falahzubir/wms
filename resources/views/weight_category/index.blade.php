@@ -67,7 +67,7 @@
                                         @endcan
                                         @can('shipping_cost.edit')
                                         <button class="btn btn-warning p-1 px-2"
-                                            onclick="editShippingCost('{{ $row->id }}','{{ $row->min_weight }}','{{ $row->max_weight }}')"><i
+                                            onclick="editShippingCost('{{ $row->id }}','{{ $row->name }}','{{ $row->min_weight }}','{{ $row->max_weight }}')"><i
                                                 class="bi bi-pencil"></i></button>
                                         @endcan
                                     </div>
@@ -123,75 +123,34 @@
         </div>
     </div>
 
-    {{-- <div class="modal fade" id="editWeightCategory" tabindex="-1" aria-labelledby="editWeightCategoryLabel"
+    <div class="modal fade" id="editWeightCategory" tabindex="-1" aria-labelledby="editWeightCategoryLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header justify-content-center">
-                    <h1 class="modal-title fs-5" id="editWeightCategoryLabel"><strong>Update Shipping Cost</strong></h1>
+                    <h1 class="modal-title fs-5" id="editWeightCategoryLabel"><strong>Edit Weight Category</strong></h1>
                 </div>
                 <div class="modal-body d-flex flex-column gap-3">
                     <div>
-                        <input type="hidden" id="shippingCostID" name="shipping_cost_id">
+                        <input type="hidden" id="category_id">
                         <label for="weightCategoryID" class="form-label fs-6"><strong>Weight Category Name:</strong></label>
-                        <select class="form-control" id="weightCategoryID" name="weight_category_id" onchange="selectionWeightID(this,'edit')">
-                            <option value="">Select Weight Category</option>
-                            @foreach ($weightCategories as $weightCategory)
-                            <option value="{{ $weightCategory->id }}">
-                                {{ $weightCategory->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="courier-filterr" class="form-label fs-6"><strong>Courier:</strong></label>
-                        <select name="courier-filter" class="form-control" id="courier-filter">
-                            <option value="">Select Courier</option>
-                            @foreach ($couriers as $courier)
-                            <option value="{{ $courier->id }}">
-                                {{ $courier->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="stateGroup-filter" class="form-label fs-6"><strong>State Group:</strong></label>
-                        <select name="stateGroup-filter" class="form-control" id="stateGroup-filter">
-                            <option value="">Select State Group</option>
-                            @foreach ($stateGroups as $stateGroup)
-                            <option value="{{ $stateGroup->id }}">
-                                {{ $stateGroup->name }}
-                            </option>
-                            @endforeach
-                        </select>
+                        <input type="text" id="category_name" class="form-control"/>
                     </div>
 
                     <div>
                         <label for="weightRange" class="form-label fs-6"><strong>Weight Range:</strong></label>
                         <div class="input-group">
-                            <input type="text" name="min_weight" class="form-control" placeholder="0.0"/ disabled/>
+                            <input type="text" id="min_weight" class="form-control" />
                             <span class="input-group-text">kg</span>
 
                             <div class="mx-2 align-self-center">
                                 <span>-</span>
                             </div>
 
-                            <input type="text" name="max_weight" class="form-control" placeholder="0.0"/ disabled/>
+                            <input type="text" id="max_weight" class="form-control"/>
                             <span class="input-group-text">kg</span>
                         </div>
                     </div>
-
-                    <div>
-                        <label for="price" class="form-label fs-6"><strong>Price:</strong></label>
-                        <div class="input-group">
-                            <span class="input-group-text">RM</span>
-                            <input type="text" class="form-control" placeholder="0.00"/ id="price">
-                        </div>
-                    </div>
-
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -199,7 +158,7 @@
                 </div>
             </div>
         </div>
-    </div> --}}
+    </div>
 
     <x-slot name="script">
         <script>
@@ -265,38 +224,29 @@
                     });
             }
 
-            function editShippingCost(id, courier_id, state_group_id, weight_category_id, price)
+            function editShippingCost(category_id, category_name, min_weight, max_weight)
             {
                 let editWeightCategoryModal = $('#editWeightCategory');
-                editWeightCategoryModal.find('#shippingCostID').val(id);
-                editWeightCategoryModal.find('#weightCategoryID').val(weight_category_id);
-                editWeightCategoryModal.find('#courier-filter').val(courier_id);
-                editWeightCategoryModal.find('#stateGroup-filter').val(state_group_id);
-                //run onchange function to set min and max weight
-                selectionWeightID(editWeightCategoryModal.find('#weightCategoryID')[0],'edit');
-                editWeightCategoryModal.find('#price').val((price/100).toFixed(2));
+                editWeightCategoryModal.find('#category_id').val(category_id);
+                editWeightCategoryModal.find('#category_name').val(category_name);
+                editWeightCategoryModal.find('#min_weight').val(min_weight/1000);
+                editWeightCategoryModal.find('#max_weight').val(max_weight/1000);
                 editWeightCategoryModal.modal('show');
             }
 
             function updateWeightCategory()
             {
                 let editWeightCategoryModal = $('#editWeightCategory');
-                let id = editWeightCategoryModal.find('#shippingCostID').val();
-                let weight_category_id = editWeightCategoryModal.find('#weightCategoryID').val();
-                let courier = editWeightCategoryModal.find('#courier-filter').val();
-                let stateGroup = editWeightCategoryModal.find('#stateGroup-filter').val();
-                let minWeight = editWeightCategoryModal.find('input[name="min_weight"]').val();
-                let maxWeight = editWeightCategoryModal.find('input[name="max_weight"]').val();
-                let price = editWeightCategoryModal.find('#price').val();
+                let id = editWeightCategoryModal.find('#category_id').val();
+                let categoryName = editWeightCategoryModal.find('#category_name').val();
+                let minWeight = editWeightCategoryModal.find('#min_weight').val();
+                let maxWeight = editWeightCategoryModal.find('#max_weight').val();
 
-                axios.post('/api/shipping-cost/update', {
+                axios.post('/api/weight-category/update', {
                         id: id,
-                        weight_category_id: weight_category_id,
-                        courier_id: courier,
-                        state_group_id: stateGroup,
+                        category_name: categoryName,
                         min_weight: minWeight,
                         max_weight: maxWeight,
-                        price: price,
                         _token: '{{ csrf_token() }}'
                     })
                     .then(response => {
@@ -304,7 +254,7 @@
                             editWeightCategoryModal.modal('hide');
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Shipping cost updated successfully!',
+                                title: 'Weight category updated successfully!',
                             }).then(() => {
                                 window.location.reload();
                             });
@@ -324,10 +274,10 @@
                     });
             }
 
-            function deleteShippingCost(id)
+            function deleteShippingCost(category_id)
             {
                 Swal.fire({
-                    title: 'Delete shipping cost?',
+                    title: 'Delete weight category?',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -335,14 +285,14 @@
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        axios.post(`/api/shipping-cost/delete/${id}`, {
+                        axios.post(`/api/weight-category/delete/${category_id}`, {
                                 _token: '{{ csrf_token() }}'
                             })
                             .then(response => {
                                 if (response.data.status == 'success') {
                                     Swal.fire({
                                         icon: 'success',
-                                        title: 'Shipping cost deleted successfully!',
+                                        title: 'Weight category deleted successfully!',
                                     }).then(() => {
                                         window.location.reload();
                                     });
@@ -357,24 +307,6 @@
                             });
                     }
                 })
-            }
-
-            function selectionWeightID(el,type)
-            {
-                let modalER = type == 'add' ? $('#addWeightCategory') : $('#editWeightCategory');
-                let weightCategory = weightCategories.find(weightCategory => weightCategory.id == el.value);
-
-                if(typeof weightCategory == 'undefined') {
-                    //reset all input
-                    modalER.find('input[name="min_weight"]').val('');
-                    modalER.find('input[name="max_weight"]').val('');
-                    return;
-                }
-
-                let minWeight = (weightCategory.min_weight/1000).toFixed(2);
-                let maxWeight = (weightCategory.max_weight/1000).toFixed(2);
-                modalER.find('input[name="min_weight"]').val(minWeight);
-                modalER.find('input[name="max_weight"]').val(maxWeight);
             }
 
             const displayErrors = (errors) => {
