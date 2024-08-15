@@ -76,12 +76,10 @@ class AttemptOrderListController extends Controller
         // Increase the execution time limit to handle large data processing
         set_time_limit(0); // 0 = unlimited
 
-        // Fetch data for CSV
-        $shippingEvents = $this->getDataForCSV($request);
         $date = date('YmdHis');
 
         // Generate CSV file
-        $response = new StreamedResponse(function () use ($shippingEvents) {
+        $response = new StreamedResponse(function () use ($request) {
             $handle = fopen('php://output', 'w');
 
             // Add headers
@@ -112,129 +110,131 @@ class AttemptOrderListController extends Controller
                 'City',
             ]);
 
-            // Add data rows
-            foreach ($shippingEvents as $event) {
-                $shipping = $event->shipping;
-                $order = $shipping->order;
+            // Fetch data in chunks and write each chunk to the CSV
+            $this->getDataForCSV($request)->chunk(1000, function ($shippingEvents) use ($handle) {
+                foreach ($shippingEvents as $event) {
+                    $shipping = $event->shipping;
+                    $order = $shipping->order;
 
-                // Retrieve the created_at date from order_logs where order_status_id is 5
-                $shippingDate = $order->logs->where('order_status_id', ORDER_STATUS_SHIPPING)->sortByDesc('id')->first();
+                    // Retrieve the created_at date from order_logs where order_status_id is 5
+                    $shippingDate = $order->logs->where('order_status_id', ORDER_STATUS_SHIPPING)->sortByDesc('id')->first();
 
-                // Retrieve the created_at date from order_logs where order_status_id is 6
-                $deliveryDate = $order->logs->where('order_status_id', ORDER_STATUS_DELIVERED)->sortByDesc('id')->first();
+                    // Retrieve the created_at date from order_logs where order_status_id is 6
+                    $deliveryDate = $order->logs->where('order_status_id', ORDER_STATUS_DELIVERED)->sortByDesc('id')->first();
 
-                // Retrieve events with specific attempt statuses
-                $events = $shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->sortBy('created_at');
+                    // Retrieve events with specific attempt statuses
+                    $events = $shipping->events->whereIn('attempt_status', [77090, 'EM013', 'EM080'])->sortBy('created_at');
 
-                // Retrieve reasons with specific attempt statuses
-                $reasons = $shipping->events->whereIn('attempt_status', [
-                    77098,
-                    77101,
-                    77102,
-                    77171,
-                    77191,
-                    'EM014',
-                    'EM093',
-                    'EM094',
-                    'EM095',
-                    'EM115',
-                ])->sortBy('created_at');
+                    // Retrieve reasons with specific attempt statuses
+                    $reasons = $shipping->events->whereIn('attempt_status', [
+                        77098,
+                        77101,
+                        77102,
+                        77171,
+                        77191,
+                        'EM014',
+                        'EM093',
+                        'EM094',
+                        'EM095',
+                        'EM115',
+                    ])->sortBy('created_at');
 
-                // Initialize default values
-                $firstAttemptDate = '';
-                $firstAttemptDescription = '';
-                $firstAttemptDateAndTime = '';
-                $secondAttemptDate = '';
-                $secondAttemptDescription = '';
-                $secondAttemptDateAndTime = '';
-                $thirdAttemptDate = '';
-                $thirdAttemptDescription = '';
-                $thirdAttemptDateAndTime = '';
+                    // Initialize default values
+                    $firstAttemptDate = '';
+                    $firstAttemptDescription = '';
+                    $firstAttemptDateAndTime = '';
+                    $secondAttemptDate = '';
+                    $secondAttemptDescription = '';
+                    $secondAttemptDateAndTime = '';
+                    $thirdAttemptDate = '';
+                    $thirdAttemptDescription = '';
+                    $thirdAttemptDateAndTime = '';
 
-                // Retrieve and process events and reasons
-                if ($events->count() > 0) {
-                    $firstEvent = $events->first();
-                    $firstReason = $reasons->first();
-                    
-                    // Ensure $firstReason is not null before accessing properties
-                    if (!is_null($firstReason)) {
-                        $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y') ?? '';
-                        $firstAttemptDescription = $firstReason->description ?? '';
-                        $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstReason->attempt_time)->format('d/m/Y h:i A') ?? '';
-                    } else {
-                        $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y') ?? '';
-                        $firstAttemptDescription = $firstEvent->description ?? '';
-                        $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y h:i A') ?? '';
-                    }
-                    
-                    if ($events->count() > 1) {
-                        $secondEvent = $events->skip(1)->first();
-                        $secondReason = $reasons->skip(1)->first();
+                    // Retrieve and process events and reasons
+                    if ($events->count() > 0) {
+                        $firstEvent = $events->first();
+                        $firstReason = $reasons->first();
                         
-                        // Ensure $secondReason is not null before accessing properties
-                        if (!is_null($secondReason)) {
-                            $secondAttemptDate = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y') ?? '';
-                            $secondAttemptDescription = $secondReason->description ?? '';
-                            $secondAttemptDateAndTime = \Carbon\Carbon::parse($secondReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                        // Ensure $firstReason is not null before accessing properties
+                        if (!is_null($firstReason)) {
+                            $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y') ?? '';
+                            $firstAttemptDescription = $firstReason->description ?? '';
+                            $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                        } else {
+                            $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y') ?? '';
+                            $firstAttemptDescription = $firstEvent->description ?? '';
+                            $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y h:i A') ?? '';
                         }
-
-                        if ($events->count() > 2) {
-                            $thirdEvent = $events->skip(2)->first();
-                            $thirdReason = $reasons->skip(2)->first();
+                        
+                        if ($events->count() > 1) {
+                            $secondEvent = $events->skip(1)->first();
+                            $secondReason = $reasons->skip(1)->first();
                             
-                            // Ensure $thirdReason is not null before accessing properties
-                            if (!is_null($thirdReason)) {
-                                $thirdAttemptDate = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y') ?? '';
-                                $thirdAttemptDescription = $thirdReason->description ?? '';
-                                $thirdAttemptDateAndTime = \Carbon\Carbon::parse($thirdReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                            // Ensure $secondReason is not null before accessing properties
+                            if (!is_null($secondReason)) {
+                                $secondAttemptDate = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y') ?? '';
+                                $secondAttemptDescription = $secondReason->description ?? '';
+                                $secondAttemptDateAndTime = \Carbon\Carbon::parse($secondReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                            }
+
+                            if ($events->count() > 2) {
+                                $thirdEvent = $events->skip(2)->first();
+                                $thirdReason = $reasons->skip(2)->first();
+                                
+                                // Ensure $thirdReason is not null before accessing properties
+                                if (!is_null($thirdReason)) {
+                                    $thirdAttemptDate = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y') ?? '';
+                                    $thirdAttemptDescription = $thirdReason->description ?? '';
+                                    $thirdAttemptDateAndTime = \Carbon\Carbon::parse($thirdReason->attempt_time)->format('d/m/Y h:i A') ?? '';
+                                }
                             }
                         }
                     }
-                }
-                
-                // Purchase Type
-                switch ($order->purchase_type) {
-                    case '1':
-                        $purchaseType = 'COD';
-                        break;
-                    case '2':
-                        $purchaseType = 'Paid';
-                        break;
-                    case '3':
-                        $purchaseType = 'Installment';
-                        break;
-                    default:
-                        $purchaseType = '';
-                        break;
-                }
+                    
+                    // Purchase Type
+                    switch ($order->purchase_type) {
+                        case '1':
+                            $purchaseType = 'COD';
+                            break;
+                        case '2':
+                            $purchaseType = 'Paid';
+                            break;
+                        case '3':
+                            $purchaseType = 'Installment';
+                            break;
+                        default:
+                            $purchaseType = '';
+                            break;
+                    }
 
-                fputcsv($handle, [
-                    $order->company->code ?? '', // Business Unit
-                    $order->sales_id ?? '', // Order ID
-                    $order->courier->name ?? '', // Courier
-                    $purchaseType, // Purchase Type
-                    $shipping->tracking_number ?? '', // Tracking Number
-                    $shippingDate->created_at->format('d/m/Y') ?? '', // Shipping Date
-                    $order->customer->postcode ?? '', // Postcode
-                    MY_STATES[$order->customer->state] ?? '', // State
-                    $shippingDate->created_at->format('d/m/Y') ?? '', // Pickup Date
-                    $shippingDate->created_at->format('h:i A') ?? '', // Pickup Time
-                    $shippingDate->created_at->format('D') ?? '', // Pickup Day
-                    $firstAttemptDate, // Start Date
-                    $firstAttemptDate, // First Attempt Date
-                    $firstAttemptDateAndTime, // Failed 1st Attempt Date & Time
-                    $firstAttemptDescription, // First Attempt Status
-                    $secondAttemptDate, // 2nd Attempt Date
-                    $secondAttemptDateAndTime, // Failed 2nd Attempt Date & Time
-                    $secondAttemptDescription, // 2nd Attempt Status
-                    $thirdAttemptDate, // 3rd Attempt Date
-                    $thirdAttemptDateAndTime, // Failed 3rd Attempt Date & Time
-                    $thirdAttemptDescription, // 3rd Attempt Status
-                    $shippingDate->created_at->format('d/m/Y') ?? '', // Delivery Date
-                    $events->count(), // Number Attempt
-                    $order->customer->city ?? '' // City
-                ]);
-            }
+                    fputcsv($handle, [
+                        $order->company->code ?? '', // Business Unit
+                        $order->sales_id ?? '', // Order ID
+                        $order->courier->name ?? '', // Courier
+                        $purchaseType, // Purchase Type
+                        $shipping->tracking_number ?? '', // Tracking Number
+                        $shippingDate->created_at->format('d/m/Y') ?? '', // Shipping Date
+                        $order->customer->postcode ?? '', // Postcode
+                        MY_STATES[$order->customer->state] ?? '', // State
+                        $shippingDate->created_at->format('d/m/Y') ?? '', // Pickup Date
+                        $shippingDate->created_at->format('h:i A') ?? '', // Pickup Time
+                        $shippingDate->created_at->format('D') ?? '', // Pickup Day
+                        $firstAttemptDate, // Start Date
+                        $firstAttemptDate, // First Attempt Date
+                        $firstAttemptDateAndTime, // Failed 1st Attempt Date & Time
+                        $firstAttemptDescription, // First Attempt Status
+                        $secondAttemptDate, // 2nd Attempt Date
+                        $secondAttemptDateAndTime, // Failed 2nd Attempt Date & Time
+                        $secondAttemptDescription, // 2nd Attempt Status
+                        $thirdAttemptDate, // 3rd Attempt Date
+                        $thirdAttemptDateAndTime, // Failed 3rd Attempt Date & Time
+                        $thirdAttemptDescription, // 3rd Attempt Status
+                        $shippingDate->created_at->format('d/m/Y') ?? '', // Delivery Date
+                        $events->count(), // Number Attempt
+                        $order->customer->city ?? '' // City
+                    ]);
+                }
+            });
 
             fclose($handle);
         });
@@ -249,14 +249,14 @@ class AttemptOrderListController extends Controller
     // Method to fetch data based on existing filter logic
     private function getDataForCSV(Request $request)
     {
-        $shippingEvents = ShippingEvent::with(['shipping.order.customer', 'shipping.order.courier'])
+        return ShippingEvent::with(['shipping.order.customer', 'shipping.order.courier'])
             ->whereIn('id', function ($query) {
                 $query->select(DB::raw('MAX(id)'))
                     ->from('shipping_events')
                     ->groupBy('shipping_id');
             })
             ->whereHas('shipping.order', function ($query) use ($request) {
-                // Apply search query if present
+                // Apply search and date filters
                 if ($request->filled('search')) {
                     $searchTerm = $request->search;
                     $query->where(function ($subQuery) use ($searchTerm) {
@@ -271,28 +271,21 @@ class AttemptOrderListController extends Controller
                     });
                 }
 
-                // Apply date filters for the first log entry of each order if present
                 if ($request->filled('date_from') && $request->filled('date_to')) {
                     $dateFrom = \Carbon\Carbon::parse($request->date_from)->startOfDay();
                     $dateTo = \Carbon\Carbon::parse($request->date_to)->endOfDay();
 
                     $query->whereHas('logs', function ($subQuery) use ($dateFrom, $dateTo) {
                         $subQuery->whereRaw('order_logs.id IN (SELECT MAX(id) FROM order_logs GROUP BY order_id)')
-                            ->whereBetween('created_at', [
-                                $dateFrom,
-                                $dateTo
-                            ]);
+                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
                     });
                 }
             })
-            // Always filter shipping events by related order logs where status = 1
             ->whereHas('shipping.order.logs', function ($query) {
                 $query->where(function ($subQuery) {
                     $subQuery->where('order_status_id', ORDER_STATUS_DELIVERED)
                         ->orWhere('order_status_id', ORDER_STATUS_SHIPPING);
                 });
             });
-
-        return $shippingEvents->get();
     }
 }
