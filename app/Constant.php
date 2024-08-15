@@ -158,6 +158,7 @@ if(!defined('DHL_PREFIX')) define('DHL_PREFIX',[
     1=>'MY', // EH // MYCKZ
     2=>'MY', // ED // MYGPK
     3=>'MY', // QA
+    4=>'SG', // EI
 ]);
 if(!defined('DHL_CLIENT_ID')) define('DHL_CLIENT_ID','LTE2MDAwOTg0NTI=');
 if(!defined('DHL_CLIENT_PASS')) define('DHL_CLIENT_PASS','MjAzMDI5MTU');
