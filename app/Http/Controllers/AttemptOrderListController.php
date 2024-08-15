@@ -73,6 +73,9 @@ class AttemptOrderListController extends Controller
 
     public function downloadCSV(Request $request)
     {
+        // Increase the execution time limit to handle large data processing
+        set_time_limit(0); // 0 = unlimited
+
         // Fetch data for CSV
         $shippingEvents = $this->getDataForCSV($request);
         $date = date('YmdHis');
@@ -114,10 +117,10 @@ class AttemptOrderListController extends Controller
                 $shipping = $event->shipping;
                 $order = $shipping->order;
 
-                // Retrieve the `created_at` date from `order_logs` where `order_status_id` is 5
+                // Retrieve the created_at date from order_logs where order_status_id is 5
                 $shippingDate = $order->logs->where('order_status_id', ORDER_STATUS_SHIPPING)->sortByDesc('id')->first();
 
-                // Retrieve the `created_at` date from `order_logs` where `order_status_id` is 6
+                // Retrieve the created_at date from order_logs where order_status_id is 6
                 $deliveryDate = $order->logs->where('order_status_id', ORDER_STATUS_DELIVERED)->sortByDesc('id')->first();
 
                 // Retrieve events with specific attempt statuses
@@ -268,20 +271,26 @@ class AttemptOrderListController extends Controller
                     });
                 }
 
-                // Apply date filters and status for order logs
+                // Apply date filters for the first log entry of each order if present
                 if ($request->filled('date_from') && $request->filled('date_to')) {
-                    $query->whereHas('logs', function ($subQuery) use ($request) {
-                        $subQuery->whereBetween('created_at', [
-                            $request->date_from,
-                            $request->date_to
-                        ]);
+                    $dateFrom = \Carbon\Carbon::parse($request->date_from)->startOfDay();
+                    $dateTo = \Carbon\Carbon::parse($request->date_to)->endOfDay();
+
+                    $query->whereHas('logs', function ($subQuery) use ($dateFrom, $dateTo) {
+                        $subQuery->whereRaw('order_logs.id IN (SELECT MAX(id) FROM order_logs GROUP BY order_id)')
+                            ->whereBetween('created_at', [
+                                $dateFrom,
+                                $dateTo
+                            ]);
                     });
                 }
             })
             // Always filter shipping events by related order logs where status = 1
             ->whereHas('shipping.order.logs', function ($query) {
-                $query->where('status', 1)
-                    ->whereIn('order_status_id', [5, 6]);
+                $query->where(function ($subQuery) {
+                    $subQuery->where('order_status_id', 6)
+                        ->orWhere('order_status_id', 5);
+                });
             });
 
         return $shippingEvents->get();
