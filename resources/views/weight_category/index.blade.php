@@ -67,7 +67,8 @@
             <section id="addWeightCategoryButton" class="mb-3">
                 <div>
                     @can('weight_category.create')
-                    <button class="btn btn-primary" onclick="addWeightCategory()"><strong>+</strong></button>
+                    <button class="btn btn-primary" onclick="addWeightCategory()">+ Add Shipping Cost</button>
+                    <button class="btn btn-success" onclick="showUploadBulkModal()"><i class="fas fa-upload"></i> Upload Bulk</button>
                     @endcan
                 </div>
             </section>
@@ -211,83 +212,32 @@
         </div>
     </div>
 
-    <div class="modal fade" id="editWeightCategory" tabindex="-1" aria-labelledby="editWeightCategoryLabel"
-        aria-hidden="true">
+     <!-- Upload Bulk Modal -->
+     <div class="modal fade" id="uploadBulkModal" tabindex="-1" aria-labelledby="uploadBulkModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header justify-content-center">
-                    <h1 class="modal-title fs-5" id="editWeightCategoryLabel"><strong>Update Shipping Cost</strong></h1>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadBulkModalLabel"><strong>Add/Update Shipping Cost</strong></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body d-flex flex-column gap-3">
-                    <div>
-                        <input type="hidden" id="shippingCostID" name="shipping_cost_id">
-                        <label for="weightCategoryID" class="form-label fs-6"><strong>Weight Category Name:</strong></label>
-                        <select class="form-control" id="weightCategoryID" name="weight_category_id" onchange="selectionWeightID(this,'edit')">
-                            <option value="">Select Weight Category</option>
-                            @foreach ($weightCategories as $weightCategory)
-                            <option value="{{ $weightCategory->id }}">
-                                {{ $weightCategory->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="courier-filterr" class="form-label fs-6"><strong>Courier:</strong></label>
-                        <select name="courier-filter" class="form-control" id="courier-filter">
-                            <option value="">Select Courier</option>
-                            @foreach ($couriers as $courier)
-                            <option value="{{ $courier->id }}">
-                                {{ $courier->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="stateGroup-filter" class="form-label fs-6"><strong>State Group:</strong></label>
-                        <select name="stateGroup-filter" class="form-control" id="stateGroup-filter">
-                            <option value="">Select State Group</option>
-                            @foreach ($stateGroups as $stateGroup)
-                            <option value="{{ $stateGroup->id }}">
-                                {{ $stateGroup->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="weightRange" class="form-label fs-6"><strong>Weight Range:</strong></label>
-                        <div class="input-group">
-                            <input type="text" name="min_weight" class="form-control" placeholder="0.0"/ disabled/>
-                            <span class="input-group-text">kg</span>
-
-                            <div class="mx-2 align-self-center">
-                                <span>-</span>
-                            </div>
-
-                            <input type="text" name="max_weight" class="form-control" placeholder="0.0"/ disabled/>
-                            <span class="input-group-text">kg</span>
+                <div class="modal-body">
+                    <p>Upload CSV File to add and update data in bulk. The system will automatically add new data or update the existing data.</p>
+                    <p>Download sample CSV file <a href="/api/weight-category/download-sample-csv" target="_blank">here</a></p>
+                    <form id="uploadBulkForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" class="form-control" id="bulkUploadFile" name="bulk_upload_file" accept=".csv">
                         </div>
-                    </div>
-
-                    <div>
-                        <label for="price" class="form-label fs-6"><strong>Price:</strong></label>
-                        <div class="input-group">
-                            <span class="input-group-text">RM</span>
-                            <input type="text" class="form-control" placeholder="0.00"/ id="price">
-                        </div>
-                    </div>
-
-
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" onclick="updateWeightCategory()" class="btn btn-primary customBtnSave">Update</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadBulk()">Upload CSV</button>
                 </div>
             </div>
         </div>
     </div>
+    
+
 
     <x-slot name="script">
         <script>
@@ -487,6 +437,39 @@
                     html: message.join('<br>'),
                 })
             }
+
+            function showUploadBulkModal() {
+                 $('#uploadBulkModal').modal('show');
+            }
+
+            function uploadBulk() {
+            let formData = new FormData(document.getElementById('uploadBulkForm'));
+            axios.post('/api/weight-category/upload-bulk', formData, {
+            headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+         })
+            .then(response => {
+             if (response.data.status == 'success') {
+            $('#uploadBulkModal').modal('hide');
+            Swal.fire({
+                icon: 'success',
+                title: 'Bulk upload successful!',
+            }).then(() => {
+                window.location.reload();
+            });
+             }
+         })
+            .catch(error => {
+            Swal.fire(
+            'Error!',
+            error.response.data.message,
+            'error'
+        )
+    });
+}
+
 
         </script>
     </x-slot>
