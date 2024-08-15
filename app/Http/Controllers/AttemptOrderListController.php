@@ -212,7 +212,7 @@ class AttemptOrderListController extends Controller
                         $order->sales_id ?? '', // Order ID
                         $order->courier->name ?? '', // Courier
                         $purchaseType, // Purchase Type
-                        $shipping->tracking_number ?? '', // Tracking Number
+                        "'" . $shipping->tracking_number ?? '', // Tracking Number
                         $shippingDate->created_at->format('d/m/Y') ?? '', // Shipping Date
                         $order->customer->postcode ?? '', // Postcode
                         MY_STATES[$order->customer->state] ?? '', // State
@@ -240,7 +240,7 @@ class AttemptOrderListController extends Controller
         });
 
         // Set headers for download
-        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
         $response->headers->set('Content-Disposition', 'attachment; filename="' . $date . '_attempt_order_list.csv"');
 
         return $response;
