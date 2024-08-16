@@ -143,6 +143,7 @@ if(!defined('CLAIM_DATE_TYPES')) define('CLAIM_DATE_TYPES', [
 if(!defined('DHL_ID')) define('DHL_ID',15);
 if(!defined('POSMALAYSIA_ID')) define('POSMALAYSIA_ID', 76);
 if(!defined('EMZIEXPRESS_ID')) define('EMZIEXPRESS_ID', 100);
+if(!defined('NINJAVAN_INTERNATIONAL_ID')) define('NINJAVAN_INTERNATIONAL_ID', 77);
 
 // courier id which will be auto shipping, other will have to set menually
 if(!defined('AUTO_SHIPPING_COURIER')) define('AUTO_SHIPPING_COURIER', [15]);
@@ -157,6 +158,7 @@ if(!defined('DHL_PREFIX')) define('DHL_PREFIX',[
     1=>'MY', // EH // MYCKZ
     2=>'MY', // ED // MYGPK
     3=>'MY', // QA
+    4=>'SG', // EI
 ]);
 if(!defined('DHL_CLIENT_ID')) define('DHL_CLIENT_ID','LTE2MDAwOTg0NTI=');
 if(!defined('DHL_CLIENT_PASS')) define('DHL_CLIENT_PASS','MjAzMDI5MTU');

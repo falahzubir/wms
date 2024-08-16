@@ -256,7 +256,7 @@
                             <button class="btn btn-info" id="add-to-bucket-btn"><i class="bi bi-basket"></i> Add to
                                 Bucket</button>
                         @endif
-                        @if (in_array(ACTION_GENERATE_CN, $actions))
+                        @if (in_array(ACTION_GENERATE_CN, $actions)) 
                             @can('consignment_note.generate')
                                 <button class="btn btn-warning" id="generate-cn-btn"><i
                                         class="bi bi-file-earmark-ruled"></i> Generate CN</button>
@@ -955,7 +955,8 @@
                 'posmalaysia': 'POS Malaysia',
                 'shopee': 'Shopee',
                 'tiktok': 'TikTok',
-                'emzi-express' : 'EMZI Express'
+                'emzi-express' : 'EMZI Express',
+                'nv-int' : 'NinjaVan International'
             };
 
             document.querySelector('#filter-order').onclick = function() {
@@ -1240,7 +1241,7 @@
                 });
             }
 
-            // generate shipping label
+            // generate shipping label 
             @if (in_array(ACTION_GENERATE_CN, $actions))
                 document.querySelector('#generate-cn-btn').onclick = async function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
@@ -1670,14 +1671,16 @@
                         }
 
                         if (!response.data.success) {
-                            // let message = response.data.error ?? response.data.message;
-                            let message = JSON.stringify(response.data);
+                            let title = response.data.title ?? 'Error!';
+                            let message = response.data.message ?? 'Fail to generate CN';
+                            
                             Swal.fire({
-                                title: 'Error!',
-                                html: `${message}` ?? "Fail to generate CN",
+                                title: title,
+                                html: message,
                                 icon: 'error',
                                 confirmButtonText: 'OK'
-                            })
+                            });
+
                             return;
                         }
 
