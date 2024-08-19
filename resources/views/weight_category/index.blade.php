@@ -98,6 +98,7 @@
                     <div>
                         <label for="weightCategoryID" class="form-label fs-6"><strong>Weight Category Name:</strong></label>
                         <input type="text" name="category_name" class="form-control">
+                        <div class="error-message text-danger"></div>
                     </div>
 
                     <div>
@@ -113,6 +114,7 @@
                             <input type="text" name="max_weight" class="form-control" placeholder="0.0"/>
                             <span class="input-group-text">kg</span>
                         </div>
+                        <div class="error-message text-danger"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -193,6 +195,20 @@
                 let minWeight = addWeightCategoryModal.find('input[name="min_weight"]').val();
                 let maxWeight = addWeightCategoryModal.find('input[name="max_weight"]').val();
 
+                // Validation: Check if any fields are empty
+                if (!categoryName) {
+                    displayErrors({ category_name: ["Please enter a weight category name"] });
+                    return; // Stop execution if validation fails
+                }
+                if (!minWeight) {
+                    displayErrors({ min_weight: ["Please enter a range greater than 0.00"] });
+                    return; // Stop execution if validation fails
+                }
+                if (!maxWeight) {
+                    displayErrors({ max_weight: ["Please enter a range greater than 0.00"] });
+                    return; // Stop execution if validation fails
+                }
+
                 axios.post('/api/weight-category/store', {
                         category_name: categoryName,
                         min_weight: minWeight,
@@ -241,6 +257,20 @@
                 let categoryName = editWeightCategoryModal.find('#category_name').val();
                 let minWeight = editWeightCategoryModal.find('#min_weight').val();
                 let maxWeight = editWeightCategoryModal.find('#max_weight').val();
+
+                // Validation: Check if any fields are empty
+                if (!categoryName) {
+                    displayErrors({ category_name: ["Please enter a weight category name"] });
+                    return; // Stop execution if validation fails
+                }
+                if (!minWeight) {
+                    displayErrors({ min_weight: ["Please enter a range greater than 0.00"] });
+                    return; // Stop execution if validation fails
+                }
+                if (!maxWeight) {
+                    displayErrors({ max_weight: ["Please enter a range greater than 0.00"] });
+                    return; // Stop execution if validation fails
+                }
 
                 axios.post('/api/weight-category/update', {
                         id: id,
@@ -310,18 +340,31 @@
             }
 
             const displayErrors = (errors) => {
-                let message = [];
+                // Clear previous error messages
+                document.querySelectorAll('.error-message').forEach(el => el.innerText = '');
+
                 for (let field in errors) {
                     let errorMessage = errors[field][0];
-                    message.push(errorMessage);
-                }
 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    html: message.join('<br>'),
-                })
-            }
+                    // Find the input element by name and display the error below it
+                    let inputElement = document.querySelector(`input[name="${field}"]`);
+
+                    if (inputElement) {
+                        let errorDiv;
+
+                        // Special handling for min_weight and max_weight to target the error div after the input-group
+                        if (field === 'min_weight' || field === 'max_weight') {
+                            errorDiv = inputElement.closest('.input-group').nextElementSibling;
+                        } else {
+                            errorDiv = inputElement.parentElement.querySelector('.error-message');
+                        }
+
+                        if (errorDiv) {
+                            errorDiv.innerText = errorMessage;
+                        }
+                    }
+                }
+            };
 
         </script>
     </x-slot>
