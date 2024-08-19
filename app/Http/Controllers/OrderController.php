@@ -36,7 +36,7 @@ class OrderController extends Controller
     public function index()
     {
         return Order::with([
-            'customer', 'items', 'items.product', 'shippings.shipping_product', 'shippings.shipping_cost.state_groups', 'shippings.shipping_cost.weight_category', 'paymentType',
+            'customer.states.group_state_list.state_groups', 'items', 'items.product', 'shippings.shipping_product', 'shippings.scannedBy' ,'shippings.shipping_cost.state_groups', 'shippings.shipping_cost.weight_category', 'paymentType',
             'bucket', 'batch', 'company', 'courier', 'operationalModel',
             'logs' => function ($query) {
                 $query->orderBy('id', 'desc');
@@ -1329,6 +1329,37 @@ class OrderController extends Controller
             })
             ->with(['items.product'])
             ->get();
+    }
+
+    public function test(Request $request)
+    {
+        ini_set('memory_limit', '-1');
+        $fileName = date('Ymdhis') . '_list_of_orders.csv';
+        // Get columns from the template
+        $columnName = TemplateMain::with(['templateColumns.columns'])
+        ->where('id','48')
+        ->first();
+
+        // Get headers from the template
+        $headers = explode(', ', $columnName->template_header);
+
+        $orders = Order::with([
+            'customer', 'items', 'items.product', 'shippings.shipping_product', 'shippings.shipping_cost.state_groups', 'shippings.shipping_cost.weight_category', 'paymentType',
+            'bucket', 'batch', 'company', 'courier', 'operationalModel',
+            'logs' => function ($query) {
+                $query->orderBy('id', 'desc');
+            }
+        ])
+        ->where('is_active', IS_ACTIVE)
+        ->where('id', 12346)
+        ->get();
+
+        return view('exports.poslaju', [
+            'orders' => $orders,
+            'headers' => $headers,
+            'columnName' => $columnName,
+            'fileName' => $fileName,
+        ]);
     }
 
 }
