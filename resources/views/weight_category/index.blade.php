@@ -87,8 +87,7 @@
         </div>
     </section>
 
-    <div class="modal fade" id="addWeightCategory" tabindex="-1" aria-labelledby="addWeightCategoryLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="addWeightCategory" tabindex="-1" aria-labelledby="addWeightCategoryLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header justify-content-center">
@@ -96,22 +95,22 @@
                 </div>
                 <div class="modal-body d-flex flex-column gap-3">
                     <div>
-                        <label for="weightCategoryID" class="form-label fs-6"><strong>Weight Category Name:</strong></label>
-                        <input type="text" name="category_name" class="form-control">
+                        <label for="category_name_add" class="form-label fs-6"><strong>Weight Category Name:</strong></label>
+                        <input type="text" id="category_name_add" name="category_name" class="form-control">
                         <div class="error-message text-danger"></div>
                     </div>
 
                     <div>
-                        <label for="weightRange" class="form-label fs-6"><strong>Weight Range:</strong></label>
+                        <label for="weightRange_add" class="form-label fs-6"><strong>Weight Range:</strong></label>
                         <div class="input-group">
-                            <input type="text" name="min_weight" class="form-control" placeholder="0.0"/>
+                            <input type="number" id="min_weight_add" name="min_weight" class="form-control" placeholder="0.0"/>
                             <span class="input-group-text">kg</span>
 
                             <div class="mx-2 align-self-center">
                                 <span>-</span>
                             </div>
 
-                            <input type="text" name="max_weight" class="form-control" placeholder="0.0"/>
+                            <input type="number" id="max_weight_add" name="max_weight" class="form-control" placeholder="0.0"/>
                             <span class="input-group-text">kg</span>
                         </div>
                         <div class="error-message text-danger"></div>
@@ -125,8 +124,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="editWeightCategory" tabindex="-1" aria-labelledby="editWeightCategoryLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="editWeightCategory" tabindex="-1" aria-labelledby="editWeightCategoryLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header justify-content-center">
@@ -135,23 +133,25 @@
                 <div class="modal-body d-flex flex-column gap-3">
                     <div>
                         <input type="hidden" id="category_id">
-                        <label for="weightCategoryID" class="form-label fs-6"><strong>Weight Category Name:</strong></label>
-                        <input type="text" id="category_name" class="form-control"/>
+                        <label for="category_name_edit" class="form-label fs-6"><strong>Weight Category Name:</strong></label>
+                        <input type="text" id="category_name_edit" name="category_name" class="form-control"/>
+                        <div class="error-message text-danger"></div>
                     </div>
 
                     <div>
-                        <label for="weightRange" class="form-label fs-6"><strong>Weight Range:</strong></label>
+                        <label for="weightRange_edit" class="form-label fs-6"><strong>Weight Range:</strong></label>
                         <div class="input-group">
-                            <input type="text" id="min_weight" class="form-control" />
+                            <input type="number" id="min_weight_edit" name="min_weight" class="form-control" />
                             <span class="input-group-text">kg</span>
 
                             <div class="mx-2 align-self-center">
                                 <span>-</span>
                             </div>
 
-                            <input type="text" id="max_weight" class="form-control"/>
+                            <input type="number" id="max_weight_edit" name="max_weight" class="form-control"/>
                             <span class="input-group-text">kg</span>
                         </div>
+                        <div class="error-message text-danger"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -188,24 +188,44 @@
                 addWeightCategoryModal.modal('show');
             }
 
-            function storeWeightCategory()
+            function storeWeightCategory() 
             {
                 let addWeightCategoryModal = $('#addWeightCategory');
                 let categoryName = addWeightCategoryModal.find('input[name="category_name"]').val();
                 let minWeight = addWeightCategoryModal.find('input[name="min_weight"]').val();
                 let maxWeight = addWeightCategoryModal.find('input[name="max_weight"]').val();
 
+                // Clear previous error messages
+                document.querySelectorAll('#addWeightCategory .error-message').forEach(el => el.innerText = '');
+
+                // Initialize error tracking
+                let hasErrors = false;
+                let errors = {};
+
                 // Validation: Check if any fields are empty
-                if (!categoryName) {
-                    displayErrors({ category_name: ["Please enter a weight category name"] });
-                    return; // Stop execution if validation fails
+                switch (true) {
+                    case !categoryName && !minWeight && !maxWeight:
+                        errors.category_name = ["*Please enter a weight category name"];
+                        errors.min_weight = ["*Please enter a range greater than 0.00"];
+                        hasErrors = true;
+                        break;
+                    case !categoryName:
+                        errors.category_name = ["*Please enter a weight category name"];
+                        hasErrors = true;
+                        break;
+                    case !minWeight:
+                        errors.min_weight = ["*lease enter a range greater than 0.00"];
+                        hasErrors = true;
+                        break;
+                    case !maxWeight:
+                        errors.max_weight = ["*Please enter a range greater than 0.00"];
+                        hasErrors = true;
+                        break;
                 }
-                if (!minWeight) {
-                    displayErrors({ min_weight: ["Please enter a range greater than 0.00"] });
-                    return; // Stop execution if validation fails
-                }
-                if (!maxWeight) {
-                    displayErrors({ max_weight: ["Please enter a range greater than 0.00"] });
+
+                // If any errors, display them
+                if (hasErrors) {
+                    displayErrors(errors, '#addWeightCategory');
                     return; // Stop execution if validation fails
                 }
 
@@ -227,15 +247,15 @@
                         }
                     })
                     .catch(error => {
-                        if (error.response.status === 422) {
+                        if (error.response && error.response.status === 422) {
                             let errors = error.response.data.errors;
-                            displayErrors(errors);
+                            displayErrors(errors, '#addWeightCategory');
                         } else {
                             Swal.fire(
                                 'Error!',
-                                error.response.data.message,
+                                error.response?.data?.message || 'An unexpected error occurred.',
                                 'error'
-                            )
+                            );
                         }
                     });
             }
@@ -244,34 +264,54 @@
             {
                 let editWeightCategoryModal = $('#editWeightCategory');
                 editWeightCategoryModal.find('#category_id').val(category_id);
-                editWeightCategoryModal.find('#category_name').val(category_name);
-                editWeightCategoryModal.find('#min_weight').val(min_weight/1000);
-                editWeightCategoryModal.find('#max_weight').val(max_weight/1000);
+                editWeightCategoryModal.find('#category_name_edit').val(category_name);
+                editWeightCategoryModal.find('#min_weight_edit').val(min_weight/1000);
+                editWeightCategoryModal.find('#max_weight_edit').val(max_weight/1000);
                 editWeightCategoryModal.modal('show');
             }
 
-            function updateWeightCategory()
-            {
+            function updateWeightCategory() {
                 let editWeightCategoryModal = $('#editWeightCategory');
                 let id = editWeightCategoryModal.find('#category_id').val();
-                let categoryName = editWeightCategoryModal.find('#category_name').val();
-                let minWeight = editWeightCategoryModal.find('#min_weight').val();
-                let maxWeight = editWeightCategoryModal.find('#max_weight').val();
+                let categoryName = editWeightCategoryModal.find('#category_name_edit').val().trim();
+                let minWeight = editWeightCategoryModal.find('#min_weight_edit').val().trim();
+                let maxWeight = editWeightCategoryModal.find('#max_weight_edit').val().trim();
+
+                // Clear previous error messages
+                document.querySelectorAll('#editWeightCategory .error-message').forEach(el => el.innerText = '');
+
+                // Initialize error tracking
+                let hasErrors = false;
+                let errors = {};
 
                 // Validation: Check if any fields are empty
-                if (!categoryName) {
-                    displayErrors({ category_name: ["Please enter a weight category name"] });
-                    return; // Stop execution if validation fails
+                switch (true) {
+                    case !categoryName && !minWeight && !maxWeight:
+                        errors.category_name = ["*Please enter a weight category name"];
+                        errors.min_weight = ["*Please enter a range greater than 0.00"];
+                        hasErrors = true;
+                        break;
+                    case !categoryName:
+                        errors.category_name = ["*Please enter a weight category name"];
+                        hasErrors = true;
+                        break;
+                    case !minWeight:
+                        errors.min_weight = ["*Please enter a range greater than 0.00"];
+                        hasErrors = true;
+                        break;
+                    case !maxWeight:
+                        errors.max_weight = ["*Please enter a range greater than 0.00"];
+                        hasErrors = true;
+                        break;
                 }
-                if (!minWeight) {
-                    displayErrors({ min_weight: ["Please enter a range greater than 0.00"] });
-                    return; // Stop execution if validation fails
-                }
-                if (!maxWeight) {
-                    displayErrors({ max_weight: ["Please enter a range greater than 0.00"] });
+
+                // If any errors, display them
+                if (hasErrors) {
+                    displayErrors(errors, '#editWeightCategory');
                     return; // Stop execution if validation fails
                 }
 
+                // If validation passes, proceed with the POST request
                 axios.post('/api/weight-category/update', {
                         id: id,
                         category_name: categoryName,
@@ -291,15 +331,15 @@
                         }
                     })
                     .catch(error => {
-                        if (error.response.status === 422) {
+                        if (error.response && error.response.status === 422) {
                             let errors = error.response.data.errors;
-                            displayErrors(errors);
+                            displayErrors(errors, '#editWeightCategory');
                         } else {
                             Swal.fire(
                                 'Error!',
-                                error.response.data.message,
+                                error.response?.data?.message || 'An unexpected error occurred.',
                                 'error'
-                            )
+                            );
                         }
                     });
             }
@@ -339,15 +379,15 @@
                 })
             }
 
-            const displayErrors = (errors) => {
+            const displayErrors = (errors, modalSelector) => {
                 // Clear previous error messages
-                document.querySelectorAll('.error-message').forEach(el => el.innerText = '');
+                document.querySelectorAll(`${modalSelector} .error-message`).forEach(el => el.innerText = '');
 
                 for (let field in errors) {
                     let errorMessage = errors[field][0];
 
                     // Find the input element by name and display the error below it
-                    let inputElement = document.querySelector(`input[name="${field}"]`);
+                    let inputElement = document.querySelector(`${modalSelector} input[name="${field}"]`);
 
                     if (inputElement) {
                         let errorDiv;
