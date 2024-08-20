@@ -2231,29 +2231,20 @@ class ShippingController extends Controller
         }
 
         foreach ($order_ninja as $key => $order) {
-            $product_list = $this->generate_product_description($order->id);
 
-            // Create shipping first
-            $shipping = new Shipping();
-            $shipping->shipment_number = shipment_num_format($order);
-            $shipping->order_id = $order->id;
-            $shipping->courier = NINJAVAN_INTERNATIONAL_ID;
-            $shipping->created_by = auth()->user()->id ?? 1;
-            $shipping->save();
+            // Get access token
+            $accessToken = NinjaVanInternationalTrait::checkAccessToken($order->company->id);
 
             // Shipment details
+            $shipmentNumber = shipment_num_format($order);
             $itemDescription = get_shipping_remarks($order) ?? '';
             $totalWeight = get_order_weight($order) / 1000 ?? '';
+            $product_list = $this->generate_product_description($order->id);
 
-            // Calculate amount into SG currency
+            // Get SGD amount
             $sgd_amount = (($order->total_price / 100) / $rate->rate) + 1;
             $sgd_amount = ceil($sgd_amount); // Round up to the nearest integer
             $sgd_amount = (int)$sgd_amount;
-
-            // Store currency amount into orders table
-            $order = Order::findOrFail($order->id);
-            $order->currency_amount = $sgd_amount;
-            $order->save();
 
             // JSON structure
             $jsonArray = [
@@ -2337,16 +2328,36 @@ class ShippingController extends Controller
             $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
 
             try {
-                $createNinjaVanOrder = NinjaVanInternationalTrait::createNinjaVanOrder($jsonSend, $order->company->id);
+                $createNinjaVanOrder = NinjaVanInternationalTrait::createNinjaVanOrder($jsonSend, $accessToken);
 
                 if (isset($createNinjaVanOrder['tracking_number'])) {
-                    // Get the tracking number
+
+                    // Shipment details
                     $trackingNumber = $createNinjaVanOrder['tracking_number'];
 
-                    // Update the shipping details
-                    $shipping->tracking_number = $trackingNumber;
-                    $shipping->packing_attachment = $product_list;
-                    $shipping->save();
+                    // Check if there's an existing shipping record with the same shipment number
+                    $shipping = Shipping::where('shipment_number', $shipmentNumber)->first();
+
+                    if ($shipping) {
+                        // Update the tracking number if shipping record exists
+                        $shipping->tracking_number = $trackingNumber;
+                        $shipping->save();
+                    } else {
+                        // Create new shipping record
+                        $shipping = new Shipping();
+                        $shipping->shipment_number = $shipmentNumber;
+                        $shipping->order_id = $order->id;
+                        $shipping->courier = NINJAVAN_INTERNATIONAL_ID;
+                        $shipping->created_by = auth()->user()->id ?? 1;
+                        $shipping->tracking_number = $trackingNumber;
+                        $shipping->packing_attachment = $product_list;
+                        $shipping->save();
+                        
+                        // Store currency amount into orders table
+                        $order = Order::findOrFail($order->id);
+                        $order->currency_amount = $sgd_amount;
+                        $order->save();
+                    }
 
                     // Retry mechanism for generating the waybill
                     $retryAttempts = 5;
@@ -2354,7 +2365,7 @@ class ShippingController extends Controller
                     $generateWayBill = null;
 
                     for ($attempt = 0; $attempt < $retryAttempts; $attempt++) {
-                        $generateWayBill = NinjaVanInternationalTrait::generateWayBill($trackingNumber, $order->company->id);
+                        $generateWayBill = NinjaVanInternationalTrait::generateWayBill($trackingNumber, $accessToken);
                         if ($generateWayBill->status() == 200) {
                             break;
                         }
