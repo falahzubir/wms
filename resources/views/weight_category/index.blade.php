@@ -5,6 +5,7 @@
         .rmBorder {
             border: none;
         }
+
         .customBtnSave {
             background-color: #7166e0;
         }
@@ -31,8 +32,8 @@
         <div class="card p-3">
             <section id="addWeightCategoryButton" class="mb-3">
                 <div>
-                    @can('shipping_cost.create')
-                    <button class="btn btn-primary" onclick="addWeightCategory()"><strong>+</strong></button>
+                    @can('weight_category.create')
+                        <button class="btn btn-primary" onclick="addWeightCategory()"><strong>+</strong></button>
                     @endcan
                 </div>
             </section>
@@ -60,15 +61,15 @@
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-center gap-2">
-                                        @can('shipping_cost.delete')
-                                        <button class="btn btn-danger p-1 px-2"
-                                            onclick="deleteShippingCost({{ $row->id }})"><i
-                                                class="bi bi-trash"></i></button>
+                                        @can('weight_category.delete')
+                                            <button class="btn btn-danger p-1 px-2"
+                                                onclick="deleteShippingCost('{{ $row->id }}','{{ $row->name }}')"><i
+                                                    class="bi bi-trash"></i></button>
                                         @endcan
-                                        @can('shipping_cost.edit')
-                                        <button class="btn btn-warning p-1 px-2"
-                                            onclick="editShippingCost('{{ $row->id }}','{{ $row->name }}','{{ $row->min_weight }}','{{ $row->max_weight }}')"><i
-                                                class="bi bi-pencil"></i></button>
+                                        @can('weight_category.edit')
+                                            <button class="btn btn-warning p-1 px-2"
+                                                onclick="editShippingCost('{{ $row->id }}','{{ $row->name }}','{{ $row->min_weight }}','{{ $row->max_weight }}')"><i
+                                                    class="bi bi-pencil"></i></button>
                                         @endcan
                                     </div>
                                 </td>
@@ -87,15 +88,18 @@
         </div>
     </section>
 
-    <div class="modal fade" id="addWeightCategory" tabindex="-1" aria-labelledby="addWeightCategoryLabel" aria-hidden="true">
+    <div class="modal fade" id="addWeightCategory" tabindex="-1" aria-labelledby="addWeightCategoryLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header justify-content-center">
-                    <h1 class="modal-title fs-5" id="addWeightCategoryLabel"><strong>Create Weight Category</strong></h1>
+                    <h1 class="modal-title fs-5" id="addWeightCategoryLabel"><strong>Create Weight Category</strong>
+                    </h1>
                 </div>
                 <div class="modal-body d-flex flex-column gap-3">
                     <div>
-                        <label for="category_name_add" class="form-label fs-6"><strong>Weight Category Name:</strong></label>
+                        <label for="category_name_add" class="form-label fs-6"><strong>Weight Category
+                                Name:</strong></label>
                         <input type="text" id="category_name_add" name="category_name" class="form-control">
                         <div class="error-message text-danger"></div>
                     </div>
@@ -103,14 +107,16 @@
                     <div>
                         <label for="weightRange_add" class="form-label fs-6"><strong>Weight Range:</strong></label>
                         <div class="input-group">
-                            <input type="number" id="min_weight_add" name="min_weight" class="form-control" placeholder="0.0"/>
+                            <input type="number" id="min_weight_add" name="min_weight" class="form-control"
+                                placeholder="0.0" />
                             <span class="input-group-text">kg</span>
 
                             <div class="mx-2 align-self-center">
                                 <span>-</span>
                             </div>
 
-                            <input type="number" id="max_weight_add" name="max_weight" class="form-control" placeholder="0.0"/>
+                            <input type="number" id="max_weight_add" name="max_weight" class="form-control"
+                                placeholder="0.0" />
                             <span class="input-group-text">kg</span>
                         </div>
                         <div class="error-message text-danger"></div>
@@ -118,13 +124,15 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" onclick="storeWeightCategory()" class="btn btn-primary customBtnSave">Save</button>
+                    <button type="button" onclick="storeWeightCategory()"
+                        class="btn btn-primary customBtnSave">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="editWeightCategory" tabindex="-1" aria-labelledby="editWeightCategoryLabel" aria-hidden="true">
+    <div class="modal fade" id="editWeightCategory" tabindex="-1" aria-labelledby="editWeightCategoryLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header justify-content-center">
@@ -133,8 +141,9 @@
                 <div class="modal-body d-flex flex-column gap-3">
                     <div>
                         <input type="hidden" id="category_id">
-                        <label for="category_name_edit" class="form-label fs-6"><strong>Weight Category Name:</strong></label>
-                        <input type="text" id="category_name_edit" name="category_name" class="form-control"/>
+                        <label for="category_name_edit" class="form-label fs-6"><strong>Weight Category
+                                Name:</strong></label>
+                        <input type="text" id="category_name_edit" name="category_name" class="form-control" />
                         <div class="error-message text-danger"></div>
                     </div>
 
@@ -148,7 +157,7 @@
                                 <span>-</span>
                             </div>
 
-                            <input type="number" id="max_weight_edit" name="max_weight" class="form-control"/>
+                            <input type="number" id="max_weight_edit" name="max_weight" class="form-control" />
                             <span class="input-group-text">kg</span>
                         </div>
                         <div class="error-message text-danger"></div>
@@ -156,7 +165,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" onclick="updateWeightCategory()" class="btn btn-primary customBtnSave">Update</button>
+                    <button type="button" onclick="updateWeightCategory()"
+                        class="btn btn-primary customBtnSave">Update</button>
                 </div>
             </div>
         </div>
@@ -178,8 +188,7 @@
                 new TomSelect(el, settings);
             });
 
-            function addWeightCategory()
-            {
+            function addWeightCategory() {
                 //reset all input
                 let addWeightCategoryModal = $('#addWeightCategory');
                 addWeightCategoryModal.find('input[name="category_name"]').val('');
@@ -188,8 +197,7 @@
                 addWeightCategoryModal.modal('show');
             }
 
-            function storeWeightCategory() 
-            {
+            function storeWeightCategory() {
                 let addWeightCategoryModal = $('#addWeightCategory');
                 let categoryName = addWeightCategoryModal.find('input[name="category_name"]').val();
                 let minWeight = addWeightCategoryModal.find('input[name="min_weight"]').val();
@@ -260,13 +268,12 @@
                     });
             }
 
-            function editShippingCost(category_id, category_name, min_weight, max_weight)
-            {
+            function editShippingCost(category_id, category_name, min_weight, max_weight) {
                 let editWeightCategoryModal = $('#editWeightCategory');
                 editWeightCategoryModal.find('#category_id').val(category_id);
                 editWeightCategoryModal.find('#category_name_edit').val(category_name);
-                editWeightCategoryModal.find('#min_weight_edit').val(min_weight/1000);
-                editWeightCategoryModal.find('#max_weight_edit').val(max_weight/1000);
+                editWeightCategoryModal.find('#min_weight_edit').val(min_weight / 1000);
+                editWeightCategoryModal.find('#max_weight_edit').val(max_weight / 1000);
                 editWeightCategoryModal.modal('show');
             }
 
@@ -344,15 +351,16 @@
                     });
             }
 
-            function deleteShippingCost(category_id)
-            {
+            function deleteShippingCost(category_id, category_name) {
                 Swal.fire({
                     title: 'Delete weight category?',
+                    html: `<small>Are you sure you want to delete ${category_name}? You can't undo this action.<br>Deleting the Weight Category will delete all records under the Weight Category in the Shipping Cost List.</small>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, delete it!'
+                    confirmButtonText: 'Yes, delete it!',
+                    width: '600px'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         axios.post(`/api/weight-category/delete/${category_id}`, {
@@ -405,7 +413,6 @@
                     }
                 }
             };
-
         </script>
     </x-slot>
 

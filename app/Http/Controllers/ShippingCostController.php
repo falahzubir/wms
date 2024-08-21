@@ -335,14 +335,27 @@ class ShippingCostController extends Controller
 
     public function delete_weight_category($id)
     {
-        // Find the existing weight category by ID and perform delete
+        // Find the existing weight category by ID
         $weightCategory = WeightCategory::find($id);
-        $weightCategory->delete();
 
-        // Return a success response
+        if ($weightCategory) {
+            // Perform soft delete on shipping costs with the given weight category ID
+            ShippingCost::where('weight_category_id', $id)->delete();
+
+            // Perform soft delete on the weight category itself
+            $weightCategory->delete();
+
+            // Return a success response
+            return response()->json([
+                'status' => 'success',
+                'data' => $weightCategory,
+            ], 200);
+        }
+
+        // If the weight category is not found, return a failure response
         return response()->json([
-            'status' => 'success',
-            'data' => $weightCategory,
-        ], 200);
+            'status' => 'failure',
+            'message' => 'Weight category not found.',
+        ], 404);
     }
 }
