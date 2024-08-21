@@ -2199,7 +2199,7 @@ class ShippingController extends Controller
         $startOfMonth = $now->startOfMonth()->format('Y-m-d H:i:s');
         $endOfMonth = $now->endOfMonth()->format('Y-m-d H:i:s');
 
-        // Filter only selected order shipping not exists
+        // Filter only if order exist in shippings table
         $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])
             ->whereIn('id', $order_ids)
             ->whereDoesntHave('shippings', function ($query) {
@@ -2211,7 +2211,7 @@ class ShippingController extends Controller
         if (count($order_ninja) == 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'No orders found to process.',
+                'message' => 'Consignment note for selected order(s) already generated.',
                 'data' => []
             ], 200);
         }
