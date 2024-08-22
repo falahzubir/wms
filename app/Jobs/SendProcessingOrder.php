@@ -1,7 +1,7 @@
 <?php
-
 namespace App\Jobs;
 
+use App\Models\Company;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -15,30 +15,33 @@ class SendProcessingOrder implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
      
     protected $sales_id;
-
+    protected $company;
+    
     /**
      * Create a new job instance.
      * @param mixed $sales_id Sales ID to process.
+     * @param mixed $company Company to process.
      */
-    public function __construct($sales_id)
+    public function __construct($sales_id, $company)
     {
         $this->sales_id = $sales_id;
+        $this->company = $company;
     }
 
     /**
      * Execute the job.
      */
-       public function handle()
+    public function handle()
     {
-       $response = Http::post("https://bosemzi.com/wms/send_sales/{$this->sales_id}");
+        // $company = Company::find($this->company_id);
+            $response = Http::post("{$this->company->url}/wms/send_sales/{$this->sales_id}");
 
-      // Check if the request was successful
-      if ($response->successful()) {
-        // Log success
-        Log::info("Sales ID {$this->sales_id} sent to BOS successfully.");
-       } else {
-        // Log failure along with the response body for debugging
-        Log::error("Failed to send Sales ID {$this->sales_id} to BOS. Response: " . $response->body());
-     }
-   }
+            if ($response->successful()) {
+                // Log success
+                Log::info("Sales ID {$this->sales_id} sent to {$this->company->url} successfully.");
+            } else {
+                Log::error("Failed to send Sales ID {$this->sales_id} to BOS. Response: " . $response->body());
+            }
+        
+    }
 }

@@ -1,11 +1,12 @@
 <?php
-
 namespace App\Console\Commands;
 
 use App\Jobs\SendProcessingOrder;
+use App\Models\Company;
 use App\Models\Order;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class RetrieveProcessingOrder extends Command
 {
@@ -28,22 +29,31 @@ class RetrieveProcessingOrder extends Command
      */
     public function handle()
     {
-        // $response = Http::get('http://localhost/bos/get_sales');
+        $companies = Company::all();
+        $time = now()->subMinutes(5)->format('Y-m-d H:i:s');
+    
+        foreach ($companies as $company) {
+    
+            $response = Http::get($company->url . '/wms/get_sales');
+    
+            if ($response->successful()) {
+                $sales_data = $response->json();
+    
+                // Extract and flatten the sales_ids array
+                $sales_ids = collect($sales_data)->pluck('sales_id')->toArray();
+    
+                $existing_orders = Order::whereIn('sales_id', $sales_ids)
+                                        ->where('company_id', $company->id) 
+                                        ->pluck('sales_id')
+                                        ->toArray(); 
 
-        $response = Http::get('https://bosemzi.com/get_sales');
+                $order_diff = array_diff($sales_ids, $existing_orders);
 
-        if ($response->successful()) {
-            $sales_id = $response->json();
-            // Ensure $sales_id is an array
-            if (!is_array($sales_id)) {
-                $sales_id = (array) $sales_id; // Convert to array if not an array
-            }
-            foreach ($sales_id as $salesId) {
-                if (!Order::where('sales_id', $salesId)->exists()) {
-                    SendProcessingOrder::dispatch($salesId);
+                // Dispatch jobs for the new sales IDs
+                foreach ($order_diff as $salesId) {
+                    SendProcessingOrder::dispatch($salesId, $company);
                 }
             }
         }
     }
-
 }
