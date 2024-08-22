@@ -34,7 +34,7 @@ class SendProcessingOrder implements ShouldQueue
     public function handle()
     {
         // $company = Company::find($this->company_id);
-            $response = Http::post("{$this->company->url}/wms/send_sales/{$this->sales_id}");
+            $response = Http::get("{$this->company->url}/wms/send_sales/{$this->sales_id}");
 
             if ($response->successful()) {
                 // Log success
