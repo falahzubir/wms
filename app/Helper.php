@@ -487,19 +487,25 @@ if (!function_exists('get_shipping_remarks_csv')) {
      * @param  obj $order_id
      * @return string
      */
-    function get_shipping_remarks_csv($product_code, $quantity)
+    function get_shipping_remarks_csv($row, $full = false)
     {
         $desc = '';
-        $product_code = explode(',', $product_code);
-        $quantity = explode(',', $quantity);
-        if(is_array($product_code) && is_array($quantity)){
+        $product_code = explode(',', $row->product_code);
+        $product_name = explode(',', $row->product_name);
+        $quantity = explode(',', $row->quantity);
+        if(is_array($product_code) && is_array($quantity) && is_array($product_name)){
             foreach ($product_code as $pc => $code) {
-                $desc .= $code . '[' . $quantity[$pc] . ']';
+                $desc .= $full ? $product_name[$pc]: $code;
+                $desc .= '[';
+                $desc .= $quantity[$pc];
+                $desc .= ']';
             }
         }
         else{
             $desc = '-';
         }
+
+        return $desc;
     }
 }
 
@@ -519,7 +525,7 @@ if (!function_exists('get_order_weight_download_csv')) {
                 return is_numeric($value);
             });
 
-            return array_sum($weight);
+            return array_sum($weight).'g';
         }
         else{
             return '-';

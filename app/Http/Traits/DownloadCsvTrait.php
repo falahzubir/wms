@@ -26,10 +26,13 @@ Trait DownloadCsvTrait
             IFNULL(operational_models.name, "-") AS operational_models_name,
             IFNULL(payment_types.payment_type_name, "-") AS payment_type_name,
             IFNULL(couriers.name, "-") AS couriers_name,
-            IFNULL(TRUNCATE(orders.total_price / 100, 2), "-") AS total_price,
+            IFNULL(TRUNCATE(orders.total_price / 100, 2), "0") AS total_price,
+            IFNULL(TRUNCATE(orders.payment_refund / 100, 2), "0") AS payment_refund,
+            IFNULL(orders.sales_remarks, "-") AS sales_remarks,
             order_items.quantity AS quantity,
             order_items.weight AS weight,
             order_items.product_code AS product_code,
+            order_items.product_name AS product_name,
             IFNULL(orders.created_at, "-") AS date_insert,
             IFNULL(delivered_logs.created_at, "-") AS delivered_date,
         ';
@@ -66,6 +69,7 @@ Trait DownloadCsvTrait
 
 
         $shippingsSelect = "
+            shippings.shipment_number AS shipping_number,
             IFNULL(shippings.created_at, '-') AS shipping_date,
             CASE
                 WHEN shippings.tracking_number REGEXP '^[0-9]+$' THEN CONCAT(\"'\", shippings.tracking_number)
@@ -75,7 +79,8 @@ Trait DownloadCsvTrait
             IFNULL(shippings_users.name, '-') AS pic_scan,
             IFNULL(CONCAT(shippings.total_weight, 'g'), '-') AS total_weight,
             IFNULL(shipping_costs.weight_category_names, '-') AS weight_category,
-            IFNULL(TRUNCATE(shipping_costs.price / 100, 2), '-') AS shipping_cost
+            IFNULL(TRUNCATE(shipping_costs.price / 100, 2), '-') AS shipping_cost,
+            IFNULL(shipping_products.quantity, '0') AS shipping_cost_product_quantity
         ";
 
 
@@ -92,7 +97,7 @@ Trait DownloadCsvTrait
             ->leftJoin('operational_models', 'orders.operational_model_id', '=', 'operational_models.id')
             ->leftJoin('payment_types', 'orders.payment_type', '=', 'payment_types.id')
             ->leftJoin('couriers', 'orders.courier_id', '=', 'couriers.id')
-            ->leftJoin(DB::raw('(SELECT order_items.order_id, GROUP_CONCAT(order_items.quantity) AS quantity, GROUP_CONCAT(products.weight) AS weight, GROUP_CONCAT(products.code) AS product_code FROM order_items LEFT JOIN products ON products.id = order_items.product_id WHERE order_items.status = 1 GROUP BY order_id) AS order_items'), 'orders.id', '=', 'order_items.order_id')
+            ->leftJoin(DB::raw('(SELECT order_items.order_id, GROUP_CONCAT(order_items.quantity) AS quantity, GROUP_CONCAT(products.weight) AS weight, GROUP_CONCAT(products.code) AS product_code, GROUP_CONCAT(products.name) AS product_name FROM order_items LEFT JOIN products ON products.id = order_items.product_id WHERE order_items.status = 1 GROUP BY order_id) AS order_items'), 'orders.id', '=', 'order_items.order_id')
             ->leftJoin(DB::raw('(SELECT group_state_lists.state_id, GROUP_CONCAT(state_groups.name) AS list_name FROM group_state_lists LEFT JOIN state_groups ON state_groups.id = group_state_lists.state_group_id WHERE group_state_lists.deleted_at IS NULL GROUP BY state_id) AS state_groups'), 'customers.state', '=', 'state_groups.state_id')
             ->leftJoin('users AS shippings_users', 'shippings.scanned_by', '=', 'shippings_users.id')
             ->leftJoin('order_logs AS delivered_logs', function ($join) {
@@ -101,10 +106,11 @@ Trait DownloadCsvTrait
                     ->where('delivered_logs.status', 1);
             })
             ->leftJoin(DB::raw('(SELECT shipping_costs.id, shipping_costs.price, weight_categories.name AS weight_category_names FROM shipping_costs LEFT JOIN weight_categories ON weight_categories.id = shipping_costs.weight_category_id WHERE shipping_costs.deleted_at IS NULL GROUP BY shipping_costs.id) AS shipping_costs'), 'shippings.shipping_cost_id', '=', 'shipping_costs.id')
+            ->leftJoin(DB::raw('(SELECT shipping_products.shipping_id, SUM(shipping_products.quantity) AS quantity FROM shipping_products GROUP BY shipping_products.shipping_id) AS shipping_products'), 'shipping_products.shipping_id', '=', 'shippings.id')
             ->selectRaw($select)
             ->whereIn('orders.id',  $order_ids)
             ->get();
-            // dd($sql);
+            dd($sql);
 
         $results = $sql->toArray();
 
@@ -173,7 +179,7 @@ Trait DownloadCsvTrait
                 } elseif ($column == 'weight') {
                     $sortedData[$uniqueKey][$column] =  get_order_weight_csv($row->weight);
                 } elseif ($column == 'item_description') {
-                    $sortedData[$uniqueKey][$column] = get_shipping_remarks_csv($row->product_code, $row->quantity);
+                    $sortedData[$uniqueKey][$column] = get_shipping_remarks_csv($row, false);
                 } elseif ($column == 'date_insert') {
                     $sortedData[$uniqueKey][$column] = $row->date_insert;
                 } elseif ($column == 'shipping_date') {
@@ -210,8 +216,17 @@ Trait DownloadCsvTrait
                     $sortedData[$uniqueKey][$column] = $row->weight_category;
                 } elseif ($column == 'shipping_cost') {
                     $sortedData[$uniqueKey][$column] = $row->shipping_cost;
+                } elseif ($column == 'shipping_number') {
+                    $sortedData[$uniqueKey][$column] = $row->shipping_number;
+                } elseif ($column == 'payment_refund') {
+                    $sortedData[$uniqueKey][$column] = $row->payment_refund;
+                } elseif ($column == 'sales_remark') {
+                    $sortedData[$uniqueKey][$column] = $row->sales_remarks;
+                } elseif ($column == 'shipping_remarks') {
+                    $sortedData[$uniqueKey][$column] = get_shipping_remarks_csv($row, true);
+                } elseif ($column == 'shipping_cost_product_quantity') {
+                    $sortedData[$uniqueKey][$column] = $row->shipping_cost_product_quantity;
                 } else {
-                    // dump($column);
                     $sortedData[$uniqueKey][$column] = $row->{$column} ?? '';
                 }
 
