@@ -109,7 +109,6 @@ Trait DownloadCsvTrait
         $results = $sql->toArray();
 
         $sortedColumns = $columnHeaders->templateColumns->sortBy('column_position');
-        // $columns = $sortedColumns->pluck('columns.column_name')->toArray();
 
         // Get order PIC from BOS
         $staffMain = self::get_order_pic(array_column($results, 'sales_id'), array_column($results, 'companies_id'));
@@ -170,19 +169,11 @@ Trait DownloadCsvTrait
                 } elseif ($column == 'total_price') {
                     $sortedData[$uniqueKey][$column] = $row->total_price;
                 } elseif ($column == 'quantity') {
-                    $quantity = explode(',', $row->quantity);
-                    $sortedData[$uniqueKey][$column] = is_array($quantity) ? array_sum($quantity) : 0;
+                    $sortedData[$uniqueKey][$column] = get_order_quantity_csv($row->quantity);
                 } elseif ($column == 'weight') {
-                    $weight = explode(',', $row->weight);
-                    $sortedData[$uniqueKey][$column] = is_array($weight) ? array_sum($weight) : 0;
+                    $sortedData[$uniqueKey][$column] =  get_order_weight_csv($row->weight);
                 } elseif ($column == 'item_description') {
-                    $desc = '';
-                    $quantity = explode(',', $row->quantity);
-                    $product_code = explode(',', $row->product_code);
-                    foreach ($product_code as $pc => $code) {
-                        $desc .= $code . '[' . $quantity[$pc] . ']';
-                    }
-                    $sortedData[$uniqueKey][$column] = rtrim($desc, ', ');
+                    $sortedData[$uniqueKey][$column] = get_shipping_remarks_csv($row->product_code, $row->quantity);
                 } elseif ($column == 'date_insert') {
                     $sortedData[$uniqueKey][$column] = $row->date_insert;
                 } elseif ($column == 'shipping_date') {
@@ -228,7 +219,7 @@ Trait DownloadCsvTrait
             $i++;
             $data[] = array_values($sortedData[$uniqueKey]);
         }
-        dd($data);
+
         return self::download($data, $filename);
 
     }

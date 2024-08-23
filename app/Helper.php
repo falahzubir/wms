@@ -477,3 +477,75 @@ if (!function_exists('getStateGroup')) {
         }
     }
 }
+
+
+//for download csv only
+if (!function_exists('get_shipping_remarks_csv')) {
+    /**
+     * Get order remarks
+     *
+     * @param  obj $order_id
+     * @return string
+     */
+    function get_shipping_remarks_csv($product_code, $quantity)
+    {
+        $desc = '';
+        $product_code = explode(',', $product_code);
+        $quantity = explode(',', $quantity);
+        if(is_array($product_code) && is_array($quantity)){
+            foreach ($product_code as $pc => $code) {
+                $desc .= $code . '[' . $quantity[$pc] . ']';
+            }
+        }
+        else{
+            $desc = '-';
+        }
+    }
+}
+
+if (!function_exists('get_order_weight_download_csv')) {
+    /**
+     * Get order weight
+     *
+     * @param  obj $order_id
+     * @return string
+     */
+    function get_order_weight_csv($weight)
+    {
+        $weight = explode(',', $weight);
+
+        if(is_array($weight)){
+            $weight = array_filter($weight, function ($value) {
+                return is_numeric($value);
+            });
+
+            return array_sum($weight);
+        }
+        else{
+            return '-';
+        }
+    }
+}
+
+if (!function_exists('get_order_quantity_csv')) {
+    /**
+     * Get order quantity
+     *
+     * @param  obj $order_id
+     * @return string
+     */
+    function get_order_quantity_csv($quantity)
+    {
+        $quantity = explode(',', $quantity);
+        if(is_array($quantity)){
+            $quantity = array_filter($quantity, function ($value) {
+                return is_numeric($value);
+            });
+
+            return array_sum($quantity);
+        }
+        else{
+            return '-';
+        }
+    }
+}
