@@ -258,17 +258,19 @@ class ShippingCostController extends Controller
         if ($headers !== $expectedHeaders) {
             return response()->json([
                 'status' => 'error',
+                'code' => 'INVALID_DATA',
                 'message' => 'Failed to upload CSV! Ensure all data matches the provided template.'
             ], 422);
         }
 
+        // Validate all rows before making any changes to the database
+        $valid_data = [];
         foreach ($data as $row) {
             $weight_category_name = $row[0];
             $courier_name = $row[1];
             $state_group_name = $row[2];
             $price = floatval($row[3]) * 100;
 
-            // Validate data
             $weight_category = WeightCategory::where('name', $weight_category_name)->first();
             $courier = Courier::where('name', $courier_name)->first();
             $state_group = StateGroup::where('name', $state_group_name)->first();
@@ -281,28 +283,31 @@ class ShippingCostController extends Controller
                 ], 422);
             }
 
-            $weight_category_id = $weight_category->id;
-            $courier_id = $courier->id;
-            $state_group_id = $state_group->id;
+            $valid_data[] = [
+                'weight_category_id' => $weight_category->id,
+                'courier_id' => $courier->id,
+                'state_group_id' => $state_group->id,
+                'price' => $price,
+            ];
+        }
 
-            // Check if the record exists
-            $shippingCost = ShippingCost::where('weight_category_id', $weight_category_id)
-                ->where('courier_id', $courier_id)
-                ->where('state_group_id', $state_group_id)
+        foreach ($valid_data as $row) {
+            $shippingCost = ShippingCost::where('weight_category_id', $row['weight_category_id'])
+                ->where('courier_id', $row['courier_id'])
+                ->where('state_group_id', $row['state_group_id'])
                 ->first();
 
             if ($shippingCost) {
-                // Update existing record
                 $shippingCost->update([
-                    'price' => $price,
+                    'price' => $row['price'],
+                    'updated_at' => now(),
                 ]);
             } else {
-                // Create new record
                 ShippingCost::create([
-                    'weight_category_id' => $weight_category_id,
-                    'courier_id' => $courier_id,
-                    'state_group_id' => $state_group_id,
-                    'price' => $price,
+                    'weight_category_id' => $row['weight_category_id'],
+                    'courier_id' => $row['courier_id'],
+                    'state_group_id' => $row['state_group_id'],
+                    'price' => $row['price'],
                 ]);
             }
         }
