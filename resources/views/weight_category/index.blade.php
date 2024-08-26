@@ -5,34 +5,38 @@
         .rmBorder {
             border: none;
         }
-
         .customBtnSave {
             background-color: #7166e0;
         }
-
         #uploadBulkForm {
             display: flex;
             gap: 10px;
             margin-bottom: 40px;
         }
-
-        #uploadBulkForm .form-control {
-            flex-grow: 1;
+        .custom-input {
+            height: 50px;
+            padding: 10px;
+            font-size: 16px;
         }
 
+        .custom-button {
+            height: 50px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .custom-file-box {
+            flex-grow: 0.8;
+        }
         #uploadBulkForm button {
             white-space: nowrap;
         }
-
         .icon-spacing {
-            margin-right: 10px;
+            margin-right: 8px;
         }
-
         .custom-modal-size {
             max-width: 63%;
             height: 80%;
         }
-
         .upload-body {
             line-height: 1.5;
             margin: 20px;
@@ -41,8 +45,6 @@
             font-size: 17px;
             text-align: middle;
         }
-
-        /* Define the specific styling for the error message content */
         .error-message-content {
             background-color: #ffe5e4;
             padding: 15px;
@@ -52,14 +54,21 @@
             align-items: flex-start;
             text-align: left;
         }
-
-        /* Define the icon styling */
         .error-icon {
             display: inline-block;
             margin-right: 10px;
             font-size: 18px;
             color: #f24f1d;
             vertical-align: middle;
+        }
+        .custom-btn-close {
+            width: 30px;
+            height: 30px;
+            background-size: 11px;
+        }
+        .custom-error-message {
+            font-size: 16px;
+            line-height: 1.5;
         }
     </style>
     <section class="section">
@@ -123,11 +132,14 @@
             <section id="addWeightCategoryButton" class="mb-3">
                 <div>
                     @can('weight_category.create')
-                        <button class="btn btn-primary" onclick="addWeightCategory()"><i class="fas fa-plus icon-spacing"
-                                style="font-weight: bold;"></i><small>Add Shipping Cost</small></button>
-                        <button class="btn btn-success" style="background-color: #008080;"
-                            onclick="showUploadBulkModal()"><i
-                                class="fa fa-arrow-up-from-bracket icon-spacing"></i><small>Bulk Upload</small></button>
+                        <button class="btn btn-primary" onclick="addWeightCategory()">
+                            <i class="fas fa-plus icon-spacing" style="font-weight: bold; font-size: 14px;"></i>
+                            <small>Add Shipping Cost</small>
+                        </button>
+                        <button class="btn btn-success" style="background-color: #008080;" onclick="showUploadBulkModal()">
+                            <i class="fa fa-arrow-up-from-bracket icon-spacing" style="font-size: 14px;"></i>
+                            <small>Bulk Upload</small>
+                        </button>
                     @endcan
                 </div>
             </section>
@@ -360,58 +372,33 @@
         </div>
     </div>
 
-    {{-- <div class="modal fade" id="uploadBulkModal" tabindex="-1" aria-labelledby="uploadBulkModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadBulkModalLabel"><strong>Add/Update Shipping Cost</strong></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Upload CSV File to add and update data in bulk. The system will automatically add new data or
-                        update the existing data.</p>
-                    <p>Download sample CSV file <a href="/api/weight-category/download-sample-csv"
-                            target="_blank">here</a></p>
-                    <form id="uploadBulkForm" enctype="multipart/form-data"
-                        class="d-flex align-items-center justify-content-between">
-                        <div class="flex-grow-1 me-2">
-                            <input type="file" class="form-control" id="bulkUploadFile" name="bulk_upload_file"
-                                accept=".csv">
-                        </div>
-                        <button type="button" class="btn btn-primary" onclick="uploadBulk()">Upload CSV</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div> --}}
-
     <div class="modal fade" id="uploadBulkModal" tabindex="-1" aria-labelledby="uploadBulkModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered custom-modal-size">
             <div class="modal-content custom-modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="uploadBulkModalLabel">Add/Update Shipping</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="uploadBulkModalLabel">Add/Update Shipping Cost</h5>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body upload-body">
-                    <p>Upload CSV File to add and update data in bulk. The system will automatically add new data or
+                    <p style="font-size: 15px;">Upload CSV File to add and update data in bulk. The system will
+                        automatically add new data or
                         update the existing data.</p>
-                    <p>Download sample CSV file <a href="/api/weight-category/download-sample-csv" target="_blank"
+                    <p style="font-size: 15px;">Download sample CSV file <a
+                            href="/api/weight-category/download-sample-csv" target="_blank"
                             style="color: blue;">here</a></p>
                     <form id="uploadBulkForm" enctype="multipart/form-data">
-                        <div class="flex-grow-1 me-2">
+                        <div class="custom-file-box me-2">
                             <input type="file" class="form-control" id="bulkUploadFile" name="bulk_upload_file"
                                 accept=".csv">
                         </div>
-                        <button type="button" class="btn btn-primary" onclick="uploadBulk()">Upload CSV</button>
+                        <button type="button" class="btn btn-primary" onclick="uploadBulk()"><small>Upload CSV</small></button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
-
 
     <x-slot name="script">
         <script>
@@ -464,7 +451,7 @@
                             addWeightCategoryModal.modal('hide');
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Shipping cost created successfully!',
+                                html: '<span style="font-size:20px;">Shipping cost created successfully!</span>',
                             }).then(() => {
                                 window.location.reload();
                             });
@@ -521,7 +508,7 @@
                             editWeightCategoryModal.modal('hide');
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Shipping cost updated successfully!',
+                                html: '<span style="font-size:20px">Shipping cost updated successfully!</span',
                             }).then(() => {
                                 window.location.reload();
                             });
@@ -558,7 +545,7 @@
                                 if (response.data.status == 'success') {
                                     Swal.fire({
                                         icon: 'success',
-                                        title: 'Shipping cost deleted successfully!',
+                                        html: '<span style="font-size:20px;">Shipping cost deleted successfully!</span>',
                                     }).then(() => {
                                         window.location.reload();
                                     });
@@ -624,7 +611,7 @@
                             $('#uploadBulkModal').modal('hide');
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Shipping Cost created successfully!',
+                                html: '<span style="font-size: 20px;">Shipping cost created successfully!</span>',
                             }).then(() => {
                                 window.location.reload();
                             });
@@ -645,11 +632,11 @@
                             } else if (errorCode === 'INVALID_DATA') {
                                 errorTitle = '<strong>Failed to upload CSV!</strong>';
                                 errorMessage = `
-            <div class="error-message-container">Unable to process your file due to one or more error(s)</div>
-            <div class="error-message-content">
-                <i class="bi bi-exclamation-triangle error-icon"></i>
-                <span>Please ensure you are using the CSV template provided, all columns are filled and free of spelling errors, then try re-uploading again.</span>
-            </div>`;
+                             <div class="error-message-container">Unable to process your file due to one or more error(s)</div>
+                             <div class="error-message-content">
+                             <i class="bi bi-exclamation-triangle error-icon"></i>
+                               <span class="custom-error-message">Please ensure you are using the CSV template provided, all columns are filled and free of spelling errors, then try re-uploading again.</span>
+                             </div>`;
                                 errorIcon = 'warning';
                             }
                         }
