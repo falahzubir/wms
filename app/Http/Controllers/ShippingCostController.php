@@ -310,9 +310,10 @@ class ShippingCostController extends Controller
         // Check if the category name already exists, but exclude the current record's name
         if (WeightCategory::where('name', $request->category_name)->where('id', '!=', $weightCategory->id)->exists()) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Weight category name already exists.'
-            ], 400);
+                'errors' => [
+                    'category_name' => ['*The name already exists. Try another.']
+                ]
+            ], 422);
         }
 
         // Convert min and max weight to grams
