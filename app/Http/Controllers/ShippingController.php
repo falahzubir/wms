@@ -2203,7 +2203,8 @@ class ShippingController extends Controller
         $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])
             ->whereIn('id', $order_ids)
             ->whereDoesntHave('shippings', function ($query) {
-                $query->where('courier', NINJAVAN_INTERNATIONAL_ID);
+                $query->where('courier', NINJAVAN_INTERNATIONAL_ID)
+                    ->whereNotNull('tracking_number');
             })
             ->get();
 

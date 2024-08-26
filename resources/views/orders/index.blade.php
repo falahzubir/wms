@@ -256,7 +256,7 @@
                             <button class="btn btn-info" id="add-to-bucket-btn"><i class="bi bi-basket"></i> Add to
                                 Bucket</button>
                         @endif
-                        @if (in_array(ACTION_GENERATE_CN, $actions)) 
+                        @if (in_array(ACTION_GENERATE_CN, $actions))
                             @can('consignment_note.generate')
                                 <button class="btn btn-warning" id="generate-cn-btn"><i
                                         class="bi bi-file-earmark-ruled"></i> Generate CN</button>
@@ -1241,7 +1241,7 @@
                 });
             }
 
-            // generate shipping label 
+            // generate shipping label
             @if (in_array(ACTION_GENERATE_CN, $actions))
                 document.querySelector('#generate-cn-btn').onclick = async function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
@@ -1657,7 +1657,7 @@
                         type: type,
                     })
                     .then(function(response) {
-                        console.log(response);
+
                         let text = inc_packing_list_result ? "Shipping label and packing list generated" :
                             "Shipping label generated."
                         if (response.data == 0) {
@@ -1672,8 +1672,15 @@
 
                         if (!response.data.success) {
                             let title = response.data.title ?? 'Error!';
-                            let message = response.data.message ?? 'Fail to generate CN';
-                            
+
+                            if(response.data.message !== undefined){
+                                message = response.data.message;
+                            }else if(response.data.all_fail.message !== undefined){
+                                message = response.data.all_fail.message;
+                            }
+                            else{
+                                message = 'Fail to generate CN';
+                            }
                             Swal.fire({
                                 title: title,
                                 html: message,
@@ -1727,9 +1734,18 @@
                         });
                     })
                     .catch(function(error) {
+
+                        if(error.data.message !== undefined){
+                            message = error.data.message;
+                        }else if(error.data.all_fail.message !== undefined){
+                            message = error.data.all_fail.message;
+                        }
+                        else{
+                            message = 'Fail to generate CN, Please contact admin';
+                        }
                         Swal.fire({
                             title: 'Error!',
-                            html: `Fail to generate CN, Please contact admin`,
+                            html: message,
                             icon: 'error',
                             confirmButtonText: 'OK'
                         })
