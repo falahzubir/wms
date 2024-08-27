@@ -2235,170 +2235,66 @@ class ShippingController extends Controller
             // Get access token
             $accessToken = NinjaVanInternationalTrait::checkAccessToken($order->company->id);
 
-            // Shipment details
+            // Get or create the shipping record
             $shipmentNumber = shipment_num_format($order);
-            $itemDescription = get_shipping_remarks($order) ?? '';
-            $totalWeight = get_order_weight($order) / 1000 ?? '';
-            $product_list = $this->generate_product_description($order->id);
+            $shipping = Shipping::where('shipment_number', $shipmentNumber)->first();
 
-            // Get SGD amount
-            $sgd_amount = (($order->total_price / 100) / $rate->rate) + 1;
-            $sgd_amount = ceil($sgd_amount); // Round up to the nearest integer
-            $sgd_amount = (int)$sgd_amount;
+            if (!$shipping) {
+                // Scenario 1: No order in `shippings` table, create everything
+                $shipping = new Shipping();
+                $shipping->shipment_number = $shipmentNumber;
+                $shipping->order_id = $order->id;
+                $shipping->courier = NINJAVAN_INTERNATIONAL_ID;
+                $shipping->created_by = auth()->user()->id ?? 1;
 
-            // JSON structure
-            $jsonArray = [
-                "service_type" => "International",
-                "international" => [
-                    "portation" => "Export",
-                    "service_code" => app()->environment() == 'production' ? "MYSG-A-S-1" : "SGMY-A-S-1"
-                ],
-                "customs_declaration" => [
-                    "goods_currency" => "SGD",
-                    "battery_type" => "No Battery",
-                    "battery_packing" => "No Battery",
-                    "trade_terms" => "DDU",
-                    "is_gst_included_in_goods_value" => false,
-                    "gst_registration_number" => ""
-                ],
-                "service_level" => "Standard",
-                "requested_tracking_number" => "NV" . $order->sales_id,
-                "reference" => [
-                    "merchant_order_number" => $order->sales_id
-                ],
-                "from" => [
-                    "name" => "EMZI FULFILLMENT",
-                    "phone_number" => "60195687313",
-                    "email" => "customerservice.elsb@emzi.com.my",
-                    "address" => [
-                        "address1" => "EMZI FULLFILLMENT, KOMPLEKS SP PLAZA, JALAN IBRAHIM, SUNGAI PETANI 08000 Sungai Petani, Kedah",
-                        "address2" => "",
-                        "city" => "Sungai Petani",
-                        "state" => "Kedah",
-                        "address_type" => "office",
-                        "country" => "MY",
-                        "postcode" => "08000"
-                    ]
-                ],
-                "to" => [
-                    "name" => $order->customer->name ?? '',
-                    "phone_number" => $order->customer->phone ?? '',
-                    "email" => $order->customer->email ?? '',
-                    "address" => [
-                        "address1" => $order->customer->address ?? '',
-                        "address2" => $order->customer->address2 ?? '',
-                        "city" => $order->customer->city ?? '',
-                        "state" => $order->customer->states->name ?? '',
-                        "country" => "SG",
-                        "postcode" => $order->customer->postcode ?? ''
-                    ]
-                ],
-                "parcel_job" => [
-                    "is_pickup_required" => false,
-                    "delivery_instructions" => $order->sales_remarks ?? '',
-                    "delivery_start_date" => Carbon::now()->format('Y-m-d'),
-                    "delivery_timeslot" => [
-                        "start_time" => "09:00",
-                        "end_time" => "18:00",
-                        "timezone" => "Asia/Singapore"
-                    ],
-                    "dimensions" => [
-                        "weight" => $totalWeight
-                    ],
-                    "items" => [
-                        [
-                            "item_description" => $itemDescription,
-                            "native_item_description" => "N/A",
-                            "unit_value" => $sgd_amount,
-                            "unit_weight" => $totalWeight,
-                            "product_url" => "https://www.product.url/12346.pdf",
-                            "invoice_url" => "https://www.invoice.url/12346.pdf",
-                            "hs_code" => 543111,
-                            "made_in_country" => "MY"
-                        ]
-                    ]
-                ]
-            ];
-
-            if ($order->purchase_type == PURCHASE_TYPE_COD) {
-                $jsonArray['parcel_job']['cash_on_delivery'] = $sgd_amount;
-                $jsonArray['parcel_job']['cash_on_delivery_currency'] = "SGD";
-            }
-
-            $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
-
-            try {
-                $createNinjaVanOrder = NinjaVanInternationalTrait::createNinjaVanOrder($jsonSend, $accessToken);
-
-                if (isset($createNinjaVanOrder['tracking_number'])) {
-
-                    // Shipment details
-                    $trackingNumber = $createNinjaVanOrder['tracking_number'];
-
-                    // Check if there's an existing shipping record with the same shipment number
-                    $shipping = Shipping::where('shipment_number', $shipmentNumber)->first();
-
-                    if ($shipping) {
-                        // Update the tracking number if shipping record exists
-                        $shipping->tracking_number = $trackingNumber;
-                        $shipping->save();
-                    } else {
-                        // Create new shipping record
-                        $shipping = new Shipping();
-                        $shipping->shipment_number = $shipmentNumber;
-                        $shipping->order_id = $order->id;
-                        $shipping->courier = NINJAVAN_INTERNATIONAL_ID;
-                        $shipping->created_by = auth()->user()->id ?? 1;
-                        $shipping->tracking_number = $trackingNumber;
-                        $shipping->packing_attachment = $product_list;
-                        $shipping->save();
-                        
-                        // Store currency amount into orders table
-                        $order = Order::findOrFail($order->id);
-                        $order->currency_amount = $sgd_amount;
-                        $order->save();
-                    }
-
-                    // Retry mechanism for generating the waybill
-                    $retryAttempts = 5;
-                    $retryDelay = 60; // 60 seconds
-                    $generateWayBill = null;
-
-                    for ($attempt = 0; $attempt < $retryAttempts; $attempt++) {
-                        $generateWayBill = NinjaVanInternationalTrait::generateWayBill($trackingNumber, $accessToken);
-                        if ($generateWayBill->status() == 200) {
-                            break;
-                        }
-                        sleep($retryDelay);
-                    }
-
-                    // Check if the waybill generation was successful
-                    if ($generateWayBill && $generateWayBill->status() == 200) {
-                        // Save the PDF to a file
-                        $pdfContent = $generateWayBill->body();
-                        $filePath = 'labels/' . shipment_num_format($order) . '.pdf';
-                        Storage::put('public/' . $filePath, $pdfContent);
-
-                        $shipping->attachment = $filePath;
-                        $shipping->save();
-
-                        // Set the order status
-                        set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by NinjaVan International");
-
-                        // Add order id and attachment to CNS array
-                        $CNS['order_ids'][] = $order->id;
-                        $CNS['attachment'][] = $shipping->attachment;
-                    } else {
-                        // Error when creating waybill
-                        $errors[] = ['message' => 'Failed to generate waybill: ' . json_encode($generateWayBill)];
-                    }
-                } else {
-                    // Error when creating order
-                    $errors[] = ['message' => 'Failed to create order in NinjaVan: ' . json_encode($createNinjaVanOrder)];
+                // Proceed to create order in NinjaVan
+                $orderCreated = $this->ninjaVanApi($order, $shipping, $rate, $accessToken);
+                if ($orderCreated !== true) {
+                    $errors[] = ['message' => $orderCreated];
+                    continue;
                 }
-            } catch (\Exception $e) {
-                $errors[] = ['message' => $e->getMessage()];
+            } elseif ($shipping->tracking_number === null) {
+                // Scenario 2: Order exists but `tracking_number` is empty
+                // Proceed to create order in NinjaVan
+                $orderCreated = $this->ninjaVanApi($order, $shipping, $rate, $accessToken);
+                if ($orderCreated !== true) {
+                    $errors[] = ['message' => $orderCreated];
+                    continue;
+                }
             }
+
+            if ($shipping->attachment === null) {
+                // Scenario 3: `tracking_number` is not null but `attachment` is empty
+                // Retry mechanism for generating the waybill
+                $retryAttempts = 5;
+                $retryDelay = 60; // 60 seconds
+                $generateWayBill = null;
+
+                for ($attempt = 0; $attempt < $retryAttempts; $attempt++) {
+                    $generateWayBill = NinjaVanInternationalTrait::generateWayBill($shipping->tracking_number, $accessToken);
+                    if ($generateWayBill->status() == 200) {
+                        break;
+                    }
+                    sleep($retryDelay);
+                }
+
+                if ($generateWayBill && $generateWayBill->status() == 200) {
+                    $pdfContent = $generateWayBill->body();
+                    $filePath = 'labels/' . shipment_num_format($order) . '.pdf';
+                    Storage::put('public/' . $filePath, $pdfContent);
+
+                    $shipping->attachment = $filePath;
+                    $shipping->save();
+
+                    set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by NinjaVan International");
+
+                    $CNS['order_ids'][] = $order->id;
+                    $CNS['attachment'][] = $shipping->attachment;
+                } else {
+                    $errors[] = ['message' => 'Failed to generate waybill: ' . json_encode($generateWayBill)];
+                }
+            }
+
         }
 
         if (count($CNS) > 0) {
@@ -2422,6 +2318,119 @@ class ShippingController extends Controller
             'message' => $message,
             'data' => $CNS ?? ''
         ], 200);
+    }
+
+    private function ninjaVanApi($order, $shipping, $rate, $accessToken)
+    {
+        // Shipment details
+        $shipmentNumber = shipment_num_format($order);
+        $itemDescription = get_shipping_remarks($order) ?? '';
+        $product_list = $this->generate_product_description($order->id);
+        $totalWeight = get_order_weight($order) / 1000 ?? '';
+        $sgd_amount = (($order->total_price / 100) / $rate->rate) + 1;
+        $sgd_amount = ceil($sgd_amount);
+        $sgd_amount = (int)$sgd_amount;
+
+        $jsonArray = [
+            "service_type" => "International",
+            "international" => [
+                "portation" => "Export",
+                "service_code" => app()->environment() == 'production' ? "MYSG-A-S-1" : "SGMY-A-S-1"
+            ],
+            "customs_declaration" => [
+                "goods_currency" => "SGD",
+                "battery_type" => "No Battery",
+                "battery_packing" => "No Battery",
+                "trade_terms" => "DDU",
+                "is_gst_included_in_goods_value" => false,
+                "gst_registration_number" => ""
+            ],
+            "service_level" => "Standard",
+            "requested_tracking_number" => "NV" . $order->sales_id,
+            "reference" => [
+                "merchant_order_number" => $order->sales_id
+            ],
+            "from" => [
+                "name" => "EMZI FULFILLMENT",
+                "phone_number" => "60195687313",
+                "email" => "customerservice.elsb@emzi.com.my",
+                "address" => [
+                    "address1" => "EMZI FULLFILLMENT, KOMPLEKS SP PLAZA, JALAN IBRAHIM, SUNGAI PETANI 08000 Sungai Petani, Kedah",
+                    "address2" => "",
+                    "city" => "Sungai Petani",
+                    "state" => "Kedah",
+                    "address_type" => "office",
+                    "country" => "MY",
+                    "postcode" => "08000"
+                ]
+            ],
+            "to" => [
+                "name" => $order->customer->name ?? '',
+                "phone_number" => $order->customer->phone ?? '',
+                "email" => $order->customer->email ?? '',
+                "address" => [
+                    "address1" => $order->customer->address ?? '',
+                    "address2" => $order->customer->address2 ?? '',
+                    "city" => $order->customer->city ?? '',
+                    "state" => $order->customer->states->name ?? '',
+                    "country" => "SG",
+                    "postcode" => $order->customer->postcode ?? ''
+                ]
+            ],
+            "parcel_job" => [
+                "is_pickup_required" => false,
+                "delivery_instructions" => $order->sales_remarks ?? '',
+                "delivery_start_date" => Carbon::now()->format('Y-m-d'),
+                "delivery_timeslot" => [
+                    "start_time" => "09:00",
+                    "end_time" => "18:00",
+                    "timezone" => "Asia/Singapore"
+                ],
+                "dimensions" => [
+                    "weight" => $totalWeight
+                ],
+                "items" => [
+                    [
+                        "item_description" => $itemDescription,
+                        "native_item_description" => "N/A",
+                        "unit_value" => $sgd_amount,
+                        "unit_weight" => $totalWeight,
+                        "product_url" => "https://www.product.url/12346.pdf",
+                        "invoice_url" => "https://www.invoice.url/12346.pdf",
+                        "hs_code" => 543111,
+                        "made_in_country" => "MY"
+                    ]
+                ]
+            ]
+        ];
+
+        // JSON for COD
+        if ($order->purchase_type == PURCHASE_TYPE_COD) {
+            $jsonArray['parcel_job']['cash_on_delivery'] = $sgd_amount;
+            $jsonArray['parcel_job']['cash_on_delivery_currency'] = "SGD";
+        }
+
+        $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
+
+        try {
+            $createNinjaVanOrder = NinjaVanInternationalTrait::createNinjaVanOrder($jsonSend, $accessToken);
+
+            if (isset($createNinjaVanOrder['tracking_number'])) {
+                $shipping->tracking_number = $createNinjaVanOrder['tracking_number'];
+                $shipping->packing_attachment = $product_list;
+                $shipping->save();
+
+                // Store currency amount into orders table
+                $order->currency_amount = $sgd_amount;
+                $order->save();
+
+                return true;
+            } else {
+                return 'Failed to create order in NinjaVan: ' . json_encode($createNinjaVanOrder);
+            }
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
     }
 
     public function get_shipping_cost_id($order)
