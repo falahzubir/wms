@@ -296,6 +296,34 @@
         </div>
     </div>
 
+    <div class="modal fade" id="uploadBulkModal" tabindex="-1" aria-labelledby="uploadBulkModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered custom-modal-size">
+            <div class="modal-content custom-modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadBulkModalLabel">Add/Update Shipping Cost</h5>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body upload-body">
+                    <p style="font-size: 15px;">Upload CSV File to add and update data in bulk. The system will
+                        automatically add new data or
+                        update the existing data.</p>
+                    <p style="font-size: 15px;">Download sample CSV file <a
+                            href="/api/weight-category/download-sample-csv" target="_blank"
+                            style="color: blue;">here</a></p>
+                    <form id="uploadBulkForm" enctype="multipart/form-data">
+                        <div class="custom-file-box me-2">
+                            <input type="file" class="form-control" id="bulkUploadFile" name="bulk_upload_file"
+                                accept=".csv">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="uploadBulk()"><small>Upload CSV</small></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <x-slot name="script">
         <script>
             let weightCategories = @json($weightCategories);
@@ -493,6 +521,61 @@
                     title: 'Oops...',
                     html: message.join('<br>'),
                 })
+            }
+
+            function showUploadBulkModal() {
+                $('#uploadBulkModal').modal('show');
+            }
+
+            function uploadBulk() {
+                let formData = new FormData(document.getElementById('uploadBulkForm'));
+                axios.post('/api/weight-category/upload-bulk', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(response => {
+                        if (response.data.status === 'success') {
+                            $('#uploadBulkModal').modal('hide');
+                            Swal.fire({
+                                icon: 'success',
+                                html: '<span style="font-size: 20px;">Shipping cost created successfully!</span>',
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        let errorMessage = 'Something went wrong. Please try again later.';
+                        let errorIcon = 'error';
+                        let errorTitle = 'Unexpected Error!';
+
+                        if (error.response.status === 422) {
+                            const errorCode = error.response.data.code;
+
+                            if (errorCode === 'NO_FILE_CHOSEN') {
+                                errorTitle = '<strong>No file chosen!</strong>';
+                                errorMessage = 'Please choose a file before uploading.';
+                                errorIcon = 'warning';
+                            } else if (errorCode === 'INVALID_DATA') {
+                                errorTitle = '<strong>Failed to upload CSV!</strong>';
+                                errorMessage = `
+                             <div class="error-message-container">Unable to process your file due to one or more error(s)</div>
+                             <div class="error-message-content">
+                             <i class="bi bi-exclamation-triangle error-icon"></i>
+                               <span class="custom-error-message">Please ensure you are using the CSV template provided, all columns are filled and free of spelling errors, then try re-uploading again.</span>
+                             </div>`;
+                                errorIcon = 'warning';
+                            }
+                        }
+
+                        Swal.fire({
+                            icon: errorIcon,
+                            title: errorTitle,
+                            html: errorMessage,
+                        });
+                    });
             }
 
         </script>
