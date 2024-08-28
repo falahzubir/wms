@@ -98,12 +98,12 @@
                     @can('weight_category.create')
                         <button class="btn btn-primary" onclick="addWeightCategory()">
                             <i class="fas fa-plus icon-spacing" style="font-weight: bold; font-size: 14px;"></i>
-                            <small>Add Shipping Cost</small>
+                            <!-- <small>Add Shipping Cost</small> -->
                         </button>
-                        <button class="btn btn-success" style="background-color: #008080;" onclick="showUploadBulkModal()">
+                        <!-- <button class="btn btn-success" style="background-color: #008080;" onclick="showUploadBulkModal()">
                             <i class="fa fa-arrow-up-from-bracket icon-spacing" style="font-size: 14px;"></i>
                             <small>Bulk Upload</small>
-                        </button>
+                        </button> -->
                     @endcan
                 </div>
             </section>
