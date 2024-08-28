@@ -8,6 +8,68 @@
         .customBtnSave {
             background-color: #7166e0;
         }
+        #uploadBulkForm {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+        .custom-input {
+            height: 50px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .custom-button {
+            height: 50px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .custom-file-box {
+            flex-grow: 0.8;
+        }
+        #uploadBulkForm button {
+            white-space: nowrap;
+        }
+        .icon-spacing {
+            margin-right: 8px;
+        }
+        .custom-modal-size {
+            max-width: 63%;
+            height: 80%;
+        }
+        .upload-body {
+            line-height: 1.5;
+            margin: 20px;
+        }
+        .error-message-container {
+            font-size: 17px;
+            text-align: middle;
+        }
+        .error-message-content {
+            background-color: #ffe5e4;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: flex;
+            align-items: flex-start;
+            text-align: left;
+        }
+        .error-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 18px;
+            color: #f24f1d;
+            vertical-align: middle;
+        }
+        .custom-btn-close {
+            width: 30px;
+            height: 30px;
+            background-size: 11px;
+        }
+        .custom-error-message {
+            font-size: 16px;
+            line-height: 1.5;
+        }
     </style>
     <section class="section">
         <div class="card p-3">
