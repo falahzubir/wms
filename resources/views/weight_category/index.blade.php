@@ -130,15 +130,6 @@
                                     <strong>{{ $row->weight_range }}</strong>
                                 </td>
                                 <td>
-                                    {{ $weightCategories->state_groups->name }}
-                                </td>
-                                <td>
-                                    {{ $shipping_cost->weight_category->weight_range }}
-                                </td>
-                                <td>
-                                    RM {{ number_format($shipping_cost->price / 100, 2) }}
-                                </td>
-                                <td>
                                     <div class="d-flex justify-content-center gap-2">
                                         @can('weight_category.delete')
                                             <button class="btn btn-danger p-1 px-2"
