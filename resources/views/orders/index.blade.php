@@ -1657,92 +1657,45 @@
                         type: type,
                     })
                     .then(function(response) {
+                        let text = inc_packing_list_result ? "Shipping label and packing list generated" : "Shipping label generated.";
+                        let title = response.data.title || 'Error!';
+                        let message = response.data.message || 'Fail to generate CN';
+                        let errors = response.data.errors || [];
 
-                        let text = inc_packing_list_result ? "Shipping label and packing list generated" :
-                            "Shipping label generated."
-                        if (response.data == 0) {
+                        if (response.data.success) {
                             Swal.fire({
-                                title: 'Error!',
-                                text: "Selected order already has CN.",
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            })
-                            return;
+                                title: 'Success!',
+                                text: text,
+                                icon: 'success',
+                                confirmButtonText: 'Download',
+                                showCancelButton: true,
+                                cancelButtonText: 'OK',
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    download_cn(checkedOrder, inc_packing_list_result, true);
+                                } else {
+                                    location.reload();
+                                }
+                            });
                         }
 
-                        if (!response.data.success) {
-                            let title = response.data.title ?? 'Error!';
-
-                            if(response.data.message !== undefined){
-                                message = response.data.message;
-                            }else if(response.data.all_fail.message !== undefined){
-                                message = response.data.all_fail.message;
-                            }
-                            else{
-                                message = 'Fail to generate CN';
-                            }
+                        if (errors.length > 0) {
+                            message = errors.map(error => error.message).join('<br>');
                             Swal.fire({
                                 title: title,
                                 html: message,
                                 icon: 'error',
                                 confirmButtonText: 'OK'
                             });
-
-                            return;
                         }
-
-                        // handle success, close or download
-                        if (response.data != null) {
-                            if (response.data.error != null) {
-                                text = "Shipping label generated.However has " + response.data.error;
-                            }
-
-                            if (response.data.all_fail) {
-                                if (typeof response.data.all_fail == "boolean") {
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: "Fail to generate CN",
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    })
-                                } else {
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: "Fail to generate CN " + response.data.all_fail,
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    })
-                                }
-
-                                return;
-                            }
-                        }
-
-                        Swal.fire({
-                            title: 'Success!',
-                            text: text,
-                            icon: 'success',
-                            confirmButtonText: 'Download',
-                            showCancelButton: true,
-                            cancelButtonText: 'Ok',
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                download_cn(checkedOrder, inc_packing_list_result, true);
-                            } else {
-                                location.reload();
-                            }
-                        });
                     })
                     .catch(function(error) {
+                        let message = 'Fail to generate CN, Please contact admin';
 
-                        if(error.data.message !== undefined){
-                            message = error.data.message;
-                        }else if(error.data.all_fail.message !== undefined){
-                            message = error.data.all_fail.message;
+                        if (error.response && error.response.data) {
+                            message = error.response.data.message || message;
                         }
-                        else{
-                            message = 'Fail to generate CN, Please contact admin';
-                        }
+
                         Swal.fire({
                             title: 'Error!',
                             html: message,
