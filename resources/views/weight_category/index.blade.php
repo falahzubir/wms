@@ -83,44 +83,6 @@
                                 value="{{ request('search') }}">
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-3 mt-3">
-                            <label class="fw-bold pb-2" for="weight-category">Weight Category</label>
-                            <select name="weight_category[]" class="form-control tomsel" id="weight-category" multiple>
-                                <option value="">Select Weight Category</option>
-                                @foreach ($weightCategories as $category)
-                                    <option value="{{ $category->id }}"
-                                        @if (in_array($category->id, request('weight_category', []))) selected @endif>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3 mt-3">
-                            <label class="fw-bold pb-2" for="courier">Courier</label>
-                            <select name="courier[]" class="form-control tomsel" id="courier" multiple>
-                                <option value="">Select Courier</option>
-                                @foreach ($couriers as $courier)
-                                    <option value="{{ $courier->id }}"
-                                        @if (in_array($courier->id, request('courier', []))) selected @endif>
-                                        {{ $courier->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3 mt-3">
-                            <label class="fw-bold pb-2" for="state_group">State Group</label>
-                            <select name="state_group_id[]" class="form-control tomsel" id="state_group" multiple>
-                                <option value="">Select State Group</option>
-                                @foreach ($stateGroups as $stateGroup)
-                                    <option value="{{ $stateGroup->id }}"
-                                        @if (in_array($stateGroup->id, request('state_group_id', []))) selected @endif>
-                                        {{ $stateGroup->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
 
                     <div class="row">
                         <div class="col-md-12 mt-3 d-flex justify-content-end">
