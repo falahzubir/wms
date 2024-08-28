@@ -130,7 +130,7 @@
                                     <strong>{{ $row->weight_range }}</strong>
                                 </td>
                                 <td>
-                                    {{ $shipping_cost->state_groups->name }}
+                                    {{ $weightCategories->state_groups->name }}
                                 </td>
                                 <td>
                                     {{ $shipping_cost->weight_category->weight_range }}
