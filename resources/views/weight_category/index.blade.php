@@ -128,7 +128,6 @@
                                 </td>
                                 <td>
                                     <strong>{{ $row->weight_range }}</strong>
-                                    {{ $shipping_cost->couriers->name }}
                                 </td>
                                 <td>
                                     {{ $shipping_cost->state_groups->name }}
