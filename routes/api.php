@@ -187,4 +187,6 @@ Route::prefix('weight-category')->group(function() {
     Route::post('store', [ShippingCostController::class, 'store_weight_category'])->middleware('can:weight_category.create');
     Route::post('update', [ShippingCostController::class, 'update_weight_category'])->middleware('can:weight_category.edit');
     Route::post('delete/{id}', [ShippingCostController::class, 'delete_weight_category'])->middleware('can:weight_category.delete');
+    Route::post('upload-bulk', [ShippingCostController::class,'upload_bulk'])->middleware(('can:weight_category.create'));
+    Route::get('download-sample-csv', [ShippingCostController::class, 'download_sample_csv'])->middleware('can:weight_category.create');
 });

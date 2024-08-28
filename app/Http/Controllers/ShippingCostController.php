@@ -6,6 +6,9 @@ use App\Models\State;
 use App\Models\StateGroup;
 use App\Models\GroupStateList;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\WeightCategory;
@@ -359,4 +362,113 @@ class ShippingCostController extends Controller
             'message' => 'Weight category not found.',
         ], 404);
     }
+
+    public function upload_bulk(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'bulk_upload_file' => 'required|file|mimes:csv,txt',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'code' => 'NO_FILE_CHOSEN',
+                'message' => 'No file chosen! Please choose a file before uploading.'
+            ], 422);
+        }
+
+        $file = $request->file('bulk_upload_file');
+        $path = $file->getRealPath();
+        $data = array_map('str_getcsv', file($path));
+
+        // Validate CSV headers
+        $headers = array_shift($data);
+        $expectedHeaders = ['Weight Category', 'Courier', 'State Group', 'Price(RM)'];
+        if ($headers !== $expectedHeaders) {
+            return response()->json([
+                'status' => 'error',
+                'code' => 'INVALID_DATA',
+                'message' => 'Failed to upload CSV! Ensure all data matches the provided template.'
+            ], 422);
+        }
+
+        // Validate all rows before making any changes to the database
+        $valid_data = [];
+        foreach ($data as $row) {
+            $weight_category_name = $row[0];
+            $courier_name = $row[1];
+            $state_group_name = $row[2];
+            $price = floatval($row[3]) * 100;
+
+            $weight_category = WeightCategory::where('name', $weight_category_name)->first();
+            $courier = Courier::where('name', $courier_name)->first();
+            $state_group = StateGroup::where('name', $state_group_name)->first();
+
+            if (!$weight_category || !$courier || !$state_group) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 'INVALID_DATA',
+                    'message' => 'Failed to upload CSV! Ensure all data matches the provided template.'
+                ], 422);
+            }
+
+            $valid_data[] = [
+                'weight_category_id' => $weight_category->id,
+                'courier_id' => $courier->id,
+                'state_group_id' => $state_group->id,
+                'price' => $price,
+            ];
+        }
+
+        foreach ($valid_data as $row) {
+            $shippingCost = ShippingCost::where('weight_category_id', $row['weight_category_id'])
+                ->where('courier_id', $row['courier_id'])
+                ->where('state_group_id', $row['state_group_id'])
+                ->first();
+
+            if ($shippingCost) {
+                $shippingCost->update([
+                    'price' => $row['price'],
+                    'updated_at' => now(),
+                ]);
+            } else {
+                ShippingCost::create([
+                    'weight_category_id' => $row['weight_category_id'],
+                    'courier_id' => $row['courier_id'],
+                    'state_group_id' => $row['state_group_id'],
+                    'price' => $row['price'],
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Shipping Cost created successfully!'
+        ]);
+    }
+
+
+    public function download_sample_csv()
+    {
+        $headers = [
+            'Weight Category',
+            'Courier',
+            'State Group',
+            'Price(RM)'
+        ];
+
+        $callback = function () use ($headers) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers);
+            fclose($file);
+        };
+
+        $responseHeaders = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="list_of_shipping_cost.csv"',
+        ];
+
+        return Response::stream($callback, 200, $responseHeaders);
+    }
+
 }
