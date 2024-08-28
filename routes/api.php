@@ -177,6 +177,12 @@ Route::prefix('state-group')->group(function() {
     Route::post('delete/{id}', [ShippingCostController::class, 'delete_state_group'])->middleware('can:state_group.delete');
 });
 
+Route::prefix('shipping-cost')->group(function() {
+    Route::post('store', [ShippingCostController::class, 'store_shipping_cost_list'])->middleware('can:shipping_cost.create');
+    Route::post('update', [ShippingCostController::class, 'update_shipping_cost_list'])->middleware('can:shipping_cost.edit');
+    Route::post('delete/{id}', [ShippingCostController::class, 'delete_shipping_cost_list'])->middleware('can:shipping_cost.delete');
+});
+
 Route::prefix('weight-category')->group(function() {
     Route::post('store', [ShippingCostController::class, 'store_weight_category'])->middleware('can:weight_category.create');
     Route::post('update', [ShippingCostController::class, 'update_weight_category'])->middleware('can:weight_category.edit');

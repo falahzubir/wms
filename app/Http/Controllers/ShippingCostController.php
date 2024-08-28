@@ -129,7 +129,7 @@ class ShippingCostController extends Controller
         ]);
     }
 
-    public function weight_category()
+    public function shipping_cost_list()
     {
         $search = request('search');
         $shippingCosts = ShippingCost::with(['state_groups', 'couriers', 'weight_category']);
@@ -150,7 +150,7 @@ class ShippingCostController extends Controller
 
         $shippingCosts = $shippingCosts->paginate(10);
 
-        return view('weight_category.index', [
+        return view('shipping_cost.index', [
             'title' => 'List of Shipping Cost',
             'shippingCosts' => $shippingCosts,
             'couriers' => Courier::all(),
@@ -160,7 +160,7 @@ class ShippingCostController extends Controller
         ]);
     }
 
-    public function store_weight_category(Request $request)
+    public function store_shipping_cost_list(Request $request)
     {
         $request->validate([
             'weight_category_id' => [
@@ -190,7 +190,7 @@ class ShippingCostController extends Controller
         ]);
     }
 
-    public function update_weight_category(Request $request)
+    public function update_shipping_cost_list(Request $request)
     {
         $request->validate([
             'weight_category_id' => [
@@ -222,7 +222,7 @@ class ShippingCostController extends Controller
         ]);
     }
 
-    public function delete_weight_category($id)
+    public function delete_shipping_cost_list($id)
     {
         $shippingCost = ShippingCost::find($id);
         $shippingCost->delete();
@@ -233,6 +233,135 @@ class ShippingCostController extends Controller
         ]);
     }
 
+    public function weight_category()
+    {
+        // Get the search keyword
+        $search = request('search');
+
+        // Query WeightCategory model
+        $weightCategories = WeightCategory::query();
+
+        // Apply search filter for category name
+        $weightCategories = $weightCategories->when(isset($search), function ($query) use ($search) {
+            $query->where('name', 'like', '%' . $search . '%');
+        });
+
+        // Apply filters for weight_category_id (if applicable)
+        $weightCategories = $weightCategories->when(request('weight_category'), function ($query) {
+            $query->whereIn('id', request('weight_category'));
+        });
+
+        // Paginate the results
+        $weightCategories = $weightCategories->paginate(10);
+
+        // Return the view with filtered weight categories
+        return view('weight_category.index', [
+            'title' => 'List of Weight Category',
+            'weightCategories' => $weightCategories,
+        ]);
+    }
+
+    public function store_weight_category(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'category_name' => 'required',
+            'min_weight' => 'required|numeric',
+            'max_weight' => 'required|numeric',
+        ]);
+
+        // Check if the category name already exists
+        if (WeightCategory::where('name', $request->category_name)->exists()) {
+            return response()->json([
+                'errors' => [
+                    'category_name' => ['*The name already exists. Try another.']
+                ]
+            ], 422);
+        }
+
+        // Convert min and max weight to grams
+        $minWeightInGrams = $request->min_weight * 1000;
+        $maxWeightInGrams = $request->max_weight * 1000;
+
+        // Create a new weight category
+        $weightCategory = WeightCategory::create([
+            'name' => $request->category_name,
+            'min_weight' => $minWeightInGrams,
+            'max_weight' => $maxWeightInGrams,
+        ]);
+
+        // Return a success response
+        return response()->json([
+            'status' => 'success',
+            'data' => $weightCategory,
+        ], 200);
+    }
+
+    public function update_weight_category(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'id' => 'required|exists:weight_categories,id',
+            'category_name' => 'required',
+            'min_weight' => 'required|numeric',
+            'max_weight' => 'required|numeric',
+        ]);
+
+        // Find the existing weight category by ID
+        $weightCategory = WeightCategory::find($request->id);
+
+        // Check if the category name already exists, but exclude the current record's name
+        if (WeightCategory::where('name', $request->category_name)->where('id', '!=', $weightCategory->id)->exists()) {
+            return response()->json([
+                'errors' => [
+                    'category_name' => ['*The name already exists. Try another.']
+                ]
+            ], 422);
+        }
+
+        // Convert min and max weight to grams
+        $minWeightInGrams = $request->min_weight * 1000;
+        $maxWeightInGrams = $request->max_weight * 1000;
+
+        // Update the weight category
+        $weightCategory->update([
+            'name' => $request->category_name,
+            'min_weight' => $minWeightInGrams,
+            'max_weight' => $maxWeightInGrams
+        ]);
+
+        // Return a success response
+        return response()->json([
+            'status' => 'success',
+            'data' => $weightCategory,
+        ], 200);
+    }
+
+    public function delete_weight_category($id)
+    {
+        // Find the existing weight category by ID
+        $weightCategory = WeightCategory::find($id);
+
+        if ($weightCategory) {
+            // Perform soft delete on shipping costs with the given weight category ID
+            ShippingCost::where('weight_category_id', $id)->delete();
+
+            // Perform soft delete on the weight category itself
+            $weightCategory->delete();
+
+            // Return a success response
+            return response()->json([
+                'status' => 'success',
+                'data' => $weightCategory,
+            ], 200);
+        }
+
+        // If the weight category is not found, return a failure response
+        return response()->json([
+            'status' => 'failure',
+            'message' => 'Weight category not found.',
+        ], 404);
+    }
 
     public function upload_bulk(Request $request)
     {
