@@ -97,7 +97,7 @@
                 <div>
                     @can('weight_category.create')
                         <button class="btn btn-primary" onclick="addWeightCategory()">
-                            <i class="fas fa-plus icon-spacing" style="font-weight: bold; font-size: 14px;"></i>
+                            <i class="fas fa-plus" style="font-weight: bold; font-size: 14px;"></i>
                             <!-- <small>Add Shipping Cost</small> -->
                         </button>
                         <!-- <button class="btn btn-success" style="background-color: #008080;" onclick="showUploadBulkModal()">
@@ -489,7 +489,7 @@
                     html: message.join('<br>'),
                 })
             }
-            
+
         </script>
     </x-slot>
 
