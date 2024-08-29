@@ -935,6 +935,10 @@ class OrderController extends Controller
      */
     public function download_order_csv(Request $request)
     {
+        // no memory limit
+        ini_set('memory_limit', '-1');
+        set_time_limit(0);
+
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
         $columnName = TemplateMain::with(['templateColumns.columns'])
             ->where('id', $request->template_id)

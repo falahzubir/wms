@@ -110,7 +110,6 @@ Trait DownloadCsvTrait
             ->selectRaw($select)
             ->whereIn('orders.id',  $order_ids)
             ->get();
-            dd($sql);
 
         $results = $sql->toArray();
 
