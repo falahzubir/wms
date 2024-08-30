@@ -2195,7 +2195,8 @@ class ShippingController extends Controller
         $message = '';
         $errors = [];
         $successCount = 0; // Track the number of successful CN generations
-        $alreadyGeneratedCount = 0; // Track the number of already generated CN
+        $generatedCount = 0; // Track the number of already generated CN
+        $shipmentHaveCN = []; // Store shipment numbers with already generated CNs
         $now = Carbon::now();
         $startOfMonth = $now->startOfMonth()->format('Y-m-d H:i:s');
         $endOfMonth = $now->endOfMonth()->format('Y-m-d H:i:s');
@@ -2287,19 +2288,20 @@ class ShippingController extends Controller
                 }
             } elseif (!is_null($shipping->tracking_number) && (!is_null($shipping->attachment) || $shipping->attachment !== '')) {
                 // Scenario 4: Already generated consignment note
-                $alreadyGeneratedCount++;
+                $generatedCount++;
+                $shipmentHaveCN[] = $shipmentNumber;
             }
         }
 
         // Build the final response message based on the outcomes
-        if ($successCount > 0 || $alreadyGeneratedCount > 0) {
+        if ($successCount > 0 || $generatedCount > 0) {
             // Success alert with detailed information
             $message = "Consignment Note Generation Completed!<br>";
             if ($successCount > 0) {
                 $message .= "$successCount orders have successfully generated CNs.<br>";
             }
-            if ($alreadyGeneratedCount > 0) {
-                $message .= "$alreadyGeneratedCount orders already have generated CNs.";
+            if ($generatedCount > 0) {
+                $errors[] = ['message' => "Already has a generated CN:<br>" . implode('<br>', $shipmentHaveCN)];
             }
         }
 
