@@ -26,6 +26,6 @@ class GroupStateList extends Model
 
     public function state_groups()
     {
-        return $this->hasMany(StateGroup::class);
+        return $this->belongsTo(StateGroup::class, 'state_group_id');
     }
 }
