@@ -2254,11 +2254,10 @@ class ShippingController extends Controller
             } elseif (!is_null($shipping->tracking_number) && (is_null($shipping->attachment) || $shipping->attachment === '')) {
                 // Scenario 3: `tracking_number` is not null but `attachment` is null or empty
                 // Retry mechanism for generating the waybill
-                $retryAttempts = 5;
                 $retryDelay = 60; // 60 seconds
                 $generateWayBill = null;
 
-                for ($attempt = 0; $attempt < $retryAttempts; $attempt++) {
+                while (true) {
                     $generateWayBill = NinjaVanInternationalTrait::generateWayBill($shipping->tracking_number, $accessToken);
                     if ($generateWayBill->status() == 200) {
                         $pdfContent = $generateWayBill->body();
@@ -2273,7 +2272,7 @@ class ShippingController extends Controller
 
                             $CNS['order_ids'][] = $order->id;
                             $CNS['attachment'][] = $shipping->attachment;
-                            break; // Exit the retry loop on success
+                            break; // Exit the loop on success
                         } else {
                             $errors[] = ['message' => 'Failed to save waybill PDF.'];
                         }

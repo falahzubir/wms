@@ -1662,6 +1662,19 @@
                         let message = response.data.message || 'Fail to generate CN';
                         let errors = response.data.errors || [];
 
+                        // Prioritize error alerts
+                        if (errors.length > 0) {
+                            message = errors.map(error => error.message).join('<br>');
+                            Swal.fire({
+                                title: title,
+                                html: message,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                            return; // Exit the function to prevent showing success alert
+                        }
+
+                        // If no errors, show the success alert
                         if (response.data.success) {
                             Swal.fire({
                                 title: 'Success!',
@@ -1677,13 +1690,11 @@
                                     location.reload();
                                 }
                             });
-                        }
-
-                        if (errors.length > 0) {
-                            message = errors.map(error => error.message).join('<br>');
+                        } else {
+                            // Handle the case where success is false, but no specific errors are provided
                             Swal.fire({
                                 title: title,
-                                html: message,
+                                text: message,
                                 icon: 'error',
                                 confirmButtonText: 'OK'
                             });
@@ -1701,7 +1712,7 @@
                             html: message,
                             icon: 'error',
                             confirmButtonText: 'OK'
-                        })
+                        });
                     })
             }
 
