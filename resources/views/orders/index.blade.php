@@ -1646,6 +1646,11 @@
                     return;
                 }
 
+                if (type == 'nv-int') {
+                    requestCNNINJA(type, checkedOrder, inc_packing_list_result);
+                    return;
+                }
+
                 requestCN(type, checkedOrder, inc_packing_list_result);
 
             } //end of generateCN
@@ -1932,6 +1937,63 @@
 
             }
 
+            const requestCNNINJA = (type, checkedOrder, inc_packing_list_result) => {
+                axios.post('/api/request-cn', {
+                    order_ids: checkedOrder,
+                    type: type,
+                }).then(function(response) {
+                    console.log(response);
+                    
+                    let { success, message, errors, data } = response.data;
+
+                    // If success is true and there are CNs generated
+                    if (success && data && data.order_ids && data.order_ids.length > 0) {
+                        let text = `CN generated successfully for ${data.order_ids.length} orders.`;
+                        Swal.fire({
+                            title: 'Success!',
+                            text: text,
+                            icon: 'success',
+                            confirmButtonText: 'Download',
+                            showCancelButton: true,
+                            cancelButtonText: 'OK',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                download_cn(checkedOrder, inc_packing_list_result, true);
+                            } else {
+                                location.reload();
+                            }
+                        });
+                    } else if (errors && errors.length > 0) {
+                        Swal.fire({
+                            title: 'Info!',
+                            html: `${errors.map(e => e.message).join('<br>')}`,
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            html: 'Failed to generate CNs. Please contact admin.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }).catch(function(error) {
+                    let message = 'Fail to generate CN, Please contact admin';
+
+                    if (error.response && error.response.data) {
+                        message = error.response.data.message || message;
+                    }
+
+                    Swal.fire({
+                        title: 'Error!',
+                        html: message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            };
+            
             function approveAsShipped(checkedOrders) {
                 axios({
                         url: '/api/orders/approve-for-shipping',
