@@ -1965,15 +1965,15 @@
                         });
                     } else if (errors && errors.length > 0) {
                         Swal.fire({
-                            title: 'Info!',
+                            title: 'Error!',
                             html: `${errors.map(e => e.message).join('<br>')}`,
-                            icon: 'warning',
+                            icon: 'error',
                             confirmButtonText: 'OK'
                         });
                     } else {
                         Swal.fire({
                             title: 'Error!',
-                            html: 'Failed to generate CNs. Please contact admin.',
+                            html: errors.message,
                             icon: 'error',
                             confirmButtonText: 'OK'
                         });

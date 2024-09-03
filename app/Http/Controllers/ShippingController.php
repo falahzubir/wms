@@ -2267,19 +2267,22 @@ class ShippingController extends Controller
             } elseif (!is_null($shipping->tracking_number) && (!is_null($shipping->attachment) || $shipping->attachment !== '')) {
                 // Scenario 4: Already generated consignment note
                 $generatedCount++;
-                $shipmentHaveCN[] = $shipmentNumber;
             }
         }
 
         if ($generatedCount > 0) {
-            $errors[] = ['message' => "Already has a generated CN:<br>" . implode('<br>', $shipmentHaveCN)];
+            $errors[] = ['message' => "Selected order already generate CN."];
         }
 
-        $CNS['attachment'] = array_filter($CNS['attachment'], function($value) {
-            return !is_null($value);
-        });
+        if (isset($CNS['attachment'])) {
+            $CNS['attachment'] = array_filter($CNS['attachment'], function($value) {
+                return !is_null($value);
+            });
+        }
 
-        $CNS['order_ids'] = array_unique($CNS['order_ids']);
+        if (isset($CNS['order_ids'])) {
+            $CNS['order_ids'] = array_unique($CNS['order_ids']);
+        }
 
         return response()->json([
             'success' => true,
