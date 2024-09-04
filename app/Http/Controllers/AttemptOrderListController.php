@@ -58,7 +58,7 @@ class AttemptOrderListController extends Controller
                 });
             })
             ->paginate(10);
-        
+
         return view('attempt_order_list.index', [
             'title' => 'Attempt Order List',
             'shippingEvents' => $shippingEvents
@@ -117,7 +117,7 @@ class AttemptOrderListController extends Controller
                     $order = $shipping->order;
 
                     // Retrieve the created_at date from order_logs where order_status_id is 5
-                    $shippingDate = $order->logs->where('order_status_id', ORDER_STATUS_SHIPPING)->sortByDesc('id')->first();
+                    $shippingDate = $order->logs->where('order_status_id', ORDER_STATUS_SHIPPING)->where('remarks', 'First Milestone from Phantom')->sortByDesc('id')->first();
 
                     // Retrieve the created_at date from order_logs where order_status_id is 6
                     $deliveryDate = $order->logs->where('order_status_id', ORDER_STATUS_DELIVERED)->sortByDesc('id')->first();
@@ -154,7 +154,7 @@ class AttemptOrderListController extends Controller
                     if ($events->count() > 0) {
                         $firstEvent = $events->first();
                         $firstReason = $reasons->first();
-                        
+
                         // Ensure $firstReason is not null before accessing properties
                         if (!is_null($firstReason)) {
                             $firstAttemptDate = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y') ?? '';
@@ -165,11 +165,11 @@ class AttemptOrderListController extends Controller
                             $firstAttemptDescription = $firstEvent->description ?? '';
                             $firstAttemptDateAndTime = \Carbon\Carbon::parse($firstEvent->attempt_time)->format('d/m/Y h:i A') ?? '';
                         }
-                        
+
                         if ($events->count() > 1) {
                             $secondEvent = $events->skip(1)->first();
                             $secondReason = $reasons->skip(1)->first();
-                            
+
                             // Ensure $secondReason is not null before accessing properties
                             if (!is_null($secondReason)) {
                                 $secondAttemptDate = \Carbon\Carbon::parse($secondEvent->attempt_time)->format('d/m/Y') ?? '';
@@ -180,7 +180,7 @@ class AttemptOrderListController extends Controller
                             if ($events->count() > 2) {
                                 $thirdEvent = $events->skip(2)->first();
                                 $thirdReason = $reasons->skip(2)->first();
-                                
+
                                 // Ensure $thirdReason is not null before accessing properties
                                 if (!is_null($thirdReason)) {
                                     $thirdAttemptDate = \Carbon\Carbon::parse($thirdEvent->attempt_time)->format('d/m/Y') ?? '';
@@ -190,7 +190,7 @@ class AttemptOrderListController extends Controller
                             }
                         }
                     }
-                    
+
                     // Purchase Type
                     switch ($order->purchase_type) {
                         case '1':
@@ -229,7 +229,7 @@ class AttemptOrderListController extends Controller
                         $thirdAttemptDate, // 3rd Attempt Date
                         $thirdAttemptDateAndTime, // Failed 3rd Attempt Date & Time
                         $thirdAttemptDescription, // 3rd Attempt Status
-                        $shippingDate->created_at->format('d/m/Y') ?? '', // Delivery Date
+                        $deliveryDate != null ? $deliveryDate->created_at->format('d/m/Y') : '', // Delivery Date
                         $events->count(), // Number Attempt
                         $order->customer->city ?? '' // City
                     ]);
