@@ -2228,29 +2228,57 @@
             }
 
             function download_csv(checkedOrder, chosenTemplate) {
-                // const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
-                // const param_obj = queryStringToJSON(params);
+                const startTime = new Date();
                 if (checkedOrder.length == 0) {
                     checkedOrder = @json($order_ids);
                 }
-                axios.post('/api/download-order-csv', {
+                Swal.fire({
+                    title: 'Please wait while we are processing your request!',
+                    html: 'Downloading...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    },
+                });
+                axios({
+                    url: '/api/download-order-csv',
+                    method: 'POST',
+                    data: {
                         order_ids: checkedOrder,
                         template_id: chosenTemplate,
-                    })
-                    .then(function(response) {
-                        // handle success, close or download
-                        if (response != null && response.data != null) {
-                            let a = document.createElement('a');
-                            a.download = response.data.file_name;
-                            a.target = '_blank';
-                            a.href = window.location.origin + "/storage/" + response.data.file_name;
-                            a.click();
-                        }
-                    })
-                    .catch(function(error) {
-                        // handle error
-                        console.log(error);
-                    })
+                    },
+                    responseType: 'blob', // Important for handling file downloads
+                })
+                .then(function(response) {
+
+                    const endTime = new Date();
+                    const elapsedTime = endTime - startTime; // Calculate elapsed time in milliseconds
+                    console.log(`Elapsed time: ${elapsedTime} ms`);
+                    Swal.close();
+                    // Create a Blob from the response
+                    const blob = new Blob([response.data], { type: 'text/csv' });
+
+                    // Create a link element, set the download attribute
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'list_of_orders.csv';  // Specify the file name
+                    document.body.appendChild(link);
+
+                    // Simulate a click event to download the file
+                    link.click();
+
+                    // Clean up the DOM
+                    document.body.removeChild(link);
+                })
+                .catch(function(error) {
+                    // Handle error
+                    Swal.fire({
+                        title: 'Error!',
+                        html: error.responseJSON.message,
+                        allowOutsideClick: false,
+                        icon: 'error',
+                    });
+                });
             }
 
             document.querySelectorAll('.tomsel').forEach((el) => {
