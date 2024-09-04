@@ -14,7 +14,7 @@ class AttemptOrderListController extends Controller
     public function index(Request $request)
     {
         // Start with the ShippingEvent model
-        $shippingEvents = ShippingEvent::with(['shipping.order.customer', 'shipping.order.courier'])
+        $shippingEvents = ShippingEvent::with(['shipping.order', 'shipping.events', 'shipping.order.company', 'shipping.order.customer', 'shipping.order.courier', 'shipping.order.items', 'shipping.order.items.product', 'shipping.order.logs'])
             ->whereIn('id', function ($query) {
                 $query->select(DB::raw('MAX(id)'))
                     ->from('shipping_events')
@@ -213,12 +213,12 @@ class AttemptOrderListController extends Controller
                         $order->courier->name ?? '', // Courier
                         $purchaseType, // Purchase Type
                         "'" . $shipping->tracking_number ?? '', // Tracking Number
-                        $shippingDate->created_at->format('d/m/Y') ?? '', // Shipping Date
+                        $shippingDate != null ? $shippingDate->created_at->format('d/m/Y') : '', // Shipping Date
                         $order->customer->postcode ?? '', // Postcode
                         MY_STATES[$order->customer->state] ?? '', // State
-                        $shippingDate->created_at->format('d/m/Y') ?? '', // Pickup Date
-                        $shippingDate->created_at->format('h:i A') ?? '', // Pickup Time
-                        $shippingDate->created_at->format('D') ?? '', // Pickup Day
+                        $shippingDate != null ? $shippingDate->created_at->format('d/m/Y') : '', // Pickup Date
+                        $shippingDate != null ? $shippingDate->created_at->format('h:i A') : '', // Pickup Time
+                        $shippingDate != null ? $shippingDate->created_at->format('D') : '', // Pickup Day
                         $firstAttemptDate, // Start Date
                         $firstAttemptDate, // First Attempt Date
                         $firstAttemptDateAndTime, // Failed 1st Attempt Date & Time
@@ -249,7 +249,8 @@ class AttemptOrderListController extends Controller
     // Method to fetch data based on existing filter logic
     private function getDataForCSV(Request $request)
     {
-        return ShippingEvent::with(['shipping.order.customer', 'shipping.order.courier'])
+        // 'shipping.order', 'shipping.events', 'shipping.order.company', 'shipping.order.customer', 'shipping.order.courier', 'shipping.order.items', 'shipping.order.items.product', 'shipping.order.logs'
+        return ShippingEvent::with(['shipping.order', 'shipping.events', 'shipping.order.company', 'shipping.order.customer', 'shipping.order.courier', 'shipping.order.items', 'shipping.order.items.product', 'shipping.order.logs'])
             ->whereIn('id', function ($query) {
                 $query->select(DB::raw('MAX(id)'))
                     ->from('shipping_events')
