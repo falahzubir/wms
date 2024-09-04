@@ -296,8 +296,6 @@
                         });
                         console.error(error);
                     });
-                // e.disabled = false;
-                // e.innerHTML = '<i class="bi bi-cloud-download"></i> Download CSV';
             }
         </script>
         @endcan
