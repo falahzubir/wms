@@ -117,7 +117,7 @@ class AttemptOrderListController extends Controller
                     $order = $shipping->order;
 
                     // Retrieve the created_at date from order_logs where order_status_id is 5
-                    $shippingDate = $order->logs->where('order_status_id', ORDER_STATUS_SHIPPING)->where('remarks', 'First Milestone from Phantom')->sortByDesc('id')->first();
+                    $shippingDate = $order->logs->where('order_status_id', ORDER_STATUS_SHIPPING)->where('remarks', 'First Milestone from Phantom')->sortBy('created_at')->first();
 
                     // Retrieve the created_at date from order_logs where order_status_id is 6
                     $deliveryDate = $order->logs->where('order_status_id', ORDER_STATUS_DELIVERED)->sortByDesc('id')->first();
