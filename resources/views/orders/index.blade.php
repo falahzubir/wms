@@ -256,7 +256,7 @@
                             <button class="btn btn-info" id="add-to-bucket-btn"><i class="bi bi-basket"></i> Add to
                                 Bucket</button>
                         @endif
-                        @if (in_array(ACTION_GENERATE_CN, $actions)) 
+                        @if (in_array(ACTION_GENERATE_CN, $actions))
                             @can('consignment_note.generate')
                                 <button class="btn btn-warning" id="generate-cn-btn"><i
                                         class="bi bi-file-earmark-ruled"></i> Generate CN</button>
@@ -397,10 +397,10 @@
                                                     {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->first()->created_at->format('d/m/Y H:i') }}
                                                 </div>
                                             @endif
-                                            @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->count() > 0)
+                                            @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->where('remarks', 'First Milestone from Phantom')->count() > 0)
                                                 <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                     data-bs-placement="right" data-bs-original-title="Date Shipping">
-                                                    {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->first()->created_at->format('d/m/Y H:i') }}
+                                                    {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->where('remarks', 'First Milestone from Phantom')->first()->created_at->format('d/m/Y H:i') }}
                                                 </div>
                                             @endif
                                             @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->count() > 0)
@@ -1241,7 +1241,7 @@
                 });
             }
 
-            // generate shipping label 
+            // generate shipping label
             @if (in_array(ACTION_GENERATE_CN, $actions))
                 document.querySelector('#generate-cn-btn').onclick = async function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
@@ -1657,7 +1657,7 @@
                         type: type,
                     })
                     .then(function(response) {
-                        console.log(response);
+
                         let text = inc_packing_list_result ? "Shipping label and packing list generated" :
                             "Shipping label generated."
                         if (response.data == 0) {
@@ -1672,8 +1672,15 @@
 
                         if (!response.data.success) {
                             let title = response.data.title ?? 'Error!';
-                            let message = response.data.message ?? 'Fail to generate CN';
-                            
+
+                            if(response.data.message !== undefined){
+                                message = response.data.message;
+                            }else if(response.data.all_fail.message !== undefined){
+                                message = response.data.all_fail.message;
+                            }
+                            else{
+                                message = 'Fail to generate CN';
+                            }
                             Swal.fire({
                                 title: title,
                                 html: message,
@@ -1727,9 +1734,18 @@
                         });
                     })
                     .catch(function(error) {
+
+                        if(error.data.message !== undefined){
+                            message = error.data.message;
+                        }else if(error.data.all_fail.message !== undefined){
+                            message = error.data.all_fail.message;
+                        }
+                        else{
+                            message = 'Fail to generate CN, Please contact admin';
+                        }
                         Swal.fire({
                             title: 'Error!',
-                            html: `Fail to generate CN, Please contact admin`,
+                            html: message,
                             icon: 'error',
                             confirmButtonText: 'OK'
                         })
@@ -2186,29 +2202,57 @@
             }
 
             function download_csv(checkedOrder, chosenTemplate) {
-                // const params = `{!! $_SERVER['QUERY_STRING'] ?? '' !!}`;
-                // const param_obj = queryStringToJSON(params);
+                const startTime = new Date();
                 if (checkedOrder.length == 0) {
                     checkedOrder = @json($order_ids);
                 }
-                axios.post('/api/download-order-csv', {
+                Swal.fire({
+                    title: 'Please wait while we are processing your request!',
+                    html: 'Downloading...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    },
+                });
+                axios({
+                    url: '/api/download-order-csv',
+                    method: 'POST',
+                    data: {
                         order_ids: checkedOrder,
                         template_id: chosenTemplate,
-                    })
-                    .then(function(response) {
-                        // handle success, close or download
-                        if (response != null && response.data != null) {
-                            let a = document.createElement('a');
-                            a.download = response.data.file_name;
-                            a.target = '_blank';
-                            a.href = window.location.origin + "/storage/" + response.data.file_name;
-                            a.click();
-                        }
-                    })
-                    .catch(function(error) {
-                        // handle error
-                        console.log(error);
-                    })
+                    },
+                    responseType: 'blob', // Important for handling file downloads
+                })
+                .then(function(response) {
+
+                    const endTime = new Date();
+                    const elapsedTime = endTime - startTime; // Calculate elapsed time in milliseconds
+                    console.log(`Elapsed time: ${elapsedTime} ms`);
+                    Swal.close();
+                    // Create a Blob from the response
+                    const blob = new Blob([response.data], { type: 'text/csv' });
+
+                    // Create a link element, set the download attribute
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'list_of_orders.csv';  // Specify the file name
+                    document.body.appendChild(link);
+
+                    // Simulate a click event to download the file
+                    link.click();
+
+                    // Clean up the DOM
+                    document.body.removeChild(link);
+                })
+                .catch(function(error) {
+                    // Handle error
+                    Swal.fire({
+                        title: 'Error!',
+                        html: error.responseJSON.message,
+                        allowOutsideClick: false,
+                        icon: 'error',
+                    });
+                });
             }
 
             document.querySelectorAll('.tomsel').forEach((el) => {

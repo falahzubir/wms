@@ -183,7 +183,7 @@ class ShippingController extends Controller
      * @param Request $request
      * @return response
      */
-    public function dhl_label($order_ids)
+    public function dhl_label($order_ids) 
     {
 
         $url = $this->dhl_label_url;
@@ -340,7 +340,7 @@ class ShippingController extends Controller
 
             $response = Http::withBody($json, 'application/json')->post($url);
 
-            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost);
+            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost); 
 
             if ($dhl_store != null) {
 
@@ -531,69 +531,70 @@ class ShippingController extends Controller
     public function dhl_store($orders, $json, $shipping_cost)
     {
         $data = [];
-        $tracking_no[] = [];
+        $tracking_no = [];
+        $content = [];
+        $errors = [];
         $json = json_decode($json);
 
+        // Loop through the label responses
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
-            if (isset($label->responseStatus)) {
-                if (isset($label->responseStatus->message)) {
-                    if ($label->responseStatus->message != "SUCCESS") {
-                        if (isset($label->responseStatus->messageDetails)) {
-
-                            Log::error('DHL Error: ' . $label->shipmentID);
-                            return response([
-                                'success' => false,
-                                'message' => $label->responseStatus->messageDetails[0]->messageDetail . '. Shipment ID: ' . $label->shipmentID
-                            ]);
-                        }
-                    }
+            if (isset($label->responseStatus) && $label->responseStatus->message !== "SUCCESS") {
+                if (isset($label->responseStatus->messageDetails)) {
+                    Log::error('DHL Error: ' . $label->shipmentID);
+                    $errors[] = $label->responseStatus->messageDetails[0]->messageDetail . '<br> Shipment ID: ' . $label->shipmentID;
                 }
+                continue; // Skip this label but continue processing other labels
             }
 
             $shipment_id = $label->shipmentID;
-            // logger($shipment_id);
-            $tracking_no[$shipment_id] = $label->deliveryConfirmationNo;
-            $content[$shipment_id] = $label->content;
+            $tracking_no[$shipment_id] = $label->deliveryConfirmationNo ?? null;
+            $content[$shipment_id] = $label->content ?? null;
         }
 
-        // logger($tracking_no);
-
+        // Process each order
         foreach ($orders as $order) {
+            $shipment_number = shipment_num_format($order);
 
-            // $product_list = $this->generate_product_description($order->id);
-
-            if (!isset($tracking_no[shipment_num_format($order)])) {
+            if (!isset($tracking_no[$shipment_number]) || empty($content[$shipment_number])) {
                 continue;
             }
 
-            if ($content[shipment_num_format($order)] == null) {
-                continue;
-            }
+            $data[$order->id] = [
+                'tracking_number' => $tracking_no[$shipment_number],
+                'order_id' => $order->id,
+                'courier' => "dhl-ecommerce",
+                'shipment_number' => $shipment_number,
+                'created_by' => auth()->user()->id ?? 1,
+                'attachment' => 'labels/' . $shipment_number . '.pdf',
+                'total_weight' => $shipping_cost[$order->id]['total_weight'],
+                'shipping_cost_id' => $shipping_cost[$order->id]['shipping_cost_id'],
+            ];
 
-            $data[$order->id]['tracking_number'] = $tracking_no[shipment_num_format($order)];
-            //if empty tracking number, remove from array and skip
-            if (empty($data[$order->id]['tracking_number'])) {
-                unset($data[$order->id]);
-                continue;
-            }
-            $data[$order->id]['order_id'] = $order->id;
-            $data[$order->id]['courier'] = "dhl-ecommerce";
-            $data[$order->id]['shipment_number'] = shipment_num_format($order);
-            $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
-            $data[$order->id]['attachment'] = 'labels/' . shipment_num_format($order) . '.pdf';
-            $data[$order->id]['total_weight'] = $shipping_cost[$order->id]['total_weight'];
-            $data[$order->id]['shipping_cost_id'] = $shipping_cost[$order->id]['shipping_cost_id'];
-
-            // $data[$order->id]['packing_attachment'] = $product_list;
-            //store label to storage
-            Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($content[shipment_num_format($order)]));
+            // Store label to storage
+            Storage::put('public/labels/' . $shipment_number . '.pdf', base64_decode($content[$shipment_number]));
             set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by DHL");
+
+            // Add order to successful orders list
+            $successful_orders[] = $order;
         }
 
-        Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+        // Store successful CNs
+        if (!empty($data)) {
+            Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+        }
 
-        //insert product_shipping
-        $this->store_shipping_products($orders);
+        // Insert product shipping for successful orders
+        if (!empty($successful_orders)) {
+            $this->store_shipping_products($successful_orders);
+        }
+
+        // Return error messages if any
+        if (!empty($errors)) {
+            return response([
+                'success' => false,
+                'message' => $errors[0], // Return the first error message to inform the user
+            ]);
+        }
     }
 
     /**
@@ -622,8 +623,12 @@ class ShippingController extends Controller
             Storage::put('public/labels/' . $shipment_num . '-' . $piece->shipmentPieceID . '.pdf', base64_decode($piece->content));
             $i++;
         }
-        Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
-        set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL, multiple parcel");
+
+        // Store successful CNs
+        if (!empty($data)) {
+            Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+            set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL, multiple parcel");
+        }
     }
 
     public function download_cn(Request $request)
@@ -2203,7 +2208,8 @@ class ShippingController extends Controller
         $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])
             ->whereIn('id', $order_ids)
             ->whereDoesntHave('shippings', function ($query) {
-                $query->where('courier', NINJAVAN_INTERNATIONAL_ID);
+                $query->where('courier', NINJAVAN_INTERNATIONAL_ID)
+                    ->whereNotNull('tracking_number');
             })
             ->get();
 

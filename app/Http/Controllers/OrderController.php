@@ -24,6 +24,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Http\Traits\DownloadCsvTrait;
 
 class OrderController extends Controller
 {
@@ -934,39 +935,18 @@ class OrderController extends Controller
      */
     public function download_order_csv(Request $request)
     {
+        // no memory limit
+        ini_set('memory_limit', '-1');
+        set_time_limit(0);
+
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
+        $columnName = TemplateMain::with(['templateColumns.columns'])
+            ->where('id', $request->template_id)
+            ->first();
+        $headers = explode(', ', $columnName->template_header);
 
-        // Fetch orders along with sales_id
-        $orders = $this->index()->whereIn('id', $request->order_ids)->get();
+        return DownloadCsvTrait::query($headers, $columnName, $request->order_ids, $fileName);
 
-        // Get headers from
-        $headers = $this->get_header($request->template_id);
-
-        $columnName = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
-            ->join('column_mains', 'template_columns.column_main_id', '=', 'column_mains.id')
-            ->select(
-                'template_mains.*',
-                'template_columns.*',
-                'column_mains.*'
-            )
-            ->where('template_mains.delete_status', '!=', 1)
-            ->where('template_columns.deleted_at', null)
-            ->whereIn('template_columns.template_main_id', function($query) use ($request) {
-                $query->select('id')
-                    ->from('template_mains')
-                    ->where('id', $request->template_id);
-            })
-            ->orderBy('template_columns.column_position')
-            ->get();
-
-        // Get order PIC from BOS
-        $staffMain = $this->get_order_pic($orders->pluck('sales_id')->toArray(), $orders->pluck('company_id')->toArray());
-
-        Excel::store(new OrderExport($orders, $headers, $columnName, $staffMain), "public/" . $fileName);
-
-        return response([
-            "file_name" => $fileName,
-        ]);
     }
 
     private function get_header($templateId)
