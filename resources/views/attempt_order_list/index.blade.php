@@ -7,7 +7,6 @@
 
                     <!-- Search -->
                     <form id="search-form" class="row g-3" action="{{ url()->current() }}">
-                        @csrf
                         <div class="col-md-12 mb-2">
                             <input type="text" class="form-control" placeholder="Search" name="search"
                                 value="{{ old('search', Request::get('search')) }}">
@@ -127,15 +126,15 @@
                                             <div>
                                                 @if ($event->shipping->order->courier->code == 'dhl-ecommerce' || $event->shipping->order->courier->code == 'dhl')
                                                     <i class="bi bi-truck"></i>
-                                                    <a class="text-success"
+                                                    <a class="text-success" target="_blank"
                                                         href="https://www.dhl.com/us-en/home/tracking/tracking-ecommerce.html?submit=1&tracking-id={{ $event->shipping->tracking_number }}">{{ $event->shipping->tracking_number }}</a>
                                                 @elseif ($event->shipping->order->courier->code == 'poslaju' || $event->shipping->order->courier->code == 'posmalaysia')
                                                     <i class="bi bi-truck"></i>
-                                                    <a class="text-success"
+                                                    <a class="text-success" target="_blank"
                                                         href="https://tracking.pos.com.my/tracking/{{ $event->shipping->tracking_number }}">{{ $event->shipping->tracking_number }}</a>
                                                 @else
                                                     <i class="bi bi-truck"></i>
-                                                    <a class="text-success"
+                                                    <a class="text-success" target="_blank"
                                                         href="https://www.tracking.my/">{{ $event->shipping->tracking_number }}</a>
                                                 @endif
                                             </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\OrderLog;
 use App\Models\Shipping;
 use App\Models\ShippingEvent;
 use Illuminate\Http\Request;
@@ -41,12 +42,13 @@ class AttemptOrderListController extends Controller
                     $dateFrom = \Carbon\Carbon::parse($request->date_from)->startOfDay();
                     $dateTo = \Carbon\Carbon::parse($request->date_to)->endOfDay();
 
-                    $query->whereHas('logs', function ($subQuery) use ($dateFrom, $dateTo) {
-                        $subQuery->whereRaw('order_logs.id IN (SELECT MAX(id) FROM order_logs GROUP BY order_id)')
-                            ->whereBetween('created_at', [
-                                $dateFrom,
-                                $dateTo
-                            ]);
+                    $log_ids = OrderLog::where('order_status_id', ORDER_STATUS_SHIPPING)
+                        ->select(DB::raw('MIN(id) as id'), DB::raw('MIN(created_at) as created_at'))
+                        ->groupBy('order_id')->havingRaw('MIN(created_at) between ? and ?', [$dateFrom, $dateTo])
+                        ->get()->pluck('id')->toArray();
+
+                    $query->whereHas('logs', function ($subQuery) use ($log_ids) {
+                        $subQuery->whereIn('id', $log_ids);
                     });
                 }
             })
@@ -276,9 +278,13 @@ class AttemptOrderListController extends Controller
                     $dateFrom = \Carbon\Carbon::parse($request->date_from)->startOfDay();
                     $dateTo = \Carbon\Carbon::parse($request->date_to)->endOfDay();
 
-                    $query->whereHas('logs', function ($subQuery) use ($dateFrom, $dateTo) {
-                        $subQuery->whereRaw('order_logs.id IN (SELECT MAX(id) FROM order_logs GROUP BY order_id)')
-                            ->whereBetween('created_at', [$dateFrom, $dateTo]);
+                    $log_ids = OrderLog::where('order_status_id', ORDER_STATUS_SHIPPING)
+                        ->select(DB::raw('MIN(id) as id'), DB::raw('MIN(created_at) as created_at'))
+                        ->groupBy('order_id')->havingRaw('MIN(created_at) between ? and ?', [$dateFrom, $dateTo])
+                        ->get()->pluck('id')->toArray();
+
+                    $query->whereHas('logs', function ($subQuery) use ($log_ids) {
+                        $subQuery->whereIn('id', $log_ids);
                     });
                 }
             })
