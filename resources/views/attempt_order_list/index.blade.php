@@ -7,7 +7,6 @@
 
                     <!-- Search -->
                     <form id="search-form" class="row g-3" action="{{ url()->current() }}">
-                        @csrf
                         <div class="col-md-12 mb-2">
                             <input type="text" class="form-control" placeholder="Search" name="search"
                                 value="{{ old('search', Request::get('search')) }}">
@@ -62,9 +61,9 @@
                     {{-- Button --}}
                     <div class="card-title text-end">
                         @can('order.download')
-                            <a href="{{ route('download_csv', Request::query()) }}" class="btn btn-secondary">
+                            <button class="btn btn-secondary" onclick="downloadCSV(this);">
                                 <i class="bi bi-cloud-download"></i> Download CSV
-                            </a>
+                            </button>
                         @endcan
                     </div>
 
@@ -127,15 +126,15 @@
                                             <div>
                                                 @if ($event->shipping->order->courier->code == 'dhl-ecommerce' || $event->shipping->order->courier->code == 'dhl')
                                                     <i class="bi bi-truck"></i>
-                                                    <a class="text-success"
+                                                    <a class="text-success" target="_blank"
                                                         href="https://www.dhl.com/us-en/home/tracking/tracking-ecommerce.html?submit=1&tracking-id={{ $event->shipping->tracking_number }}">{{ $event->shipping->tracking_number }}</a>
                                                 @elseif ($event->shipping->order->courier->code == 'poslaju' || $event->shipping->order->courier->code == 'posmalaysia')
                                                     <i class="bi bi-truck"></i>
-                                                    <a class="text-success"
+                                                    <a class="text-success" target="_blank"
                                                         href="https://tracking.pos.com.my/tracking/{{ $event->shipping->tracking_number }}">{{ $event->shipping->tracking_number }}</a>
                                                 @else
                                                     <i class="bi bi-truck"></i>
-                                                    <a class="text-success"
+                                                    <a class="text-success" target="_blank"
                                                         href="https://www.tracking.my/">{{ $event->shipping->tracking_number }}</a>
                                                 @endif
                                             </div>
@@ -259,6 +258,45 @@
     </section>
 
     <x-slot name="script">
+        @can('order.download')
+        <script>
+            const downloadCSV = (e) => {
+                event.preventDefault();
+                e.disabled = true;
+                //download animation
+                e.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Downloading...';
 
+                const formData = new FormData(document.getElementById('search-form'));
+                const nowDate = new Date();
+                nowDate.setHours(nowDate.getHours() + 8);
+                const nowDateUnix = nowDate.toISOString().slice(0, 10).replace(/-/g, '') + nowDate.toISOString().slice(11, 19).replace(/:/g, '');
+
+                axios.get(`{{ route('download_csv') }}`, {
+                    params: Object.fromEntries(formData),
+                    responseType: 'blob',
+                })
+                    .then((response) => {
+                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', `${nowDateUnix}_attempt_order_list.csv`);
+                        document.body.appendChild(link);
+                        link.click();
+                        e.disabled = false;
+                        e.innerHTML = '<i class="bi bi-cloud-download"></i> Download CSV';
+                    })
+                    .catch((error) => {
+                        e.disabled = false;
+                        e.innerHTML = '<i class="bi bi-cloud-download"></i> Download CSV';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Something went wrong!',
+                        });
+                        console.error(error);
+                    });
+            }
+        </script>
+        @endcan
     </x-slot>
 </x-layout>

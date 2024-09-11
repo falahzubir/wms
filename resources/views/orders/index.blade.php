@@ -397,10 +397,10 @@
                                                     {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_READY_TO_SHIP)->first()->created_at->format('d/m/Y H:i') }}
                                                 </div>
                                             @endif
-                                            @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->count() > 0)
+                                            @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->where('remarks', 'First Milestone from Phantom')->count() > 0)
                                                 <div style="font-size: 0.75rem;" data-bs-toggle="tooltip"
                                                     data-bs-placement="right" data-bs-original-title="Date Shipping">
-                                                    {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->first()->created_at->format('d/m/Y H:i') }}
+                                                    {{ $order->logs->where('order_status_id', '=', ORDER_STATUS_SHIPPING)->where('remarks', 'First Milestone from Phantom')->first()->created_at->format('d/m/Y H:i') }}
                                                 </div>
                                             @endif
                                             @if ($order->logs->where('order_status_id', '=', ORDER_STATUS_DELIVERED)->count() > 0)
