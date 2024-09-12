@@ -80,7 +80,7 @@ Route::prefix('shippings')->group(function () {
     Route::post('check-multiple-parcels', [ShippingController::class, 'check_multiple_parcels']);
     Route::post('update-tracking', [ShippingController::class, 'update_bulk_tracking']);
     Route::post('first-milestone', [ShippingController::class, 'first_milestone']);
-    Route::post('attempt-order-list', [ShippingController::class, 'attempt_order_list']);
+    Route::post('attempt-order-milestone', [ShippingController::class, 'attempt_order_milestone']);
     Route::post('delivered-milestone', [ShippingController::class, 'delivered_milestone']);
     Route::post('return-ongoing-milestone', [ShippingController::class, 'return_ongoing_milestone']);
     Route::post('return-delivered-milestone', [ShippingController::class, 'return_delivered_milestone']);
@@ -177,8 +177,16 @@ Route::prefix('state-group')->group(function() {
     Route::post('delete/{id}', [ShippingCostController::class, 'delete_state_group'])->middleware('can:state_group.delete');
 });
 
+Route::prefix('shipping-cost')->group(function() {
+    Route::post('store', [ShippingCostController::class, 'store_shipping_cost_list'])->middleware('can:shipping_cost.create');
+    Route::post('update', [ShippingCostController::class, 'update_shipping_cost_list'])->middleware('can:shipping_cost.edit');
+    Route::post('delete/{id}', [ShippingCostController::class, 'delete_shipping_cost_list'])->middleware('can:shipping_cost.delete');
+});
+
 Route::prefix('weight-category')->group(function() {
     Route::post('store', [ShippingCostController::class, 'store_weight_category'])->middleware('can:weight_category.create');
     Route::post('update', [ShippingCostController::class, 'update_weight_category'])->middleware('can:weight_category.edit');
     Route::post('delete/{id}', [ShippingCostController::class, 'delete_weight_category'])->middleware('can:weight_category.delete');
+    Route::post('upload-bulk', [ShippingCostController::class,'upload_bulk'])->middleware(('can:weight_category.create'));
+    Route::get('download-sample-csv', [ShippingCostController::class, 'download_sample_csv'])->middleware('can:weight_category.create');
 });

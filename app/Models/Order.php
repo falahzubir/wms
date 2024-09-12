@@ -10,7 +10,7 @@ class Order extends Model
     use HasFactory;
     protected $guarded = [];
 
-    protected $appends = ['is_multiple_carton'];
+    protected $appends = ['is_multiple_carton', 'sum_item_quantity', 'sum_item_weight'];
 
     public function scopeActive($query)
     {
@@ -54,7 +54,7 @@ class Order extends Model
 
     public function logs()
     {
-        return $this->hasMany(OrderLog::class);
+        return $this->hasMany(OrderLog::class)->where('status', IS_ACTIVE);
     }
 
     public function company()
@@ -101,5 +101,21 @@ class Order extends Model
     public function claim()
     {
         return $this->hasOne(Claim::class);
+    }
+
+    public function getSumItemQuantityAttribute()
+    {
+        return $this->items->sum('quantity');
+    }
+
+    public function getSumItemWeightAttribute()
+    {
+        $items = $this->items;
+        $weight = 0;
+        foreach ($items as $item) {
+            $weight += $item->product->weight;
+        }
+
+        return $weight;
     }
 }

@@ -96,6 +96,7 @@ if(!defined('ACTION_UPLOAD_TRACKING_BULK')) define('ACTION_UPLOAD_TRACKING_BULK'
 if(!defined('ACTION_APPROVE_AS_SHIPPED')) define('ACTION_APPROVE_AS_SHIPPED', 'approve-as-shipped');
 if(!defined('ACTION_DOWNLOAD_CLAIM')) define('ACTION_DOWNLOAD_CLAIM', 'download-claim');
 if(!defined('ACTION_ARRANGE_SHIPMENT')) define('ACTION_ARRANGE_SHIPMENT', 'arrange-shipment');
+if(!defined('ACTION_GENERATE_PACKING')) define('ACTION_GENERATE_PACKING', 'generate-packing');
 
 // box minimum quantity
 if(!defined('BOX_MINIMUM_QUANTITY')) define('BOX_MINIMUM_QUANTITY', 5);
@@ -125,6 +126,7 @@ if(!defined('ORDER_FILTER_STATE')) define('ORDER_FILTER_STATE', 9);
 if(!defined('ORDER_FILTER_PLATFORM')) define('ORDER_FILTER_PLATFORM', 10);
 if(!defined('ORDER_FILTER_STATUS')) define('ORDER_FILTER_STATUS', 11);
 if(!defined('ORDER_FILTER_BUCKET_CATEGORY')) define('ORDER_FILTER_BUCKET_CATEGORY', 12);
+if(!defined('ORDER_FILTER_SALES_TYPE')) define('ORDER_FILTER_SALES_TYPE', 13);
 
 // date types
 if(!defined('ORDER_DATE_TYPES')) define('ORDER_DATE_TYPES', [
@@ -141,6 +143,7 @@ if(!defined('CLAIM_DATE_TYPES')) define('CLAIM_DATE_TYPES', [
 if(!defined('DHL_ID')) define('DHL_ID',15);
 if(!defined('POSMALAYSIA_ID')) define('POSMALAYSIA_ID', 76);
 if(!defined('EMZIEXPRESS_ID')) define('EMZIEXPRESS_ID', 100);
+if(!defined('NINJAVAN_INTERNATIONAL_ID')) define('NINJAVAN_INTERNATIONAL_ID', 77);
 
 // courier id which will be auto shipping, other will have to set menually
 if(!defined('AUTO_SHIPPING_COURIER')) define('AUTO_SHIPPING_COURIER', [15]);
@@ -155,6 +158,7 @@ if(!defined('DHL_PREFIX')) define('DHL_PREFIX',[
     1=>'MY', // EH // MYCKZ
     2=>'MY', // ED // MYGPK
     3=>'MY', // QA
+    4=>'SG', // EI
 ]);
 if(!defined('DHL_CLIENT_ID')) define('DHL_CLIENT_ID','LTE2MDAwOTg0NTI=');
 if(!defined('DHL_CLIENT_PASS')) define('DHL_CLIENT_PASS','MjAzMDI5MTU');
@@ -197,7 +201,7 @@ if(!defined('CLAIM_STATUS_PENDING')) define('CLAIM_STATUS_PENDING', 0);
 if(!defined('CLAIM_STATUS_COMPLETED')) define('CLAIM_STATUS_COMPLETED', 1);
 
 if(!defined('SHOPEE_LIVE_PARTNER_ID')) define('SHOPEE_LIVE_PARTNER_ID', '2004184');
-if(!defined('SHOPEE_LIVE_PARTNER_KEY')) define('SHOPEE_LIVE_PARTNER_KEY', 'e9b00cc3924edee9d1675f60116adc56bbc5e9f3bfd241d463e84bc695b86e03');
+if(!defined('SHOPEE_LIVE_PARTNER_KEY')) define('SHOPEE_LIVE_PARTNER_KEY', '6e75676c4b776841546a6f7a7962784859564d47576656476365654b4f5a4264');
 
 if(!defined('SETTING_TYPE_GENERAL')) define('SETTING_TYPE_GENERAL', 1);
 if(!defined('SETTING_TYPE_SCAN')) define('SETTING_TYPE_SCAN', 2);
@@ -210,3 +214,14 @@ if(!defined('SETTING_DATA_TYPE_JSON')) define('SETTING_DATA_TYPE_JSON', 'json');
 
 if(!defined('TIKTOK_APP_KEY')) define('TIKTOK_APP_KEY', '68r1ubo74bujf');
 if(!defined('TIKTOK_APP_SECRET')) define('TIKTOK_APP_SECRET', 'f0e77dbfcdce30efe2b144dc0ebc99c1b35499e5');
+
+if(!defined('SALES_TYPE')) define('SALES_TYPE', [
+    1 => 'From Campaign',
+    2 => 'Repeat Order',
+    3 => 'Direct Order',
+    4 => 'Clone Order',
+    5 => 'Affiliate',
+    6 => 'Gift Order',
+    7 => 'Event Order',
+    8 => 'Repost Order'
+]);

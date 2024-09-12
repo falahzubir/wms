@@ -3,27 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Exports\OrderExport;
+use App\Http\Traits\BucketTrait;
+use App\Models\AlternativePostcode;
+use App\Models\CategoryMain;
 use App\Models\Company;
 use App\Models\Courier;
 use App\Models\Customer;
 use App\Models\OperationalModel;
 use App\Models\Order;
+use App\Models\OrderEvent;
 use App\Models\OrderItem;
-use App\Models\Product;
-use App\Models\Shipping;
 use App\Models\OrderLog;
+use App\Models\Product;
+use App\Models\Setting;
+use App\Models\Shipping;
+use App\Models\TemplateMain;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Route;
-use App\Http\Traits\ApiTrait;
-use App\Http\Traits\BucketTrait;
-use App\Models\OrderEvent;
-use App\Models\AlternativePostcode;
-use App\Models\CategoryMain;
-use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
-use App\Models\TemplateMain;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Http\Traits\DownloadCsvTrait;
 
 class OrderController extends Controller
 {
@@ -36,7 +37,7 @@ class OrderController extends Controller
     public function index()
     {
         return Order::with([
-            'customer', 'items', 'items.product', 'shippings', 'paymentType',
+            'customer', 'items', 'items.product', 'shippings.shipping_product', 'shippings.shipping_cost.state_groups', 'shippings.shipping_cost.weight_category', 'paymentType',
             'bucket', 'batch', 'company', 'courier', 'operationalModel',
             'logs' => function ($query) {
                 $query->orderBy('id', 'desc');
@@ -129,6 +130,10 @@ class OrderController extends Controller
             }
         }
 
+        if (!in_array(ORDER_FILTER_SALES_TYPE, $exclude)) {
+            $filter_data['sales_type'] = SALES_TYPE;
+        }
+
         return (object) $filter_data;
     }
 
@@ -201,7 +206,7 @@ class OrderController extends Controller
             'order_ids' => $orders->pluck('id')->toArray(),
             'orders' => $orders->paginate(PAGINATE_LIMIT),
             'filter_data' => $this->filter_data_exclude([ORDER_FILTER_CUSTOMER_TYPE, ORDER_FILTER_TEAM]),
-            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING],
+            'actions' => [ACTION_ADD_TO_BUCKET, ACTION_GENERATE_CN, ACTION_DOWNLOAD_CN, ACTION_DOWNLOAD_ORDER, ACTION_UPLOAD_TRACKING_BULK, ACTION_GENERATE_PICKING, ACTION_GENERATE_PACKING],
         ]);
     }
 
@@ -411,6 +416,7 @@ class OrderController extends Controller
         $data['payment_type'] = isset($webhook['payment_type']) ? $webhook['payment_type'] : null;
         $data['processed_at'] = $webhook['dt_processing'] ?? null;
         $data['third_party_sn'] = $webhook['third_party_sn'] ?? null;
+        $data['sales_type'] = $webhook['sales_type'] ?? null;
         $data['is_active'] = IS_ACTIVE;
 
         $assigned_bucket = $this->assignBucket($data);
@@ -850,6 +856,10 @@ class OrderController extends Controller
             $query->whereIn('status', $request->statuses);
         });
 
+        $orders->when($request->filled('sales_types'), function ($query) use ($request) {
+            $query->whereIn('sales_type', $request->sales_types);
+        });
+
         return $orders;
     }
 
@@ -925,39 +935,18 @@ class OrderController extends Controller
      */
     public function download_order_csv(Request $request)
     {
+        // no memory limit
+        ini_set('memory_limit', '-1');
+        set_time_limit(0);
+
         $fileName = date('Ymdhis') . '_list_of_orders.csv';
+        $columnName = TemplateMain::with(['templateColumns.columns'])
+            ->where('id', $request->template_id)
+            ->first();
+        $headers = explode(', ', $columnName->template_header);
 
-        // Fetch orders along with sales_id
-        $orders = $this->index()->whereIn('id', $request->order_ids)->get();
+        return DownloadCsvTrait::query($headers, $columnName, $request->order_ids, $fileName);
 
-        // Get headers from
-        $headers = $this->get_header($request->template_id);
-
-        $columnName = TemplateMain::join('template_columns', 'template_mains.id', '=', 'template_columns.template_main_id')
-            ->join('column_mains', 'template_columns.column_main_id', '=', 'column_mains.id')
-            ->select(
-                'template_mains.*',
-                'template_columns.*',
-                'column_mains.*'
-            )
-            ->where('template_mains.delete_status', '!=', 1)
-            ->where('template_columns.deleted_at', null)
-            ->whereIn('template_columns.template_main_id', function($query) use ($request) {
-                $query->select('id')
-                    ->from('template_mains')
-                    ->where('id', $request->template_id);
-            })
-            ->orderBy('template_columns.column_position')
-            ->get();
-
-        // Get order PIC from BOS
-        $staffMain = $this->get_order_pic($orders->pluck('sales_id')->toArray(), $orders->pluck('company_id')->toArray());
-
-        Excel::store(new OrderExport($orders, $headers, $columnName, $staffMain), "public/" . $fileName);
-
-        return response([
-            "file_name" => $fileName,
-        ]);
     }
 
     private function get_header($templateId)
@@ -1155,6 +1144,171 @@ class OrderController extends Controller
             // Handle the case where the status is not recognized
             return response()->json(['error' => 'Invalid status'], 400);
         }
+    }
+
+    // Check CN and bucket batch for generate packing
+    public function check_cn_generate_packing(Request $request)
+    {
+        // Validate the request to ensure orders are provided
+        $request->validate([
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'exists:orders,id'  // Ensure each order_id exists in the orders table
+        ]);
+
+        $order_ids = $request->input('order_ids');
+
+        // Check for orders with null bucket_batch_id
+        $bucket_batch_id = Order::whereIn('id', $order_ids)
+            ->whereNull('bucket_batch_id')
+            ->get();
+
+        if($bucket_batch_id->count() > 0){
+            return response()->json(['data' => 1]);
+        }
+
+        // Check for orders with null attachments
+        $attachment = Order::whereIn('id', $order_ids)
+            ->whereDoesntHave('shippings')
+            ->get();
+
+        if($attachment->count() > 0){
+            return response()->json(['data' => 2]);
+        }
+
+        return response()->json(['data' => 0]);
+    }
+
+    // Generate Packing
+    public function generate_packing(Request $request)
+    {
+        // Validate the request to ensure orders are provided
+        $request->validate([
+            'orders' => 'required|array'
+        ]);
+
+        $orders = $request->input('orders');
+
+        // Fetch data for Generate Packing based on selected orders
+        $data = $this->get_generate_packing_data($orders);
+
+        // Generate Packing
+        $response = new StreamedResponse(function () use ($data, $orders) {
+            $handle = fopen('php://output', 'w');
+
+            // Add headers
+            fputcsv($handle, [
+                'Product',
+                'Order(s)',
+            ]);
+
+            $productCounts = [];
+
+            // Add data rows
+            foreach ($data as $row) {
+                $products = $row->items ? $row->items->map(function($item) {
+                    return $item->product->code . ' [' . $item->quantity . ']';
+                })->implode(', ') : '';
+
+                if (isset($productCounts[$products])) {
+                    $productCounts[$products]++;
+                } else {
+                    $productCounts[$products] = 1;
+                }
+            }
+
+            // Function to extract the quantity from the product code
+            $extractQuantity = function($productCode) {
+                preg_match('/\[(\d+)\]/', $productCode, $matches);
+                return $matches ? (int)$matches[1] : 0;
+            };
+
+            // Function to extract the core product codes from the product code string
+            $extractCoreProducts = function($productCode) {
+                $coreProducts = [];
+                preg_match_all('/(\w+) \[\d+\]/', $productCode, $matches);
+                if ($matches && isset($matches[1])) {
+                    $coreProducts = $matches[1];
+                }
+                return $coreProducts;
+            };
+
+            // Group and sort products by the number of products and then by core product codes and quantity
+            $sortedProducts = function($products) use ($extractCoreProducts, $extractQuantity) {
+                $groupedProducts = [];
+
+                // Group products by their core product codes
+                foreach ($products as $productCode => $count) {
+                    $coreProducts = $extractCoreProducts($productCode);
+                    $numProducts = count($coreProducts);
+                    $primaryProduct = $coreProducts[0] ?? '';
+                    $secondaryProduct = $coreProducts[1] ?? '';
+                    $tertiaryProduct = $coreProducts[2] ?? '';
+
+                    $groupKey = $numProducts . '|' . $primaryProduct . '|' . $secondaryProduct . '|' . $tertiaryProduct;
+
+                    if (!isset($groupedProducts[$groupKey])) {
+                        $groupedProducts[$groupKey] = [];
+                    }
+                    $groupedProducts[$groupKey][] = [
+                        'productCode' => $productCode,
+                        'count' => $count,
+                        'quantity' => $extractQuantity($productCode)
+                    ];
+                }
+
+                // Sort each group by number of products first, then primary, secondary, and tertiary products
+                uksort($groupedProducts, function($a, $b) {
+                    list($numA, $primaryA, $secondaryA, $tertiaryA) = explode('|', $a);
+                    list($numB, $primaryB, $secondaryB, $tertiaryB) = explode('|', $b);
+
+                    if ($primaryA == $primaryB) {
+                        return $numA <=> $numB;
+                    }
+                    return strcmp($primaryA, $primaryB);
+                });
+
+                return $groupedProducts;
+            };
+
+            $sortedProducts = $sortedProducts($productCounts);
+
+            // Write the sorted products to the CSV
+            foreach ($sortedProducts as $group) {
+                foreach ($group as $product) {
+                    fputcsv($handle, [
+                        $product['productCode'],
+                        $product['count'],
+                    ]);
+                }
+            }
+
+            fclose($handle);
+        });
+
+        // Set order status for each order
+        foreach ($orders as $orderId) {
+            $order = Order::find($orderId); // Fetch the order object by its ID
+            if ($order) {
+                set_order_status($order, ORDER_STATUS_PACKING, "Generate packing list");
+            } else {
+                // Handle the case where the order is not found (optional)
+                Log::warning("Order with ID $orderId not found.");
+            }
+        }
+
+        return $response;
+    }
+
+    private function get_generate_packing_data(array $orders)
+    {
+        // Fetch orders based on the selected order IDs and load related items and products
+        return Order::whereIn('id', $orders)
+            ->whereNotNull('bucket_batch_id')
+            ->whereHas('shippings', function ($query) {
+                $query->whereNotNull('attachment');
+            })
+            ->with(['items.product'])
+            ->get();
     }
 
 }

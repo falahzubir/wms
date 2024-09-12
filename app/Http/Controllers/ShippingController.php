@@ -2,30 +2,38 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\Company;
-use App\Models\OrderLog;
-use App\Models\Shipping;
-use App\Models\OrderItem;
-use Illuminate\Log\Logger;
-use App\Models\AccessToken;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use App\Http\Controllers\api\ShippingApiController;
+use App\Http\Traits\EmziExpressTrait;
+use App\Http\Traits\NinjaVanInternationalTrait;
 use App\Http\Traits\ShopeeTrait;
 use App\Http\Traits\TiktokTrait;
 use App\Imports\ShippingsImport;
+use App\Models\AccessToken;
+use App\Models\Company;
+use App\Models\ExchangeRate;
+use App\Models\GroupStateList;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\OrderLog;
+use App\Models\Product;
+use App\Models\Shipping;
+// use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
+use App\Models\ShippingCost;
+use App\Models\ShippingDocumentTemplate;
+use App\Models\ShippingProduct;
+use App\Models\WeightCategory;
+// use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Log;
-// use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Karriere\PdfMerge\PdfMerge as PDFMerger;
 use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
-use App\Http\Traits\EmziExpressTrait;
-use Illuminate\Support\Facades\Storage;
-use App\Models\ShippingDocumentTemplate;
-use Karriere\PdfMerge\PdfMerge as PDFMerger;
-use App\Http\Controllers\api\ShippingApiController;
 
 class ShippingController extends Controller
 {
@@ -116,6 +124,9 @@ class ShippingController extends Controller
             case ('emzi-express'):
                 return $this->emzi_express_cn($request->order_ids);
                 break;
+            case ('nv-int'):
+                return $this->ninjavan_international($request->order_ids);
+                break;
             default:
                 return response()->json([
                     'status' => 'error',
@@ -172,7 +183,7 @@ class ShippingController extends Controller
      * @param Request $request
      * @return response
      */
-    public function dhl_label($order_ids)
+    public function dhl_label($order_ids) 
     {
 
         $url = $this->dhl_label_url;
@@ -238,8 +249,17 @@ class ShippingController extends Controller
                 $order_count[$company_id] = 0;
             }
 
+            $shipping_cost = [];
             foreach ($orders_dhl as $order) {
 
+                //calculate total weight product
+                $shipping_cost_id = $this->get_shipping_cost_id($order);
+                $shipping_cost[$order->id]['total_weight'] = 0;
+                $shipping_cost[$order->id]['shipping_cost_id'] = null;
+                if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+                {
+                    $shipping_cost[$order->id] = $shipping_cost_id;
+                }
                 $package_description = "";
                 foreach ($order->items as $items) {
                     $package_description .= $items->product->name . ", ";
@@ -248,73 +268,71 @@ class ShippingController extends Controller
 
                 $total_price = $order->total_price > 0 ? $order->total_price / 100 : null;
 
-                if ($order->company_id == $access_token->company_id) {
-
-                    $second_phone_num = '';
-                    //if ED
-                    if ($order->company_id == 2) {
-                        //If secondary phone number existed
-                        if ($order->customer->phone_2 != null) {
-                            $second_phone_num = $order->customer->phone_2 . " (HQ NO: 60122843214)";
-                        }
-                        //if not existed
-                        else {
-                            $second_phone_num = "(HQ NO: 60122843214)";
-                        }
-                    } else {//if EH
-                        //If secondary phone number existed
-                        if ($order->customer->phone_2 != null) {
-                            $second_phone_num = $order->customer->phone_2 . ' (PIC: ' . $order->sold_by . ')';
-                        }
-                        //if not existed
-                        else {
-                            $second_phone_num = '(PIC: ' . $order->sold_by . ')';
-                        }
+                $second_phone_num = '';
+                //if ED
+                if ($order->company_id == 2) {
+                    //If secondary phone number existed
+                    if ($order->customer->phone_2 != null) {
+                        $second_phone_num = $order->customer->phone_2 . " (HQ NO: 60122843214)";
                     }
-                    $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
-                        'consigneeAddress' => [
-                            // 'companyName' => get_shipping_remarks($order),
-                            // 'name' => $order->customer->name,
-                            'name' => substr($order->customer->name, 0, 30),
-                            'address1' => $order->customer->address,
-                            // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
-                            'address2' => "-",
-                            // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
-                            'address3' => $second_phone_num,
-                            'city' => $order->customer->city,
-                            'state' => MY_STATES[$order->customer->state],
-                            'country' => "MY",
-                            'district' => $order->customer->district ?? null,
-                            'postCode' => $order->customer->postcode,
-                            'phone' => $order->customer->phone,
-                            'email' => $order->customer->email,
-                            'idNumber' => null,
-                            'idType' => null,
-                        ],
-                        'shipmentID' => shipment_num_format($order, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
-                        'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
-                        'deliveryConfirmationNo' => null, //not used
-                        'packageDesc' => substr($this->package_description($order), 0, 50), // required
-                        'totalWeight' => get_order_weight($order), // mandatory, optional if product code is PDR
-                        'totalWeightUOM' => "G",
-                        'dimensionUOM' => "cm", //mandatory if height, length, width is not null
-                        'height' => null, //mandatory if dimensionUOM is not null
-                        'length' => null, //mandatory if dimensionUOM is not null
-                        'width' => null, //mandatory if dimensionUOM is not null
-                        'customerReference1' => null, //optional
-                        'customerReference2' => null, //optional
-                        'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
-                        'contentIndicator' => null, //mandatory if product include lithium battery
-                        'codValue' => $order->purchase_type == 1 ? $total_price : null, //optional
-                        'insuranceValue' => null, //optional
-                        'freightCharge' => null, //optional
-                        'totalValue' => null, //optional for domestic
-                        'currency' => "MYR", //3-char currency code
-                        'remarks' => get_shipping_remarks($order), //optional
-                        'deliveryOption' => "C", //only C is supported
-                        'isMult' => "false", //true: multiple pieces, false: single piece
-                    ];
+                    //if not existed
+                    else {
+                        $second_phone_num = "(HQ NO: 60122843214)";
+                    }
+                } else {//if EH
+                    //If secondary phone number existed
+                    if ($order->customer->phone_2 != null) {
+                        $second_phone_num = $order->customer->phone_2 . ' (PIC: ' . $order->sold_by . ')';
+                    }
+                    //if not existed
+                    else {
+                        $second_phone_num = '(PIC: ' . $order->sold_by . ')';
+                    }
                 }
+                $data['labelRequest']['bd']['shipmentItems'][$order_count[$order->company_id]] = [
+                    'consigneeAddress' => [
+                        // 'companyName' => get_shipping_remarks($order),
+                        // 'name' => $order->customer->name,
+                        'name' => substr($order->customer->name, 0, 30),
+                        'address1' => $order->customer->address,
+                        // 'address2' => $order->company_id == 2 ? "HQ NO: 60122843214" : "-",
+                        'address2' => "-",
+                        // 'address3' => $order->company_id == 2 ? "HQ NO: 60122843214" : $order->sold_by,
+                        'address3' => $second_phone_num,
+                        'city' => $order->customer->city,
+                        'state' => MY_STATES[$order->customer->state],
+                        'country' => "MY",
+                        'district' => $order->customer->district ?? null,
+                        'postCode' => $order->customer->postcode,
+                        'phone' => $order->customer->phone,
+                        'email' => $order->customer->email,
+                        'idNumber' => null,
+                        'idType' => null,
+                    ],
+                    'shipmentID' => shipment_num_format($order, $access_token), //order_num_format($order); //must not repeated in 90 days, Accepted special characters : ~ _ \ .
+                    'returnMode' => "01", //01: return to registered address, 02: return to pickup address (ad-hoc pickup only), 03: return to new address
+                    'deliveryConfirmationNo' => null, //not used
+                    'packageDesc' => substr($this->package_description($order), 0, 50), // required
+                    'totalWeight' => get_order_weight($order), // mandatory, optional if product code is PDR
+                    'totalWeightUOM' => "G",
+                    'dimensionUOM' => "cm", //mandatory if height, length, width is not null
+                    'height' => null, //mandatory if dimensionUOM is not null
+                    'length' => null, //mandatory if dimensionUOM is not null
+                    'width' => null, //mandatory if dimensionUOM is not null
+                    'customerReference1' => null, //optional
+                    'customerReference2' => null, //optional
+                    'productCode' => "PDO", //PDO: Parcel Domestic, PDR: Parcel Domestic Return, PDD: Parcel Domestic Document, PDD: Parcel Domestic Document Return
+                    'contentIndicator' => null, //mandatory if product include lithium battery
+                    'codValue' => $order->purchase_type == 1 ? $total_price : null, //optional
+                    'insuranceValue' => null, //optional
+                    'freightCharge' => null, //optional
+                    'totalValue' => null, //optional for domestic
+                    'currency' => "MYR", //3-char currency code
+                    'remarks' => get_shipping_remarks($order), //optional
+                    'deliveryOption' => "C", //only C is supported
+                    'isMult' => "false", //true: multiple pieces, false: single piece
+                ];
+
                 $order_count[$order->company_id]++;
             }
 
@@ -322,7 +340,7 @@ class ShippingController extends Controller
 
             $response = Http::withBody($json, 'application/json')->post($url);
 
-            $dhl_store = $this->dhl_store($orders_dhl, $response);
+            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost); 
 
             if ($dhl_store != null) {
 
@@ -510,66 +528,73 @@ class ShippingController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function dhl_store($orders, $json)
+    public function dhl_store($orders, $json, $shipping_cost)
     {
         $data = [];
-        $tracking_no[] = [];
+        $tracking_no = [];
+        $content = [];
+        $errors = [];
         $json = json_decode($json);
 
+        // Loop through the label responses
         foreach ($json->labelResponse->bd->labels ?? [] as $label) {
-            if (isset($label->responseStatus)) {
-                if (isset($label->responseStatus->message)) {
-                    if ($label->responseStatus->message != "SUCCESS") {
-                        if (isset($label->responseStatus->messageDetails)) {
-
-                            Log::error('DHL Error: ' . $label->shipmentID);
-                            return response([
-                                'success' => false,
-                                'message' => $label->responseStatus->messageDetails[0]->messageDetail . '. Shipment ID: ' . $label->shipmentID
-                            ]);
-                        }
-                    }
+            if (isset($label->responseStatus) && $label->responseStatus->message !== "SUCCESS") {
+                if (isset($label->responseStatus->messageDetails)) {
+                    Log::error('DHL Error: ' . $label->shipmentID);
+                    $errors[] = $label->responseStatus->messageDetails[0]->messageDetail . '<br> Shipment ID: ' . $label->shipmentID;
                 }
+                continue; // Skip this label but continue processing other labels
             }
 
             $shipment_id = $label->shipmentID;
-            // logger($shipment_id);
-            $tracking_no[$shipment_id] = $label->deliveryConfirmationNo;
-            $content[$shipment_id] = $label->content;
+            $tracking_no[$shipment_id] = $label->deliveryConfirmationNo ?? null;
+            $content[$shipment_id] = $label->content ?? null;
         }
 
-        // logger($tracking_no);
-
+        // Process each order
         foreach ($orders as $order) {
+            $shipment_number = shipment_num_format($order);
 
-            // $product_list = $this->generate_product_description($order->id);
-
-            if (!isset($tracking_no[shipment_num_format($order)])) {
+            if (!isset($tracking_no[$shipment_number]) || empty($content[$shipment_number])) {
                 continue;
             }
 
-            if ($content[shipment_num_format($order)] == null) {
-                continue;
-            }
+            $data[$order->id] = [
+                'tracking_number' => $tracking_no[$shipment_number],
+                'order_id' => $order->id,
+                'courier' => "dhl-ecommerce",
+                'shipment_number' => $shipment_number,
+                'created_by' => auth()->user()->id ?? 1,
+                'attachment' => 'labels/' . $shipment_number . '.pdf',
+                'total_weight' => $shipping_cost[$order->id]['total_weight'],
+                'shipping_cost_id' => $shipping_cost[$order->id]['shipping_cost_id'],
+            ];
 
-            $data[$order->id]['tracking_number'] = $tracking_no[shipment_num_format($order)];
-            //if empty tracking number, remove from array and skip
-            if (empty($data[$order->id]['tracking_number'])) {
-                unset($data[$order->id]);
-                continue;
-            }
-            $data[$order->id]['order_id'] = $order->id;
-            $data[$order->id]['courier'] = "dhl-ecommerce";
-            $data[$order->id]['shipment_number'] = shipment_num_format($order);
-            $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
-            $data[$order->id]['attachment'] = 'labels/' . shipment_num_format($order) . '.pdf';
-            // $data[$order->id]['packing_attachment'] = $product_list;
-            //store label to storage
-            Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($content[shipment_num_format($order)]));
-            set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL");
+            // Store label to storage
+            Storage::put('public/labels/' . $shipment_number . '.pdf', base64_decode($content[$shipment_number]));
+            set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by DHL");
+
+            // Add order to successful orders list
+            $successful_orders[] = $order;
         }
 
-        Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+        // Store successful CNs
+        if (!empty($data)) {
+            Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+        }
+
+        // Insert product shipping for successful orders
+        if (!empty($successful_orders)) {
+            $this->store_shipping_products($successful_orders);
+        }
+
+        // Return error messages if any
+        if (!empty($errors)) {
+            return response([
+                'success' => false,
+                'message' => $errors[0], // Return the first error message to inform the user
+            ]);
+        }
     }
 
     /**
@@ -598,8 +623,12 @@ class ShippingController extends Controller
             Storage::put('public/labels/' . $shipment_num . '-' . $piece->shipmentPieceID . '.pdf', base64_decode($piece->content));
             $i++;
         }
-        Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
-        set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL, multiple parcel");
+
+        // Store successful CNs
+        if (!empty($data)) {
+            Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+            set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL, multiple parcel");
+        }
     }
 
     public function download_cn(Request $request)
@@ -911,12 +940,12 @@ class ShippingController extends Controller
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function attempt_order_list(Request $request)
+    public function attempt_order_milestone(Request $request)
     {
         $request->validate([
             'tracking_id' => 'required|exists:shippings,tracking_number',
             'attempt_status' => 'required|string',
-            'description' => 'required|string',
+            // 'description' => 'required|string',
             'attempt_time' => 'required|date',
         ]);
 
@@ -1039,7 +1068,11 @@ class ShippingController extends Controller
         $array_data = ($request->input('cn_data'));
 
         // for now support only dhl-ecommerce and posmalaysia
-        if ($request->input('courier_id') == DHL_ID) {
+        if($request->input('courier_id') == DHL_ID){
+            if(count($array_data) === 1)
+            {
+                return $this->dhl_label_mult_cn($order_id, $array_data); // for dhl orders
+            }
             return $this->dhl_label_single($order_id, $array_data); // for dhl orders
         } elseif ($request->input('courier_id') == POSMALAYSIA_ID) {
             $posmalaysia = new \App\Http\Controllers\ThirdParty\PosMalaysiaController();
@@ -1108,7 +1141,16 @@ class ShippingController extends Controller
 
         foreach ($array_data as $key => $cn) {
 
-            $product_list = $this->generate_multiple_product_description($cn);
+            //calculate total weight product
+            $shipping_cost_id = $this->get_shipping_cost_multiple($order, $cn);
+            $shipping_cost[$order->id]['total_weight'] = 0;
+            $shipping_cost[$order->id]['shipping_cost_id'] = null;
+            if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+            {
+                $shipping_cost[$order->id] = $shipping_cost_id;
+            }
+            // $product_list = $this->generate_multiple_product_description($cn);
+            $product_list = '';
             //calculate COD amount
             $codAmmount = ($remainCodAmmount > MAX_DHL_COD_PER_PARCEL) ? MAX_DHL_COD_PER_PARCEL : $remainCodAmmount;
             $remainCodAmmount -= $codAmmount;
@@ -1195,7 +1237,7 @@ class ShippingController extends Controller
 
             $response = Http::withBody($data, 'application/json')->post($url);
             // $dhl_store = ['test'];
-            $dhl_store = $this->dhl_store_for_mult($order, $response, $key, $product_list);
+            $dhl_store = $this->dhl_store_for_mult($order, $response, $key, $product_list, $cn, $shipping_cost);
         }
         if (!empty($dhl_store)) {
             return response()->json([
@@ -1218,7 +1260,7 @@ class ShippingController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function dhl_store_for_mult($order, $json, $num_cn, $product_list)
+    public function dhl_store_for_mult($order, $json, $num_cn, $product_list , $cn, $shipping_cost)
     {
         $data = [];
         $tracking_no[] = [];
@@ -1251,6 +1293,8 @@ class ShippingController extends Controller
         $data[$order->id]['created_by'] = auth()->user()->id ?? 1;
         $data[$order->id]['attachment'] = 'labels/' . shipment_num_format_mult($order, $num_cn) . '.pdf';
         $data[$order->id]['packing_attachment'] = $product_list;
+        $data[$order->id]['total_weight'] = $shipping_cost[$order->id]['total_weight'];
+        $data[$order->id]['shipping_cost_id'] = $shipping_cost[$order->id]['shipping_cost_id'];
 
         // store label to storage
         Storage::put('public/labels/' . shipment_num_format_mult($order, $num_cn) . '.pdf', base64_decode($content[shipment_num_format_mult($order, $num_cn)]));
@@ -1258,6 +1302,9 @@ class ShippingController extends Controller
         set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL");
 
         Shipping::upsert($data, ['order_id'], ['courier', 'shipment_number', 'created_by']);
+
+        //insert product_shipping
+        $this->store_shipping_products_multiple($order, $cn);
     }
 
     /**
@@ -1300,7 +1347,10 @@ class ShippingController extends Controller
         $order->bucket_batch_id = null;
         $order->save();
 
-        //delete all shipping
+        //delete all shipping and shipping products
+        foreach ($order->shippings as $shipping) {
+            $shipping->shipping_product()->delete();
+        }
         $order->shippings()->delete();
 
         //set order status to pending
@@ -1449,120 +1499,43 @@ class ShippingController extends Controller
 
     public function sort_order_to_download($order_ids)
     {
-        // Fetch the product counts per order
+        $newOrders = [];
+
+        $orders = OrderItem::with(['order', 'product'])
+            ->whereIn('order_id', $order_ids)
+            ->where('status', IS_ACTIVE)
+            ->where('is_foc', IS_INACTIVE)
+            ->get();
+
         $product_counts = OrderItem::select('order_id', DB::raw('COUNT(DISTINCT product_id) as product_count'))
             ->whereIn('order_id', $order_ids)
             ->groupBy('order_id')
             ->pluck('product_count', 'order_id')->toArray();
 
-        // Sort $order_ids by the count of distinct products in ascending order
-        uasort($product_counts, function ($a, $b) {
-            return $a <=> $b;
-        });
+        // Group by product name
+        foreach ($orders->groupBy('product.name') as $product_name => $items) {
+            // Sort the group by product count and quantity
+            $sortedItems = $items->sortBy(function ($item) use ($product_counts) {
+                return [$product_counts[$item->order_id], $item->quantity];
+            });
 
-        // Get sorted order_ids based on their product count
-        $sorted_order_ids = array_keys($product_counts);
-
-        $orders = OrderItem::with(['order', 'product'])
-            ->whereIn('order_id', $sorted_order_ids)
-            ->where('status', IS_ACTIVE)
-            ->where('is_foc', IS_INACTIVE)
-            ->orderByRaw("FIELD(order_id, " . implode(',', $sorted_order_ids) . ")") // Ensures the order of orders is as per $sorted_order_ids
-            ->get();
-
-        $newOrders = [];
-
-        // Group orders by marital status and preserve the sorted order
-        $single_orders = $orders->filter(function ($order) {
-            return $order->marital_status == "single";
-        })->sortBy(function ($order) use ($sorted_order_ids) {
-            return array_search($order->order_id, $sorted_order_ids);
-        });
-
-        $married_orders = $orders->filter(function ($order) {
-            return $order->marital_status == "married";
-        })->sortBy(function ($order) use ($sorted_order_ids) {
-            return array_search($order->order_id, $sorted_order_ids);
-        });
-
-        // Process single orders
-        foreach ($single_orders->groupBy(function ($order) use ($product_counts) {
-            return $product_counts[$order->order_id] ?? 0; // Default to 0 if not set
-        }) as $count => $group) {
-            foreach ($group->groupBy("product.name") as $product_name => $items) {
-                // Sort by quantity within each product name group
-                foreach ($items->sortBy("quantity")->pluck("order_id") as $order_id) {
-                    $newOrders[] = $order_id;
-                }
+            // Collect order IDs
+            foreach ($sortedItems->pluck('order_id') as $order_id) {
+                $newOrders[] = $order_id;
             }
         }
 
-        // Process married orders
-        foreach ($married_orders->groupBy(function ($order) use ($product_counts) {
-            return $product_counts[$order->order_id] ?? 0; // Default to 0 if not set
-        }) as $count => $group) {
-            foreach ($group->groupBy("product.name") as $product_name => $items) {
-                // Sort by quantity within each product name group
-                foreach ($items->sortBy("quantity")->pluck("order_id") as $order_id) {
-                    $newOrders[] = $order_id;
-                }
+        // array diff newOrders and order_ids
+        $diff = array_diff($order_ids, $newOrders);
+
+        if (!empty($diff)) {
+            foreach ($diff as $order_id) {
+                $newOrders[] = (int)$order_id;
             }
-        }
-
-        // Check for any missing order IDs
-        $missing_order_ids = array_diff($order_ids, $newOrders);
-
-        // Add missing orders to the newOrders array
-        foreach ($missing_order_ids as $order_id) {
-            $newOrders[] = (int) $order_id;
         }
 
         return $newOrders;
     }
-
-
-
-    // public function sort_order_to_download($order_ids)
-    // {
-    //     $newOrders = [];
-    //     // $order_ids = [17849,17848,17842,17840,17839,17836,17835,17834,17833,17826];
-    //     $orders = OrderItem::with(['order', 'product'])
-    //         ->whereIn('order_id', $order_ids)->where('status', IS_ACTIVE)
-    //         ->where('is_foc', IS_INACTIVE)
-    //         ->get();
-
-    //     // [x] GROUPING BY SINGLE OR MARRIED (IGNORE FOC)
-
-    //     // [x] Single
-    //     // [x] GROUP BY PRODUCT (IGNORE FOC)
-    //     foreach ($orders->where("marital_status", "single")->groupBy("product.name") as $product_name => $item) {
-    //         // [x] SORT BY QUANTITY ASC ^
-    //         foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
-    //             // logger($order_id->quantity);
-    //             $newOrders[] = $order_id;
-    //         }
-    //     }
-
-    //     // [x] Married
-    //     // [x] GROUP BY PRODUCT (IGNORE FOC)
-    //     foreach ($orders->where("marital_status", "married")->groupBy("product.name") as $product_name => $item) {
-    //         // [x] SORT BY QUANTITY ASC ^
-    //         foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
-    //             $newOrders[] = $order_id;
-    //         }
-    //     }
-
-    //     //  array diff newOrders and order_ids
-    //     $diff = array_diff($order_ids, $newOrders);
-
-    //     if (!empty($diff)) {
-    //         foreach ($diff as $order_id) {
-    //             $newOrders[] = (int)$order_id;
-    //         }
-    //     }
-
-    //     return $newOrders;
-    // }
 
 
     public function generateShopeeCN($orderIds)
@@ -2107,6 +2080,7 @@ class ShippingController extends Controller
                     [
                         "receiverAddress" => $receiverAddress,
                         "returnAddress" => $pickupAddress,
+                        "shipmentPrefix" => $order->company->code,
                         "shipmentID" => $shipmentID,
                         "shipmentRemarks" => $shipmentRemarks,
                         "itemDescription" => $itemDescription,
@@ -2124,11 +2098,24 @@ class ShippingController extends Controller
 
             $generateCN = EmziExpressTrait::generateCN($accessToken->token, $jsonSend);
             if (isset($generateCN['shipmentItems'][0]['trackingNumber']) && isset($generateCN['shipmentItems'][0]['labels'])) {
+                //calculate total weight product
+                $shipping_cost_id = $this->get_shipping_cost_id($order);
+                $shipping_cost_data['total_weight'] = 0;
+                $shipping_cost_data['shipping_cost_id'] = null;
+                if (isset($shipping_cost_id) && $shipping_cost_id !== false)
+                {
+                    $shipping_cost_data['total_weight'] = $shipping_cost_id['total_weight'];
+                    $shipping_cost_data['shipping_cost_id'] = $shipping_cost_id['shipping_cost_id'];
+                }
+
+                $shipping->total_weight = $shipping_cost_data['total_weight'];
+                $shipping->shipping_cost_id = $shipping_cost_data['shipping_cost_id'];
+
                 $shipping->tracking_number = $generateCN['shipmentItems'][0]['trackingNumber'] ?? '';
                 $shipping->attachment = 'labels/' . shipment_num_format($order) . '.pdf';
                 $shipping->packing_attachment = $product_list;
                 Storage::put('public/labels/' . shipment_num_format($order) . '.pdf', base64_decode($generateCN['shipmentItems'][0]['labels']));
-                set_order_status($order, ORDER_STATUS_PACKING, "Shipping label generated by DHL");
+                set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by DHL");
                 $shipping->save();
 
                 $CNS['order_ids'][] = $order->id;
@@ -2138,6 +2125,9 @@ class ShippingController extends Controller
             }
 
         }
+
+        //store shipping products
+        $this->store_shipping_products($order_ex);
 
         if (count($CNS) > 0) {
             return response()->json([
@@ -2160,6 +2150,342 @@ class ShippingController extends Controller
             'message' => $message,
             'data' => $CNS ?? ''
         ], 200);
+    }
+
+    public function ninjavan_international($order_ids)
+    {
+        $order = [];
+        $CNS = [];
+        $message = '';
+        $errors = [];
+        $now = Carbon::now();
+        $startOfMonth = $now->startOfMonth()->format('Y-m-d H:i:s');
+        $endOfMonth = $now->endOfMonth()->format('Y-m-d H:i:s');
+
+        // Filter only selected order shipping not exists
+        $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])
+            ->whereIn('id', $order_ids)
+            ->whereDoesntHave('shippings', function ($query) {
+                $query->where('courier', NINJAVAN_INTERNATIONAL_ID)
+                    ->whereNotNull('tracking_number');
+            })
+            ->get();
+
+        if (count($order_ninja) == 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No orders found to process.',
+                'data' => []
+            ], 200);
+        }
+
+        // Get rate for currency exchange
+        $rate = ExchangeRate::where('start_date', '>=', $startOfMonth)
+                    ->where('end_date', '<=', $endOfMonth)
+                    ->first();
+
+        if (!$rate) {
+            return response()->json([
+                'success' => false,
+                'title' => 'Exchange rate is outdated!',
+                'message' => 'Please contact the system administrator to update the exchange rate.',
+                'data' => []
+            ], 200);
+        }
+
+        foreach ($order_ninja as $key => $order) {
+            $product_list = $this->generate_product_description($order->id);
+
+            // Create shipping first
+            $shipping = new Shipping();
+            $shipping->shipment_number = shipment_num_format($order);
+            $shipping->order_id = $order->id;
+            $shipping->courier = NINJAVAN_INTERNATIONAL_ID;
+            $shipping->created_by = auth()->user()->id ?? 1;
+            $shipping->save();
+
+            // Shipment details
+            $itemDescription = get_shipping_remarks($order) ?? '';
+            $totalWeight = get_order_weight($order) / 1000 ?? '';
+
+            // Calculate amount into SG currency
+            $sgd_amount = (($order->total_price / 100) / $rate->rate) + 1;
+            $sgd_amount = ceil($sgd_amount); // Round up to the nearest integer
+            $sgd_amount = (int)$sgd_amount;
+
+            // Store currency amount into orders table
+            $order = Order::findOrFail($order->id);
+            $order->currency_amount = $sgd_amount;
+            $order->save();
+
+            // JSON structure
+            $jsonArray = [
+                "service_type" => "International",
+                "international" => [
+                    "portation" => "Export",
+                    "service_code" => app()->environment() == 'production' ? "MYSG-A-S-1" : "SGMY-A-S-1"
+                ],
+                "customs_declaration" => [
+                    "goods_currency" => "SGD",
+                    "battery_type" => "No Battery",
+                    "battery_packing" => "No Battery",
+                    "trade_terms" => "DDU",
+                    "is_gst_included_in_goods_value" => false,
+                    "gst_registration_number" => ""
+                ],
+                "service_level" => "Standard",
+                "requested_tracking_number" => "NV" . $order->sales_id,
+                "reference" => [
+                    "merchant_order_number" => $order->sales_id
+                ],
+                "from" => [
+                    "name" => "EMZI FULFILLMENT",
+                    "phone_number" => "60195687313",
+                    "email" => "customerservice.elsb@emzi.com.my",
+                    "address" => [
+                        "address1" => "EMZI FULLFILLMENT, KOMPLEKS SP PLAZA, JALAN IBRAHIM, SUNGAI PETANI 08000 Sungai Petani, Kedah",
+                        "address2" => "",
+                        "city" => "Sungai Petani",
+                        "state" => "Kedah",
+                        "address_type" => "office",
+                        "country" => "MY",
+                        "postcode" => "08000"
+                    ]
+                ],
+                "to" => [
+                    "name" => $order->customer->name ?? '',
+                    "phone_number" => $order->customer->phone ?? '',
+                    "email" => $order->customer->email ?? '',
+                    "address" => [
+                        "address1" => $order->customer->address ?? '',
+                        "address2" => $order->customer->address2 ?? '',
+                        "city" => $order->customer->city ?? '',
+                        "state" => $order->customer->states->name ?? '',
+                        "country" => "SG",
+                        "postcode" => $order->customer->postcode ?? ''
+                    ]
+                ],
+                "parcel_job" => [
+                    "is_pickup_required" => false,
+                    "delivery_instructions" => $order->sales_remarks ?? '',
+                    "delivery_start_date" => Carbon::now()->format('Y-m-d'),
+                    "delivery_timeslot" => [
+                        "start_time" => "09:00",
+                        "end_time" => "18:00",
+                        "timezone" => "Asia/Singapore"
+                    ],
+                    "dimensions" => [
+                        "weight" => $totalWeight
+                    ],
+                    "items" => [
+                        [
+                            "item_description" => $itemDescription,
+                            "native_item_description" => "N/A",
+                            "unit_value" => $sgd_amount,
+                            "unit_weight" => $totalWeight,
+                            "product_url" => "https://www.product.url/12346.pdf",
+                            "invoice_url" => "https://www.invoice.url/12346.pdf",
+                            "hs_code" => 543111,
+                            "made_in_country" => "MY"
+                        ]
+                    ]
+                ]
+            ];
+
+            if ($order->purchase_type == PURCHASE_TYPE_COD) {
+                $jsonArray['parcel_job']['cash_on_delivery'] = $sgd_amount;
+                $jsonArray['parcel_job']['cash_on_delivery_currency'] = "SGD";
+            }
+
+            $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
+
+            try {
+                $createNinjaVanOrder = NinjaVanInternationalTrait::createNinjaVanOrder($jsonSend, $order->company->id);
+
+                if (isset($createNinjaVanOrder['tracking_number'])) {
+                    // Get the tracking number
+                    $trackingNumber = $createNinjaVanOrder['tracking_number'];
+
+                    // Update the shipping details
+                    $shipping->tracking_number = $trackingNumber;
+                    $shipping->packing_attachment = $product_list;
+                    $shipping->save();
+
+                    // Retry mechanism for generating the waybill
+                    $retryAttempts = 5;
+                    $retryDelay = 60; // 60 seconds
+                    $generateWayBill = null;
+
+                    for ($attempt = 0; $attempt < $retryAttempts; $attempt++) {
+                        $generateWayBill = NinjaVanInternationalTrait::generateWayBill($trackingNumber, $order->company->id);
+                        if ($generateWayBill->status() == 200) {
+                            break;
+                        }
+                        sleep($retryDelay);
+                    }
+
+                    // Check if the waybill generation was successful
+                    if ($generateWayBill && $generateWayBill->status() == 200) {
+                        // Save the PDF to a file
+                        $pdfContent = $generateWayBill->body();
+                        $filePath = 'labels/' . shipment_num_format($order) . '.pdf';
+                        Storage::put('public/' . $filePath, $pdfContent);
+
+                        $shipping->attachment = $filePath;
+                        $shipping->save();
+
+                        // Set the order status
+                        set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by NinjaVan International");
+
+                        // Add order id and attachment to CNS array
+                        $CNS['order_ids'][] = $order->id;
+                        $CNS['attachment'][] = $shipping->attachment;
+                    } else {
+                        // Error when creating waybill
+                        $errors[] = ['message' => 'Failed to generate waybill: ' . json_encode($generateWayBill)];
+                    }
+                } else {
+                    // Error when creating order
+                    $errors[] = ['message' => 'Failed to create order in NinjaVan: ' . json_encode($createNinjaVanOrder)];
+                }
+            } catch (\Exception $e) {
+                $errors[] = ['message' => $e->getMessage()];
+            }
+        }
+
+        if (count($CNS) > 0) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Success',
+                'data' => $CNS
+            ], 200);
+        }
+
+        $message .= "Success: " . count($CNS) . " generated.<br>";
+
+        if (count($errors) > 0) {
+            foreach ($errors as $error) {
+                $message .= "Failed: " . ($error['message'] ?? 'Unknown error') . "<br>";
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'data' => $CNS ?? ''
+        ], 200);
+    }
+
+    public function get_shipping_cost_id($order)
+    {
+        $courier_id = $order->courier_id;
+        $state_id = $order->customer->state;
+        $product_weight = 0;
+        foreach($order->items as $item)
+        {
+            $weight = Product::where('id', $item['product_id'])->first()->weight;
+
+            $product_weight += $item['quantity'] * $weight;
+        }
+        $weight_category = WeightCategory::where('min_weight', '<=', $product_weight)->where('max_weight', '>=', $product_weight)->first();
+        $state_group = GroupStateList::where('state_id', $state_id)->first();
+
+        //get shipping cost
+        if ($weight_category && $courier_id && $state_group) {
+            $shipping_cost = ShippingCost::where('weight_category_id', $weight_category->id)
+            ->where('courier_id', $courier_id)
+            ->where('state_group_id', $state_group->state_group_id)
+            ->first();
+        }
+
+        if(isset($shipping_cost))
+        {
+            $shipping_cost_data['total_weight'] = $product_weight;
+            $shipping_cost_data['shipping_cost_id'] = $shipping_cost->id;
+            return $shipping_cost_data;
+        }
+        return false;
+
+    }
+
+    public function get_shipping_cost_multiple($order, $items)
+    {
+        $courier_id = $order->courier_id;
+        $state_id = $order->customer->state;
+        $product_weight = 0;
+        foreach($items as $item)
+        {
+            $weight = OrderItem::with('product')->where('id', $item['order_item_id'])->first()->product->weight;
+            $product_weight += $item['quantity'] * $weight;
+        }
+
+        $weight_category = WeightCategory::where('min_weight', '<=', $product_weight)->where('max_weight', '>=', $product_weight)->first();
+        $state_group = GroupStateList::where('state_id', $state_id)->first();
+        //get shipping cost
+        if ($weight_category && $courier_id && $state_group) {
+            $shipping_cost = ShippingCost::where('weight_category_id', $weight_category->id)
+            ->where('courier_id', $courier_id)
+            ->where('state_group_id', $state_group->state_group_id)
+            ->first();
+        }
+
+        if(isset($shipping_cost))
+        {
+            $shipping_cost_data['total_weight'] = $product_weight;
+            $shipping_cost_data['shipping_cost_id'] = $shipping_cost->id;
+            return $shipping_cost_data;
+        }
+        return false;
+    }
+
+    public function store_shipping_products($orders)
+    {
+        $shipping_products = [];
+
+        foreach($orders as $order)
+        {
+            //get shipping id
+            $shipping_id = Shipping::where('order_id', $order->id)->first()->id;
+
+            if(isset($shipping_id) && !empty($shipping_id))
+            {
+                //delete old shipping products
+                ShippingProduct::where('shipping_id', $shipping_id)->delete();
+                foreach($order->items as $item)
+                {
+                    $shipping_products[] = [
+                        'shipping_id' => $shipping_id,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ];
+                }
+            }
+        }
+        ShippingProduct::insert($shipping_products);
+    }
+
+    public function store_shipping_products_multiple($order, $items)
+    {
+        $shipping_products = [];
+
+        $shipping_ids = Shipping::where('order_id', $order->id)->pluck('id');
+
+        foreach($shipping_ids as $shipping_id)
+        {
+            foreach($items as $key => $item)
+            {
+                $shipping_products[$key] = [
+                    'shipping_id' => $shipping_id,
+                    'product_id' => OrderItem::with('product')->where('id', $item['order_item_id'])->first()->product->id,
+                    'quantity' => $item['quantity'],
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ];
+            }
+        }
+        ShippingProduct::insert($shipping_products);
     }
 
 }

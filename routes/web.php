@@ -72,6 +72,8 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/attempt-order-list', [AttemptOrderListController::class, 'index'])->name('attempt_order_list');
         Route::post('/attempt-order-list/filter', [AttemptOrderListController::class, 'filter'])->name('attempt_order_list.filter');
         Route::get('/download-csv', [AttemptOrderListController::class, 'downloadCSV'])->name('download_csv'); // This only for Attempt Order List
+        Route::post('/check-cn', [OrderController::class, 'check_cn_generate_packing'])->name('check_cn_generate_packing');
+        Route::post('/generate-packing', [OrderController::class, 'generate_packing'])->name('generate_packing');
         Route::get('/test', [OrderController::class, 'test']);
     });
 
@@ -216,7 +218,11 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/', [ShippingCostController::class, 'state_group'])->name('state_group.list')->middleware('can:state_group.list');
     });
 
-    Route::prefix('weight-categories')->group(function() {
+    Route::prefix('shipping-cost')->group(function() {
+        Route::get('/', [ShippingCostController::class, 'shipping_cost_list'])->name('shipping-cost.list')->middleware('can:shipping_cost.list');
+    });
+
+    Route::prefix('weight-category')->group(function() {
         Route::get('/', [ShippingCostController::class, 'weight_category'])->name('weight-category.list')->middleware('can:weight_category.list');
     });
 
