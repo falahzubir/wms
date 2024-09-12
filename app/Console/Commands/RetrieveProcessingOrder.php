@@ -31,6 +31,7 @@ class RetrieveProcessingOrder extends Command
     {
         $companies = Company::all();
         $time = now()->subMinutes(5)->format('Y-m-d H:i:s');
+        $time_limit = now()->subDay()->startOfDay()->format('Y-m-d H:i:s');
     
         foreach ($companies as $company) {
     
