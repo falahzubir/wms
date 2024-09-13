@@ -1943,7 +1943,8 @@
                     type: type,
                 }).then(function(response) {
                     if (response.data && response.data.success) {
-                        let text = "CN generated successfully!"; // Default success message
+                        // Default success message
+                        let text = "CN generated successfully!";
 
                         // If there's a message inside the data, extract it
                         if (response.data.data && response.data.data[0] && response.data.data[0].message) {
@@ -1966,7 +1967,7 @@
                         });
                     }
                 }).catch(function(error) {
-                    // Default message
+                    // Default error message
                     let title = 'Error!';
                     let message = 'Fail to generate CN, Please contact admin';
 
