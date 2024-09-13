@@ -32,21 +32,25 @@ class RetrieveProcessingOrder extends Command
         $companies = Company::all();
         $time = now()->subMinutes(5)->format('Y-m-d H:i:s');
         $time_limit = now()->subDay()->startOfDay()->format('Y-m-d H:i:s');
-    
+
         foreach ($companies as $company) {
-    
+
+            if($company->url == null || $company->url == '') {
+                continue;
+            }
+
             $response = Http::get($company->url . '/wms/get_sales');
-    
+
             if ($response->successful()) {
                 $sales_data = $response->json();
-    
+
                 // Extract and flatten the sales_ids array
                 $sales_ids = collect($sales_data)->pluck('sales_id')->toArray();
-    
+
                 $existing_orders = Order::whereIn('sales_id', $sales_ids)
-                                        ->where('company_id', $company->id) 
+                                        ->where('company_id', $company->id)
                                         ->pluck('sales_id')
-                                        ->toArray(); 
+                                        ->toArray();
 
                 $order_diff = array_diff($sales_ids, $existing_orders);
 
