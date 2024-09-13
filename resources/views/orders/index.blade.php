@@ -1942,13 +1942,14 @@
                     order_ids: checkedOrder,
                     type: type,
                 }).then(function(response) {
-                    console.log(response);
-                    
-                    let { success, message, errors, data } = response.data;
+                    if (response.data && response.data.success) {
+                        let text = "CN generated successfully!"; // Default success message
 
-                    // If success is true and there are CNs generated
-                    if (success && data && data.order_ids && data.order_ids.length > 0) {
-                        let text = `CN generated successfully for ${data.order_ids.length} orders.`;
+                        // If there's a message inside the data, extract it
+                        if (response.data.data && response.data.data[0] && response.data.data[0].message) {
+                            text = response.data.data[0].message;
+                        }
+
                         Swal.fire({
                             title: 'Success!',
                             text: text,
@@ -1963,36 +1964,46 @@
                                 location.reload();
                             }
                         });
-                    } else if (errors && errors.length > 0) {
-                        Swal.fire({
-                            title: 'Error!',
-                            html: `${errors.map(e => e.message).join('<br>')}`,
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'Error!',
-                            html: errors.message,
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
                     }
                 }).catch(function(error) {
+                    // Default message
+                    let title = 'Error!';
                     let message = 'Fail to generate CN, Please contact admin';
 
                     if (error.response && error.response.data) {
-                        message = error.response.data.message || message;
+                        if (error.response.data.data && Array.isArray(error.response.data.data)) {
+                            // Error from NinjaVan
+                            try {
+                                const errorData = error.response.data.data[0];
+                                const apiError = JSON.parse(errorData.message);
+
+                                // Extract the title and message
+                                title = apiError.error.title || title;
+                                message = 'NinjaVan: <br>' + apiError.error.message || message;
+
+                                // If there are additional details, add them to the message
+                                if (apiError.error.details && apiError.error.details.length > 0) {
+                                    const detail = apiError.error.details[0];
+                                    message += `<br>${detail.message}`;
+                                }
+                            } catch (e) {
+                                console.error("Error parsing NinjaVan API response:", e);
+                            }
+                        } else {
+                            // Error from WMS
+                            title = error.response.data.title || title;
+                            message = error.response.data.message || message;
+                        }
                     }
 
                     Swal.fire({
-                        title: 'Error!',
+                        title: title,
                         html: message,
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
                 });
-            };
+            }
             
             function approveAsShipped(checkedOrders) {
                 axios({

@@ -2197,10 +2197,8 @@ class ShippingController extends Controller
     public function ninjavan_international($order_ids)
     {
         $CNS = [];
-        $message = '';
         $errors = [];
         $generatedCount = 0; // Track the number of already generated CN
-        $shipmentHaveCN = []; // Store shipment numbers with already generated CNs
         $now = Carbon::now();
         $startOfMonth = $now->startOfMonth()->format('Y-m-d H:i:s');
         $endOfMonth = $now->endOfMonth()->format('Y-m-d H:i:s');
@@ -2218,83 +2216,85 @@ class ShippingController extends Controller
                 'success' => false,
                 'title' => 'Exchange rate is outdated!',
                 'message' => 'Please contact the system administrator to update the exchange rate.',
-                'data' => []
-            ], 200);
+            ], 500);
         }
 
         foreach ($order_ninja as $order) {
-            // Get access token
-            $accessToken = NinjaVanInternationalTrait::checkAccessToken($order->company->id);
+            $shipmentNumber = shipment_num_format($order);
 
             // Get or create the shipping record
-            $shipmentNumber = shipment_num_format($order);
-            $shipping = Shipping::where('shipment_number', $shipmentNumber)->first();
+            do {
+                $shipping = Shipping::where('shipment_number', $shipmentNumber)->first();
+                $accessToken = NinjaVanInternationalTrait::checkAccessToken($order->company->id);
 
-            if (!$shipping) {
-                // Scenario 1: No order in `shippings` table, create everything
-                $shipping = new Shipping();
-                $shipping->shipment_number = $shipmentNumber;
-                $shipping->order_id = $order->id;
-                $shipping->courier = NINJAVAN_INTERNATIONAL_ID;
-                $shipping->created_by = auth()->user()->id ?? 1;
+                if (!$shipping) {
+                    // Scenario 1: No order in `shippings` table, create everything
+                    $shipping = new Shipping();
+                    $shipping->shipment_number = $shipmentNumber;
+                    $shipping->order_id = $order->id;
+                    $shipping->courier = NINJAVAN_INTERNATIONAL_ID;
+                    $shipping->created_by = auth()->user()->id ?? 1;
 
-                // Create order in NinjaVan
-                $orderCreated = $this->createNinjaVanOrder($order, $shipping, $rate, $accessToken);
-                if ($orderCreated === true) {
-                    $CNS['order_ids'][] = $order->id;
-                    $CNS['attachment'][] = $shipping->attachment;
-                } else {
-                    $errors[] = ['message' => $orderCreated];
+                    // Create order in NinjaVan
+                    $orderCreated = $this->createNinjaVanOrder($order, $shipping, $rate, $accessToken);
+                    if ($orderCreated === true) {
+                        $success['order_ids'][] = $order->id;
+                        $success['attachment'][] = $shipping->attachment;
+                    } else {
+                        $errors[] = ['message' => $orderCreated];
+                        break; // Stop further processing for this order if creation fails
+                    }
                 }
 
-                // Request waybill from NinjaVan
-                $this->requestNinjaVanWaybill($shipping, $order, $accessToken, $errors, $CNS);
-
-            } elseif (is_null($shipping->tracking_number)) {
-                // Scenario 2: Order exists but `tracking_number` is empty
-                // Create order in NinjaVan
-                $orderCreated = $this->createNinjaVanOrder($order, $shipping, $rate, $accessToken);
-                if ($orderCreated === true) {
-                    $CNS['order_ids'][] = $order->id;
-                    $CNS['attachment'][] = $shipping->attachment;
-                } else {
-                    $errors[] = ['message' => $orderCreated];
+                // Check for tracking_number
+                if (is_null($shipping->tracking_number)) {
+                    // Scenario 2: Order exists but `tracking_number` is empty
+                    $orderCreated = $this->createNinjaVanOrder($order, $shipping, $rate, $accessToken);
+                    if ($orderCreated !== true) {
+                        $errors[] = ['message' => $orderCreated];
+                        break; // Stop further processing for this order if creation fails
+                    }
                 }
 
-                // Request waybill from NinjaVan
-                $this->requestNinjaVanWaybill($shipping, $order, $accessToken, $errors, $CNS);
+                // Check for attachment
+                if (is_null($shipping->attachment) || $shipping->attachment === '') {
+                    // Scenario 3: Request waybill from NinjaVan
+                    $this->requestNinjaVanWaybill($shipping, $order, $accessToken, $errors, $success);
+                }
 
-            } elseif (!is_null($shipping->tracking_number) && (is_null($shipping->attachment) || $shipping->attachment === '')) {
-                // Scenario 3: tracking_number is not null but attachment is null or empty
-                // Request waybill from NinjaVan
-                $this->requestNinjaVanWaybill($shipping, $order, $accessToken, $errors, $CNS);
+            } while (is_null($shipping->tracking_number) || is_null($shipping->attachment) || $shipping->attachment === '');
 
-            } elseif (!is_null($shipping->tracking_number) && (!is_null($shipping->attachment) || $shipping->attachment !== '')) {
-                // Scenario 4: Already generated consignment note
+            // Count success if all fields are populated
+            if (!is_null($shipping->tracking_number) && !is_null($shipping->attachment) && $shipping->attachment !== '') {
                 $generatedCount++;
             }
         }
 
         if ($generatedCount > 0) {
-            $errors[] = ['message' => "Selected order already generate CN."];
+            $success[] = ['message' => "Selected orders successfully generated CN."];
         }
 
-        if (isset($CNS['attachment'])) {
-            $CNS['attachment'] = array_filter($CNS['attachment'], function($value) {
+        if (isset($success['attachment'])) {
+            $success['attachment'] = array_filter($success['attachment'], function($value) {
                 return !is_null($value);
             });
         }
 
-        if (isset($CNS['order_ids'])) {
-            $CNS['order_ids'] = array_unique($CNS['order_ids']);
+        if (isset($success['order_ids'])) {
+            $success['order_ids'] = array_unique($success['order_ids']);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'errors' => $errors,
-            'data' => $CNS ?? ''
-        ], 200);
+        if (!empty($errors)) {
+            return response()->json([
+                'success' => false,
+                'data' => $errors
+            ], 500);
+        } else {
+            return response()->json([
+                'success' => true,
+                'data' => $success
+            ], 200);
+        }
     }
 
     private function createNinjaVanOrder($order, $shipping, $rate, $accessToken)
@@ -2403,14 +2403,14 @@ class ShippingController extends Controller
 
                 return true;
             } else {
-                return 'Failed to create order in NinjaVan: ' . json_encode($createNinjaVanOrder);
+                return json_encode($createNinjaVanOrder);
             }
         } catch (\Exception $e) {
             return $e->getMessage();
         }
     }
 
-    private function requestNinjaVanWaybill($shipping, $order, $accessToken, &$errors, &$CNS)
+    private function requestNinjaVanWaybill($shipping, $order, $accessToken, &$errors, &$success)
     {
         $retryAttempts = 5;
         $retryDelay = 60;
@@ -2424,8 +2424,8 @@ class ShippingController extends Controller
                 if (Storage::put('public/' . $filePath, $pdfContent)) {
                     $shipping->update(['attachment' => $filePath]);
                     set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by NinjaVan International");
-                    $CNS['order_ids'][] = $order->id;
-                    $CNS['attachment'][] = $shipping->attachment;
+                    $success['order_ids'][] = $order->id;
+                    $success['attachment'][] = $shipping->attachment;
                     break;
                 } else {
                     $errors[] = ['message' => 'Failed to save waybill PDF.'];
