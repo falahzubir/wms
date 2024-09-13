@@ -13,19 +13,19 @@ use Illuminate\Foundation\Bus\Dispatchable;
 class SendProcessingOrder implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-     
+
     protected $sales_id;
-    protected $company;
-    
+    protected $company_url;
+
     /**
      * Create a new job instance.
      * @param mixed $sales_id Sales ID to process.
      * @param mixed $company Company to process.
      */
-    public function __construct($sales_id, $company)
+    public function __construct($sales_id, $company_url)
     {
         $this->sales_id = $sales_id;
-        $this->company = $company;
+        $this->company_url = $company_url;
     }
 
     /**
@@ -34,14 +34,8 @@ class SendProcessingOrder implements ShouldQueue
     public function handle()
     {
         // $company = Company::find($this->company_id);
-            $response = Http::get("{$this->company->url}/wms/send_sales/{$this->sales_id}");
+            $response = Http::get("{$this->company_url}/wms/send_sales/{$this->sales_id}");
+            Log::info("Order request to {$this->company_url}, response: {$response->body()}");
 
-            if ($response->successful()) {
-                // Log success
-                Log::info("Sales ID {$this->sales_id} sent to {$this->company->url} successfully.");
-            } else {
-                Log::error("Failed to send Sales ID {$this->sales_id} to BOS. Response: " . $response->body());
-            }
-        
     }
 }

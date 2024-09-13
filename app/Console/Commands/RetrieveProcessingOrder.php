@@ -56,7 +56,7 @@ class RetrieveProcessingOrder extends Command
 
                 // Dispatch jobs for the new sales IDs
                 foreach ($order_diff as $salesId) {
-                    SendProcessingOrder::dispatch($salesId, $company);
+                    SendProcessingOrder::dispatch($salesId, $company->url);
                 }
             }
         }
