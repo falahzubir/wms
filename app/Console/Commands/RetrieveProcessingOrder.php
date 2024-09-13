@@ -42,10 +42,7 @@ class RetrieveProcessingOrder extends Command
             $response = Http::get($company->url . '/wms/get_sales');
 
             if ($response->successful()) {
-                $sales_data = $response->json();
-
-                // Extract and flatten the sales_ids array
-                $sales_ids = collect($sales_data)->pluck('sales_id')->toArray();
+                $sales_ids = $response->json();
 
                 $existing_orders = Order::whereIn('sales_id', $sales_ids)
                                         ->where('company_id', $company->id)
