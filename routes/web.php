@@ -8,6 +8,7 @@ use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\CountryListController;
 use App\Http\Controllers\CourierController;
 use App\Http\Controllers\CustomTemplateController;
 use App\Http\Controllers\DashboardController;
@@ -21,12 +22,13 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
-use App\Http\Controllers\TemplateSettingController;
 use App\Http\Controllers\ShippingCostController;
+use App\Http\Controllers\TemplateSettingController;
 use App\Http\Controllers\UserController;
 use App\Models\Company;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
+
 
 
 /*
@@ -241,9 +243,11 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/ship_doc_desc',[SettingsController::class,'view_shipping_doc_desc'])->name('view_shipping_doc_desc');
         Route::get('/ship_doc_desc/form',[SettingsController::class,'sdd_form'])->name('sdd_form');
         Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
+
+        Route::get('country-list', [CountryListController::class, 'index'])->name('country_list');
     });
 
-        Route::prefix('picking_list_setting')->group(function() {
+    Route::prefix('picking_list_setting')->group(function() {
         Route::get('/', [PickingListSettingController::class, 'index'])->name('picking_list_setting.index');
         Route::post('/update', [PickingListSettingController::class, 'update'])->name('picking_sequence.update');
         Route::get('/get', [PickingListSettingController::class, 'index'])->name('picking_sequence.get'); // AJAX endpoint

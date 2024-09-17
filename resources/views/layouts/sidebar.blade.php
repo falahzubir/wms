@@ -450,6 +450,15 @@
                         </a>
                     </li>
                     @endcan
+
+                    @can('view.country_list')
+                        <li>
+                            <a href="{{ route('country_list') }}"
+                                {{ Route::current()->getName() == 'country_list' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i><span>Country List</span>
+                            </a>
+                        </li>
+                    @endcan
                 </ul>
             </li><!-- End Components Nav -->
         @endcan

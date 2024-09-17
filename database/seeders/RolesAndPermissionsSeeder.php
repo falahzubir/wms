@@ -58,6 +58,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view.dashboard']);
         Permission::firstOrCreate(['name' => 'view.setting_bucket_automation']);
         Permission::firstOrCreate(['name' => 'view.attempt_order_list']);
+        Permission::firstOrCreate(['name' => 'view.country_list']);
 
         //product permission
         Permission::firstOrCreate(['name' => 'product.list']);
