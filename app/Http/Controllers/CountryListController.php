@@ -12,7 +12,7 @@ class CountryListController extends Controller
         $countries = Country::paginate(10);
 
         return view('country_list/index', [
-            'title' => 'Country List',
+            'title' => 'List of Country',
             'countries' => $countries,
         ]);
     }
