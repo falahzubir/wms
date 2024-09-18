@@ -453,8 +453,8 @@
 
                     @can('view.country_list')
                         <li>
-                            <a href="{{ route('country_list') }}"
-                                {{ Route::current()->getName() == 'country_list' ? 'class=active' : '' }}>
+                            <a href="{{ route('settings.country_list') }}"
+                                {{ Route::current()->getName() == 'settings.country_list' ? 'class=active' : '' }}>
                                 <i class="bi bi-circle"></i><span>Country List</span>
                             </a>
                         </li>
