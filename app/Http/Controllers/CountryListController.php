@@ -16,9 +16,10 @@ class CountryListController extends Controller
         if ($search) {
             $countries = Country::where('name', 'LIKE', '%' . $search . '%')
                         ->orWhere('code', 'LIKE', '%' . $search . '%')
+                        ->orderBy('name', 'asc')
                         ->paginate(10);
         } else {
-            $countries = Country::paginate(10);
+            $countries = Country::orderBy('name', 'asc')->paginate(10);
         }
 
         return view('country_list/index', [

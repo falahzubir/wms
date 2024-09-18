@@ -54,7 +54,7 @@
                                 <tr>
                                     <td colspan="100%" class="text-center">
                                         <div class="alert alert-warning" role="alert">
-                                            No country found!
+                                            No data found.
                                         </div>
                                     </td>
                                 </tr>
@@ -167,51 +167,67 @@
 
                 // Gather form data
                 const formData = new FormData(document.getElementById('addCountryForm'));
+                let countryName = $('input[name="add_country_name"]').val() || '';
+                let countryCode = $('input[name="add_country_code"]').val() || '';
+                let valid = true;
 
-                // Perform the AJAX request
-                $.ajax({
-                    url: "{{ route('settings.country_list.add') }}",
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        // Handle success response
-                        if (response.success) {
-                            // Show success message
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: response.message
-                            }).then(() => {
-                                location.reload(); // Reload the page
-                            });
-                        }
-                    },
-                    error: function(xhr) {                        
-                        // Check if the response has validation errors
-                        if (xhr.status === 422) {
-                            let response = xhr.responseJSON;
+                // Check if fields are empty
+                if (countryName.trim() === '') {
+                    $('input[name="add_country_name"]').after('<span class="text-danger">*This field is required.</span>');
+                    valid = false;
+                }
 
-                            // Handle error specific to country_name
-                            if (response.field === 'add_country_name') {
-                                $('input[name="add_country_name"]').after('<span class="text-danger">' + response.message + '</span>');
+                if (countryCode.trim() === '') {
+                    $('input[name="add_country_code"]').after('<span class="text-danger">*This field is required.</span>');
+                    valid = false;
+                }
+
+                if (valid) {
+                    // Perform the AJAX request
+                    $.ajax({
+                        url: "{{ route('settings.country_list.add') }}",
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function(response) {
+                            // Handle success response
+                            if (response.success) {
+                                // Show success message
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: response.message
+                                }).then(() => {
+                                    location.reload(); // Reload the page
+                                });
                             }
+                        },
+                        error: function(xhr) {                        
+                            // Check if the response has validation errors
+                            if (xhr.status === 422) {
+                                let response = xhr.responseJSON;
 
-                            // Handle error specific to country_code
-                            if (response.field === 'add_country_code') {
-                                $('input[name="add_country_code"]').after('<span class="text-danger">' + response.message + '</span>');
+                                // Handle error specific to country_name
+                                if (response.field === 'add_country_name') {
+                                    $('input[name="add_country_name"]').after('<span class="text-danger">' + response.message + '</span>');
+                                }
+
+                                // Handle error specific to country_code
+                                if (response.field === 'add_country_code') {
+                                    $('input[name="add_country_code"]').after('<span class="text-danger">' + response.message + '</span>');
+                                }
+                            } else {
+                                // Generic error handling for other issues
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: 'Something went wrong!'
+                                });
                             }
-                        } else {
-                            // Generic error handling for other issues
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'Something went wrong!'
-                            });
                         }
-                    }
-                });
+                    });
+                }
             };
 
             const openEditModal = async (id) => {
