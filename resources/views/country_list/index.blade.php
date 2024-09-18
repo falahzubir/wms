@@ -83,7 +83,7 @@
                 <form id="addCountryForm">
                     @csrf
                     <!-- Modal Header -->
-                    <div class="modal-header">
+                    <div class="modal-header d-flex justify-content-center align-items-center">
                         <h6 class="modal-title"><strong>Add Country</strong></h4>
                     </div>
     
@@ -123,7 +123,7 @@
                 <form id="editCountryForm">
                     @csrf
                     <!-- Modal Header -->
-                    <div class="modal-header">
+                    <div class="modal-header d-flex justify-content-center align-items-center">
                         <h6 class="modal-title"><strong>Edit Country</strong></h4>
                     </div>
     

@@ -55,8 +55,8 @@ class CountryListController extends Controller
 
             // Save input into countries table
             $country = new Country();
-            $country->name = $request->input('add_country_name');
-            $country->code = $request->input('add_country_code');
+            $country->name = ucwords($request->input('add_country_name'));
+            $country->code = strtoupper($request->input('add_country_code'));
 
             if ($country->save()) {
                 return response()->json(['success' => true, 'message' => 'Country created successfully!']);
@@ -108,8 +108,8 @@ class CountryListController extends Controller
             }
 
             // Update the country's details
-            $country->name = $request->input('edit_country_name');
-            $country->code = $request->input('edit_country_code');
+            $country->name = ucwords($request->input('edit_country_name'));
+            $country->code = strtoupper($request->input('edit_country_code'));
 
             if ($country->save()) {
                 return response()->json(['success' => true, 'message' => 'Country updated successfully!']);
