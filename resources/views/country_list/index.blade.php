@@ -271,6 +271,9 @@
                 event.preventDefault(); // Prevent the default form submission
 
                 const formData = new FormData(document.getElementById('editCountryForm'));
+                let countryName = $('input[name="edit_country_name"]').val() || '';
+                let countryCode = $('input[name="edit_country_code"]').val() || '';
+                let valid = true;
 
                 // Country id
                 let id = $('input[name="id"]').val();
@@ -278,52 +281,65 @@
                 // Clear previous validation messages
                 $('.text-danger').remove();
 
-                try {
-                    // Submit the form via AJAX
-                    const response = await $.ajax({
-                        url: "{{ route('settings.country_list.update', ':id') }}".replace(':id', id),
-                        type: 'POST',
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                    });
+                // Check if fields are empty
+                if (countryName.trim() === '') {
+                    $('input[name="edit_country_name"]').after('<span class="text-danger">*This field is required.</span>');
+                    valid = false;
+                }
 
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: response.message,
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Failed to update country. ' + response.message,
-                        });
-                    }
-                } catch (error) {
-                    // Check if the response has validation errors
-                    if (error.status === 422) {
-                        let response = error.responseJSON;
+                if (countryCode.trim() === '') {
+                    $('input[name="edit_country_code"]').after('<span class="text-danger">*This field is required.</span>');
+                    valid = false;
+                }
 
-                        // Handle error specific to country_name
-                        if (response.field === 'edit_country_name') {
-                            $('input[name="edit_country_name"]').after('<span class="text-danger">' + response.message + '</span>');
+                if (valid) {
+                    try {
+                        // Submit the form via AJAX
+                        const response = await $.ajax({
+                            url: "{{ route('settings.country_list.update', ':id') }}".replace(':id', id),
+                            type: 'POST',
+                            data: formData,
+                            contentType: false,
+                            processData: false,
+                        });
+
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: response.message,
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Failed to update country. ' + response.message,
+                            });
                         }
+                    } catch (error) {
+                        // Check if the response has validation errors
+                        if (error.status === 422) {
+                            let response = error.responseJSON;
 
-                        // Handle error specific to country_code
-                        if (response.field === 'edit_country_code') {
-                            $('input[name="edit_country_code"]').after('<span class="text-danger">' + response.message + '</span>');
+                            // Handle error specific to country_name
+                            if (response.field === 'edit_country_name') {
+                                $('input[name="edit_country_name"]').after('<span class="text-danger">' + response.message + '</span>');
+                            }
+
+                            // Handle error specific to country_code
+                            if (response.field === 'edit_country_code') {
+                                $('input[name="edit_country_code"]').after('<span class="text-danger">' + response.message + '</span>');
+                            }
+                        } else {
+                            // Generic error handling for other issues
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Something went wrong!'
+                            });
                         }
-                    } else {
-                        // Generic error handling for other issues
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Something went wrong!'
-                        });
                     }
                 }
             };
