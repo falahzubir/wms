@@ -17,4 +17,18 @@ class Country extends Model
         'updated_at',
         'deleted_at',
     ];
+
+    // One Country has many ExchangeRate
+    public function currencies() {
+        return $this->hasMany(ExchangeRate::class);
+    }
+
+    // Override the delete method to cascade soft delete
+    public static function boot() {
+        parent::boot();
+
+        static::deleting(function ($country) {
+            $country->currencies()->delete(); // Soft delete related currencies
+        });
+    }
 }

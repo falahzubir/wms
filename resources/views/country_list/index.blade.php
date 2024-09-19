@@ -347,7 +347,7 @@
             const deleteCountry = async (id) => {
                 Swal.fire({
                     title: 'Delete country?',
-                    html: `<div class="text-danger"><strong>This action will delete the item and affect other related data! <br>Are you sure you want to proceed?</strong></div>`,
+                    html: `<div class="text-danger"><i class="bx bxs-error text-warning fs-5"></i> <strong class="fs-6">This action will delete the item and affect other related data! <br>Are you sure you want to proceed?</strong></div>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
