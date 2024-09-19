@@ -376,7 +376,7 @@
                                 Swal.fire('Error!', response.message, 'error');
                             }
                         } catch (error) {
-                            Swal.fire('Error!', 'Failed to delete country. Something went wrong!', 'error');
+                            Swal.fire('Error!', 'Failed to delete country. Please try again.', 'error');
                         }
                     }
                 });
