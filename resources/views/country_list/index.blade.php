@@ -315,7 +315,7 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error!',
-                                text: 'Failed to update country. ' + response.message,
+                                text: 'Failed to update country. Please try again. ' + response.message,
                             });
                         }
                     } catch (error) {
