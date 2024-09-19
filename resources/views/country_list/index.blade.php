@@ -21,7 +21,10 @@
             <div class="card" style="font-size:0.8rem" id="order-table">
                 <div class="card-body">
                     <div class="card-title text-start">
-                        <button class="btn btn-primary" id="add-country-btn" data-bs-toggle="modal" data-bs-target="#addCountry"><i class="bi bi-plus"></i></button>
+                        {{-- Add Button --}}
+                        @can('country_list.add')
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountry"><i class="bi bi-plus"></i></button>
+                        @endcan
                     </div>
                     <!-- Country Table -->
                     <table class="table">
@@ -45,8 +48,15 @@
                                             {{ $country->code }}
                                         </th>
                                         <td class="d-flex align-middle justify-content-center gap-1">
-                                            <a class="btn btn-danger" onclick="deleteCountry({{ $country->id }})"><i class='bx bxs-trash'></i></a>
-                                            <a class="btn btn-warning text-white" onclick="openEditModal('{{ $country->id }}')"><i class='bx bxs-edit'></i></a>
+                                            {{-- Delete Button --}}
+                                            @can('country_list.delete')
+                                                <a class="btn btn-danger" onclick="deleteCountry({{ $country->id }})"><i class='bx bxs-trash'></i></a>
+                                            @endcan
+
+                                            {{-- Edit Button --}}
+                                            @can('country_list.edit')
+                                                <a class="btn btn-warning text-white" onclick="openEditModal('{{ $country->id }}')"><i class='bx bxs-edit'></i></a>
+                                            @endcan
                                         </td>
                                     </tr>
                                 @endforeach
