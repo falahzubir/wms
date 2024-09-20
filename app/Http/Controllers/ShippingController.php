@@ -1538,49 +1538,6 @@ class ShippingController extends Controller
     }
 
 
-    // public function sort_order_to_download($order_ids)
-    // {
-    //     $newOrders = [];
-    //     // $order_ids = [17849,17848,17842,17840,17839,17836,17835,17834,17833,17826];
-    //     $orders = OrderItem::with(['order', 'product'])
-    //         ->whereIn('order_id', $order_ids)->where('status', IS_ACTIVE)
-    //         ->where('is_foc', IS_INACTIVE)
-    //         ->get();
-
-    //     // [x] GROUPING BY SINGLE OR MARRIED (IGNORE FOC)
-
-    //     // [x] Single
-    //     // [x] GROUP BY PRODUCT (IGNORE FOC)
-    //     foreach ($orders->where("marital_status", "single")->groupBy("product.name") as $product_name => $item) {
-    //         // [x] SORT BY QUANTITY ASC ^
-    //         foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
-    //             // logger($order_id->quantity);
-    //             $newOrders[] = $order_id;
-    //         }
-    //     }
-
-    //     // [x] Married
-    //     // [x] GROUP BY PRODUCT (IGNORE FOC)
-    //     foreach ($orders->where("marital_status", "married")->groupBy("product.name") as $product_name => $item) {
-    //         // [x] SORT BY QUANTITY ASC ^
-    //         foreach ($item->sortBy("quantity")->pluck("order_id") as $order_id) {
-    //             $newOrders[] = $order_id;
-    //         }
-    //     }
-
-    //     //  array diff newOrders and order_ids
-    //     $diff = array_diff($order_ids, $newOrders);
-
-    //     if (!empty($diff)) {
-    //         foreach ($diff as $order_id) {
-    //             $newOrders[] = (int)$order_id;
-    //         }
-    //     }
-
-    //     return $newOrders;
-    // }
-
-
     public function generateShopeeCN($orderIds)
     {
         $orders = Order::with(['shippings'])
@@ -2153,6 +2110,7 @@ class ShippingController extends Controller
 
                 $shipping->total_weight = $shipping_cost_data['total_weight'];
                 $shipping->shipping_cost_id = $shipping_cost_data['shipping_cost_id'];
+
                 $shipping->tracking_number = $generateCN['shipmentItems'][0]['trackingNumber'] ?? '';
                 $shipping->attachment = 'labels/' . shipment_num_format($order) . '.pdf';
                 $shipping->packing_attachment = $product_list;
