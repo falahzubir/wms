@@ -241,9 +241,15 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/ship_doc_desc',[SettingsController::class,'view_shipping_doc_desc'])->name('view_shipping_doc_desc');
         Route::get('/ship_doc_desc/form',[SettingsController::class,'sdd_form'])->name('sdd_form');
         Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
+
+        Route::get('country-list', [CountryListController::class, 'index'])->name('country_list');
+        Route::post('country-list/add', [CountryListController::class, 'store'])->name('country_list.add');
+        Route::get('country-list/show/{id}', [CountryListController::class, 'show'])->name('country_list.show');
+        Route::post('country-list/update/{id}', [CountryListController::class, 'update'])->name('country_list.update');
+        Route::delete('country-list/{id}/delete', [CountryListController::class, 'destroy'])->name('country_list.delete');
     });
 
-        Route::prefix('picking_list_setting')->group(function() {
+    Route::prefix('picking_list_setting')->group(function() {
         Route::get('/', [PickingListSettingController::class, 'index'])->name('picking_list_setting.index');
         Route::post('/update', [PickingListSettingController::class, 'update'])->name('picking_sequence.update');
         Route::get('/get', [PickingListSettingController::class, 'index'])->name('picking_sequence.get'); // AJAX endpoint
