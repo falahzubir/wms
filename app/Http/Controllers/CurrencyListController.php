@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Country;
+use App\Models\Currency;
 use Illuminate\Http\Request;
 
-class CountryListController extends Controller
+class CurrencyListController extends Controller
 {
     public function index(Request $request)
     {
@@ -14,17 +14,16 @@ class CountryListController extends Controller
 
         // If a search term is provided, filter the countries; otherwise, get all countries
         if ($search) {
-            $countries = Country::where('name', 'LIKE', '%' . $search . '%')
-                        ->orWhere('code', 'LIKE', '%' . $search . '%')
+            $currency = Currency::where('currency', 'LIKE', '%' . $search . '%')
                         ->orderBy('name', 'asc')
                         ->paginate(10);
         } else {
-            $countries = Country::orderBy('name', 'asc')->paginate(10);
+            $currency = Currency::orderBy('name', 'asc')->paginate(10);
         }
 
-        return view('country_list/index', [
-            'title' => 'List of Country',
-            'countries' => $countries,
+        return view('currency_list/index', [
+            'title' => 'List of Currency',
+            'currency' => $currency,
         ]);
     }
 

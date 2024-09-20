@@ -457,11 +457,11 @@
                                 <i class="bi bi-circle"></i>
                                 <span>Currency</span><i class="bi bi-chevron-down ms-auto"></i>
                             </a>
-                            <ul id="components-nav-shipping-cost" class=" {{ Route::current()->getName() != 'currency_list' ? 'collapsed' : '' }} ">
+                            <ul id="components-nav-shipping-cost" class=" {{ Route::current()->getName() != 'settings.currency_list' ? 'collapsed' : '' }} ">
                                 @can('currency_list.view')
                                     <li>
-                                        <a class="{{ Route::current()->getName() != 'currency_list' ? 'collapsed' : '' }}"
-                                            href="{{ route('currency_list') }}">
+                                        <a class="{{ Route::current()->getName() != 'settings.currency_list' ? 'collapsed' : '' }}"
+                                            href="{{ route('settings.currency_list') }}">
                                             <i class="bi bi-circle"></i>
                                             <span>Currency List</span>
                                         </a>

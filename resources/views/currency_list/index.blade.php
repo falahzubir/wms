@@ -22,7 +22,7 @@
                 <div class="card-body">
                     <div class="card-title text-start">
                         {{-- Add Button --}}
-                        @can('country_list.add')
+                        @can('currency_list.add')
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountry"><i class="bi bi-plus"></i></button>
                         @endcan
                     </div>
@@ -37,25 +37,25 @@
                             </tr>
                         </thead>
                         <tbody class="text-center">
-                            @if ($countries->count())
-                                @foreach ($countries as $key => $country)
+                            @if ($currency->count())
+                                @foreach ($currency as $key => $currency)
                                     <tr style="font-size: 0.8rem;">
-                                        <td scope="row">{{ $key + $countries->firstItem() }}</td>
+                                        <td scope="row">{{ $key + $currency->firstItem() }}</td>
                                         <td>
-                                            {{ $country->name }}
+                                            {{ $currency->name }}
                                         </td>
                                         <th>
-                                            {{ $country->code }}
+                                            {{ $currency->code }}
                                         </th>
                                         <td class="d-flex align-middle justify-content-center gap-1">
                                             {{-- Delete Button --}}
-                                            @can('country_list.delete')
-                                                <a class="btn btn-danger" onclick="deleteCountry({{ $country->id }})"><i class='bx bxs-trash'></i></a>
+                                            @can('currency_list.delete')
+                                                <a class="btn btn-danger" onclick="deleteCountry({{ $currency->id }})"><i class='bx bxs-trash'></i></a>
                                             @endcan
 
                                             {{-- Edit Button --}}
-                                            @can('country_list.edit')
-                                                <a class="btn btn-warning text-white" onclick="openEditModal('{{ $country->id }}')"><i class='bx bxs-edit'></i></a>
+                                            @can('currency_list.edit')
+                                                <a class="btn btn-warning text-white" onclick="openEditModal('{{ $currency->id }}')"><i class='bx bxs-edit'></i></a>
                                             @endcan
                                         </td>
                                     </tr>
@@ -73,10 +73,10 @@
                     </table>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            Showing {{ $countries->firstItem() }} to {{ $countries->lastItem() }} of
-                            {{ $countries->total() }} countries
+                            Showing {{ $currency->firstItem() }} to {{ $currency->lastItem() }} of
+                            {{ $currency->total() }} currency
                         </div>
-                        {{ $countries->withQueryString()->links() }}
+                        {{ $currency->withQueryString()->links() }}
                     </div>
                     <!-- End Country Table -->
                 </div>

@@ -9,6 +9,7 @@ use App\Http\Controllers\BucketController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CourierController;
+use App\Http\Controllers\CurrencyListController;
 use App\Http\Controllers\CustomTemplateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
@@ -21,12 +22,13 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
-use App\Http\Controllers\TemplateSettingController;
 use App\Http\Controllers\ShippingCostController;
+use App\Http\Controllers\TemplateSettingController;
 use App\Http\Controllers\UserController;
 use App\Models\Company;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
+
 
 
 /*
