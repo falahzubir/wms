@@ -450,6 +450,26 @@
                         </a>
                     </li>
                     @endcan
+
+                    @can('view.currency_list')
+                        <li>
+                            <a class="nav-link collapsed" data-bs-target="#components-nav-shipping-cost" data-bs-toggle="collapse" href="#">
+                                <i class="bi bi-circle"></i>
+                                <span>Currency</span><i class="bi bi-chevron-down ms-auto"></i>
+                            </a>
+                            <ul id="components-nav-shipping-cost" class=" {{ Route::current()->getName() != 'state_group.list' ? 'collapsed' : '' }} ">
+                                @can('state_group.list')
+                                    <li>
+                                        <a class="{{ Route::current()->getName() != 'state_group.list' ? 'collapsed' : '' }}"
+                                            href="{{ route('state_group.list') }}">
+                                            <i class="bi bi-circle"></i>
+                                            <span>Currency List</span>
+                                        </a>
+                                    </li>
+                                @endcan
+                            </ul>
+                        </li>
+                    @endcan
                 </ul>
             </li><!-- End Components Nav -->
         @endcan
