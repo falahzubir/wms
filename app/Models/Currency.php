@@ -26,13 +26,4 @@ class Currency extends Model
     public function exchange_rate() {
         return $this->hasMany(ExchangeRate::class); // One to Many
     }
-
-    // Override the delete method to cascade soft delete
-    public static function boot() {
-        parent::boot();
-
-        static::deleting(function ($currency) {
-            $currency->exchange_rate()->delete(); // Soft delete related exchange rate
-        });
-    }
 }

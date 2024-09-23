@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Country;
 use App\Models\Currency;
+use App\Models\ExchangeRate;
 use Illuminate\Http\Request;
 
 class CurrencyListController extends Controller
@@ -148,11 +149,13 @@ class CurrencyListController extends Controller
     public function destroy($id)
     {
         try {
-            // Find the country by id
+            // Soft delete the currencies
             $currency = Currency::findOrFail($id);
-
-            // Soft delete the country
             $currency->delete();
+
+            // Soft delete the exchange_rates
+            $exchangeRates = ExchangeRate::where('country_id', $currency->country_id);
+            $exchangeRates->delete();
 
             return response()->json(['success' => true, 'message' => 'Currency deleted successfully!']);
         } catch (\Exception $e) {

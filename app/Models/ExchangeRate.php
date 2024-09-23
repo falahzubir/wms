@@ -28,9 +28,16 @@ class ExchangeRate extends Model
         'rate',
         'start_date',
         'end_date',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
     public function country() {
         return $this->belongsTo(Country::class);
+    }
+
+    public function currency() {
+        return $this->belongsTo(Currency::class); // Many to One
     }
 }
