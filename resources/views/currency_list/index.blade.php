@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Filters</h5>
-                    <form id="search-form" class="row g-3" action="{{ route('settings.country_list') }}" method="GET">
+                    <form id="search-form" class="row g-3" action="{{ route('settings.currency_list') }}" method="GET">
                         <div class="col-md-12">
                             <input type="text" class="form-control" placeholder="Search" name="search" value="{{ request('search') }}">
                         </div>
@@ -33,6 +33,7 @@
                                 <th scope="col">#</th>
                                 <th scope="col">Country Name</th>
                                 <th scope="col">Country Code</th>
+                                <th scope="col">Currency</th>
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
