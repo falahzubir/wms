@@ -156,7 +156,7 @@ class CurrencyListController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Currency deleted successfully!']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to delete country. Error: ' . $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to delete currency. Please try again. Error: ' . $e->getMessage()]);
         }
     }
 }

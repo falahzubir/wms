@@ -31,8 +31,8 @@ class Currency extends Model
     public static function boot() {
         parent::boot();
 
-        static::deleting(function ($country) {
-            $country->exchange_rate()->delete(); // Soft delete related exchange rate
+        static::deleting(function ($currency) {
+            $currency->exchange_rate()->delete(); // Soft delete related exchange rate
         });
     }
 }
