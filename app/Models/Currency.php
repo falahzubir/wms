@@ -17,4 +17,9 @@ class Currency extends Model
         'updated_at',
         'deleted_at',
     ];
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class); // Many to one
+    }
 }

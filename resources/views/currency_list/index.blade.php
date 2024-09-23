@@ -23,7 +23,7 @@
                     <div class="card-title text-start">
                         {{-- Add Button --}}
                         @can('currency_list.add')
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountry"><i class="bi bi-plus"></i></button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCurrency"><i class="bi bi-plus"></i></button>
                         @endcan
                     </div>
                     <!-- Country Table -->
@@ -38,20 +38,23 @@
                             </tr>
                         </thead>
                         <tbody class="text-center">
-                            @if ($currency->count())
-                                @foreach ($currency as $key => $currency)
+                            @if ($currencies->count())
+                                @foreach ($currencies as $key => $currency)
                                     <tr style="font-size: 0.8rem;">
-                                        <td scope="row">{{ $key + $currency->firstItem() }}</td>
+                                        <td scope="row">{{ $key + $currencies->firstItem() }}</td>
                                         <td>
-                                            {{ $currency->name }}
+                                            {{ $currency->country->name }}
                                         </td>
                                         <th>
-                                            {{ $currency->code }}
+                                            {{ $currency->country->code }}
+                                        </th>
+                                        <th>
+                                            {{ $currency->currency }}
                                         </th>
                                         <td class="d-flex align-middle justify-content-center gap-1">
                                             {{-- Delete Button --}}
                                             @can('currency_list.delete')
-                                                <a class="btn btn-danger" onclick="deleteCountry({{ $currency->id }})"><i class='bx bxs-trash'></i></a>
+                                                <a class="btn btn-danger" onclick="deleteCurrency({{ $currency->id }})"><i class='bx bxs-trash'></i></a>
                                             @endcan
 
                                             {{-- Edit Button --}}
@@ -74,10 +77,10 @@
                     </table>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            Showing {{ $currency->firstItem() }} to {{ $currency->lastItem() }} of
-                            {{ $currency->total() }} currency
+                            Showing {{ $currencies->firstItem() }} to {{ $currencies->lastItem() }} of
+                            {{ $currencies->total() }} currency
                         </div>
-                        {{ $currency->withQueryString()->links() }}
+                        {{ $currencies->withQueryString()->links() }}
                     </div>
                     <!-- End Country Table -->
                 </div>
@@ -87,33 +90,32 @@
 
     </section>
 
-    <!-- The Modal: Add Country -->
-    <div class="modal fade" id="addCountry">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+    <!-- The Modal: Add Currency -->
+    <div class="modal fade" id="addCurrency">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form id="addCountryForm">
+                <form id="addCurrencyForm">
                     @csrf
                     <!-- Modal Header -->
                     <div class="modal-header d-flex justify-content-center align-items-center">
-                        <h6 class="modal-title"><strong>Add Country</strong></h4>
+                        <h6 class="modal-title"><strong>Add Currency</strong></h4>
                     </div>
     
                     <!-- Modal body -->
                     <div class="modal-body p-5">
                         <div class="mb-3">
                             <label><strong>Country Name: </strong></label>
-                            <input type="text" name="add_country_name" class="form-control mt-2" value="{{ old('add_country_name') }}" required>
-                            @error('add_country_name')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
+                            <select name="add_country_name" class="form-select mt-2" required>
+                                <option value="" selected disabled>Nothing Selected</option>
+                                @foreach ($countries as $country)
+                                    <option value="{{ $country->id }}">{{ $country->name }} ({{ $country->code }})</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div>
-                            <label><strong>Country Code: </strong></label>
-                            <input type="text" name="add_country_code" class="form-control mt-2" value="{{ old('add_country_code') }}" required>
-                            @error('add_country_code')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
+                            <label><strong>Currency: </strong></label>
+                            <input type="text" name="add_currency" class="form-control mt-2" value="" required>
                         </div>
                     </div>
     
@@ -127,15 +129,15 @@
         </div>
     </div>
 
-    <!-- The Modal: Edit Country -->
-    <div class="modal fade" id="editCountry">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+    <!-- The Modal: Edit Currency -->
+    <div class="modal fade" id="editCurrency">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form id="editCountryForm">
+                <form id="editCurrencyForm">
                     @csrf
                     <!-- Modal Header -->
                     <div class="modal-header d-flex justify-content-center align-items-center">
-                        <h6 class="modal-title"><strong>Edit Country</strong></h4>
+                        <h6 class="modal-title"><strong>Edit Currency</strong></h4>
                     </div>
     
                     <!-- Modal body -->
@@ -149,9 +151,9 @@
                         </div>
 
                         <div>
-                            <label><strong>Country Code: </strong></label>
-                            <input type="text" name="edit_country_code" class="form-control mt-2" value="{{ old('edit_country_code') }}" required>
-                            @error('edit_country_code')
+                            <label><strong>Currency: </strong></label>
+                            <input type="text" name="edit_currency" class="form-control mt-2" value="{{ old('edit_currency') }}" required>
+                            @error('edit_currency')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
@@ -177,26 +179,26 @@
                 $('span.text-danger').remove();
 
                 // Gather form data
-                const formData = new FormData(document.getElementById('addCountryForm'));
-                let countryName = $('input[name="add_country_name"]').val() || '';
-                let countryCode = $('input[name="add_country_code"]').val() || '';
+                const formData = new FormData(document.getElementById('addCurrencyForm'));
+                let countryName = $('select[name="add_country_name"]').val() || '';
+                let currency = $('input[name="add_currency"]').val() || '';
                 let valid = true;
 
                 // Check if fields are empty
                 if (countryName.trim() === '') {
-                    $('input[name="add_country_name"]').after('<span class="text-danger">*This field is required.</span>');
+                    $('select[name="add_country_name"]').after('<span class="text-danger">*Please select a country name</span>');
                     valid = false;
                 }
 
-                if (countryCode.trim() === '') {
-                    $('input[name="add_country_code"]').after('<span class="text-danger">*This field is required.</span>');
+                if (currency.trim() === '') {
+                    $('input[name="add_currency"]').after('<span class="text-danger">*Please enter a currency</span>');
                     valid = false;
                 }
 
                 if (valid) {
                     // Perform the AJAX request
                     $.ajax({
-                        url: "{{ route('settings.country_list.add') }}",
+                        url: "{{ route('settings.currency_list.add') }}",
                         type: 'POST',
                         data: formData,
                         contentType: false,
@@ -221,12 +223,12 @@
 
                                 // Handle error specific to country_name
                                 if (response.field === 'add_country_name') {
-                                    $('input[name="add_country_name"]').after('<span class="text-danger">' + response.message + '</span>');
+                                    $('select[name="add_country_name"]').after('<span class="text-danger">' + response.message + '</span>');
                                 }
 
                                 // Handle error specific to country_code
-                                if (response.field === 'add_country_code') {
-                                    $('input[name="add_country_code"]').after('<span class="text-danger">' + response.message + '</span>');
+                                if (response.field === 'add_currency') {
+                                    $('input[name="add_currency"]').after('<span class="text-danger">' + response.message + '</span>');
                                 }
                             } else {
                                 // Generic error handling for other issues
@@ -250,7 +252,7 @@
 
                     // Fetch the country data using AJAX
                     const response = await $.ajax({
-                        url: "{{ route('settings.country_list.show', ':id') }}".replace(':id', id),
+                        url: "{{ route('settings.currency_list.show', ':id') }}".replace(':id', id),
                         type: 'GET',
                     });
 
@@ -307,7 +309,7 @@
                     try {
                         // Submit the form via AJAX
                         const response = await $.ajax({
-                            url: "{{ route('settings.country_list.update', ':id') }}".replace(':id', id),
+                            url: "{{ route('settings.currency_list.update', ':id') }}".replace(':id', id),
                             type: 'POST',
                             data: formData,
                             contentType: false,
@@ -355,9 +357,9 @@
                 }
             };
 
-            const deleteCountry = async (id) => {
+            const deleteCurrency = async (id) => {
                 Swal.fire({
-                    title: 'Delete country?',
+                    title: 'Delete currency?',
                     html: `<div class="text-danger"><i class="bx bxs-error text-warning fs-5"></i> <strong class="fs-6">This action will delete the item and affect other related data! <br>Are you sure you want to proceed?</strong></div>`,
                     icon: 'warning',
                     showCancelButton: true,
@@ -368,7 +370,7 @@
                     if (result.isConfirmed) {
                         try {
                             const response = await $.ajax({
-                                url: "{{ route('settings.country_list.delete', ':id') }}".replace(':id', id),
+                                url: "{{ route('settings.currency_list.delete', ':id') }}".replace(':id', id),
                                 type: 'DELETE',
                                 data: {
                                     _token: '{{ csrf_token() }}'
@@ -387,7 +389,7 @@
                                 Swal.fire('Error!', response.message, 'error');
                             }
                         } catch (error) {
-                            Swal.fire('Error!', 'Failed to delete country. Please try again.', 'error');
+                            Swal.fire('Error!', 'Failed to delete currency. Please try again.', 'error');
                         }
                     }
                 });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Country;
 use App\Models\Currency;
 use Illuminate\Http\Request;
 
@@ -12,18 +13,29 @@ class CurrencyListController extends Controller
         // Get the search query from the request
         $search = $request->input('search');
 
-        // If a search term is provided, filter the countries; otherwise, get all countries
+        // Initialize the query for Currency model
+        $query = Currency::query();
+
+        // If user search something
         if ($search) {
-            $currency = Currency::where('currency', 'LIKE', '%' . $search . '%')
-                        ->orderBy('name', 'asc')
-                        ->paginate(10);
-        } else {
-            $currency = Currency::orderBy('name', 'asc')->paginate(10);
+            $query->where('currency', 'LIKE', '%' . $search . '%')
+                ->orWhereHas('country', function($q) use ($search) {
+                    $q->where('name', 'LIKE', '%' . $search . '%')
+                    ->orWhere('code', 'LIKE', '%' . $search . '%');
+                });
         }
 
+        // Paginate the results
+        $currencies = $query->paginate(10);
+
+        $countries = Country::all();
+
+        // Return the view with the currency data
         return view('currency_list/index', [
             'title' => 'List of Currency',
-            'currency' => $currency,
+            'currencies' => $currencies,
+            'countries' => $countries,
+
         ]);
     }
 
@@ -32,11 +44,11 @@ class CurrencyListController extends Controller
         try {
             $request->validate([
                 'add_country_name' => 'required',
-                'add_country_code' => 'required',
+                'add_currency' => 'required',
             ]);
 
             // Check if country name already exists
-            $existName = Country::where('name', $request->input('add_country_name'))
+            $existName = Currency::where('country_id', $request->input('add_country_name'))
                 ->whereNull('deleted_at')
                 ->first();
 
@@ -45,27 +57,27 @@ class CurrencyListController extends Controller
             }
 
             // Check if country code already exists
-            $existCode = Country::where('code', $request->input('add_country_code'))
+            $existCode = Currency::where('currency', $request->input('add_currency'))
                 ->whereNull('deleted_at')
                 ->first();
 
             if ($existCode) {
-                return response()->json(['success' => false, 'message' => '*The country code already exists. Try another.', 'field' => 'add_country_code'], 422);
+                return response()->json(['success' => false, 'message' => '*The currency already exists. Try another.', 'field' => 'add_currency'], 422);
             }
 
             // Save input into countries table
-            $country = new Country();
-            $country->name = ucwords($request->input('add_country_name'));
-            $country->code = strtoupper($request->input('add_country_code'));
+            $currency = new Currency();
+            $currency->country_id = $request->input('add_country_name');
+            $currency->currency = strtoupper($request->input('add_currency'));
 
-            if ($country->save()) {
-                return response()->json(['success' => true, 'message' => 'Country created successfully!']);
+            if ($currency->save()) {
+                return response()->json(['success' => true, 'message' => 'Currency created successfully!']);
             } else {
-                return response()->json(['success' => false, 'message' => 'Failed to add country']);
+                return response()->json(['success' => false, 'message' => 'Failed to add currency']);
             }
 
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to add country. Error: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to add currency. Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -125,12 +137,12 @@ class CurrencyListController extends Controller
     {
         try {
             // Find the country by id
-            $country = Country::findOrFail($id);
+            $currency = Currency::findOrFail($id);
 
             // Soft delete the country
-            $country->delete();
+            $currency->delete();
 
-            return response()->json(['success' => true, 'message' => 'Country deleted successfully!']);
+            return response()->json(['success' => true, 'message' => 'Currency deleted successfully!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to delete country. Error: ' . $e->getMessage()]);
         }
