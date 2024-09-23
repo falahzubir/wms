@@ -16,7 +16,7 @@ class CurrencyListController extends Controller
         // Initialize the query for Currency model
         $query = Currency::query();
 
-        // If user search something
+        // If user searches something
         if ($search) {
             $query->where('currency', 'LIKE', '%' . $search . '%')
                 ->orWhereHas('country', function($q) use ($search) {
@@ -25,8 +25,12 @@ class CurrencyListController extends Controller
                 });
         }
 
+        // Order by the related country name
+        $query->join('countries', 'currencies.country_id', '=', 'countries.id')
+            ->orderBy('countries.name', 'asc');
+
         // Paginate the results
-        $currencies = $query->paginate(10);
+        $currencies = $query->select('currencies.*')->paginate(10);
 
         $countries = Country::all();
 
