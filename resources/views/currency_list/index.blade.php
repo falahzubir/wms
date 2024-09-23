@@ -27,7 +27,7 @@
                         @endcan
                     </div>
                     <!-- Country Table -->
-                    <table class="table">
+                    <table class="table table-striped">
                         <thead class="text-center" class="bg-secondary">
                             <tr class="align-middle">
                                 <th scope="col">#</th>
@@ -78,7 +78,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             Showing {{ $currencies->firstItem() }} to {{ $currencies->lastItem() }} of
-                            {{ $currencies->total() }} currency
+                            {{ $currencies->total() }} currencies
                         </div>
                         {{ $currencies->withQueryString()->links() }}
                     </div>
