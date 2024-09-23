@@ -88,7 +88,7 @@
 
     <!-- The Modal: Add Country -->
     <div class="modal fade" id="addCountry">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="addCountryForm">
                     @csrf
@@ -128,7 +128,7 @@
 
     <!-- The Modal: Edit Country -->
     <div class="modal fade" id="editCountry">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="editCountryForm">
                     @csrf
