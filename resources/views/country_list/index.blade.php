@@ -27,7 +27,7 @@
                         @endcan
                     </div>
                     <!-- Country Table -->
-                    <table class="table">
+                    <table class="table table-striped">
                         <thead class="text-center" class="bg-secondary">
                             <tr class="align-middle">
                                 <th scope="col">#</th>
