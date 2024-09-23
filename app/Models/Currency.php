@@ -20,6 +20,19 @@ class Currency extends Model
 
     public function country()
     {
-        return $this->belongsTo(Country::class); // Many to one
+        return $this->belongsTo(Country::class); // Many to One
+    }
+
+    public function exchange_rate() {
+        return $this->hasMany(ExchangeRate::class); // One to Many
+    }
+
+    // Override the delete method to cascade soft delete
+    public static function boot() {
+        parent::boot();
+
+        static::deleting(function ($country) {
+            $country->exchange_rate()->delete(); // Soft delete related exchange rate
+        });
     }
 }
