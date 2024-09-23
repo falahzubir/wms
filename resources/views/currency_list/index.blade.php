@@ -144,10 +144,12 @@
                     <div class="modal-body p-5">
                         <div class="mb-3">
                             <label><strong>Country Name: </strong></label>
-                            <input type="text" name="edit_country_name" class="form-control mt-2" value="{{ old('edit_country_name') }}" required>
-                            @error('edit_country_name')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
+                            <select name="edit_country_name" class="form-select mt-2" required>
+                                <option value="" selected disabled>Nothing Selected</option>
+                                @foreach ($countries as $country)
+                                    <option value="{{ $country->id }}">{{ $country->name }} ({{ $country->code }})</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div>
@@ -246,30 +248,36 @@
             const openEditModal = async (id) => {
                 try {
                     // Initialize the modal
-                    const editCountry = new bootstrap.Modal(document.getElementById('editCountry'), {
+                    const editCurrency = new bootstrap.Modal(document.getElementById('editCurrency'), {
                         keyboard: false
                     });
 
-                    // Fetch the country data using AJAX
+                    // Fetch the currency data using AJAX
                     const response = await $.ajax({
                         url: "{{ route('settings.currency_list.show', ':id') }}".replace(':id', id),
                         type: 'GET',
                     });
 
-                    // Populate the form fields with the country data
-                    $('input[name="edit_country_name"]').val(response.country.name);
-                    $('input[name="edit_country_code"]').val(response.country.code);
+                    // Make sure data is available and matches the expected structure
+                    if (response && response.data) {
+                        const currency = response.data;
+                        
+                        // Populate the form fields with the fetched data
+                        $('select[name="edit_country_name"]').val(currency.country_id);
+                        $('input[name="edit_currency"]').val(currency.currency);
 
-                    // Remove any previous hidden input fields for the method and id to avoid duplication
-                    $('#editCountryForm input[name="_method"]').remove();
-                    $('#editCountryForm input[name="id"]').remove();
+                        // Clear any previous hidden inputs for method and id to avoid duplication
+                        $('#editCurrencyForm input[name="_method"]').remove();
+                        $('#editCurrencyForm input[name="id"]').remove();
 
-                    // Add hidden inputs for method and id
-                    $('#editCountryForm').append('<input type="hidden" name="id" value="' + id + '">');
+                        // Append hidden inputs for method and id
+                        $('#editCurrencyForm').append('<input type="hidden" name="id" value="' + id + '">');
 
-                    // Show the modal
-                    editCountry.show();
-
+                        // Show the modal
+                        editCurrency.show();
+                    } else {
+                        throw new Error('Invalid response structure');
+                    }
                 } catch (error) {
                     console.error('Error:', error);
                     Swal.fire({
@@ -283,9 +291,9 @@
             const submitEditForm = async () => {
                 event.preventDefault(); // Prevent the default form submission
 
-                const formData = new FormData(document.getElementById('editCountryForm'));
-                let countryName = $('input[name="edit_country_name"]').val() || '';
-                let countryCode = $('input[name="edit_country_code"]').val() || '';
+                const formData = new FormData(document.getElementById('editCurrencyForm'));
+                let countryName = $('select[name="edit_country_name"]').val() || '';
+                let currency = $('input[name="edit_currency"]').val() || '';
                 let valid = true;
 
                 // Country id
@@ -296,12 +304,12 @@
 
                 // Check if fields are empty
                 if (countryName.trim() === '') {
-                    $('input[name="edit_country_name"]').after('<span class="text-danger">*This field is required.</span>');
+                    $('input[select="edit_country_name"]').after('<span class="text-danger">*Please select a country name</span>');
                     valid = false;
                 }
 
-                if (countryCode.trim() === '') {
-                    $('input[name="edit_country_code"]').after('<span class="text-danger">*This field is required.</span>');
+                if (currency.trim() === '') {
+                    $('input[name="edit_currency"]').after('<span class="text-danger">*Please enter a currency</span>');
                     valid = false;
                 }
 
@@ -338,12 +346,12 @@
 
                             // Handle error specific to country_name
                             if (response.field === 'edit_country_name') {
-                                $('input[name="edit_country_name"]').after('<span class="text-danger">' + response.message + '</span>');
+                                $('select[name="edit_country_name"]').after('<span class="text-danger">' + response.message + '</span>');
                             }
 
                             // Handle error specific to country_code
-                            if (response.field === 'edit_country_code') {
-                                $('input[name="edit_country_code"]').after('<span class="text-danger">' + response.message + '</span>');
+                            if (response.field === 'edit_currency') {
+                                $('input[name="edit_currency"]').after('<span class="text-danger">' + response.message + '</span>');
                             }
                         } else {
                             // Generic error handling for other issues

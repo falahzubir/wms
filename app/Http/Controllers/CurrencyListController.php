@@ -47,7 +47,7 @@ class CurrencyListController extends Controller
                 'add_currency' => 'required',
             ]);
 
-            // Check if country name already exists
+            // Check if country id already exists
             $existName = Currency::where('country_id', $request->input('add_country_name'))
                 ->whereNull('deleted_at')
                 ->first();
@@ -56,7 +56,7 @@ class CurrencyListController extends Controller
                 return response()->json(['success' => false, 'message' => '*The country name already exists. Try another.', 'field' => 'add_country_name'], 422);
             }
 
-            // Check if country code already exists
+            // Check if currency code already exists
             $existCode = Currency::where('currency', $request->input('add_currency'))
                 ->whereNull('deleted_at')
                 ->first();
@@ -65,7 +65,7 @@ class CurrencyListController extends Controller
                 return response()->json(['success' => false, 'message' => '*The currency already exists. Try another.', 'field' => 'add_currency'], 422);
             }
 
-            // Save input into countries table
+            // Save input into currencies table
             $currency = new Currency();
             $currency->country_id = $request->input('add_country_name');
             $currency->currency = strtoupper($request->input('add_currency'));
@@ -83,9 +83,17 @@ class CurrencyListController extends Controller
 
     public function show($id)
     {
-        $country = Country::find($id);
-        return response([
-            'country' => $country,
+        $currency = Currency::with('country')->find($id);
+
+        // Check if the currency exists
+        if (!$currency) {
+            return response()->json([
+                'message' => 'Currency not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => $currency,
             'message' => 'Retrieved successfully'
         ], 200);
     }
@@ -93,43 +101,43 @@ class CurrencyListController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'edit_country_name' => 'required|string|max:255',
-            'edit_country_code' => 'required|string|max:10',
+            'edit_country_name' => 'required',
+            'edit_currency' => 'required|string|max:10',
         ]);
 
         try {
-            // Find the country by id
-            $country = Country::find($id);
+            // Find the currency by id
+            $currency = Currency::find($id);
 
-            // Check if country name exists (excluding the current country)
-            $countryNameExists = Country::where('name', $request->input('edit_country_name'))
-                ->where('id', '!=', $id) // Exclude the current country
+            // Check if country id exists (excluding the current country id)
+            $countryNameExists = Currency::where('country_id', $request->input('edit_country_name'))
+                ->where('id', '!=', $id)
                 ->exists();
 
             if ($countryNameExists) {
                 return response()->json(['success' => false, 'message' => '*The country name already exists. Try another.', 'field' => 'edit_country_name'], 422);
             }
 
-            // Check if country code exists (excluding the current country)
-            $countryCodeExists = Country::where('code', $request->input('edit_country_code'))
-                ->where('id', '!=', $id) // Exclude the current country
+            // Check if currency exists (excluding the current currency)
+            $countryCodeExists = Currency::where('currency', $request->input('edit_currency'))
+                ->where('id', '!=', $id)
                 ->exists();
 
             if ($countryCodeExists) {
-                return response()->json(['success' => false, 'message' => '*The country code already exists. Try another.', 'field' => 'edit_country_code'], 422);
+                return response()->json(['success' => false, 'message' => '*The currency already exists. Try another.', 'field' => 'edit_currency'], 422);
             }
 
-            // Update the country's details
-            $country->name = ucwords($request->input('edit_country_name'));
-            $country->code = strtoupper($request->input('edit_country_code'));
+            // Update the currency details
+            $currency->country_id = $request->input('edit_country_name');
+            $currency->currency = strtoupper($request->input('edit_currency'));
 
-            if ($country->save()) {
-                return response()->json(['success' => true, 'message' => 'Country updated successfully!']);
+            if ($currency->save()) {
+                return response()->json(['success' => true, 'message' => 'Currency updated successfully!']);
             } else {
-                return response()->json(['success' => false, 'message' => 'Failed to update country']);
+                return response()->json(['success' => false, 'message' => 'Failed to update currency']);
             }
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to update country. Error: ' . $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to update currency. Error: ' . $e->getMessage()]);
         }
     }
 
