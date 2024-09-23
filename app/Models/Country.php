@@ -19,7 +19,7 @@ class Country extends Model
     ];
 
     // One Country has many ExchangeRate
-    public function currencies() {
+    public function exchange_rate() {
         return $this->hasMany(ExchangeRate::class);
     }
 
@@ -28,7 +28,7 @@ class Country extends Model
         parent::boot();
 
         static::deleting(function ($country) {
-            $country->currencies()->delete(); // Soft delete related currencies
+            $country->exchange_rate()->delete(); // Soft delete related currencies
         });
     }
 }
