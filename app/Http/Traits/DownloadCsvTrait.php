@@ -104,8 +104,8 @@ Trait DownloadCsvTrait
                 $join->on('orders.id', '=', 'delivered_logs.order_id')
                     ->where('delivered_logs.order_status_id', 6)
                     ->where('delivered_logs.status', 1)
-                    ->where('delivered_logs.created_at', function ($query) {
-                        $query->select(DB::raw('MAX(ol.created_at)'))
+                    ->where('delivered_logs.id', function ($query) {
+                        $query->select(DB::raw('MAX(ol.id)'))
                             ->from('order_logs AS ol')
                             ->whereColumn('ol.order_id', 'orders.id')
                             ->where('ol.order_status_id', 6)
