@@ -183,12 +183,12 @@
 
                 // Check if fields are empty
                 if (countryName.trim() === '') {
-                    $('input[name="add_country_name"]').after('<span class="text-danger">*This field is required.</span>');
+                    $('input[name="add_country_name"]').after('<span class="text-danger">*Please enter a country name</span>');
                     valid = false;
                 }
 
                 if (countryCode.trim() === '') {
-                    $('input[name="add_country_code"]').after('<span class="text-danger">*This field is required.</span>');
+                    $('input[name="add_country_code"]').after('<span class="text-danger">*Please enter a country code</span>');
                     valid = false;
                 }
 
@@ -293,12 +293,12 @@
 
                 // Check if fields are empty
                 if (countryName.trim() === '') {
-                    $('input[name="edit_country_name"]').after('<span class="text-danger">*This field is required.</span>');
+                    $('input[name="edit_country_name"]').after('<span class="text-danger">*Please enter a country name</span>');
                     valid = false;
                 }
 
                 if (countryCode.trim() === '') {
-                    $('input[name="edit_country_code"]').after('<span class="text-danger">*This field is required.</span>');
+                    $('input[name="edit_country_code"]').after('<span class="text-danger">*Please enter a country code</span>');
                     valid = false;
                 }
 
