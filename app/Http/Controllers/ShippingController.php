@@ -2347,24 +2347,36 @@ class ShippingController extends Controller
 
         $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
 
-        try {
-            $createNinjaVanOrder = NinjaVanInternationalTrait::createNinjaVanOrder($jsonSend, $accessToken);
+        $retryAttempts = 5;
+        $retryDelay = 60; // Delay in seconds
 
-            if (isset($createNinjaVanOrder['tracking_number'])) {
-                $shipping->tracking_number = $createNinjaVanOrder['tracking_number'];
-                $shipping->packing_attachment = $product_list;
-                $shipping->save();
+        for ($attempt = 0; $attempt < $retryAttempts; $attempt++) {
+            try {
+                $createNinjaVanOrder = NinjaVanInternationalTrait::createNinjaVanOrder($jsonSend, $accessToken);
 
-                // Store currency amount into orders table
-                $order->currency_amount = $sgd_amount;
-                $order->save();
+                if (isset($createNinjaVanOrder['tracking_number'])) {
+                    $shipping->tracking_number = $createNinjaVanOrder['tracking_number'];
+                    $shipping->packing_attachment = $product_list;
+                    $shipping->save();
 
-                return true;
-            } else {
-                return json_encode($createNinjaVanOrder);
+                    // Store currency amount into orders table
+                    $order->currency_amount = $sgd_amount;
+                    $order->save();
+
+                    return true; // Success, exit retry loop
+                } else {
+                    // If there's no tracking number, return the response
+                    return json_encode($createNinjaVanOrder);
+                }
+            } catch (\Exception $e) {
+                if ($attempt == $retryAttempts - 1) {
+                    // If it's the last attempt, return the error message
+                    return 'Final attempt failed: ' . $e->getMessage();
+                }
+                // Log the error and wait before retrying
+                error_log('Attempt ' . ($attempt + 1) . ' failed: ' . $e->getMessage());
+                sleep($retryDelay); // Wait before retrying
             }
-        } catch (\Exception $e) {
-            return $e->getMessage();
         }
     }
 
