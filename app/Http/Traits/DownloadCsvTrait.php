@@ -103,7 +103,14 @@ Trait DownloadCsvTrait
             ->leftJoin('order_logs AS delivered_logs', function ($join) {
                 $join->on('orders.id', '=', 'delivered_logs.order_id')
                     ->where('delivered_logs.order_status_id', 6)
-                    ->where('delivered_logs.status', 1);
+                    ->where('delivered_logs.status', 1)
+                    ->where('delivered_logs.id', function ($query) {
+                        $query->select(DB::raw('MAX(ol.id)'))
+                            ->from('order_logs AS ol')
+                            ->whereColumn('ol.order_id', 'orders.id')
+                            ->where('ol.order_status_id', 6)
+                            ->where('ol.status', 1);
+                    });
             })
             ->leftJoin(DB::raw('(SELECT shipping_costs.id, shipping_costs.price, weight_categories.name AS weight_category_names FROM shipping_costs LEFT JOIN weight_categories ON weight_categories.id = shipping_costs.weight_category_id WHERE shipping_costs.deleted_at IS NULL GROUP BY shipping_costs.id) AS shipping_costs'), 'shippings.shipping_cost_id', '=', 'shipping_costs.id')
             ->leftJoin(DB::raw('(SELECT shipping_products.shipping_id, SUM(shipping_products.quantity) AS quantity FROM shipping_products GROUP BY shipping_products.shipping_id) AS shipping_products'), 'shipping_products.shipping_id', '=', 'shippings.id')
