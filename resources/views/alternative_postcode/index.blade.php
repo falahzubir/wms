@@ -387,8 +387,7 @@
                         }
                     });
                 }
-                }
-       
+            }
 
             // Handle Delete Button
             $('.delete-link').on('click', function (e) {

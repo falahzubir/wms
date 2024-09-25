@@ -8,6 +8,7 @@ use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\CountryListController;
 use App\Http\Controllers\CourierController;
 use App\Http\Controllers\CurrencyListController;
 use App\Http\Controllers\CustomTemplateController;
@@ -243,6 +244,12 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/ship_doc_desc',[SettingsController::class,'view_shipping_doc_desc'])->name('view_shipping_doc_desc');
         Route::get('/ship_doc_desc/form',[SettingsController::class,'sdd_form'])->name('sdd_form');
         Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
+
+        Route::get('country-list', [CountryListController::class, 'index'])->name('country_list');
+        Route::post('country-list/add', [CountryListController::class, 'store'])->name('country_list.add');
+        Route::get('country-list/show/{id}', [CountryListController::class, 'show'])->name('country_list.show');
+        Route::post('country-list/update/{id}', [CountryListController::class, 'update'])->name('country_list.update');
+        Route::delete('country-list/{id}/delete', [CountryListController::class, 'destroy'])->name('country_list.delete');
 
         Route::get('currency-list', [CurrencyListController::class, 'index'])->name('currency_list');
         Route::post('currency-list/add', [CurrencyListController::class, 'store'])->name('currency_list.add');

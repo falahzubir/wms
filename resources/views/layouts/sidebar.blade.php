@@ -451,6 +451,15 @@
                     </li>
                     @endcan
 
+                    @can('view.country_list')
+                        <li>
+                            <a href="{{ route('settings.country_list') }}"
+                                {{ Route::current()->getName() == 'settings.country_list' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i><span>Country List</span>
+                            </a>
+                        </li>
+                    @endcan
+
                     @can('currency.view')
                         <li>
                             <a class="nav-link collapsed" data-bs-target="#components-nav-shipping-cost" data-bs-toggle="collapse" href="#">
