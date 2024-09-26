@@ -278,7 +278,7 @@
                 if (valid) {
                     // Perform the AJAX request
                     $.ajax({
-                        url: "{{ route('settings.currency_list.add') }}",
+                        url: "{{ route('settings.exchange_rate.add') }}",
                         type: 'POST',
                         data: formData,
                         contentType: false,
@@ -301,22 +301,12 @@
                             if (xhr.status === 422) {
                                 let response = xhr.responseJSON;
 
-                                // Show input error
-                                if (response.field === 'add_start_date') {
-                                    $('input[name="add_start_date"]').after('<span class="text-danger alert-error">' + response.message + '</span>');
-                                }
-
-                                if (response.field === 'add_end_date') {
-                                    $('input[name="add_end_date"]').after('<span class="text-danger alert-error">' + response.message + '</span>');
-                                }
-                                
-                                if (response.field === 'add_currency') {
-                                    $('select[name="add_currency"]').after('<span class="text-danger alert-error">' + response.message + '</span>');
-                                }
-
-                                if (response.field === 'add_rate') {
-                                    $('#add_rate').after('<span class="text-danger alert-error">' + response.message + '</span>');
-                                }
+                                // Show error if exchange rate already exist.
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: response.message
+                                });
                             } else {
                                 // Generic error handling for other issues
                                 Swal.fire({

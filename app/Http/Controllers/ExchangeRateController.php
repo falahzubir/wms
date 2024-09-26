@@ -48,7 +48,56 @@ class ExchangeRateController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $request->validate([
+                'add_start_date' => 'required',
+                'add_end_date' => 'required',
+                'add_currency' => 'required',
+                'add_rate' => 'required',
+            ]);
+
+            // Check if country id already exists
+            $exists = ExchangeRate::where('currency', $request->input('add_currency'))
+                ->where(function($query) use ($request) {
+                    $query->where(function($q) use ($request) {
+                        // Check if the input start date falls within an existing date range
+                        $q->where('start_date', '<=', $request->input('add_start_date'))
+                        ->where('end_date', '>=', $request->input('add_start_date'));
+                    })
+                    ->orWhere(function($q) use ($request) {
+                        // Check if the input end date falls within an existing date range
+                        $q->where('start_date', '<=', $request->input('add_end_date'))
+                        ->where('end_date', '>=', $request->input('add_end_date'));
+                    })
+                    ->orWhere(function($q) use ($request) {
+                        // Check if an existing date range is fully inside the input range
+                        $q->where('start_date', '>=', $request->input('add_start_date'))
+                        ->where('end_date', '<=', $request->input('add_end_date'));
+                    });
+                })
+                ->whereNull('deleted_at') // Ignore soft-deleted entries
+                ->first();
+
+            if ($exists) {
+                return response()->json(['success' => false, 'message' => 'The exchange rate for this currency already exists within the selected date range.'], 422);
+            }
+
+            // Save input into currencies table
+            $exchangeRate = new ExchangeRate();
+            $exchangeRate->start_date = $request->input('add_start_date');
+            $exchangeRate->end_date = $request->input('add_end_date');
+            $exchangeRate->currency = $request->input('add_currency');
+            $exchangeRate->rate = $request->input('add_rate');
+
+            if ($exchangeRate->save()) {
+                return response()->json(['success' => true, 'message' => 'Exchange rate created successfully!']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Failed to add exchange rate']);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to add exchange rate. Error: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
