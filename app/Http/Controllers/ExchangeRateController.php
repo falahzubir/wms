@@ -103,9 +103,21 @@ class ExchangeRateController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        // Find the exchange rate and load the related currency
+        $exchangeRate = ExchangeRate::with('currencies')->find($id);
+
+        if (!$exchangeRate) {
+            return response([
+                'message' => 'Exchange rate not found.'
+            ], 404); // Return a 404 if the exchange rate is not found
+        }
+
+        return response([
+            'data' => $exchangeRate,
+            'message' => 'Retrieved successfully'
+        ], 200);
     }
 
     /**

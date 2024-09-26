@@ -103,7 +103,7 @@
 
     </section>
 
-    <!-- The Modal: Add Currency -->
+    <!-- The Modal: Add Exchange Rate -->
     <div class="modal fade" id="addExchangeRate">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -183,35 +183,73 @@
         </div>
     </div>
 
-    <!-- The Modal: Edit Currency -->
-    {{-- <div class="modal fade" id="editCurrency">
-        <div class="modal-dialog modal-dialog-centered">
+    <!-- The Modal: Edit Exchange Rate -->
+    <div class="modal fade" id="editExchangeRate">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <form id="editCurrencyForm">
+                <form id="editExchangeRateForm" style="font-size: 11pt">
                     @csrf
                     <!-- Modal Header -->
                     <div class="modal-header d-flex justify-content-center align-items-center">
-                        <h6 class="modal-title"><strong>Edit Currency</strong></h4>
+                        <h6 class="modal-title"><strong>Edit Exchange Rate</strong></h4>
                     </div>
     
                     <!-- Modal body -->
-                    <div class="modal-body p-5">
-                        <div class="mb-3">
-                            <label><strong>Country Name: </strong></label>
-                            <select name="edit_country_name" class="form-select mt-2" required>
-                                <option value="" selected disabled>Nothing Selected</option>
-                                @foreach ($countries as $country)
-                                    <option value="{{ $country->id }}">{{ $country->name }} ({{ $country->code }})</option>
-                                @endforeach
-                            </select>
+                    <div class="modal-body p-4">
+                        <!-- Start Date and End Date -->
+                        <div class="row p-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="edit_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="edit_start_date" name="edit_start_date" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="edit_end_date" class="form-label">End Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="edit_end_date" name="edit_end_date" required>
+                            </div>
                         </div>
 
-                        <div>
-                            <label><strong>Currency: </strong></label>
-                            <input type="text" name="edit_currency" class="form-control mt-2" value="{{ old('edit_currency') }}" required>
-                            @error('edit_currency')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
+                        <div class="container p-4 border rounded-4 bg-light shadow">
+                            <!-- Currency Selection and Exchange Rate -->
+                            <div class="row mb-3">
+                                <div class="col-md-3 mt-3">
+                                    <label for="edit_currency" class="form-label">Currency <span class="text-danger">*</span></label>
+                                </div>
+                                <div class="col-md-9">
+                                    <select name="edit_currency" class="form-select mt-2" id="edit_currency" required>
+                                        <option value="" selected disabled>Nothing Selected</option>
+                                        @foreach ($currencies as $currency)
+                                            <option value="{{ $currency->id }}" data-currency="{{ $currency->currency }}">{{ $currency->currency }} ({{ $currency->country->name }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Exchange Rate (MYR) -->
+                            <div class="row d-flex align-items-center">
+                                <!-- 1 IDR Section -->
+                                <div class="col-md-3">
+                                    <label for="edit_foreign_currency" class="form-label">Exchange Rate (MYR) <span class="text-danger">*</span></label>
+                                </div>
+
+                                <!-- Fixed text for 1 IDR -->
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control text-center" value="" id="edit_foreign_rate" name="edit_foreign_rate" placeholder="(Select currency first)" disabled>
+                                </div>
+
+                                <!-- Equal sign -->
+                                <div class="col-md-1 text-center">
+                                    <p class="mb-0">=</p>
+                                </div>
+
+                                <!-- Exchange rate input for MYR -->
+                                <div class="col-md-4">
+                                    <div class="input-group" id="edit_rate">
+                                        <input type="text" class="form-control text-end" name="edit_rate" placeholder="0.00" required>
+                                        <span class="input-group-text">MYR</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
     
@@ -223,7 +261,7 @@
                 </form>
             </div>
         </div>
-    </div> --}}
+    </div>
 
     <x-slot name="script">
         <script>
@@ -320,48 +358,57 @@
                 }
             };
 
-            // const openEditModal = async (id) => {
-            //     try {
-            //         // Initialize the modal
-            //         const editCurrency = new bootstrap.Modal(document.getElementById('editCurrency'), {
-            //             keyboard: false
-            //         });
+            const openEditModal = async (id) => {
+                try {
+                    // Initialize the modal
+                    const editExchangeRate = new bootstrap.Modal(document.getElementById('editExchangeRate'), {
+                        keyboard: false
+                    });
 
-            //         // Fetch the currency data using AJAX
-            //         const response = await $.ajax({
-            //             url: "{{ route('settings.currency_list.show', ':id') }}".replace(':id', id),
-            //             type: 'GET',
-            //         });
+                    // Fetch the exchange rate data using AJAX
+                    const response = await $.ajax({
+                        url: "{{ route('settings.exchange_rate.show', ':id') }}".replace(':id', id),
+                        type: 'GET',
+                    });
 
-            //         // Make sure data is available and matches the expected structure
-            //         if (response && response.data) {
-            //             const currency = response.data;
+                    // Make sure the data exists and has the expected structure
+                    if (response && response.data) {
+                        const exchangeRate = response.data;
                         
-            //             // Populate the form fields with the fetched data
-            //             $('select[name="edit_country_name"]').val(currency.country_id);
-            //             $('input[name="edit_currency"]').val(currency.currency);
+                        // Manually extract the date (ignoring time)
+                        const startDate = exchangeRate.start_date.split(' ')[0]; // 'YYYY-MM-DD'
+                        const endDate = exchangeRate.end_date.split(' ')[0]; // 'YYYY-MM-DD'
 
-            //             // Clear any previous hidden inputs for method and id to avoid duplication
-            //             $('#editCurrencyForm input[name="_method"]').remove();
-            //             $('#editCurrencyForm input[name="id"]').remove();
+                        // Populate the form fields with the fetched data
+                        $('input[name="edit_start_date"]').val(startDate);
+                        $('input[name="edit_end_date"]').val(endDate);
+                        $('select[name="edit_currency"]').val(exchangeRate.currency);
 
-            //             // Append hidden inputs for method and id
-            //             $('#editCurrencyForm').append('<input type="hidden" name="id" value="' + id + '">');
+                        // Show the exchange rate value and set the foreign rate
+                        $('input[name="edit_foreign_rate"]').val(`1 ${exchangeRate.currencies.currency}`);
+                        $('input[name="edit_rate"]').val(exchangeRate.rate);
 
-            //             // Show the modal
-            //             editCurrency.show();
-            //         } else {
-            //             throw new Error('Invalid response structure');
-            //         }
-            //     } catch (error) {
-            //         console.error('Error:', error);
-            //         Swal.fire({
-            //             icon: 'error',
-            //             title: 'Oops...',
-            //             text: 'Failed to fetch data. Please try again.'
-            //         });
-            //     }
-            // };
+                        // Clear any previous hidden inputs for method and id to avoid duplication
+                        $('#editExchangeRateForm input[name="_method"]').remove();
+                        $('#editExchangeRateForm input[name="id"]').remove();
+
+                        // Append hidden inputs for method and id
+                        $('#editExchangeRateForm').append('<input type="hidden" name="id" value="' + id + '">');
+
+                        // Show the modal
+                        editExchangeRate.show();
+                    } else {
+                        throw new Error('Invalid response structure');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Failed to fetch data. Please try again.'
+                    });
+                }
+            };
 
             // const submitEditForm = async () => {
             //     event.preventDefault(); // Prevent the default form submission
