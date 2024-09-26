@@ -37,7 +37,7 @@ class ExchangeRate extends Model
         return $this->belongsTo(Country::class);
     }
 
-    public function currency() {
-        return $this->belongsTo(Currency::class); // Many to One
+    public function currencies() {
+        return $this->belongsTo(Currency::class, 'currency', 'id');
     }
 }

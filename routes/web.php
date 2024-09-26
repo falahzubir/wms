@@ -13,6 +13,7 @@ use App\Http\Controllers\CourierController;
 use App\Http\Controllers\CurrencyListController;
 use App\Http\Controllers\CustomTemplateController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExchangeRateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationalModelController;
 use App\Http\Controllers\OrderController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\UserController;
 use App\Models\Company;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -256,6 +258,12 @@ Route::middleware(['auth'])->group(function() {
         Route::get('currency-list/show/{id}', [CurrencyListController::class, 'show'])->name('currency_list.show');
         Route::post('currency-list/update/{id}', [CurrencyListController::class, 'update'])->name('currency_list.update');
         Route::delete('currency-list/{id}/delete', [CurrencyListController::class, 'destroy'])->name('currency_list.delete');
+
+        Route::get('exchange-rate', [ExchangeRateController::class, 'index'])->name('exchange_rate');
+        Route::post('exchange-rate/add', [ExchangeRateController::class, 'store'])->name('exchange_rate.add');
+        Route::get('exchange-rate/show/{id}', [ExchangeRateController::class, 'show'])->name('exchange_rate.show');
+        Route::post('exchange-rate/update/{id}', [ExchangeRateController::class, 'update'])->name('exchange_rate.update');
+        Route::delete('exchange-rate/{id}/delete', [ExchangeRateController::class, 'destroy'])->name('exchange_rate.delete');
     });
 
     Route::prefix('picking_list_setting')->group(function() {
