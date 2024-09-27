@@ -265,7 +265,7 @@
 
     <x-slot name="script">
         <script>
-            // Auto select currency when user select country
+            // Auto select currency when user selects a country (For Add)
             document.getElementById('add_currency').addEventListener('change', function() {
                 // Get the selected option
                 const selectedOption = this.options[this.selectedIndex];
@@ -275,6 +275,18 @@
                 
                 // Update the foreign currency input field to display "1 <Currency>"
                 document.getElementById('add_foreign_rate').value = `1 ${selectedCurrency}`;
+            });
+
+            // Auto select currency when user selects a country (For Edit)
+            document.getElementById('edit_currency').addEventListener('change', function() {
+                // Get the selected option
+                const selectedOption = this.options[this.selectedIndex];
+                
+                // Get the currency from the data attribute
+                const selectedCurrency = selectedOption.getAttribute('data-currency');
+                
+                // Update the foreign currency input field to display "1 <Currency>"
+                document.getElementById('edit_foreign_rate').value = `1 ${selectedCurrency}`;
             });
 
             const submitAddForm = () => {
@@ -410,82 +422,92 @@
                 }
             };
 
-            // const submitEditForm = async () => {
-            //     event.preventDefault(); // Prevent the default form submission
+            const submitEditForm = async () => {
+                // Prevent the default form submission
+                event.preventDefault();
 
-            //     const formData = new FormData(document.getElementById('editCurrencyForm'));
-            //     let countryName = $('select[name="edit_country_name"]').val() || '';
-            //     let currency = $('input[name="edit_currency"]').val() || '';
-            //     let valid = true;
+                // Clear previous validation messages
+                $('span.alert-error').remove();
 
-            //     // Country id
-            //     let id = $('input[name="id"]').val();
+                const formData = new FormData(document.getElementById('editExchangeRateForm'));
+                let edit_start_date = $('input[name="edit_start_date"]').val() || '';
+                let edit_end_date = $('input[name="edit_end_date"]').val() || '';
+                let edit_currency = $('select[name="edit_currency"]').val() || '';
+                let edit_rate = $('input[name="edit_rate"]').val() || '';
+                let valid = true;
 
-            //     // Clear previous validation messages
-            //     $('.text-danger').remove();
+                // Exchange rate id
+                let id = $('input[name="id"]').val();
 
-            //     // Check if fields are empty
-            //     if (countryName.trim() === '') {
-            //         $('input[select="edit_country_name"]').after('<span class="text-danger">*Please select a country name</span>');
-            //         valid = false;
-            //     }
+                // Check if fields are empty
+                if (edit_start_date.trim() === '') {
+                    $('input[name="edit_start_date"]').after('<span class="text-danger alert-error">*Please select start date</span>');
+                    valid = false;
+                }
 
-            //     if (currency.trim() === '') {
-            //         $('input[name="edit_currency"]').after('<span class="text-danger">*Please enter a currency</span>');
-            //         valid = false;
-            //     }
+                if (edit_end_date.trim() === '') {
+                    $('input[name="edit_end_date"]').after('<span class="text-danger alert-error">*Please select end date</span>');
+                    valid = false;
+                }
 
-            //     if (valid) {
-            //         try {
-            //             // Submit the form via AJAX
-            //             const response = await $.ajax({
-            //                 url: "{{ route('settings.currency_list.update', ':id') }}".replace(':id', id),
-            //                 type: 'POST',
-            //                 data: formData,
-            //                 contentType: false,
-            //                 processData: false,
-            //             });
+                if (edit_currency.trim() === '') {
+                    $('select[name="edit_currency"]').after('<span class="text-danger alert-error">*Please select currency</span>');
+                    valid = false;
+                }
 
-            //             if (response.success) {
-            //                 Swal.fire({
-            //                     icon: 'success',
-            //                     title: 'Success!',
-            //                     text: response.message,
-            //                 }).then(() => {
-            //                     location.reload();
-            //                 });
-            //             } else {
-            //                 Swal.fire({
-            //                     icon: 'error',
-            //                     title: 'Error!',
-            //                     text: 'Failed to update country. Please try again. ' + response.message,
-            //                 });
-            //             }
-            //         } catch (error) {
-            //             // Check if the response has validation errors
-            //             if (error.status === 422) {
-            //                 let response = error.responseJSON;
+                if (edit_rate.trim() === '') {
+                    $('#edit_rate').after('<span class="text-danger alert-error">*Please enter exchange rate</span>');
+                    valid = false;
+                }
 
-            //                 // Handle error specific to country_name
-            //                 if (response.field === 'edit_country_name') {
-            //                     $('select[name="edit_country_name"]').after('<span class="text-danger">' + response.message + '</span>');
-            //                 }
+                if (valid) {
+                    try {
+                        // Submit the form via AJAX
+                        const response = await $.ajax({
+                            url: "{{ route('settings.exchange_rate.update', ':id') }}".replace(':id', id),
+                            type: 'POST',
+                            data: formData,
+                            contentType: false,
+                            processData: false,
+                        });
 
-            //                 // Handle error specific to country_code
-            //                 if (response.field === 'edit_currency') {
-            //                     $('input[name="edit_currency"]').after('<span class="text-danger">' + response.message + '</span>');
-            //                 }
-            //             } else {
-            //                 // Generic error handling for other issues
-            //                 Swal.fire({
-            //                     icon: 'error',
-            //                     title: 'Error!',
-            //                     text: 'Something went wrong!'
-            //                 });
-            //             }
-            //         }
-            //     }
-            // };
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: response.message,
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Failed to update country. Please try again. ' + response.message,
+                            });
+                        }
+                    } catch (error) {
+                        // Check if the response has validation errors
+                        if (error.status === 422) {
+                            let response = error.responseJSON;
+
+                            // Show error if exchange rate already exist.
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: response.message
+                            });
+                        } else {
+                            // Generic error handling for other issues
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Something went wrong!'
+                            });
+                        }
+                    }
+                }
+            };
 
             // const deleteCurrency = async (id) => {
             //     Swal.fire({

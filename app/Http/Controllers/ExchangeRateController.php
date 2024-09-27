@@ -16,7 +16,6 @@ class ExchangeRateController extends Controller
         // Get the search query from the request
         $search = $request->input('search');
 
-        // If a search term is provided, filter the countries; otherwise, get all countries
         if ($search) {
             $exchangeRate = ExchangeRate::where('name', 'LIKE', '%' . $search . '%')
                         ->orWhere('code', 'LIKE', '%' . $search . '%')
@@ -36,14 +35,6 @@ class ExchangeRateController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -56,7 +47,7 @@ class ExchangeRateController extends Controller
                 'add_rate' => 'required',
             ]);
 
-            // Check if country id already exists
+            // Check if exchange rate id already exists
             $exists = ExchangeRate::where('currency', $request->input('add_currency'))
                 ->where(function($query) use ($request) {
                     $query->where(function($q) use ($request) {
@@ -75,14 +66,14 @@ class ExchangeRateController extends Controller
                         ->where('end_date', '<=', $request->input('add_end_date'));
                     });
                 })
-                ->whereNull('deleted_at') // Ignore soft-deleted entries
+                ->whereNull('deleted_at')
                 ->first();
 
             if ($exists) {
                 return response()->json(['success' => false, 'message' => 'The exchange rate for this currency already exists within the selected date range.'], 422);
             }
 
-            // Save input into currencies table
+            // Save input into exchange_rates table
             $exchangeRate = new ExchangeRate();
             $exchangeRate->start_date = $request->input('add_start_date');
             $exchangeRate->end_date = $request->input('add_end_date');
@@ -121,19 +112,61 @@ class ExchangeRateController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'edit_start_date' => 'required',
+            'edit_end_date' => 'required',
+            'edit_currency' => 'required',
+            'edit_rate' => 'required',
+        ]);
+
+        try {
+
+            // Check if exchange rate id already exists
+            $exists = ExchangeRate::where('currency', $request->input('edit_currency'))
+                ->where(function($query) use ($request) {
+                    $query->where(function($q) use ($request) {
+                        // Check if the input start date falls within an existing date range
+                        $q->where('start_date', '<=', $request->input('edit_start_date'))
+                        ->where('end_date', '>=', $request->input('edit_start_date'));
+                    })
+                    ->orWhere(function($q) use ($request) {
+                        // Check if the input end date falls within an existing date range
+                        $q->where('start_date', '<=', $request->input('edit_end_date'))
+                        ->where('end_date', '>=', $request->input('edit_end_date'));
+                    })
+                    ->orWhere(function($q) use ($request) {
+                        // Check if an existing date range is fully inside the input range
+                        $q->where('start_date', '>=', $request->input('edit_start_date'))
+                        ->where('end_date', '<=', $request->input('edit_end_date'));
+                    });
+                })
+                ->whereNull('deleted_at')
+                ->where('id', '!=', $id)
+                ->exists();
+
+            if ($exists) {
+                return response()->json(['success' => false, 'message' => 'The exchange rate for this currency already exists within the selected date range.'], 422);
+            }
+
+            // Update data into exchange_rates table
+            $exchangeRate = ExchangeRate::find($id);
+            $exchangeRate->start_date = $request->input('edit_start_date');
+            $exchangeRate->end_date = $request->input('edit_end_date');
+            $exchangeRate->currency = $request->input('edit_currency');
+            $exchangeRate->rate = $request->input('edit_rate');
+            
+            if ($exchangeRate->save()) {
+                return response()->json(['success' => true, 'message' => 'Exchange rate updated successfully!']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Failed to update exchange rate']);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to update exchange rate. Error: ' . $e->getMessage()]);
+        }
     }
 
     /**
