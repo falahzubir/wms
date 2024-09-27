@@ -58,10 +58,10 @@
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <h5><strong>Currency</strong></h5>
-                                <select name="currency" class="form-select mt-2" id="currency" required>
+                                <select name="currency" class="form-select mt-2" id="currency">
                                     <option value="" selected disabled>Nothing Selected</option>
                                     @foreach ($currencies as $currency)
-                                        <option value="{{ $currency->id }}" data-currency="{{ $currency->currency }}">{{ $currency->currency }} ({{ $currency->country->name }})</option>
+                                        <option value="{{ $currency->id }}">{{ $currency->currency }} ({{ $currency->country->name }})</option>
                                     @endforeach
                                 </select>
                             </div>

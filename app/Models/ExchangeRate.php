@@ -23,7 +23,6 @@ class ExchangeRate extends Model
      * @var array
      */
     protected $fillable = [
-        'country_id',
         'currency',
         'rate',
         'start_date',
@@ -33,11 +32,7 @@ class ExchangeRate extends Model
         'deleted_at',
     ];
 
-    public function country() {
-        return $this->belongsTo(Country::class);
-    }
-
     public function currencies() {
-        return $this->belongsTo(Currency::class, 'currency', 'id');
+        return $this->belongsTo(Currency::class, 'currency', 'id'); // Many to One
     }
 }
