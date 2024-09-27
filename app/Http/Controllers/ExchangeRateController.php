@@ -40,11 +40,19 @@ class ExchangeRateController extends Controller
     public function store(Request $request)
     {
         try {
+            // Validation rules
             $request->validate([
-                'add_start_date' => 'required',
-                'add_end_date' => 'required',
-                'add_currency' => 'required',
-                'add_rate' => 'required',
+                'add_currency' => 'required|integer',
+                'add_start_date' => 'required|date',
+                'add_end_date' => 'required|date|after_or_equal:add_start_date',
+                'add_rate' => [
+                    'required',
+                    'numeric',  // Ensures the value is numeric
+                    'regex:/^\d{1,9}(\.\d{1,11})?$/'  // Allows up to 9 digits before and 11 after the decimal point
+                ],
+            ], [
+                // Custom error message for the regex validation
+                'add_rate.regex' => 'The exchange rate must be a valid decimal number.',
             ]);
 
             // Check if exchange rate id already exists
@@ -116,11 +124,18 @@ class ExchangeRateController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Validation rules
         $request->validate([
-            'edit_start_date' => 'required',
-            'edit_end_date' => 'required',
-            'edit_currency' => 'required',
-            'edit_rate' => 'required',
+            'edit_currency' => 'required|integer',
+            'edit_start_date' => 'required|date',
+            'edit_end_date' => 'required|date|after_or_equal:edit_start_date',
+            'edit_rate' => [
+                'required',
+                'numeric',
+                'regex:/^\d{1,9}(\.\d{1,11})?$/',  // Allows up to 9 digits before and 11 after the decimal point
+            ],
+        ], [
+            'edit_rate.regex' => 'The exchange rate must be a valid decimal number.',
         ]);
 
         try {
