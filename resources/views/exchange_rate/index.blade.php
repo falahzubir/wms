@@ -66,7 +66,7 @@
                                             <div class="d-flex justify-content-center gap-1">
                                                 {{-- Delete Button --}}
                                                 @can('exchange_rate.delete')
-                                                    <a class="btn btn-danger" onclick="deleteCurrency({{ $row->id }})"><i class='bx bxs-trash'></i></a>
+                                                    <a class="btn btn-danger" onclick="deleteExchangeRate({{ $row->id }})"><i class='bx bxs-trash'></i></a>
                                                 @endcan
 
                                                 {{-- Edit Button --}}
@@ -483,7 +483,7 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error!',
-                                text: 'Failed to update country. Please try again. ' + response.message,
+                                text: 'Failed to update exchange rate. Please try again. ' + response.message,
                             });
                         }
                     } catch (error) {
@@ -509,43 +509,42 @@
                 }
             };
 
-            // const deleteCurrency = async (id) => {
-            //     Swal.fire({
-            //         title: 'Delete currency?',
-            //         html: `<div class="text-danger"><i class="bx bxs-error text-warning fs-5"></i> <strong class="fs-6">This action will delete the item and affect other related data! <br>Are you sure you want to proceed?</strong></div>`,
-            //         icon: 'warning',
-            //         showCancelButton: true,
-            //         confirmButtonColor: '#d33',
-            //         confirmButtonText: 'Yes, delete it!',
-            //         width: 650
-            //     }).then(async (result) => {
-            //         if (result.isConfirmed) {
-            //             try {
-            //                 const response = await $.ajax({
-            //                     url: "{{ route('settings.currency_list.delete', ':id') }}".replace(':id', id),
-            //                     type: 'DELETE',
-            //                     data: {
-            //                         _token: '{{ csrf_token() }}'
-            //                     },
-            //                 });
+            const deleteExchangeRate = async (id) => {
+                Swal.fire({
+                    title: 'Delete exchange rate?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!',
+                    width: 650
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await $.ajax({
+                                url: "{{ route('settings.exchange_rate.delete', ':id') }}".replace(':id', id),
+                                type: 'DELETE',
+                                data: {
+                                    _token: '{{ csrf_token() }}'
+                                },
+                            });
 
-            //                 if (response.success) {
-            //                     // Show success message
-            //                     Swal.fire({
-            //                         icon: 'success',
-            //                         title: response.message,
-            //                     }).then(() => {
-            //                         location.reload(); // Reload the page
-            //                     });
-            //                 } else {
-            //                     Swal.fire('Error!', response.message, 'error');
-            //                 }
-            //             } catch (error) {
-            //                 Swal.fire('Error!', 'Failed to delete currency. Please try again.', 'error');
-            //             }
-            //         }
-            //     });
-            // };
+                            if (response.success) {
+                                // Show success message
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: response.message,
+                                }).then(() => {
+                                    location.reload(); // Reload the page
+                                });
+                            } else {
+                                Swal.fire('Error!', response.message, 'error');
+                            }
+                        } catch (error) {
+                            Swal.fire('Error!', 'Failed to delete exchange rate. Please try again.', 'error');
+                        }
+                    }
+                });
+            };
         </script>
     </x-slot>
 

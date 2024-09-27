@@ -172,8 +172,16 @@ class ExchangeRateController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        try {
+            // Soft delete the currencies
+            $currency = ExchangeRate::findOrFail($id);
+            $currency->delete();
+
+            return response()->json(['success' => true, 'message' => 'Exchange rate deleted successfully!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to delete exchange rate. Please try again. Error: ' . $e->getMessage()]);
+        }
     }
 }
