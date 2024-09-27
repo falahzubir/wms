@@ -117,6 +117,7 @@ class CurrencyListController extends Controller
             // Check if country id exists (excluding the current country id)
             $countryNameExists = Currency::where('country_id', $request->input('edit_country_name'))
                 ->where('id', '!=', $id)
+                ->whereNull('deleted_at')
                 ->exists();
 
             if ($countryNameExists) {
@@ -126,6 +127,7 @@ class CurrencyListController extends Controller
             // Check if currency exists (excluding the current currency)
             $countryCodeExists = Currency::where('currency', $request->input('edit_currency'))
                 ->where('id', '!=', $id)
+                ->whereNull('deleted_at')
                 ->exists();
 
             if ($countryCodeExists) {

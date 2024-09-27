@@ -93,6 +93,7 @@ class CountryListController extends Controller
             // Check if country name exists (excluding the current country)
             $countryNameExists = Country::where('name', $request->input('edit_country_name'))
                 ->where('id', '!=', $id) // Exclude the current country
+                ->whereNull('deleted_at')
                 ->exists();
 
             if ($countryNameExists) {
@@ -102,6 +103,7 @@ class CountryListController extends Controller
             // Check if country code exists (excluding the current country)
             $countryCodeExists = Country::where('code', $request->input('edit_country_code'))
                 ->where('id', '!=', $id) // Exclude the current country
+                ->whereNull('deleted_at')
                 ->exists();
 
             if ($countryCodeExists) {
