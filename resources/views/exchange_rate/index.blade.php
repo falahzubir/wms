@@ -12,11 +12,61 @@
 
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Filters</h5>
+                    <h5 class="card-title">Filters...</h5>
                     <form id="search-form" class="row g-3" action="{{ route('settings.exchange_rate') }}" method="GET">
-                        <div class="col-md-12">
+                        <div class="col-md-12 mb-4">
                             <input type="text" class="form-control" placeholder="Search" name="search" value="{{ request('search') }}">
                         </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-3">
+                                <h5><strong>Date Range</strong></h5>
+                                <div class="btn-group" data-toggle="buttons">
+                                    <input type="radio" class="btn-check" id="btn-check-today" name="off">
+                                    <label class="btn btn-outline-secondary rounded-pill mx-1"
+                                        for="btn-check-today">Today</label>
+
+                                    <input type="radio" class="btn-check" id="btn-check-yesterday" name="off">
+                                    <label class="btn btn-outline-secondary rounded-pill mx-1"
+                                        for="btn-check-yesterday">Yesterday</label>
+
+                                    <input type="radio" class="btn-check" id="btn-check-this-month" name="off">
+                                    <label class="btn btn-outline-secondary rounded-pill mx-1"
+                                        for="btn-check-this-month">This Month</label>
+
+                                    <input type="radio" class="btn-check" id="btn-check-last-month" name="off">
+                                    <label class="btn btn-outline-secondary rounded-pill mx-1"
+                                        for="btn-check-last-month">Last Month</label>
+
+                                    <input type="radio" class="btn-check" id="btn-check-overall" name="off">
+                                    <label class="btn btn-outline-secondary rounded-pill mx-1"
+                                        for="btn-check-overall">Overall</label>
+                                </div>
+                            </div>
+                        
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" placeholder="From" name="date_from"
+                                    id="start-date" value="{{ Request::get('date_from') ?? '' }}">
+                            </div>
+
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" placeholder="To" name="date_to" id="end-date"
+                                    value="{{ Request::get('date_to') ?? '' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <h5><strong>Currency</strong></h5>
+                                <select name="currency" class="form-select mt-2" id="currency" required>
+                                    <option value="" selected disabled>Nothing Selected</option>
+                                    @foreach ($currencies as $currency)
+                                        <option value="{{ $currency->id }}" data-currency="{{ $currency->currency }}">{{ $currency->currency }} ({{ $currency->country->name }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="text-end">
                             <button type="submit" class="btn btn-primary" id="filter-order">Submit</button>
                         </div>
