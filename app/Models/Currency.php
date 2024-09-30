@@ -20,10 +20,12 @@ class Currency extends Model
 
     public function country()
     {
-        return $this->belongsTo(Country::class); // Many to One
+        return $this->belongsTo(Country::class); // Many to one relationship with Country
     }
 
-    public function exchange_rate() {
-        return $this->hasMany(ExchangeRate::class); // One to Many
+    public function exchange_rate()
+    {
+        // Establish a one-to-many relationship with ExchangeRate using the `currency` column
+        return $this->hasMany(ExchangeRate::class, 'currency', 'id');
     }
 }

@@ -10,18 +10,8 @@ class ExchangeRate extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'exchange_rates';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'currency',
         'rate',
@@ -32,7 +22,9 @@ class ExchangeRate extends Model
         'deleted_at',
     ];
 
-    public function currencies() {
-        return $this->belongsTo(Currency::class, 'currency', 'id'); // Many to One
+    public function currencies()
+    {
+        // Use the 'currency' column in exchange_rates to link to the id in currencies table
+        return $this->belongsTo(Currency::class, 'currency', 'id');
     }
 }

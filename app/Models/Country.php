@@ -18,17 +18,36 @@ class Country extends Model
         'deleted_at',
     ];
 
-    // One Country has many ExchangeRate
-    public function exchange_rate() {
-        return $this->hasMany(ExchangeRate::class);
+    public function currencies()
+    {
+        return $this->hasMany(Currency::class); // One to many with Currency
+    }
+
+    public function exchange_rate()
+    {
+        // Use hasManyThrough to relate ExchangeRate through Currency
+        return $this->hasManyThrough(
+            ExchangeRate::class,      // The related model
+            Currency::class,          // The intermediate model
+            'country_id',             // Foreign key on currencies table
+            'currency',               // Foreign key on exchange_rates table
+            'id',                     // Local key on countries table
+            'id'                      // Local key on currencies table
+        );
     }
 
     // Override the delete method to cascade soft delete
-    public static function boot() {
+    public static function boot()
+    {
         parent::boot();
 
         static::deleting(function ($country) {
-            $country->exchange_rate()->delete(); // Soft delete related exchange rate
+            // Soft delete exchange rates related through currencies
+            foreach ($country->currencies as $currency) {
+                $currency->exchange_rate()->delete();  // Soft delete exchange rates
+            }
+
+            $country->currencies()->delete(); // Soft delete currencies
         });
     }
 }
