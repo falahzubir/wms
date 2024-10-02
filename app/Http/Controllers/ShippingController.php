@@ -183,7 +183,7 @@ class ShippingController extends Controller
      * @param Request $request
      * @return response
      */
-    public function dhl_label($order_ids) 
+    public function dhl_label($order_ids)
     {
 
         $url = $this->dhl_label_url;
@@ -340,7 +340,7 @@ class ShippingController extends Controller
 
             $response = Http::withBody($json, 'application/json')->post($url);
 
-            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost); 
+            $dhl_store = $this->dhl_store($orders_dhl, $response, $shipping_cost);
 
             if ($dhl_store != null) {
 
@@ -2158,15 +2158,13 @@ class ShippingController extends Controller
         $errors = [];
         $generatedCount = 0; // Track the number of already generated CN
         $now = Carbon::now();
-        $startOfMonth = $now->startOfMonth()->format('Y-m-d H:i:s');
-        $endOfMonth = $now->endOfMonth()->format('Y-m-d H:i:s');
 
         // Get order data
         $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])->whereIn('id', $order_ids)->get();
 
         // Get rate for currency exchange
-        $rate = ExchangeRate::where('start_date', '>=', $startOfMonth)
-                    ->where('end_date', '<=', $endOfMonth)
+        $rate = ExchangeRate::where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now)
                     ->first();
 
         if (!$rate) {
@@ -2396,7 +2394,7 @@ class ShippingController extends Controller
         for ($attempt = 0; $attempt < $retryAttempts; $attempt++) {
             try {
                 $generateWayBill = NinjaVanInternationalTrait::generateWayBill($shipping->tracking_number, $accessToken);
-                
+
                 if ($generateWayBill->status() == 200) {
                     $pdfContent = $generateWayBill->body();
                     $filePath = 'labels/' . shipment_num_format($order) . '.pdf';
@@ -2419,7 +2417,7 @@ class ShippingController extends Controller
                     $errors[] = ['message' => 'Final attempt to generate waybill failed: ' . $e->getMessage()];
                 }
             }
-            
+
             // Wait for the delay before retrying
             sleep($delay);
             // Exponentially increase delay, but cap at maxDelay
