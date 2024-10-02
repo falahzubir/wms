@@ -6,6 +6,8 @@
         }
     </style>
 
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+
     <section class="section">
 
         <div class="row">
@@ -58,8 +60,7 @@
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <h5><strong>Currency</strong></h5>
-                                <select name="currency" class="form-select mt-2" id="currency">
-                                    <option value="" selected disabled>Nothing Selected</option>
+                                <select name="currency[]" id="currency" class="form-select mt-2" placeholder="Nothing Selected" multiple>
                                     @foreach ($currencies as $currency)
                                         <option value="{{ $currency->id }}">{{ $currency->currency }} ({{ $currency->country->name }})</option>
                                     @endforeach
@@ -314,7 +315,15 @@
     </div>
 
     <x-slot name="script">
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
         <script>
+            // Tom Select Plugin
+            new TomSelect("#currency", {
+                plugins: ['remove_button'],
+            });
+
             // Auto select currency when user selects a country (For Add)
             document.getElementById('add_currency').addEventListener('change', function() {
                 // Get the selected option
