@@ -13,14 +13,14 @@ Trait NinjaVanInternationalTrait
     {
         // Define the URL for the token request
         $ninjaVanTokenUrl = app()->environment() == 'production' ? 'https://api.ninjavan.co/my/2.0/oauth/access_token' : 'https://api-sandbox.ninjavan.co/sg/2.0/oauth/access_token';
-        
+
         // Retrieve the existing access token record from the database
         $ninjaVanToken = AccessToken::where('type', 'nv-int')
             ->where('company_id', $company)
             ->first();
 
         // Check if the token exists and is not expired
-        if ($ninjaVanToken && Carbon::createFromTimestamp($ninjaVanToken->expires_at)->isFuture()) {
+        if ($ninjaVanToken && Carbon::parse($ninjaVanToken->expires_at)->isFuture()) {
             return $ninjaVanToken;
         }
 
@@ -28,23 +28,23 @@ Trait NinjaVanInternationalTrait
         $responseGet = Http::withHeaders([
             'Accept' => 'application/json',
         ])->post($ninjaVanTokenUrl, [
-            'client_id' => app()->environment() == 'production' ? 'f98f1ed2ce0c48a7bdbd7273e42c07fe' : '4c7b667e220b424bb684a3b91bad9ce4',
-            'client_secret' => app()->environment() == 'production' ? 'b67e92e050834beca6d4814518eb3c13' :'5dbe0ca634264f07ae9de7fb1990467d',
+            'client_id' => app()->environment() == 'production' ? 'f98f1ed2ce0c48a7bdbd7273e42c07fe' : 'b59d818fb3594a46bc6970da2f503a2f',
+            'client_secret' => app()->environment() == 'production' ? 'b67e92e050834beca6d4814518eb3c13' : '115a4c5af7204f2692114e7499f4c46c',
             'grant_type' => 'client_credentials',
             'scope' => 'CORE_GET_AWB DASH_MANAGE_ORDER DASH_GET_ORDER ALL_ACCESS INTERNAL_SERVICE'
         ]);
 
         if ($responseGet->status() == 200) {
             $newTokenData = $responseGet->json();
-            
+
             if (!$ninjaVanToken) {
                 $ninjaVanToken = new AccessToken();
                 $ninjaVanToken->type = 'nv-int';
                 $ninjaVanToken->company_id = $company;
             }
-            
-            $ninjaVanToken->client_id = app()->environment() == 'production' ? 'f98f1ed2ce0c48a7bdbd7273e42c07fe' : '5dbe0ca634264f07ae9de7fb1990467d';
-            $ninjaVanToken->client_secret = app()->environment() == 'production' ? 'b67e92e050834beca6d4814518eb3c13' : '5dbe0ca634264f07ae9de7fb1990467d';
+
+            $ninjaVanToken->client_id = app()->environment() == 'production' ? 'f98f1ed2ce0c48a7bdbd7273e42c07fe' : 'b59d818fb3594a46bc6970da2f503a2f';
+            $ninjaVanToken->client_secret = app()->environment() == 'production' ? 'b67e92e050834beca6d4814518eb3c13' : '115a4c5af7204f2692114e7499f4c46c';
             $ninjaVanToken->name = 'NinjaVan International Authentication';
             $ninjaVanToken->token = $newTokenData['access_token'];
             $ninjaVanToken->expires_at = Carbon::now()->addSeconds($newTokenData['expires_in'])->toDateTimeString(); // Convert to datetime format
@@ -57,11 +57,8 @@ Trait NinjaVanInternationalTrait
         }
     }
 
-    public static function createNinjaVanOrder($json, $company)
+    public static function createNinjaVanOrder($json, $accessToken)
     {
-        // Retrieve the valid access token
-        $accessToken = self::checkAccessToken($company);
-
         $ninjaVanUrl = app()->environment() == 'production' ? 'https://api.ninjavan.co/my/4.2/orders' : 'https://api-sandbox.ninjavan.co/sg/4.2/orders';
 
         $response = Http::withHeaders([
@@ -78,11 +75,8 @@ Trait NinjaVanInternationalTrait
         return $response->json();
     }
 
-    public static function generateWayBill($trackingNumber, $company)
+    public static function generateWayBill($trackingNumber, $accessToken)
     {
-        // Retrieve the valid access token
-        $accessToken = self::checkAccessToken($company);
-
         // Define the URL for the waybill report request
         $ninjaVanUrl = app()->environment() == 'production' ? 'https://api.ninjavan.co/my/2.0/reports/waybill' : 'https://api-sandbox.ninjavan.co/sg/2.0/reports/waybill';
 

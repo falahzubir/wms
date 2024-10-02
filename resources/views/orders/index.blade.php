@@ -1646,6 +1646,11 @@
                     return;
                 }
 
+                if (type == 'nv-int') {
+                    requestCNNINJA(type, checkedOrder, inc_packing_list_result);
+                    return;
+                }
+
                 requestCN(type, checkedOrder, inc_packing_list_result);
 
             } //end of generateCN
@@ -1657,98 +1662,62 @@
                         type: type,
                     })
                     .then(function(response) {
+                        let text = inc_packing_list_result ? "Shipping label and packing list generated" : "Shipping label generated.";
+                        let title = response.data.title || 'Error!';
+                        let message = response.data.message || 'Fail to generate CN';
+                        let errors = response.data.errors || [];
 
-                        let text = inc_packing_list_result ? "Shipping label and packing list generated" :
-                            "Shipping label generated."
-                        if (response.data == 0) {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: "Selected order already has CN.",
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            })
-                            return;
-                        }
-
-                        if (!response.data.success) {
-                            let title = response.data.title ?? 'Error!';
-
-                            if(response.data.message !== undefined){
-                                message = response.data.message;
-                            }else if(response.data.all_fail.message !== undefined){
-                                message = response.data.all_fail.message;
-                            }
-                            else{
-                                message = 'Fail to generate CN';
-                            }
+                        // Prioritize error alerts
+                        if (errors.length > 0) {
+                            message = errors.map(error => error.message).join('<br>');
                             Swal.fire({
                                 title: title,
                                 html: message,
                                 icon: 'error',
                                 confirmButtonText: 'OK'
                             });
-
-                            return;
+                            return; // Exit the function to prevent showing success alert
                         }
 
-                        // handle success, close or download
-                        if (response.data != null) {
-                            if (response.data.error != null) {
-                                text = "Shipping label generated.However has " + response.data.error;
-                            }
-
-                            if (response.data.all_fail) {
-                                if (typeof response.data.all_fail == "boolean") {
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: "Fail to generate CN",
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    })
+                        // If no errors, show the success alert
+                        if (response.data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: text,
+                                icon: 'success',
+                                confirmButtonText: 'Download',
+                                showCancelButton: true,
+                                cancelButtonText: 'OK',
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    download_cn(checkedOrder, inc_packing_list_result, true);
                                 } else {
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: "Fail to generate CN " + response.data.all_fail,
-                                        icon: 'error',
-                                        confirmButtonText: 'OK'
-                                    })
+                                    location.reload();
                                 }
-
-                                return;
-                            }
+                            });
+                        } else {
+                            // Handle the case where success is false, but no specific errors are provided
+                            Swal.fire({
+                                title: title,
+                                text: message,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
                         }
-
-                        Swal.fire({
-                            title: 'Success!',
-                            text: text,
-                            icon: 'success',
-                            confirmButtonText: 'Download',
-                            showCancelButton: true,
-                            cancelButtonText: 'Ok',
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                download_cn(checkedOrder, inc_packing_list_result, true);
-                            } else {
-                                location.reload();
-                            }
-                        });
                     })
                     .catch(function(error) {
+                        let message = 'Fail to generate CN, Please contact admin';
 
-                        if(error.data.message !== undefined){
-                            message = error.data.message;
-                        }else if(error.data.all_fail.message !== undefined){
-                            message = error.data.all_fail.message;
+                        if (error.response && error.response.data) {
+                            message = error.response.data.message || message;
                         }
-                        else{
-                            message = 'Fail to generate CN, Please contact admin';
-                        }
+
                         Swal.fire({
                             title: 'Error!',
                             html: message,
                             icon: 'error',
                             confirmButtonText: 'OK'
-                        })
+                        });
                     })
             }
 
@@ -1968,6 +1937,75 @@
 
             }
 
+            const requestCNNINJA = (type, checkedOrder, inc_packing_list_result) => {
+                axios.post('/api/request-cn', {
+                    order_ids: checkedOrder,
+                    type: type,
+                }).then(function(response) {
+                    if (response.data && response.data.success) {
+                        // Default success message
+                        let text = "CN generated successfully!";
+
+                        // If there's a message inside the data, extract it
+                        if (response.data.data && response.data.data[0] && response.data.data[0].message) {
+                            text = response.data.data[0].message;
+                        }
+
+                        Swal.fire({
+                            title: 'Success!',
+                            text: text,
+                            icon: 'success',
+                            confirmButtonText: 'Download',
+                            showCancelButton: true,
+                            cancelButtonText: 'OK',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                download_cn(checkedOrder, inc_packing_list_result, true);
+                            } else {
+                                location.reload();
+                            }
+                        });
+                    }
+                }).catch(function(error) {
+                    // Default error message
+                    let title = 'Error!';
+                    let message = 'Fail to generate CN, Please contact admin';
+
+                    if (error.response && error.response.data) {
+                        if (error.response.data.data && Array.isArray(error.response.data.data)) {
+                            // Error from NinjaVan
+                            try {
+                                const errorData = error.response.data.data[0];
+                                const apiError = JSON.parse(errorData.message);
+
+                                // Extract the title and message
+                                title = apiError.error.title || title;
+                                message = 'NinjaVan: <br>' + apiError.error.message || message;
+
+                                // If there are additional details, add them to the message
+                                if (apiError.error.details && apiError.error.details.length > 0) {
+                                    const detail = apiError.error.details[0];
+                                    message += `<br>${detail.message}`;
+                                }
+                            } catch (e) {
+                                console.error("Error parsing NinjaVan API response:", e);
+                            }
+                        } else {
+                            // Error from WMS
+                            title = error.response.data.title || title;
+                            message = error.response.data.message || message;
+                        }
+                    }
+
+                    Swal.fire({
+                        title: title,
+                        html: message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            }
+            
             function approveAsShipped(checkedOrders) {
                 axios({
                         url: '/api/orders/approve-for-shipping',
