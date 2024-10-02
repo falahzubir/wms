@@ -11,6 +11,54 @@ class ExchangeRateController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // public function index(Request $request)
+    // {
+    //     // Fetch filter inputs from the request
+    //     $search = $request->input('search');
+    //     $dateFrom = $request->input('date_from');
+    //     $dateTo = $request->input('date_to');
+    //     $currency = $request->input('currency');
+        
+    //     // Initialize query builder
+    //     $query = ExchangeRate::query();
+
+    //     // Search by country name (relationship with Country model)
+    //     if ($search) {
+    //         $query->whereHas('currencies.country', function($q) use ($search) {
+    //             $q->where('name', 'LIKE', '%' . $search . '%');
+    //         });
+    //     }
+
+    //     // Filter by currency if provided
+    //     if ($currency) {
+    //         $query->where('currency', $currency);
+    //     }
+
+    //     // Filter by date range if provided (overlaps with start_date and end_date)
+    //     if ($dateFrom && $dateTo) {
+    //         $query->where(function($q) use ($dateFrom, $dateTo) {
+    //             $q->whereBetween('start_date', [$dateFrom, $dateTo])
+    //             ->orWhereBetween('end_date', [$dateFrom, $dateTo])
+    //             ->orWhere(function($q) use ($dateFrom, $dateTo) {
+    //                 $q->where('start_date', '<=', $dateFrom)
+    //                     ->where('end_date', '>=', $dateTo);
+    //             });
+    //         });
+    //     }
+
+    //     // Order by start_date and paginate results
+    //     $exchangeRate = $query->orderBy('start_date', 'desc')->paginate(10);
+
+    //     // Get currencies for the dropdown
+    //     $currencies = Currency::all();
+
+    //     return view('exchange_rate/index', [
+    //         'title' => 'List of Exchange Rate',
+    //         'exchangeRate' => $exchangeRate,
+    //         'currencies' => $currencies,
+    //     ]);
+    // }
+
     public function index(Request $request)
     {
         // Fetch filter inputs from the request
@@ -18,7 +66,7 @@ class ExchangeRateController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
         $currency = $request->input('currency');
-        
+
         // Initialize query builder
         $query = ExchangeRate::query();
 
@@ -34,15 +82,28 @@ class ExchangeRateController extends Controller
             $query->where('currency', $currency);
         }
 
-        // Filter by date range if provided (overlaps with start_date and end_date)
-        if ($dateFrom && $dateTo) {
+        // Filter by date range if dateFrom or dateTo is provided
+        if ($dateFrom || $dateTo) {
             $query->where(function($q) use ($dateFrom, $dateTo) {
-                $q->whereBetween('start_date', [$dateFrom, $dateTo])
-                ->orWhereBetween('end_date', [$dateFrom, $dateTo])
-                ->orWhere(function($q) use ($dateFrom, $dateTo) {
-                    $q->where('start_date', '<=', $dateFrom)
-                        ->where('end_date', '>=', $dateTo);
-                });
+                // If only dateFrom is provided, fetch data from dateFrom onwards
+                if ($dateFrom && !$dateTo) {
+                    $q->where('start_date', '>=', $dateFrom);
+                }
+
+                // If only dateTo is provided, fetch data until dateTo (including)
+                if (!$dateFrom && $dateTo) {
+                    $q->where('end_date', '<=', $dateTo);
+                }
+
+                // If both dateFrom and dateTo are provided, handle the overlap scenario
+                if ($dateFrom && $dateTo) {
+                    $q->whereBetween('start_date', [$dateFrom, $dateTo])
+                    ->orWhereBetween('end_date', [$dateFrom, $dateTo])
+                    ->orWhere(function($q) use ($dateFrom, $dateTo) {
+                        $q->where('start_date', '<=', $dateFrom)
+                            ->where('end_date', '>=', $dateTo);
+                    });
+                }
             });
         }
 
