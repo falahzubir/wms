@@ -62,7 +62,9 @@
                                 <h5><strong>Currency</strong></h5>
                                 <select name="currency[]" id="currency" class="form-select mt-2" placeholder="Nothing Selected" multiple>
                                     @foreach ($currencies as $currency)
-                                        <option value="{{ $currency->id }}">{{ $currency->currency }} ({{ $currency->country->name }})</option>
+                                        <option value="{{ $currency->id }}" {{ request('currency') != null ? (in_array($currency->id, request('currency')) ? 'selected' : '') : '' }}>
+                                            {{ $currency->currency }} ({{ $currency->country->name }})
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
