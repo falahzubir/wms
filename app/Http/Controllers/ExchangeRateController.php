@@ -117,7 +117,7 @@ class ExchangeRateController extends Controller
                 ->first();
 
             if ($exists) {
-                return response()->json(['success' => false, 'message' => 'The exchange rate for this currency already exists within the selected date range.'], 422);
+                return response()->json(['success' => false, 'message' => '*The dates and currency already exist. Try another'], 422);
             }
 
             // Save input into exchange_rates table
@@ -203,7 +203,7 @@ class ExchangeRateController extends Controller
                 ->exists();
 
             if ($exists) {
-                return response()->json(['success' => false, 'message' => 'The exchange rate for this currency already exists within the selected date range.'], 422);
+                return response()->json(['success' => false, 'message' => '*The dates and currency already exist. Try another'], 422);
             }
 
             // Update data into exchange_rates table

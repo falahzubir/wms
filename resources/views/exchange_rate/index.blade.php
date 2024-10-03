@@ -170,7 +170,7 @@
                     <!-- Modal body -->
                     <div class="modal-body p-4">
                         <!-- Start Date and End Date -->
-                        <div class="row p-3 mb-3">
+                        <div class="row p-3 mb-3" id="add_data_group">
                             <div class="col-md-6">
                                 <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="add_start_date" name="add_start_date" required>
@@ -250,7 +250,7 @@
                     <!-- Modal body -->
                     <div class="modal-body p-4">
                         <!-- Start Date and End Date -->
-                        <div class="row p-3 mb-3">
+                        <div class="row p-3 mb-3" id="edit_data_group">
                             <div class="col-md-6">
                                 <label for="edit_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="edit_start_date" name="edit_start_date" required>
@@ -412,12 +412,14 @@
                             if (xhr.status === 422) {
                                 let response = xhr.responseJSON;
 
-                                // Show error if exchange rate already exist.
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error!',
-                                    text: response.message
-                                });
+                                // Add error below date group
+                                $('#add_data_group').removeClass('mb-3');
+                                $('#add_data_group').after(`<div class="mb-3 d-flex justify-content-center align-items-center"><span class="text-danger alert-error">${response.message}</span></div>`);
+
+                                // Add Bootstrap's invalid class to highlight the input
+                                $('#add_start_date').addClass('is-invalid');
+                                $('#add_end_date').addClass('is-invalid');
+                                $('#add_currency').addClass('is-invalid');
                             } else {
                                 // Generic error handling for other issues
                                 Swal.fire({
@@ -552,12 +554,14 @@
                         if (error.status === 422) {
                             let response = error.responseJSON;
 
-                            // Show error if exchange rate already exist.
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: response.message
-                            });
+                            // Add error below date group
+                            $('#edit_data_group').removeClass('mb-3');
+                            $('#edit_data_group').after(`<div class="mb-3 d-flex justify-content-center align-items-center"><span class="text-danger alert-error">${response.message}</span></div>`);
+
+                            // Add Bootstrap's invalid class to highlight the input
+                            $('#edit_start_date').addClass('is-invalid');
+                            $('#edit_end_date').addClass('is-invalid');
+                            $('#edit_currency').addClass('is-invalid');
                         } else {
                             // Generic error handling for other issues
                             Swal.fire({
