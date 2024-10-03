@@ -30,7 +30,7 @@ class ExchangeRateController extends Controller
             });
         }
 
-        // Filter by currency if provided
+        // Filter by multiple currencies if provided
         if ($currency && is_array($currency)) {
             $query->whereIn('currency', $currency);
         }
@@ -38,17 +38,23 @@ class ExchangeRateController extends Controller
         // Filter by date range if dateFrom or dateTo is provided
         if ($dateFrom || $dateTo) {
             $query->where(function($q) use ($dateFrom, $dateTo) {
-                // If only dateFrom is provided, fetch data from dateFrom onwards
+                // If only dateFrom is provided
                 if ($dateFrom && !$dateTo) {
-                    $q->where('start_date', '>=', $dateFrom);
+                    $q->where(function($subQuery) use ($dateFrom) {
+                        $subQuery->where('start_date', '>=', $dateFrom)
+                                ->orWhere('end_date', '>=', $dateFrom);
+                    });
                 }
 
-                // If only dateTo is provided, fetch data until dateTo (including)
+                // If only dateTo is provided
                 if (!$dateFrom && $dateTo) {
-                    $q->where('end_date', '<=', $dateTo);
+                    $q->where(function($subQuery) use ($dateTo) {
+                        $subQuery->where('start_date', '<=', $dateTo)
+                                ->orWhere('end_date', '<=', $dateTo);
+                    });
                 }
 
-                // If both dateFrom and dateTo are provided, handle the overlap scenario
+                // If both dateFrom and dateTo are provided
                 if ($dateFrom && $dateTo) {
                     $q->whereBetween('start_date', [$dateFrom, $dateTo])
                     ->orWhereBetween('end_date', [$dateFrom, $dateTo])
