@@ -155,10 +155,6 @@ class CurrencyListController extends Controller
             $currency = Currency::findOrFail($id);
             $currency->delete();
 
-            // Soft delete the exchange_rates
-            $exchangeRates = ExchangeRate::where('country_id', $currency->country_id);
-            $exchangeRates->delete();
-
             return response()->json(['success' => true, 'message' => 'Currency deleted successfully!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to delete currency. Please try again. Error: ' . $e->getMessage()]);

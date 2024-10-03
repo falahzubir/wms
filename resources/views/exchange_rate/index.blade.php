@@ -109,7 +109,11 @@
                                             {{ \Carbon\Carbon::parse($row->end_date)->format('d/m/Y') }}
                                         </td>
                                         <td class="align-middle">
-                                            {{ $row->currencies->currency }} ({{ $row->currencies->country->name }})
+                                            @if ($row->currencies && $row->currencies->country)
+                                                {{ $row->currencies->currency }} ({{ $row->currencies->country->name }})
+                                            @else
+                                                N/A
+                                            @endif
                                         </td>
                                         <th class="align-middle">
                                             1 {{ $row->currencies->currency }} =

@@ -21,7 +21,7 @@ class ExchangeRateController extends Controller
         $currency = $request->input('currency');
 
         // Initialize query builder
-        $query = ExchangeRate::query();
+        $query = ExchangeRate::with(['currencies.country']);
 
         // Search by country name (relationship with Country model)
         if ($search) {
