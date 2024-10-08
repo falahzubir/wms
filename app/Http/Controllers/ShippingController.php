@@ -2172,7 +2172,7 @@ class ShippingController extends Controller
             return response()->json([
                 'success' => false,
                 'title' => 'Exchange rate is outdated!',
-                'message' => 'Please contact the system administrator to update the exchange rate.',
+                'message' => 'Please contact the treasury department to update the exchange rate.',
             ], 500);
         }
 
