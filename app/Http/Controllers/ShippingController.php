@@ -2165,6 +2165,7 @@ class ShippingController extends Controller
         // Get rate for currency exchange
         $rate = ExchangeRate::where('start_date', '<=', $now)
                     ->where('end_date', '>=', $now)
+                    ->whereNull('deleted_at')
                     ->first();
 
         if (!$rate) {
