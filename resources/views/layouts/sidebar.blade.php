@@ -450,6 +450,45 @@
                         </a>
                     </li>
                     @endcan
+
+                    @can('view.country_list')
+                        <li>
+                            <a href="{{ route('settings.country_list') }}"
+                                {{ Route::current()->getName() == 'settings.country_list' ? 'class=active' : '' }}>
+                                <i class="bi bi-circle"></i><span>Country List</span>
+                            </a>
+                        </li>
+                    @endcan
+
+                    @can('currency.view')
+                        <li>
+                            <a class="nav-link collapsed" data-bs-target="#components-currency" data-bs-toggle="collapse" href="#">
+                                <i class="bi bi-circle"></i>
+                                <span>Currency</span><i class="bi bi-chevron-down ms-auto"></i>
+                            </a>
+                            <ul id="components-currency" class=" {{ Route::current()->getName() != 'settings.currency_list' ? 'collapsed' : '' }} ">
+                                @can('currency_list.view')
+                                    <li>
+                                        <a class="{{ Route::current()->getName() != 'settings.currency_list' ? 'collapsed' : '' }}"
+                                            href="{{ route('settings.currency_list') }}">
+                                            <i class="bi bi-circle"></i>
+                                            <span>Currency List</span>
+                                        </a>
+                                    </li>
+                                @endcan
+
+                                @can('exchange_rate.view')
+                                    <li>
+                                        <a class="{{ Route::current()->getName() != 'settings.exchange_rate' ? 'collapsed' : '' }}"
+                                            href="{{ route('settings.exchange_rate') }}">
+                                            <i class="bi bi-circle"></i>
+                                            <span>Exchange Rate List</span>
+                                        </a>
+                                    </li>
+                                @endcan
+                            </ul>
+                        </li>
+                    @endcan
                 </ul>
             </li><!-- End Components Nav -->
         @endcan

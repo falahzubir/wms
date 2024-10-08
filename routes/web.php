@@ -8,9 +8,12 @@ use App\Http\Controllers\BucketBatchController;
 use App\Http\Controllers\BucketController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\CountryListController;
 use App\Http\Controllers\CourierController;
+use App\Http\Controllers\CurrencyListController;
 use App\Http\Controllers\CustomTemplateController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExchangeRateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationalModelController;
 use App\Http\Controllers\OrderController;
@@ -21,12 +24,14 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingController;
-use App\Http\Controllers\TemplateSettingController;
 use App\Http\Controllers\ShippingCostController;
+use App\Http\Controllers\TemplateSettingController;
 use App\Http\Controllers\UserController;
 use App\Models\Company;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
+
+
 
 
 /*
@@ -241,9 +246,27 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/ship_doc_desc',[SettingsController::class,'view_shipping_doc_desc'])->name('view_shipping_doc_desc');
         Route::get('/ship_doc_desc/form',[SettingsController::class,'sdd_form'])->name('sdd_form');
         Route::get('/ship_doc_desc/form/{id}',[SettingsController::class,'sdd_form']);
+
+        Route::get('country-list', [CountryListController::class, 'index'])->name('country_list');
+        Route::post('country-list/add', [CountryListController::class, 'store'])->name('country_list.add');
+        Route::get('country-list/show/{id}', [CountryListController::class, 'show'])->name('country_list.show');
+        Route::post('country-list/update/{id}', [CountryListController::class, 'update'])->name('country_list.update');
+        Route::delete('country-list/{id}/delete', [CountryListController::class, 'destroy'])->name('country_list.delete');
+
+        Route::get('currency-list', [CurrencyListController::class, 'index'])->name('currency_list');
+        Route::post('currency-list/add', [CurrencyListController::class, 'store'])->name('currency_list.add');
+        Route::get('currency-list/show/{id}', [CurrencyListController::class, 'show'])->name('currency_list.show');
+        Route::post('currency-list/update/{id}', [CurrencyListController::class, 'update'])->name('currency_list.update');
+        Route::delete('currency-list/{id}/delete', [CurrencyListController::class, 'destroy'])->name('currency_list.delete');
+
+        Route::get('exchange-rate', [ExchangeRateController::class, 'index'])->name('exchange_rate');
+        Route::post('exchange-rate/add', [ExchangeRateController::class, 'store'])->name('exchange_rate.add');
+        Route::get('exchange-rate/show/{id}', [ExchangeRateController::class, 'show'])->name('exchange_rate.show');
+        Route::post('exchange-rate/update/{id}', [ExchangeRateController::class, 'update'])->name('exchange_rate.update');
+        Route::delete('exchange-rate/{id}/delete', [ExchangeRateController::class, 'destroy'])->name('exchange_rate.delete');
     });
 
-        Route::prefix('picking_list_setting')->group(function() {
+    Route::prefix('picking_list_setting')->group(function() {
         Route::get('/', [PickingListSettingController::class, 'index'])->name('picking_list_setting.index');
         Route::post('/update', [PickingListSettingController::class, 'update'])->name('picking_sequence.update');
         Route::get('/get', [PickingListSettingController::class, 'index'])->name('picking_sequence.get'); // AJAX endpoint

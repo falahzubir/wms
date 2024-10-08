@@ -102,6 +102,25 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'weight_category.edit']);
         Permission::firstOrCreate(['name' => 'weight_category.delete']);
 
+        // country list permission
+        Permission::firstOrCreate(['name' => 'view.country_list']);
+        Permission::firstOrCreate(['name' => 'country_list.add']);
+        Permission::firstOrCreate(['name' => 'country_list.edit']);
+        Permission::firstOrCreate(['name' => 'country_list.delete']);
+
+        // currency list permission
+        Permission::firstOrCreate(['name' => 'currency.view']);
+        Permission::firstOrCreate(['name' => 'currency_list.view']);
+        Permission::firstOrCreate(['name' => 'currency_list.add']);
+        Permission::firstOrCreate(['name' => 'currency_list.edit']);
+        Permission::firstOrCreate(['name' => 'currency_list.delete']);
+
+        // exchange rate list permission
+        Permission::firstOrCreate(['name' => 'exchange_rate.view']);
+        Permission::firstOrCreate(['name' => 'exchange_rate.add']);
+        Permission::firstOrCreate(['name' => 'exchange_rate.edit']);
+        Permission::firstOrCreate(['name' => 'exchange_rate.delete']);
+
         // create roles and assign created permissions
         $role = Role::firstOrCreate(['name' => 'IT_Admin']);
         $role->givePermissionTo(Permission::all());

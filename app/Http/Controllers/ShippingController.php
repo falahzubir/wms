@@ -2165,13 +2165,14 @@ class ShippingController extends Controller
         // Get rate for currency exchange
         $rate = ExchangeRate::where('start_date', '<=', $now)
                     ->where('end_date', '>=', $now)
+                    ->whereNull('deleted_at')
                     ->first();
 
         if (!$rate) {
             return response()->json([
                 'success' => false,
                 'title' => 'Exchange rate is outdated!',
-                'message' => 'Please contact the system administrator to update the exchange rate.',
+                'message' => 'Please contact the treasury department to update the exchange rate.',
             ], 500);
         }
 
