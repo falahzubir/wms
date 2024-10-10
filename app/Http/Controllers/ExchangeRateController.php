@@ -100,6 +100,8 @@ class ExchangeRateController extends Controller
                 'add_rate.regex' => 'The exchange rate must be a valid decimal number.',
             ]);
 
+            $request->merge(['add_end_date' => $request->input('add_end_date') . ' 23:59:59']);
+
             // Check if exchange rate id already exists
             $exists = ExchangeRate::where('currency', $request->input('add_currency'))
                 ->where(function($query) use ($request) {
@@ -183,6 +185,8 @@ class ExchangeRateController extends Controller
             'edit_rate.regex' => 'The exchange rate must be a valid decimal number.',
         ]);
 
+        $request->merge(['edit_end_date' => $request->input('edit_end_date') . ' 23:59:59']);
+
         try {
 
             // Check if exchange rate id already exists
@@ -218,7 +222,7 @@ class ExchangeRateController extends Controller
             $exchangeRate->end_date = $request->input('edit_end_date');
             $exchangeRate->currency = $request->input('edit_currency');
             $exchangeRate->rate = $request->input('edit_rate');
-            
+
             if ($exchangeRate->save()) {
                 return response()->json(['success' => true, 'message' => 'Exchange rate updated successfully!']);
             } else {
