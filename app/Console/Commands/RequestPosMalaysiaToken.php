@@ -33,13 +33,14 @@ class RequestPosMalaysiaToken extends Command
     {
         $posmalaysia_tokens = AccessToken::where('type', 'posmalaysia');
         $posmalaysia_tokens = $posmalaysia_tokens->get();
+        $posmalaysia_tokens_url = config('app.env') == 'production' ? 'https://posapi.pos.com.my/oauth2/token' : 'https://api-dev.pos.com.my/oauth2/token';
 
         foreach ($posmalaysia_tokens as $token) {
             try {
                 $response = Http::asForm()
-                    ->post('https://gateway-usc.pos.com.my/security/connect/token', [
-                        'client_id' => '64dda61cfa1b1b000ed9fb30',
-                        'client_secret' => 'cpy70tObJYUXa+67Wtw4+nQ44JCcCKkowXN5RV/sIgE=',
+                    ->post($posmalaysia_tokens_url, [
+                        'client_id' => config('app.env') == 'production' ? '64dda61cfa1b1b000ed9fb30' : 'b3d254f7-4b9f-4dd7-b86c-bc5aa9eb898d',
+                        'client_secret' => config('app.env') == 'production' ? 'cpy70tObJYUXa+67Wtw4+nQ44JCcCKkowXN5RV/sIgE=' : '2ef405f9-55eb-4c01-ae02-b72d1ffab343',
                         'grant_type' => 'client_credentials',
                         'scope' => 'as2corporate.v2trackntracewebapijson.all as2corporate.tracking-event-list.all as2corporate.tracking-office-list.all as2corporate.tracking-reason-list.all as2poslaju.poslaju-poscode-coverage.all as01.gen-connote.all as01.generate-pl9-with-connote.all as2corporate.preacceptancessingle.all',
                     ]);
@@ -56,7 +57,7 @@ class RequestPosMalaysiaToken extends Command
             }
         }
 
-        dump('Pos Malaysia Token Cron Job Run successfully!');
+        // dump('Pos Malaysia Token Cron Job Run successfully!');
         return Command::SUCCESS;
     }
 }

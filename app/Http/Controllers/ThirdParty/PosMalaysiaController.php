@@ -53,6 +53,7 @@ class PosMalaysiaController extends ShippingController
             if($order->purchase_type == PURCHASE_TYPE_COD && $order->total_price == 0){
                 $order->purchase_type = PURCHASE_TYPE_PAID;
             }
+
             $connote = Http::withToken($bearer->token, 'Bearer')->get($this->posmalaysia_generate_connote, [
                 'numberOfItem' => 1,
                 'Prefix' => $order->purchase_type == PURCHASE_TYPE_COD ? config('settings.genconnote_prefix_cod') : config('settings.genconnote_prefix_paid'),
@@ -106,6 +107,13 @@ class PosMalaysiaController extends ShippingController
 
     public function generate_pl9(Request $request)
     {
+        // --- Update POS Malaysia API --- Start //
+        return response([
+            'status' => 'success',
+            'message' => 'No PL9 for new POS Malaysia API.',
+        ]);
+        // --- Update POS Malaysia API --- End //
+
         $orders_pos = Order::with([
             'company', 'operationalModel', 'batch', 'shippings',
         ])->has('shippings')

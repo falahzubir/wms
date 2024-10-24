@@ -56,24 +56,26 @@ class ShippingController extends Controller
         $dhl_label_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label';
         $dhl_cancel_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label/Delete';
         $dhl_reprint_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label/Reprint';
-        $posmalaysia_generate_connote_live = 'https://gateway-usc.pos.com.my/as01/gen-connote/v1/api/GConnote';
+        $posmalaysia_access_live = 'https://posapi.pos.com.my/oauth2/token';
+        $posmalaysia_generate_connote_live = 'https://posapi.pos.com.my/as01/gen-connote/v1/api/GConnote';
         $posmalaysia_generate_pl9_live = 'https://gateway-usc.pos.com.my/as01/generate-pl9-with-connote/v1/api/GPL9C';
-        $posmalaysia_download_connote_live = 'https://gateway-usc.pos.com.my/as2corporate/preacceptancessingle/v1/Tracking.PreAcceptance.WebApi/api/PreAcceptancesSingle';
+        $posmalaysia_download_connote_live = 'https://posapi.pos.com.my/as2corporate/preacceptancessingle/v1/Tracking.PreAcceptance.WebApi/api/PreAcceptancesSingle';
 
         $dhl_access_test = "https://apitest.dhlecommerce.asia/rest/v1/OAuth/AccessToken";
         $dhl_label_url_test = "https://apitest.dhlecommerce.asia/rest/v2/Label";
         $dhl_cancel_url_test = "https://apitest.dhlecommerce.asia/rest/v2/Label/Delete";
         $dhl_reprint_url_test = "https://apitest.dhlecommerce.asia/rest/v2/Label/Reprint";
-        $posmalaysia_generate_connote_test = 'https://gateway-usc.pos.com.my/staging/as01/gen-connote/v1/api/GConnote';
+        $posmalaysia_access_test = 'https://api-dev.pos.com.my/oauth2/token';
+        $posmalaysia_generate_connote_test = 'https://api-dev.pos.com.my/as01/gen-connote/v1/api/GConnote';
         $posmalaysia_generate_pl9_test = 'https://gateway-usc.pos.com.my/staging/as01/generate-pl9-with-connote/v1/api/GPL9C';
-        $posmalaysia_download_connote_test = 'https://gateway-usc.pos.com.my/staging/as2corporate/preacceptancessingle/v1/Tracking.PreAcceptance.WebApi/api/PreAcceptancesSingle';
+        $posmalaysia_download_connote_test = 'https://api-dev.pos.com.my/as2corporate/preacceptancesingle/v1/Tracking.PreAcceptance.WebApi/api/PreAcceptancesSingle';
 
         $this->dhl_access = config('app.env') == 'production' ? $dhl_access_live : $dhl_access_test;
         $this->dhl_label_url = config('app.env') == 'production' ? $dhl_label_url_live : $dhl_label_url_test;
         $this->dhl_cancel_url = config('app.env') == 'production' ? $dhl_cancel_url_live : $dhl_cancel_url_test;
         $this->dhl_reprint_url = config('app.env') == 'production' ? $dhl_reprint_url_live : $dhl_reprint_url_test;
 
-        $this->posmalaysia_access = 'https://gateway-usc.pos.com.my/security/connect/token'; // same for test and live
+        $this->posmalaysia_access = config('app.env') == 'production' ? $posmalaysia_access_live : $posmalaysia_access_test;
         $this->posmalaysia_generate_connote = config('app.env') == 'production' ? $posmalaysia_generate_connote_live : $posmalaysia_generate_connote_test;
         $this->posmalaysia_generate_pl9 = config('app.env') == 'production' ? $posmalaysia_generate_pl9_live : $posmalaysia_generate_pl9_test;
         $this->posmalaysia_download_connote = config('app.env') == 'production' ? $posmalaysia_download_connote_live : $posmalaysia_download_connote_test;
