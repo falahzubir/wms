@@ -16,7 +16,7 @@
         @can('view.overall_list')
             <li class="nav-item">
                 <a class="nav-link {{ Route::current()->getName() != 'orders.overall' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.overall') }}">
+                    href="{{ route('orders.overall') }}?search=&off=on&date_type=1&date_from={{ date('Y-m-d') }}&date_to={{ date('Y-m-d')}}">
                     <i class="bi bi-inboxes"></i>
                     <span>Overall List</span>
                 </a>
@@ -26,7 +26,7 @@
         @can('view.pending_list')
             <li class="nav-item">
                 <a class="nav-link {{ Route::current()->getName() != 'orders.pending' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.pending') }}">
+                    href="{{ route('orders.pending') }}?search=&off=on&date_type=1&date_from={{ date('Y-m-d') }}&date_to={{ date('Y-m-d')}}">
                     <i class="bi bi-clock-history"></i>
                     <span>Pending List</span>
                 </a>
@@ -46,7 +46,7 @@
         @can('view.packing_list')
             <li class="nav-item">
                 <a class="nav-link {{ Route::current()->getName() != 'orders.packing' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.packing') }}">
+                    href="{{ route('orders.packing') }}?search=&off=on&date_type=1&date_from={{ date('Y-m-d') }}&date_to={{ date('Y-m-d')}}">
                     <i class="bi bi-box-seam"></i>
                     <span>Packing List</span>
                 </a>
@@ -56,7 +56,7 @@
         @can('view.rts_list')
             <li class="nav-item">
                 <a class="nav-link {{ Route::current()->getName() != 'orders.readyToShip' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.readyToShip') }}">
+                    href="{{ route('orders.readyToShip') }}?search=&off=on&date_type=1&date_from={{ date('Y-m-d') }}&date_to={{ date('Y-m-d')}}">
                     <i class="bi bi-truck-flatbed"></i>
                     <span>Pending Shipping List</span>
                 </a>
@@ -66,7 +66,7 @@
         @can('view.shipping_list')
             <li class="nav-item">
                 <a class="nav-link {{ Route::current()->getName() != 'orders.shipping' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.shipping') }}">
+                    href="{{ route('orders.shipping') }}?search=&off=on&date_type=1&date_from={{ date('Y-m-d') }}&date_to={{ date('Y-m-d')}}">
                     <i class="bi bi-truck"></i>
                     <span>In Transit List</span>
                 </a>
@@ -86,7 +86,7 @@
         @can('view.delivered_list')
             <li class="nav-item">
                 <a class="nav-link {{ Route::current()->getName() != 'orders.delivered' ? 'collapsed' : '' }}"
-                    href="{{ route('orders.delivered') }}">
+                    href="{{ route('orders.delivered') }}?search=&off=on&date_type=1&date_from={{ date('Y-m-d') }}&date_to={{ date('Y-m-d')}}">
                     <i class="bi bi-check-circle"></i>
                     <span>Delivered List</span>
                 </a>
