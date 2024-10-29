@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Http\Traits\DownloadCsvTrait;
+use App\Jobs\SendProcessingOrder;
 
 class OrderController extends Controller
 {
@@ -512,6 +513,11 @@ class OrderController extends Controller
         OrderItem::where('order_id', $order->id)->update(['status' => 0]);
 
         foreach ($product_list as $product) {
+            if(!isset($products[$product['code']])){ //if product not found
+                SendProcessingOrder::dispatch($order->sales_id, $company->url)->delay(now()->addMinutes(1));
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(403, 'Product not found');
+                return;
+            }
             $p_ids['product_id'] = $products[$product['code']];
             $product_data['price'] = $product['price'] * 100;
             $product_data['quantity'] = $product['quantity'];
