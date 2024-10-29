@@ -1664,7 +1664,7 @@
                     .then(function(response) {
                         let text = inc_packing_list_result ? "Shipping label and packing list generated" : "Shipping label generated.";
                         let title = response.data.title || 'Error!';
-                        let message = response.data.message || 'Fail to generate CN';
+                        let message = response.data.message || response.data.all_fail.message || 'Fail to generate CN';
                         let errors = response.data.errors || [];
 
                         // Prioritize error alerts
@@ -2005,7 +2005,7 @@
                     });
                 });
             }
-            
+
             function approveAsShipped(checkedOrders) {
                 axios({
                         url: '/api/orders/approve-for-shipping',
