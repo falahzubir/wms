@@ -42,7 +42,7 @@ class RequestPosMalaysiaToken extends Command
                         'client_id' => config('app.env') == 'production' ? '64dda61cfa1b1b000ed9fb30' : 'b3d254f7-4b9f-4dd7-b86c-bc5aa9eb898d',
                         'client_secret' => config('app.env') == 'production' ? 'cpy70tObJYUXa+67Wtw4+nQ44JCcCKkowXN5RV/sIgE=' : '2ef405f9-55eb-4c01-ae02-b72d1ffab343',
                         'grant_type' => 'client_credentials',
-                        'scope' => 'as2corporate.v2trackntracewebapijson.all as2corporate.tracking-event-list.all as2corporate.tracking-office-list.all as2corporate.tracking-reason-list.all as2poslaju.poslaju-poscode-coverage.all as01.gen-connote.all as01.generate-pl9-with-connote.all as2corporate.preacceptancessingle.all',
+                        // 'scope' => 'as2corporate.v2trackntracewebapijson.all as2corporate.tracking-event-list.all as2corporate.tracking-office-list.all as2corporate.tracking-reason-list.all as2poslaju.poslaju-poscode-coverage.all as01.gen-connote.all as01.generate-pl9-with-connote.all as2corporate.preacceptancessingle.all',
                     ]);
 
                 if ($response->successful()) {
