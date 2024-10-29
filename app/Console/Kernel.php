@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('posmalaysia-token:cron')->everySixHours();
         $schedule->command('posmalaysia-token:cron')->everyMinute();
         $schedule->command('send-shipping:cron')->everyFiveMinutes();
-        $schedule->command('app:retrieve-processing-order')->everyFiveMinutes();
+        // $schedule->command('app:retrieve-processing-order')->everyFiveMinutes();
     }
 
     /**
