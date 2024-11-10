@@ -1893,9 +1893,13 @@ class ShippingController extends Controller
                     $responseFailed['message'][] = 'Third party data not found';
                     continue;
                 }
+
+                // TikTok Order ID
+                $tiktok_order_id = $order->third_party_sn;
+
                 //get order_status
                 $additional_data = json_decode($order->shippings->first()->additional_data, true);
-                $order_details = TiktokTrait::getOrderDetails($additional_data);
+                $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id);
                 $detailsJson = json_decode($order_details, true);
                 if ($detailsJson['code'] != 0) {
                     $responseFailed['order_id'][] = $order->id;
@@ -1915,7 +1919,7 @@ class ShippingController extends Controller
                     }
 
                     //run back to get tracking number
-                    $order_details = TiktokTrait::getOrderDetails($additional_data);
+                    $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id);
                     $detailsJson = json_decode($order_details, true);
 
                     $additional_data = json_encode([
@@ -1942,7 +1946,7 @@ class ShippingController extends Controller
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
                 } else {
                     //run back to get tracking number
-                    $order_details = TiktokTrait::getOrderDetails($additional_data);
+                    $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id);
                     $detailsJson = json_decode($order_details, true);
 
                     $additional_data = json_encode([
