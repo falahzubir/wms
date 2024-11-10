@@ -99,7 +99,7 @@ Trait TiktokTrait
         return $sign;
     }
 
-    public static function getOrderDetails($params, $tiktok_order_id = null)
+    public static function getOrderDetails($params, $tiktok_order_id)
     {
         $url = 'https://open-api.tiktokglobalshop.com';
         $action = '/api/orders/detail/query';
@@ -115,11 +115,7 @@ Trait TiktokTrait
             // Include all the necessary parameters for signing
         ];
 
-        if ($tiktok_order_id = null) {
-            $order_id['order_id_list'][] = $params['order_id'];
-        } else {
-            $order_id['order_id_list'][] = $tiktok_order_id;
-        }
+        $order_id['order_id_list'][] = $tiktok_order_id;
 
         $sign = self::getSign($info_sign, TIKTOK_APP_SECRET, $action);
 
