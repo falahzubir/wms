@@ -564,10 +564,13 @@
                         let tbodyData = response.data.data;
 
                         for (let i = 0; i < tbodyData.length; i++) {
+                            let name = tbodyData[i].scanned_by && tbodyData[i].scanned_by.name ? tbodyData[i].scanned_by.name : "N/A";
+                            let total = tbodyData[i].total || 0;
+
                             html += '<tr>';
                             html += `<td class="text-center">${i + 1}</td>`;
-                            html += '<td class="text-start">'+tbodyData[i].scanned_by.name+'</td>';
-                            html += '<td class="text-center">'+tbodyData[i].total+'</td>';
+                            html += `<td class="text-start">${name}</td>`;
+                            html += `<td class="text-center">${total}</td>`;
                             html += '</tr>';
                             tbodyMonthly.innerHTML = html;
                         }
