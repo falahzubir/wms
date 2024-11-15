@@ -375,7 +375,8 @@ class ShippingController extends Controller
         }
 
         return response([
-            "success" => $orders_dhl->count() . " order(s) cn generated successfully."
+            "success" => true,
+            "message" => $orders_dhl->count() . " order(s) cn generated successfully.",
         ]);
     }
 
