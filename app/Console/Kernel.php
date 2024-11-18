@@ -16,8 +16,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('dhl-token:cron')->everySixHours();
-        // $schedule->command('posmalaysia-token:cron')->everySixHours();
-        $schedule->command('posmalaysia-token:cron')->everyMinute();
+        $schedule->command('posmalaysia-token:cron')->everySixHours();
         $schedule->command('send-shipping:cron')->everyFiveMinutes();
         // $schedule->command('app:retrieve-processing-order')->everyFiveMinutes();
     }
