@@ -61,7 +61,7 @@ trait ShopeeTrait
 
     public static function getShopeeKey($company_id)
     {
-        $shopee = AccessToken::where('type', 'shopee')->where('company_id', $company_id)->first()
+        $shopee = AccessToken::where('type', 'shopee')->where('company_id', $company_id)->first();
 
         if($shopee){
             $shopee_partner_id = $shopee->client_id;
