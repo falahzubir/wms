@@ -1736,7 +1736,7 @@ class ShippingController extends Controller
         ], 200);
     }
 
-    public function arrange_shipment(Request $request)
+    public function arrange_shipment(Request $request) 
     {
         $responseSuccess = [];
         $responseProcessing = [];

@@ -59,9 +59,25 @@ trait ShopeeTrait
 
     }
 
+    public static function getShopeeKey()
+    {
+        $shopee = AccessToken::where('type', 'shopee_key')->first();
+
+        if($shopee){
+            $shopee_partner_id = $shopee->client_id;
+            $shopee_partner_key = $shopee->client_secret;
+
+            return [
+                'shopee_partner_id' => $shopee_partner_id,
+                'shopee_partner_key' => $shopee_partner_key
+            ];
+        }
+    }
+
     public static function get_sign($path, $partner_id, $timestamp, $access_token, $shop_id)
     {
-        $partnerKey = SHOPEE_LIVE_PARTNER_KEY;
+        $shopee = self::getShopeeKey();
+        $partnerKey = $shopee['shopee_partner_key'];
 
         $tokenBaseString = $partner_id . $path . $timestamp . $access_token .  $shop_id;
         $sign = hash_hmac('sha256', $tokenBaseString, $partnerKey);
@@ -208,10 +224,11 @@ trait ShopeeTrait
         return false;
     }
 
-    private static function sendRequest($method, $path, $data = [])
+    private static function sendRequest($method, $path, $data = []) 
     {
         $accessToken = self::getAccessToken();
-        $partner_id = SHOPEE_LIVE_PARTNER_ID;
+        $shopee = self::getShopeeKey();
+        $partner_id = $shopee['shopee_partner_id'];
         $token = $accessToken['token'];
         $shop_id = $accessToken['shop_id'];
         $host = "https://partner.shopeemobile.com";
