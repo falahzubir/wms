@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Storage;
 
 trait ShopeeTrait
 {
-    public static function getAccessToken()
+    public static function getAccessToken($company_id)
     {
         $date = date('Y-m-d H:i:s');
 
-        $accessToken = AccessToken::where('type', 'shopee')->first();
+        $accessToken = AccessToken::where('type', 'shopee')->where('company_id', $company_id)->first();
 
         if($accessToken){
             $token = $accessToken->token;
@@ -27,7 +27,7 @@ trait ShopeeTrait
                 ];
             }
             else{
-                $new_token = self::refreshToken();
+                $new_token = self::refreshToken($company_id);
                 return [
                     'token' => $new_token,
                     'shop_id' => $shop_id
@@ -36,7 +36,7 @@ trait ShopeeTrait
         }
     }
 
-    public static function refreshToken()
+    public static function refreshToken($company_id)
     {
         $url = app()->environment() == 'production' ? 'https://aa.bosemzi.com' : 'https://qastg.groobok.com';
         $json['from'] = 'wms';
@@ -49,7 +49,7 @@ trait ShopeeTrait
 
         $response = json_decode($response, true);
         //update access token
-        $access_token = AccessToken::where('type', 'shopee')->first();
+        $access_token = AccessToken::where('type', 'shopee')->where('company_id', $company_id)->first();
         $access_token->token = $response['token']['token'];
         $access_token->expires_at = $response['token']['expired'];
 
@@ -59,9 +59,9 @@ trait ShopeeTrait
 
     }
 
-    public static function getShopeeKey()
+    public static function getShopeeKey($company_id)
     {
-        $shopee = AccessToken::where('type', 'shopee_key')->first();
+        $shopee = AccessToken::where('type', 'shopee')->where('company_id', $company_id)->first()
 
         if($shopee){
             $shopee_partner_id = $shopee->client_id;
@@ -74,9 +74,9 @@ trait ShopeeTrait
         }
     }
 
-    public static function get_sign($path, $partner_id, $timestamp, $access_token, $shop_id)
+    public static function get_sign($path, $partner_id, $timestamp, $access_token, $shop_id, $company_id)
     {
-        $shopee = self::getShopeeKey();
+        $shopee = self::getShopeeKey($company_id);
         $partnerKey = $shopee['shopee_partner_key'];
 
         $tokenBaseString = $partner_id . $path . $timestamp . $access_token .  $shop_id;
@@ -85,29 +85,32 @@ trait ShopeeTrait
         return $sign;
     }
 
-    public static function getOrderDetail($order_sn)
+    public static function getOrderDetail($order_sn, $company_id)
     {
         $data = [
             'order_sn_list' => $order_sn,
+            'company_id' => $company_id,
             'response_optional_fields' => "buyer_user_id,buyer_username,recipient_address,item_list,total_amount,shipping_carrier,estimated_shipping_fee,pay_time,package_list,fulfillment_flag",
         ];
 
         return self::sendRequest('get', '/api/v2/order/get_order_detail', $data);
     }
 
-    public static function getShippingParameter($order_sn)
+    public static function getShippingParameter($order_sn, $company_id)
     {
         $data = [
             'order_sn' => $order_sn,
+            'company_id' => $company_id,
         ];
 
         return self::sendRequest('get', '/api/v2/logistics/get_shipping_parameter', $data);
     }
 
-    public static function getTrackingNumber($order_sn)
+    public static function getTrackingNumber($order_sn, $company_id)
     {
         $data = [
             'order_sn' => $order_sn,
+            'company_id' => $company_id,
             'package_number' => '-',
         ];
 
@@ -124,10 +127,11 @@ trait ShopeeTrait
         return self::sendRequest('get', '/api/v2/logistics/get_tracking_info', $data);
     }
 
-    public static function shipOrder($order_sn, $pickup_time_id)
+    public static function shipOrder($order_sn, $pickup_time_id, $company_id)
     {
         $data = [
             'order_sn' => $order_sn,
+            'company_id' => $company_id,
             'pickup' => [
                 'address_id' => 200007694,
                 'pickup_time_id' => $pickup_time_id,
@@ -138,18 +142,19 @@ trait ShopeeTrait
         return self::sendRequest('post', '/api/v2/logistics/ship_order', $data);
     }
 
-    public static function getShippingDocumentParameter($data)
+    public static function getShippingDocumentParameter($data, $company_id)
     {
         $orderList = [
             [
                 'order_sn' => $data['ordersn'],
                 'package_number' => $data['package_number'],
+                'company_id' => $company_id,
             ],
         ];
         return self::sendRequest('post', '/api/v2/logistics/get_shipping_document_parameter', ['order_list' => $orderList]);
     }
 
-    public static function createShippingDocument($data)
+    public static function createShippingDocument($data, $company_id)
     {
         $orderList = [
             [
@@ -157,26 +162,28 @@ trait ShopeeTrait
                 'package_number' => $data['package_number'],
                 'shipping_document_type' => $data['shipping_document_type'],
                 'tracking_number' => $data['tracking_no'],
+                'company_id' => $company_id,
             ],
         ];
 
         return self::sendRequest('post', '/api/v2/logistics/create_shipping_document', ['order_list' => $orderList]);
     }
 
-    public static function getShippingDocumentResult($data)
+    public static function getShippingDocumentResult($data, $company_id)
     {
         $orderList = [
             [
                 'order_sn' => $data['ordersn'],
                 'package_number' => $data['package_number'],
                 'shipping_document_type' => $data['shipping_document_type'],
+                'company_id' => $company_id,
             ],
         ];
 
         return self::sendRequest('post', '/api/v2/logistics/get_shipping_document_result', ['order_list' => $orderList]);
     }
 
-    public static function downloadShippingDocument($data)
+    public static function downloadShippingDocument($data, $company_id)
     {
         $fileContent = self::sendRequest('post', '/api/v2/logistics/download_shipping_document', [
             'shipping_document_type' => $data['shipping_document_type'],
@@ -184,6 +191,7 @@ trait ShopeeTrait
                 [
                     'order_sn' => $data['ordersn'],
                     'package_number' => $data['package_number'],
+                    'company_id' => $company_id,
                 ],
             ],
         ]);
@@ -226,8 +234,8 @@ trait ShopeeTrait
 
     private static function sendRequest($method, $path, $data = []) 
     {
-        $accessToken = self::getAccessToken();
-        $shopee = self::getShopeeKey();
+        $accessToken = self::getAccessToken($data['company_id']);
+        $shopee = self::getShopeeKey($data['company_id']);
         $partner_id = $shopee['shopee_partner_id'];
         $token = $accessToken['token'];
         $shop_id = $accessToken['shop_id'];
@@ -235,7 +243,7 @@ trait ShopeeTrait
         $current_time = Carbon::now();
         $timestamp = $current_time->timestamp;
 
-        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id);
+        $sign = self::get_sign($path, $partner_id, $timestamp, $token, $shop_id, $data['company_id']);
 
         $url = $host . $path . "?access_token=" . $token . "&partner_id=" . $partner_id . "&shop_id=" . $shop_id . "&sign=" . $sign . "&timestamp=" . $timestamp;
 

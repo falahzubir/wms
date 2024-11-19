@@ -1572,7 +1572,7 @@
             @endif
 
             @if (in_array(ACTION_ARRANGE_SHIPMENT, $actions))
-                document.querySelector('#arrange-shipment-btn').onclick = function() { 
+                document.querySelector('#arrange-shipment-btn').onclick = function() {
                     const inputElements = [].slice.call(document.querySelectorAll('.check-order'));
                     let checkedValue = inputElements.filter(chk => chk.checked).length;
 
