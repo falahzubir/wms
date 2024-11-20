@@ -28,8 +28,8 @@ class ShopeeKeySeeder extends Seeder
         DB::table('access_tokens')->updateOrInsert(
             ['type' => 'shopee', 'company_id' => 6],
             [
-                'client_id' => '2004184',
-                'client_secret' => '6e75676c4b776841546a6f7a7962784859564d47576656476365654b4f5a4264',
+                'client_id' => '2009885',
+                'client_secret' => '496f4a6679464e786d70584266444d75585241687a774f6a6446454e7376774b',
                 'name' => 'Shopee Access Token & Partner Key for SPV',
                 'updated_at' => now(),
                 'created_at' => now(),
