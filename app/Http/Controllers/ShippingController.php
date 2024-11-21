@@ -1564,10 +1564,10 @@ class ShippingController extends Controller
             }
 
             $order[$key]['additional_data'] = json_decode($value->shippings[0]->additional_data, true);
-            $order[$key]['company_id'] = $value->company_id;
+            $company_id = $value->company_id;
 
             ###### start get shipping document parameter ######
-            $getShippingDocumentParameter = ShopeeTrait::getShippingDocumentParameter($order[$key]['additional_data'], $order[$key]['company_id']);
+            $getShippingDocumentParameter = ShopeeTrait::getShippingDocumentParameter($order[$key]['additional_data'], $company_id);
             $jsonGetShippingDocumentParameter = json_decode($getShippingDocumentParameter, true);
 
             if (empty($jsonGetShippingDocumentParameter['error'])) {
@@ -1576,14 +1576,14 @@ class ShippingController extends Controller
                 ############################################
                 ###### start create shipping document ######
                 ############################################
-                $getCreateShippingDocument = ShopeeTrait::createShippingDocument($order[$key]['additional_data'], $order[$key]['company_id']);
+                $getCreateShippingDocument = ShopeeTrait::createShippingDocument($order[$key]['additional_data'], $company_id);
                 $jsonGetCreateShippingDocument = json_decode($getCreateShippingDocument, true);
 
                 if (empty($jsonGetCreateShippingDocument['error'])) {
                     ###############################################
                     ###### start get shipping document result #####
                     ###############################################
-                    $getShippingDocument = ShopeeTrait::getShippingDocumentResult($order[$key]['additional_data'], $order[$key]['company_id']);
+                    $getShippingDocument = ShopeeTrait::getShippingDocumentResult($order[$key]['additional_data'], $company_id);
                     $jsonGetShippingDocument = json_decode($getShippingDocument, true);
 
                     if (empty($jsonGetShippingDocument['error'])) {
@@ -1592,7 +1592,7 @@ class ShippingController extends Controller
                         #######################################
                         ###### start generate_cn ##############
                         #######################################
-                        $getDownloadShippingDocument = ShopeeTrait::downloadShippingDocument($order[$key]['additional_data'], $order[$key]['company_id']);
+                        $getDownloadShippingDocument = ShopeeTrait::downloadShippingDocument($order[$key]['additional_data']);
 
                         if ($getDownloadShippingDocument) {
                             //save to shippings table
