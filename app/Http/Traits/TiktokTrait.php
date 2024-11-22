@@ -119,7 +119,6 @@ Trait TiktokTrait
         $action = '/api/orders/detail/query';
         $access_token = self::getAccessToken($params['shop_id'],$company_id);
         $token = $access_token['token'];
-        dump ($token); //FOR DEBUGGING
         $sign = '';
         $timestamp = time();
 
