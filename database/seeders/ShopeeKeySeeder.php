@@ -33,7 +33,8 @@ class ShopeeKeySeeder extends Seeder
                 'name' => 'Shopee Access Token & Partner Key for SPV',
                 'token' => '786d4f7767736b5673726449616b5554',
                 'additional_data' => ([
-                    'shop_id' => 1381617825
+                    'shop_id' => 1381617825,
+                    'refresh_token' => ''
                 ]),
                 'updated_at' => now(),
                 'created_at' => now(),
