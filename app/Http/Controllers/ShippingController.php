@@ -1671,7 +1671,6 @@ class ShippingController extends Controller
         $order = [];
         $CNS = [];
         $message = '';
-
         foreach ($orders as $key => $value) {
             $product_list = $this->generate_product_description($value->id);
             // $order[$key]['id'] = $value->id;
@@ -1693,7 +1692,7 @@ class ShippingController extends Controller
             ###### download shipping document ######
             $generateCN = TiktokTrait::generateCN($order[$key]['additional_data'],$company_id);
             $generateCN = json_decode($generateCN, true);
-
+            // dump($generateCN);die;
             if ($generateCN['code'] != 0) {
                 $order[$key]['error']['type'][] = 'generateCN';
                 $order[$key]['error']['message'][] = $generateCN['message'];

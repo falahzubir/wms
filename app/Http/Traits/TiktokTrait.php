@@ -405,8 +405,8 @@ Trait TiktokTrait
         $response = Http::get("$curl_url");
 
         $response = json_decode($response->body(),true);
-
-        try {
+        // dump($response);
+        // try {
 
             if ($response['code'] != 0) {
                 return json_encode([
@@ -422,19 +422,56 @@ Trait TiktokTrait
             ]);
             // URL of the file you want to download
             $fileUrl = $response['data']['doc_url'];
-            // Get the file content
-            $fileContent = file_get_contents($fileUrl, false, $context);
+            
+            //TODO Get the file content (CAN"T DETERMINE THE ERROR WHEN USING THIS) [PROCEED TO USING CURL FOR ALTERNATIVE ERROR]
+            // $fileContent = file_get_contents($fileUrl, false, $context);
+            // if ($fileContent === false || strlen($fileContent) === 0) {
+            //     throw new \Exception("File content is empty or couldn't be fetched.");
+            // }
+
+            //TODO Get the file content [ALTERNATIVE] [PROCEED TO USING CURL FOR ALTERNATIVE ERROR]
+            // Initialize CURL session
+            $curl_handle = curl_init();
+
+            // Set CURL options
+            curl_setopt($curl_handle, CURLOPT_URL, $fileUrl);
+            curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true); // Return the content as a string
+            curl_setopt($curl_handle, CURLOPT_FOLLOWLOCATION, true); // Follow redirects, if any
+            curl_setopt($curl_handle, CURLOPT_TIMEOUT, 30); // Set timeout (in seconds)
+            curl_setopt($curl_handle, CURLOPT_USERAGENT, 'GuzzleHttp/7'); // Set a user-agent to match your context
+
+            // Execute CURL and fetch the file content
+            $fileContent = curl_exec($curl_handle);
+
+            // Check for errors during CURL execution
+            if (curl_errno($curl_handle)) {
+                throw new \Exception('CURL Error: ' . curl_error($curl_handle));
+            }
+
+            // Close the CURL session
+            curl_close($curl_handle);
+
+            // Check if the content is empty or invalid
+            if ($fileContent === false || strlen($fileContent) === 0) {
+                throw new \Exception("File content is empty or couldn't be fetched.");
+            }
+            //TODO Get the file content (CAN"T DETERMINE THE ERROR WHEN USING THIS) [PROCEED TO USING CURL FOR ALTERNATIVE ERROR]
+
 
             // Save the file to storage
             $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['order_id'] . '.pdf';
             $file_path = storage_path('app/public/' . $file_name);
-
+            
+            
             // Set the appropriate headers for a PDF file
             header('Content-Type: application/pdf');
             header('Content-Disposition: attachment; filename="' . $file_name . '"');
-
             Storage::put('public/'.$file_name, $fileContent);
-
+            // dump($fileUrl);
+            // dump('==========');
+            // dump($file_name);
+            // dump('==========');
+            // dump($fileContent);
             return json_encode([
                 'code' => 0,
                 'message' => 'Success',
@@ -443,13 +480,13 @@ Trait TiktokTrait
                 ]
             ]);
 
-        } catch (\Throwable $th) {
+        // } catch (\Throwable $th) {
 
-            return json_encode([
-                'code' => 500,
-                'message' => json_encode($th)
-            ]);
-        }
+        //     return json_encode([
+        //         'code' => 500,
+        //         'message' => json_encode($th)
+        //     ]);
+        // }
 
         return json_encode([
             'code' => 500,
