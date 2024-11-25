@@ -1552,7 +1552,6 @@ class ShippingController extends Controller
         $order = [];
         $CNS = [];
         $message = '';
-
         foreach ($orders as $key => $value) {
             $product_list = $this->generate_product_description($value->id);
             $order[$key]['id'] = $value->id;
@@ -1569,7 +1568,6 @@ class ShippingController extends Controller
             ###### start get shipping document parameter ######
             $getShippingDocumentParameter = ShopeeTrait::getShippingDocumentParameter($order[$key]['additional_data'], $company_id);
             $jsonGetShippingDocumentParameter = json_decode($getShippingDocumentParameter, true);
-
             if (empty($jsonGetShippingDocumentParameter['error'])) {
                 $order[$key]['additional_data']['shipping_document_type'] = $jsonGetShippingDocumentParameter['response']['result_list'][0]['suggest_shipping_document_type'];
 
@@ -1592,8 +1590,7 @@ class ShippingController extends Controller
                         #######################################
                         ###### start generate_cn ##############
                         #######################################
-                        $getDownloadShippingDocument = ShopeeTrait::downloadShippingDocument($order[$key]['additional_data']);
-
+                        $getDownloadShippingDocument = ShopeeTrait::downloadShippingDocument($order[$key]['additional_data'],$company_id);
                         if ($getDownloadShippingDocument) {
                             //save to shippings table
                             $shipping = Shipping::where('order_id', $value->id)->first();

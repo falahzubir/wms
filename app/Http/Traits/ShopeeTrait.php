@@ -183,7 +183,7 @@ trait ShopeeTrait
         return self::sendRequest('post', '/api/v2/logistics/get_shipping_document_result', ['order_list' => $orderList]);
     }
 
-    public static function downloadShippingDocument($data)
+    public static function downloadShippingDocument($data,$company_id)
     {
         $fileContent = self::sendRequest('post', '/api/v2/logistics/download_shipping_document', [
             'shipping_document_type' => $data['shipping_document_type'],
@@ -191,6 +191,7 @@ trait ShopeeTrait
                 [
                     'order_sn' => $data['ordersn'],
                     'package_number' => $data['package_number'],
+                    'company_id' => $company_id,
                 ],
             ],
         ]);
