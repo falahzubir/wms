@@ -2659,7 +2659,7 @@
                 }
             }
 
-            const confirmationArrange = (type, checkedValue) => {
+            const confirmationArrange = (type, checkedValue) => { 
                 //change checkedValue to array
 
                 if (typeof checkedValue == "string") {
