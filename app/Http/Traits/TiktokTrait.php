@@ -33,7 +33,6 @@ Trait TiktokTrait
             $shop_id = $accessToken->additional_data->shop_id;
             $client_id = $accessToken->client_id;
             $client_secret = $accessToken->client_secret;
-
             if($date <= $expired){
                 return [
                     'token' => $token,

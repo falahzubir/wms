@@ -1676,8 +1676,12 @@ class ShippingController extends Controller
 
         foreach ($orders as $key => $value) {
             $product_list = $this->generate_product_description($value->id);
-            $order[$key]['id'] = $value->id;
-
+            // $order[$key]['id'] = $value->id;
+            $order[$key] = [
+                'id' => $value->id,
+                'company_id' => $value->company_id,
+            ];
+        
             $company_id = $order[$key]['company_id'];
 
             if (isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings[0]->tracking_number)) {
