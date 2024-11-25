@@ -3,6 +3,7 @@
 namespace App\Http\Traits;
 
 use App\Models\AccessToken;
+use App\Models\Company;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -38,7 +39,7 @@ trait ShopeeTrait
 
     public static function refreshToken($company_id)
     {
-        $url = app()->environment() == 'production' ? 'https://aa.bosemzi.com' : 'https://qastg.groobok.com';
+       $url = Company::where('id', $company_id)->first()->url;
         $json['from'] = 'wms';
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
@@ -232,7 +233,7 @@ trait ShopeeTrait
         return false;
     }
 
-    private static function sendRequest($method, $path, $data = []) 
+    private static function sendRequest($method, $path, $data = [])
     {
         // Ensure `order_list` exists and has at least one element
         if (in_array($path,array('/api/v2/order/get_order_detail','/api/v2/logistics/get_tracking_number'))) {
@@ -242,7 +243,7 @@ trait ShopeeTrait
         } else {
             throw new \Exception('Company ID is missing or improperly structured.');
         }
-        
+
         $accessToken = self::getAccessToken($company_id);
         $shopee = self::getShopeeKey($company_id);
         $partner_id = $shopee['shopee_partner_id'];
