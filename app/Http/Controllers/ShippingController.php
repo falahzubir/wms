@@ -1853,9 +1853,11 @@ class ShippingController extends Controller
                     //update order status to pending shipment
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
                 } else {
+
                     //get tracking number
                     $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn, $order->company_id);
                     $tracking_number = json_decode($tracking_number, true);
+
                     if (!empty($tracking_number['error'])) {
                         $responseFailed['order_id'][] = $order->id;
                         $responseFailed['message'][] = $tracking_number['message'];

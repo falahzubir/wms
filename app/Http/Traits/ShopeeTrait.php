@@ -235,7 +235,9 @@ trait ShopeeTrait
     private static function sendRequest($method, $path, $data = []) 
     {
         // Ensure `order_list` exists and has at least one element
-        if (isset($data['order_list'][0]['company_id'])) {
+        if (in_array($path,array('/api/v2/order/get_order_detail','/api/v2/logistics/get_tracking_number'))) {
+            $company_id = $data['company_id'];
+        } else if (isset($data['order_list'][0]['company_id'])) {
             $company_id = $data['order_list'][0]['company_id']; // Extract company_id
         } else {
             throw new \Exception('Company ID is missing or improperly structured.');
