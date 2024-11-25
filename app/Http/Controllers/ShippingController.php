@@ -1544,7 +1544,7 @@ class ShippingController extends Controller
     public function generateShopeeCN($orderIds)
     {
         $orders = Order::with(['shippings'])
-            ->select('payment_type', 'id')
+            ->select('payment_type', 'id', 'company_id')
             ->whereIn('id', $orderIds)
             ->where('payment_type', 22)
             ->get();
@@ -1552,7 +1552,6 @@ class ShippingController extends Controller
         $order = [];
         $CNS = [];
         $message = '';
-
         foreach ($orders as $key => $value) {
             $product_list = $this->generate_product_description($value->id);
             $order[$key]['id'] = $value->id;
@@ -1564,25 +1563,25 @@ class ShippingController extends Controller
             }
 
             $order[$key]['additional_data'] = json_decode($value->shippings[0]->additional_data, true);
+            $company_id = $value->company_id;
 
             ###### start get shipping document parameter ######
-            $getShippingDocumentParameter = ShopeeTrait::getShippingDocumentParameter($order[$key]['additional_data']);
+            $getShippingDocumentParameter = ShopeeTrait::getShippingDocumentParameter($order[$key]['additional_data'], $company_id);
             $jsonGetShippingDocumentParameter = json_decode($getShippingDocumentParameter, true);
-
             if (empty($jsonGetShippingDocumentParameter['error'])) {
                 $order[$key]['additional_data']['shipping_document_type'] = $jsonGetShippingDocumentParameter['response']['result_list'][0]['suggest_shipping_document_type'];
 
                 ############################################
                 ###### start create shipping document ######
                 ############################################
-                $getCreateShippingDocument = ShopeeTrait::createShippingDocument($order[$key]['additional_data']);
+                $getCreateShippingDocument = ShopeeTrait::createShippingDocument($order[$key]['additional_data'], $company_id);
                 $jsonGetCreateShippingDocument = json_decode($getCreateShippingDocument, true);
 
                 if (empty($jsonGetCreateShippingDocument['error'])) {
                     ###############################################
                     ###### start get shipping document result #####
                     ###############################################
-                    $getShippingDocument = ShopeeTrait::getShippingDocumentResult($order[$key]['additional_data']);
+                    $getShippingDocument = ShopeeTrait::getShippingDocumentResult($order[$key]['additional_data'], $company_id);
                     $jsonGetShippingDocument = json_decode($getShippingDocument, true);
 
                     if (empty($jsonGetShippingDocument['error'])) {
@@ -1591,8 +1590,7 @@ class ShippingController extends Controller
                         #######################################
                         ###### start generate_cn ##############
                         #######################################
-                        $getDownloadShippingDocument = ShopeeTrait::downloadShippingDocument($order[$key]['additional_data']);
-
+                        $getDownloadShippingDocument = ShopeeTrait::downloadShippingDocument($order[$key]['additional_data'],$company_id);
                         if ($getDownloadShippingDocument) {
                             //save to shippings table
                             $shipping = Shipping::where('order_id', $value->id)->first();
@@ -1743,7 +1741,7 @@ class ShippingController extends Controller
         ], 200);
     }
 
-    public function arrange_shipment(Request $request)
+    public function arrange_shipment(Request $request) 
     {
         $responseSuccess = [];
         $responseProcessing = [];
@@ -1784,7 +1782,7 @@ class ShippingController extends Controller
                 }
 
                 //get order status
-                $order_details = ShopeeTrait::getOrderDetail($order->third_party_sn);
+                $order_details = ShopeeTrait::getOrderDetail($order->third_party_sn, $order->company_id);
                 $detailsJson = json_decode($order_details, true);
                 if (!empty($detailsJson['error'])) {
                     $responseFailed['order_id'][] = $order->id;
@@ -1796,7 +1794,7 @@ class ShippingController extends Controller
                 //check order status to arrange shipment
                 if ($order_status == 'READY_TO_SHIP') {
                     //get time slot
-                    $timeslot = ShopeeTrait::getShippingParameter($order->third_party_sn);
+                    $timeslot = ShopeeTrait::getShippingParameter($order->third_party_sn, $order->company_id);
                     $timeslot = json_decode($timeslot, true);
                     if (!empty($timeslot['error'])) {
                         $responseFailed['order_id'][] = $order->id;
@@ -1824,7 +1822,7 @@ class ShippingController extends Controller
                         }
                     }
 
-                    $process = ShopeeTrait::shipOrder($order->third_party_sn, $availablePickupTimes[0]['pickup_time_id']);
+                    $process = ShopeeTrait::shipOrder($order->third_party_sn, $availablePickupTimes[0]['pickup_time_id'], $order->company_id);
                     $processJson = json_decode($process, true);
                     if (!empty($processJson['error'])) {
                         $responseFailed['order_id'][] = $order->id;
@@ -1833,7 +1831,7 @@ class ShippingController extends Controller
                     }
 
                     //get tracking number
-                    $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
+                    $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn, $order->company_id);
                     $tracking_number = json_decode($tracking_number, true);
                     if (!empty($tracking_number['error'])) {
                         $responseFailed['order_id'][] = $order->id;
@@ -1862,9 +1860,11 @@ class ShippingController extends Controller
                     //update order status to pending shipment
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
                 } else {
+
                     //get tracking number
-                    $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn);
+                    $tracking_number = ShopeeTrait::getTrackingNumber($order->third_party_sn, $order->company_id);
                     $tracking_number = json_decode($tracking_number, true);
+
                     if (!empty($tracking_number['error'])) {
                         $responseFailed['order_id'][] = $order->id;
                         $responseFailed['message'][] = $tracking_number['message'];

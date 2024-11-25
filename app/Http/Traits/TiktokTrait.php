@@ -3,6 +3,7 @@
 namespace App\Http\Traits;
 
 use App\Models\AccessToken;
+use App\Models\Company;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -57,8 +58,11 @@ Trait TiktokTrait
 
     public static function refreshToken($shop_id,$company_id)
     {
-        $url = app()->environment() == 'production' ? 'https://aa.bosemzi.com' : 'https://qastg.groobok.com';
+        // $url = app()->environment() == 'production' ? 'https://aa.bosemzi.com' : 'https://qastg.groobok.com';
         // $url = 'https://aa.bosemzi.com'; # FOR TESTING
+
+        $url = Company::where('id', $company_id)->first()->url;
+        // $json['from'] = 'wms';
         $json['from'] = 'wms';
         $json['shop_id'] = $shop_id;
         $response = Http::withHeaders([
