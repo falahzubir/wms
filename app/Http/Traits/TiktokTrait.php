@@ -422,11 +422,39 @@ Trait TiktokTrait
             // URL of the file you want to download
             $fileUrl = $response['data']['doc_url'];
             
-            // Get the file content
-            $fileContent = file_get_contents($fileUrl, false, $context);
-            if ($fileContent === false || strlen($fileContent) === 0) {
-                throw new \Exception("File content is empty or couldn't be fetched.");
+            // // Get the file content
+            // $fileContent = file_get_contents($fileUrl, false, $context);
+            // if ($fileContent === false || strlen($fileContent) === 0) {
+            //     throw new \Exception("File content is empty or couldn't be fetched.");
+            // }
+
+
+            $curl_handle = curl_init();
+            curl_setopt($curl_handle, CURLOPT_URL, $fileUrl);
+            curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl_handle, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($curl_handle, CURLOPT_TIMEOUT, 30);
+            curl_setopt($curl_handle, CURLOPT_USERAGENT, 'GuzzleHttp/7');
+
+            $fileContent = curl_exec($curl_handle);
+
+            if (curl_errno($curl_handle)) {
+                throw new \Exception('CURL Error: ' . curl_error($curl_handle));
             }
+
+            $http_code = curl_getinfo($curl_handle, CURLINFO_HTTP_CODE);
+            curl_close($curl_handle);
+
+            // Check if HTTP response code is not 200 (OK)
+            if ($http_code !== 200) {
+                throw new \Exception("HTTP Error: Received response code $http_code.");
+            }
+
+            // Check if content is a valid PDF
+            if (strpos($fileContent, '%PDF') !== 0) {
+                throw new \Exception("Downloaded content is not a valid PDF.");
+            }
+
             // Save the file to storage
             $file_name = 'tiktok/initial_' . Carbon::now()->format('YmdHis') . '_' . $params['order_id'] . '.pdf';
             $file_path = storage_path('app/public/' . $file_name);
