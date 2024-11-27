@@ -76,5 +76,74 @@ class TiktokAccessTokenSeeder extends Seeder
                 'updated_at' => now(), // Updated in both cases
             ]
         );
+
+        DB::table('access_tokens')->updateOrInsert(
+            // Match condition (what identifies the record)
+            [
+                'type' => 'tiktok',
+                'client_id' => '6eda56978j5kn',
+                'client_secret' => '92866e4f2c1dcb8880a9c2099ced14251f9d4061',
+            ],
+            // Data to update or insert
+            [
+                'company_id' => 1, //THIS IS Access Token EMZI CARE FROM LIVE DB
+                'prefix' => null,
+                'suffix' => null,
+                'name' => 'TikTok Access Token EMZI CARE HOUSE Shop 1',
+                'token' => 'secret',
+                'additional_data' => '{"shop_id":7495992503136848669}',
+                'abilities' => null,
+                'last_used_at' => null,
+                'expires_at' => null,
+                'created_at' => now(), // Only used during insertion
+                'updated_at' => now(), // Updated in both cases
+            ]
+        );
+
+        DB::table('access_tokens')->updateOrInsert(
+            // Match condition (what identifies the record)
+            [
+                'type' => 'tiktok',
+                'client_id' => '6eda56978j5kn',
+                'client_secret' => '92866e4f2c1dcb8880a9c2099ced14251f9d4061',
+            ],
+            // Data to update or insert
+            [
+                'company_id' => 1, //THIS IS Emzi Care Live DB
+                'prefix' => null,
+                'suffix' => null,
+                'name' => 'TikTok Access Token Emzi Care Live Shop 1',
+                'token' => 'secret',
+                'additional_data' => '{"shop_id":7495993471534926546}',
+                'abilities' => null,
+                'last_used_at' => null,
+                'expires_at' => null,
+                'created_at' => now(), // Only used during insertion
+                'updated_at' => now(), // Updated in both cases
+            ]
+        );
+
+        DB::table('access_tokens')->updateOrInsert(
+            // Match condition (what identifies the record)
+            [
+                'type' => 'tiktok',
+                'client_id' => '6eda56978j5kn',
+                'client_secret' => '92866e4f2c1dcb8880a9c2099ced14251f9d4061',
+            ],
+            // Data to update or insert
+            [
+                'company_id' => 1, //THIS IS Emzi Care World DB
+                'prefix' => null,
+                'suffix' => null,
+                'name' => 'TikTok Access Token Emzi Care World Shop 1',
+                'token' => 'secret',
+                'additional_data' => '{"shop_id":7495992400319514981}',
+                'abilities' => null,
+                'last_used_at' => null,
+                'expires_at' => null,
+                'created_at' => now(), // Only used during insertion
+                'updated_at' => now(), // Updated in both cases
+            ]
+        );
     }
 }
