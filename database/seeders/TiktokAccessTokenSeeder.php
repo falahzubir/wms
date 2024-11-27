@@ -85,6 +85,8 @@ class TiktokAccessTokenSeeder extends Seeder
             ],
             // Data to update or insert
             [
+                'client_id' => '6eda56978j5kn',
+                'client_secret' => '92866e4f2c1dcb8880a9c2099ced14251f9d4061',
                 'company_id' => 1, //THIS IS Access Token EMZI CARE FROM LIVE DB
                 'prefix' => null,
                 'suffix' => null,
@@ -107,6 +109,8 @@ class TiktokAccessTokenSeeder extends Seeder
             ],
             // Data to update or insert
             [
+                'client_id' => '6eda56978j5kn',
+                'client_secret' => '92866e4f2c1dcb8880a9c2099ced14251f9d4061',
                 'company_id' => 1, //THIS IS Emzi Care Live DB
                 'prefix' => null,
                 'suffix' => null,
@@ -129,6 +133,8 @@ class TiktokAccessTokenSeeder extends Seeder
             ],
             // Data to update or insert
             [
+                'client_id' => '6eda56978j5kn',
+                'client_secret' => '92866e4f2c1dcb8880a9c2099ced14251f9d4061',
                 'company_id' => 1, //THIS IS Emzi Care World DB
                 'prefix' => null,
                 'suffix' => null,
