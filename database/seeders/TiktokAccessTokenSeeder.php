@@ -81,8 +81,7 @@ class TiktokAccessTokenSeeder extends Seeder
             // Match condition (what identifies the record)
             [
                 'type' => 'tiktok',
-                'client_id' => '6eda56978j5kn',
-                'client_secret' => '92866e4f2c1dcb8880a9c2099ced14251f9d4061',
+                'name' => 'TikTok Access Token EMZI CARE HOUSE Shop 1'
             ],
             // Data to update or insert
             [
@@ -104,8 +103,7 @@ class TiktokAccessTokenSeeder extends Seeder
             // Match condition (what identifies the record)
             [
                 'type' => 'tiktok',
-                'client_id' => '6eda56978j5kn',
-                'client_secret' => '92866e4f2c1dcb8880a9c2099ced14251f9d4061',
+                'name' => 'TikTok Access Token Emzi Care Live Shop 1',
             ],
             // Data to update or insert
             [
@@ -127,8 +125,7 @@ class TiktokAccessTokenSeeder extends Seeder
             // Match condition (what identifies the record)
             [
                 'type' => 'tiktok',
-                'client_id' => '6eda56978j5kn',
-                'client_secret' => '92866e4f2c1dcb8880a9c2099ced14251f9d4061',
+                'name' => 'TikTok Access Token Emzi Care World Shop 1',
             ],
             // Data to update or insert
             [
