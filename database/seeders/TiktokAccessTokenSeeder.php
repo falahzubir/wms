@@ -89,7 +89,7 @@ class TiktokAccessTokenSeeder extends Seeder
                 'company_id' => 1, //THIS IS Access Token EMZI CARE FROM LIVE DB
                 'prefix' => null,
                 'suffix' => null,
-                'name' => 'TikTok Access Token EMZI CARE HOUSE Shop 1',
+                'name' => 'TikTok Access Token EMZI Care House',
                 'token' => 'secret',
                 'additional_data' => '{"shop_id":7495992503136848669}',
                 'abilities' => null,
@@ -112,7 +112,7 @@ class TiktokAccessTokenSeeder extends Seeder
                 'company_id' => 1, //THIS IS Emzi Care Live DB
                 'prefix' => null,
                 'suffix' => null,
-                'name' => 'TikTok Access Token Emzi Care Live Shop 1',
+                'name' => 'TikTok Access Token EMZI Care Live',
                 'token' => 'secret',
                 'additional_data' => '{"shop_id":7495993471534926546}',
                 'abilities' => null,
@@ -135,7 +135,7 @@ class TiktokAccessTokenSeeder extends Seeder
                 'company_id' => 1, //THIS IS Emzi Care World DB
                 'prefix' => null,
                 'suffix' => null,
-                'name' => 'TikTok Access Token Emzi Care World Shop 1',
+                'name' => 'TikTok Access Token EMZI Care World',
                 'token' => 'secret',
                 'additional_data' => '{"shop_id":7495992400319514981}',
                 'abilities' => null,
