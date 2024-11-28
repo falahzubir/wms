@@ -92,6 +92,12 @@ trait ShopeeTrait
             'order_sn_list' => $order_sn,
             'company_id' => $company_id,
             'response_optional_fields' => "buyer_user_id,buyer_username,recipient_address,item_list,total_amount,shipping_carrier,estimated_shipping_fee,pay_time,package_list,fulfillment_flag",
+            'order_list'=> [
+                [
+                    'order_sn' => $order_sn,
+                    'company_id' => $company_id,
+                ],
+            ],
         ];
 
         return self::sendRequest('get', '/api/v2/order/get_order_detail', $data);
@@ -102,6 +108,12 @@ trait ShopeeTrait
         $data = [
             'order_sn' => $order_sn,
             'company_id' => $company_id,
+            'order_list'=> [
+                [
+                    'order_sn' => $order_sn,
+                    'company_id' => $company_id,
+                ],
+            ],
         ];
 
         return self::sendRequest('get', '/api/v2/logistics/get_shipping_parameter', $data);
@@ -113,6 +125,12 @@ trait ShopeeTrait
             'order_sn' => $order_sn,
             'company_id' => $company_id,
             'package_number' => '-',
+            'order_list'=> [
+                [
+                    'order_sn' => $order_sn,
+                    'company_id' => $company_id,
+                ],
+            ],
         ];
 
         return self::sendRequest('get', '/api/v2/logistics/get_tracking_number', $data);
@@ -133,6 +151,12 @@ trait ShopeeTrait
         $data = [
             'order_sn' => $order_sn,
             'company_id' => $company_id,
+            'order_list'=> [
+                [
+                    'order_sn' => $order_sn,
+                    'company_id' => $company_id,
+                ],
+            ],
             'pickup' => [
                 'address_id' => 200007694,
                 'pickup_time_id' => $pickup_time_id,
@@ -235,15 +259,12 @@ trait ShopeeTrait
 
     private static function sendRequest($method, $path, $data = [])
     {
-        // Ensure `order_list` exists and has at least one element
-        if (in_array($path,array('/api/v2/order/get_order_detail','/api/v2/logistics/get_tracking_number'))) {
-            $company_id = $data['company_id'];
-        } else if (isset($data['order_list'][0]['company_id'])) {
+        
+        if (isset($data['order_list'][0]['company_id'])) {
             $company_id = $data['order_list'][0]['company_id']; // Extract company_id
         } else {
             throw new \Exception('Company ID is missing or improperly structured.');
         }
-
         $accessToken = self::getAccessToken($company_id);
         $shopee = self::getShopeeKey($company_id);
         $partner_id = $shopee['shopee_partner_id'];
