@@ -953,6 +953,7 @@
             let generate_cn_couriers = {
                 'dhl-ecommerce': 'DHL Ecommerce',
                 'posmalaysia': 'POS Malaysia',
+                'nv-my' : 'NinjaVan Malaysia',
                 'shopee': 'Shopee',
                 'tiktok': 'TikTok',
                 'emzi-express' : 'EMZI Express',
@@ -1646,7 +1647,7 @@
                     return;
                 }
 
-                if (type == 'nv-int') {
+                if (type == 'nv-my' || type == 'nv-int') {
                     requestCNNINJA(type, checkedOrder, inc_packing_list_result);
                     return;
                 }

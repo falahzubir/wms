@@ -120,8 +120,8 @@ class ShippingController extends Controller
             case ('posmalaysia'):
                 return $this->posmalaysia_cn($request->order_ids);
                 break;
-            case ('ninjavan'):
-                return $this->ninjavan_cn($request->order_ids);
+            case ('nv-my'):
+                return $this->ninjavan_malaysia($request->order_ids);
                 break;
             case ('emzi-express'):
                 return $this->emzi_express_cn($request->order_ids);
@@ -2543,6 +2543,238 @@ class ShippingController extends Controller
             }
         }
         ShippingProduct::insert($shipping_products);
+    }
+
+    public function ninjavan_malaysia($order_ids)
+    {
+        $CNS = [];
+        $errors = [];
+        $generatedCount = 0; // Track the number of already generated CN
+        $now = Carbon::now();
+
+        // Get order data
+        $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])->whereIn('id', $order_ids)->get();
+
+        foreach ($order_ninja as $order) {
+            $shipmentNumber = shipment_num_format($order);
+
+            // Get or create the shipping record
+            do {
+                $shipping = Shipping::where('shipment_number', $shipmentNumber)->first();
+                $accessToken = NinjaVanInternationalTrait::checkAccessToken($order->company->id);
+
+                if (!$shipping) {
+                    // Scenario 1: No order in `shippings` table, create everything
+                    $shipping = new Shipping();
+                    $shipping->shipment_number = $shipmentNumber;
+                    $shipping->order_id = $order->id;
+                    $shipping->courier = NINJAVAN_MALAYSIA_ID;
+                    $shipping->created_by = auth()->user()->id ?? 1;
+
+                    // Create order in NinjaVan
+                    $orderCreated = $this->createNinjaVanMYOrder($order, $shipping, $accessToken);
+                    if ($orderCreated === true) {
+                        $success['order_ids'][] = $order->id;
+                        $success['attachment'][] = $shipping->attachment;
+                    } else {
+                        $errors[] = ['message' => $orderCreated];
+                        break; // Stop further processing for this order if creation fails
+                    }
+                }
+
+                // Check for tracking_number
+                if (is_null($shipping->tracking_number)) {
+                    // Scenario 2: Order exists but `tracking_number` is empty
+                    $orderCreated = $this->createNinjaVanMYOrder($order, $shipping, $accessToken);
+                    if ($orderCreated !== true) {
+                        $errors[] = ['message' => $orderCreated];
+                        break; // Stop further processing for this order if creation fails
+                    }
+                }
+
+                // Check for attachment
+                if (is_null($shipping->attachment) || $shipping->attachment === '') {
+                    // Scenario 3: Request waybill from NinjaVan
+                    $this->requestNinjaVanMYWaybill($shipping, $order, $accessToken, $errors, $success);
+                }
+
+            } while (is_null($shipping->tracking_number) || is_null($shipping->attachment) || $shipping->attachment === '');
+
+            // Count success if all fields are populated
+            if (!is_null($shipping->tracking_number) && !is_null($shipping->attachment) && $shipping->attachment !== '') {
+                $generatedCount++;
+            }
+        }
+
+        if ($generatedCount > 0) {
+            $success[] = ['message' => "Selected orders successfully generated CN."];
+        }
+
+        if (isset($success['attachment'])) {
+            $success['attachment'] = array_filter($success['attachment'], function($value) {
+                return !is_null($value);
+            });
+        }
+
+        if (isset($success['order_ids'])) {
+            $success['order_ids'] = array_unique($success['order_ids']);
+        }
+
+        if (!empty($errors)) {
+            return response()->json([
+                'success' => false,
+                'data' => $errors
+            ], 500);
+        } else {
+            return response()->json([
+                'success' => true,
+                'data' => $success
+            ], 200);
+        }
+    }
+
+    private function createNinjaVanMYOrder($order, $shipping, $accessToken)
+    {
+        // Shipment details
+        $shipmentNumber = shipment_num_format($order);
+        $itemDescription = get_shipping_remarks($order) ?? '';
+        $product_list = $this->generate_product_description($order->id);
+        $totalWeight = get_order_weight($order) / 1000 ?? '';
+
+        $jsonArray = [
+            "service_type" => "Parcel",
+            "service_level" => "Standard",
+            "requested_tracking_number" => "NV" . $order->sales_id,
+            "reference" => [
+                "merchant_order_number" => $order->sales_id
+            ],
+            "from" => [
+                "name" => "EMZI FULFILLMENT",
+                "phone_number" => "60195687313",
+                "email" => "customerservice.elsb@emzi.com.my",
+                "address" => [
+                    "address1" => "EMZI FULLFILLMENT, KOMPLEKS SP PLAZA, JALAN IBRAHIM, SUNGAI PETANI 08000 Sungai Petani, Kedah",
+                    "address2" => "",
+                    "city" => "Sungai Petani",
+                    "state" => "Kedah",
+                    "address_type" => "office",
+                    "country" => "MY",
+                    "postcode" => "08000"
+                ]
+            ],
+            "to" => [
+                "name" => $order->customer->name ?? '',
+                "phone_number" => $order->customer->phone ?? '',
+                "email" => $order->customer->email ?? '',
+                "address" => [
+                    "required" => true,
+                    "address1" => $order->customer->address ?? '',
+                    "address2" => $order->customer->address2 ?? '',
+                    "city" => $order->customer->city ?? '',
+                    "state" => $order->customer->states->name ?? '',
+                    "address_type" => "home",
+                    "country" => "MY",
+                    "postcode" => $order->customer->postcode ?? ''
+                ]
+            ],
+            "parcel_job" => [
+                "is_pickup_required" => false,
+                "delivery_instructions" => $order->sales_remarks ?? '',
+                "delivery_start_date" => Carbon::now()->format('Y-m-d'),
+                "delivery_timeslot" => [
+                    "start_time" => "09:00",
+                    "end_time" => "12:00",
+                    "timezone" => "Asia/Kuala_Lumpur"
+                ],
+                "dimensions" => [
+                    "weight" => $totalWeight
+                ],
+                "items" => [
+                    [
+                        "item_description" => $itemDescription,
+                        "quantity" => 1,
+                        "is_dangerous_good" => false
+                    ]
+                ]
+            ]
+        ];
+
+        $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
+
+        // Retry mechanism with exponential backoff
+        $retryAttempts = 5;
+        $baseDelay = 1; // 1 second initial delay
+        $maxDelay = 300; // 5 minutes maximum delay (in seconds)
+        $delay = $baseDelay;
+
+        for ($attempt = 0; $attempt < $retryAttempts; $attempt++) {
+            try {
+                $createNinjaVanOrder = NinjaVanInternationalTrait::createNinjaVanOrder($jsonSend, $accessToken);
+
+                if (isset($createNinjaVanOrder['tracking_number'])) {
+                    $shipping->tracking_number = $createNinjaVanOrder['tracking_number'];
+                    $shipping->packing_attachment = $product_list;
+                    $shipping->save();
+
+                    return true; // Success, exit retry loop
+                } else {
+                    return json_encode($createNinjaVanOrder);
+                }
+            } catch (\Exception $e) {
+                error_log('Attempt ' . ($attempt + 1) . ' failed: ' . $e->getMessage());
+
+                if ($attempt == $retryAttempts - 1) {
+                    // Final attempt, return the error message
+                    return 'Final attempt failed: ' . $e->getMessage();
+                }
+
+                // Wait for the delay before retrying
+                sleep($delay);
+                // Exponentially increase delay, but cap at maxDelay
+                $delay = min($delay * 2, $maxDelay);
+            }
+        }
+    }
+
+    private function requestNinjaVanMYWaybill($shipping, $order, $accessToken, &$errors, &$success)
+    {
+        $retryAttempts = 5;
+        $baseDelay = 1; // 1 second initial delay
+        $maxDelay = 300; // 5 minutes maximum delay
+        $delay = $baseDelay;
+
+        for ($attempt = 0; $attempt < $retryAttempts; $attempt++) {
+            try {
+                $generateWayBill = NinjaVanInternationalTrait::generateWayBill($shipping->tracking_number, $accessToken);
+
+                if ($generateWayBill->status() == 200) {
+                    $pdfContent = $generateWayBill->body();
+                    $filePath = 'labels/' . shipment_num_format($order) . '.pdf';
+
+                    if (Storage::put('public/' . $filePath, $pdfContent)) {
+                        $shipping->update(['attachment' => $filePath]);
+                        set_order_status($order, ORDER_STATUS_PROCESSING, "Shipping label generated by NinjaVan Malaysia");
+                        $success['order_ids'][] = $order->id;
+                        $success['attachment'][] = $shipping->attachment;
+                        break; // Exit retry loop on success
+                    } else {
+                        $errors[] = ['message' => 'Failed to save waybill PDF.'];
+                    }
+                } else {
+                    $errors[] = ['message' => 'Failed to generate waybill: ' . json_encode($generateWayBill)];
+                }
+            } catch (\Exception $e) {
+                error_log('Attempt ' . ($attempt + 1) . ' failed: ' . $e->getMessage());
+                if ($attempt == $retryAttempts - 1) {
+                    $errors[] = ['message' => 'Final attempt to generate waybill failed: ' . $e->getMessage()];
+                }
+            }
+
+            // Wait for the delay before retrying
+            sleep($delay);
+            // Exponentially increase delay, but cap at maxDelay
+            $delay = min($delay * 2, $maxDelay);
+        }
     }
 
 }
