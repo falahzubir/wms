@@ -2692,7 +2692,6 @@ class ShippingController extends Controller
                 "items" => [
                     [
                         "item_description" => $itemDescription,
-                        "quantity" => $order->items->quantity,
                         "is_dangerous_good" => false
                     ]
                 ]
