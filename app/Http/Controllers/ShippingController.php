@@ -1663,7 +1663,7 @@ class ShippingController extends Controller
     public function generateTiktokCN($orderIds)
     {
         $orders = Order::with(['shippings'])
-            ->select('payment_type', 'id')
+            ->select('payment_type', 'id','company_id')
             ->whereIn('id', $orderIds)
             ->where('payment_type', 23)
             ->get();
@@ -1671,10 +1671,16 @@ class ShippingController extends Controller
         $order = [];
         $CNS = [];
         $message = '';
-
         foreach ($orders as $key => $value) {
             $product_list = $this->generate_product_description($value->id);
-            $order[$key]['id'] = $value->id;
+            // $order[$key]['id'] = $value->id;
+            $order[$key] = [
+                'id' => $value->id,
+                'company_id' => $value->company_id,
+            ];
+        
+            $company_id = $order[$key]['company_id'];
+
             if (isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings[0]->tracking_number)) {
                 $order[$key]['error']['type'][] = 'generateTiktokCN';
                 $order[$key]['error']['message'][] = 'No Tracking Number Found';
@@ -1684,9 +1690,9 @@ class ShippingController extends Controller
             $order[$key]['additional_data'] = json_decode($value->shippings[0]->additional_data, true);
 
             ###### download shipping document ######
-            $generateCN = TiktokTrait::generateCN($order[$key]['additional_data']);
+            $generateCN = TiktokTrait::generateCN($order[$key]['additional_data'],$company_id);
             $generateCN = json_decode($generateCN, true);
-
+            // dump($generateCN);die;
             if ($generateCN['code'] != 0) {
                 $order[$key]['error']['type'][] = 'generateCN';
                 $order[$key]['error']['message'][] = $generateCN['message'];
@@ -1750,7 +1756,7 @@ class ShippingController extends Controller
         $data['created_by'] = auth()->user()->id ?? 1;
 
         $orders = Order::with(['shippings'])
-            ->select('orders.payment_type', 'orders.id', 'orders.third_party_sn', 'couriers.code', 'orders.company_id')
+            ->select('orders.payment_type', 'orders.id', 'orders.third_party_sn', 'couriers.code','orders.company_id')
             ->whereIn('orders.id', $data['order_ids'])
             ->where('orders.payment_type', $platform)
             ->join('couriers', 'orders.courier_id', '=', 'couriers.id')
@@ -1897,10 +1903,12 @@ class ShippingController extends Controller
 
                 // TikTok Order ID
                 $tiktok_order_id = $order->third_party_sn;
+                // Company ID
+                $company_id = $order->company_id;
 
                 //get order_status
                 $additional_data = json_decode($order->shippings->first()->additional_data, true);
-                $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id);
+                $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id,$company_id);
                 $detailsJson = json_decode($order_details, true);
                 if ($detailsJson['code'] != 0) {
                     $responseFailed['order_id'][] = $order->id;
@@ -1911,7 +1919,7 @@ class ShippingController extends Controller
 
                 //check order status to arrange shipment
                 if ($order_status == '111') {
-                    $process = TikTokTrait::shipOrder($additional_data);
+                    $process = TikTokTrait::shipOrder($additional_data,$company_id);
                     $processJson = json_decode($process, true);
                     if ($processJson['code'] != 0) {
                         $responseFailed['order_id'][] = $order->id;
@@ -1920,7 +1928,7 @@ class ShippingController extends Controller
                     }
 
                     //run back to get tracking number
-                    $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id);
+                    $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id,$company_id);
                     $detailsJson = json_decode($order_details, true);
 
                     $additional_data = json_encode([
@@ -1947,7 +1955,7 @@ class ShippingController extends Controller
                     set_order_status($order, ORDER_STATUS_PENDING_SHIPMENT, "Order arranged for shipment");
                 } else {
                     //run back to get tracking number
-                    $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id);
+                    $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id,$company_id);
                     $detailsJson = json_decode($order_details, true);
 
                     $additional_data = json_encode([
