@@ -2175,7 +2175,15 @@ class ShippingController extends Controller
         $now = Carbon::now();
 
         // Get order data
-        $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])->whereIn('id', $order_ids)->get();
+        $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])->whereIn('id', $order_ids)->where('courier_id', NINJAVAN_INTERNATIONAL_ID)->get();
+
+        // Check if user select the correct courier
+        if ($order_ninja->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please ensure you have selected the correct courier and try again.'
+            ], 404);
+        }
 
         // Get rate for currency exchange
         $rate = ExchangeRate::where('start_date', '<=', $now)
@@ -2561,7 +2569,15 @@ class ShippingController extends Controller
         $now = Carbon::now();
 
         // Get order data
-        $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])->whereIn('id', $order_ids)->get();
+        $order_ninja = Order::with(['customer.states', 'items', 'items.product', 'company'])->whereIn('id', $order_ids)->where('courier_id', NINJAVAN_MALAYSIA_ID)->get();
+
+        // Check if user select the correct courier
+        if ($order_ninja->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please ensure you have selected the correct courier and try again.'
+            ], 404);
+        }
 
         foreach ($order_ninja as $order) {
             $shipmentNumber = shipment_num_format($order);
