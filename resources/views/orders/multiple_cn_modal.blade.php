@@ -82,17 +82,30 @@
             return;
         }
 
-        if(_order.purchase_type == {{ PURCHASE_TYPE_COD }} && _order.courier_id == {{ DHL_ID }}){
-            if(_order.total_price > {{ MAX_DHL_COD_PER_PARCEL}}){
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'DHL COD amount exceed limit',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                })
-                return;
+        if (_order.purchase_type == {{ PURCHASE_TYPE_COD }}) {
+            if (_order.courier_id == {{ DHL_ID }}) {
+                if (_order.total_price > {{ MAX_DHL_COD_PER_PARCEL }}) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'DHL COD amount exceeds the limit',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+            } else if (_order.courier_id == {{ NINJAVAN_MALAYSIA_ID }}) {
+                if (_order.total_price > {{ MAX_NINJAVAN_COD_PER_PARCEL }}) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'NinjaVan COD amount exceeds the limit',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
             }
         }
+
         const myModal = new bootstrap.Modal('#multiple-cn-modal', {
             backdrop: 'static',
             keyboard: false

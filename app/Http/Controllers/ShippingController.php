@@ -2589,13 +2589,6 @@ class ShippingController extends Controller
             $shipmentNumberBase = shipment_num_format($order);
 
             if ($mult_cn) {
-                // If total price exceed RM2000
-                $totalPrice = $order->total_price / 100 ?? 0;
-                if ($totalPrice > 2000 && $order->purchase_type == PURCHASE_TYPE_COD) {
-                    $errors[] = ['message' => "Total COD price for order ID $order->id exceeds RM2000 limit."];
-                    continue;
-                }
-                
                 foreach ($mult_cn as $index => $parcelItems) {
                     // Ensure parcelItems array exists and is valid
                     if (!is_array($parcelItems) || empty($parcelItems)) {
