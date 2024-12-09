@@ -297,4 +297,39 @@ class OrderApiController extends Controller
             'month_name'=> $month_name
         ], 200);
     }
+
+    /*
+    * API to delete order
+    * @param Request $request
+    * @return json
+    */
+    public function delete(Request $request)
+    {
+        $request->validate([
+            'sales_id' => 'required|exists:orders,sales_id',
+            'company_code' => 'required|exists:companies,code',
+        ]);
+
+        $order = Order::where('sales_id', $request->sales_id)
+            ->whereHas('company', function ($query) use ($request) {
+                $query->where('code', $request->company_code);
+            })->first();
+
+        if (!$order) {
+            return response()->json([
+                'error' => 'Order not found'
+            ], 404);
+        }
+
+        set_order_status($order, ORDER_STATUS_REJECTED, "Order deleted by API");
+
+        $order->is_active = IS_INACTIVE;
+        $order->save();
+
+        return response()->json([
+            'success' => 'ok',
+            'message' => 'Order deleted successfully',
+            'data' => $order
+        ], 200);
+    }
 }
