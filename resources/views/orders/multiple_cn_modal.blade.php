@@ -365,9 +365,10 @@
                                 .then(response => {
                                     Swal.close();
                                     if (response.data.status == 'error' || response.data.success == false) {
+                                        const errorMessages = response.data.data.map(err => err.message).join('\n');
                                         Swal.fire({
                                             title: 'Error!',
-                                            text: response.data.message,
+                                            text: errorMessages || response.data.message,
                                             icon: 'error',
                                             confirmButtonText: 'OK'
                                         })
@@ -428,9 +429,11 @@
                                     }
                                 })
                                 .catch(error => {
+                                    const errorDetails = error.response.data?.data || [];
+                                    const errorMessages = errorDetails.map(err => err.message).join('\n');
                                     Swal.fire({
                                         title: 'Error!',
-                                        text: error.response.data.message,
+                                        text: errorMessages || error.response.data.message,
                                         icon: 'error',
                                         confirmButtonText: 'OK'
                                     })

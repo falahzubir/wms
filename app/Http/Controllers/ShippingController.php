@@ -2589,6 +2589,13 @@ class ShippingController extends Controller
             $shipmentNumberBase = shipment_num_format($order);
 
             if ($mult_cn) {
+                // If total price exceed RM2000
+                $totalPrice = $order->total_price / 100 ?? 0;
+                if ($totalPrice > 2000 && $order->purchase_type == PURCHASE_TYPE_COD) {
+                    $errors[] = ['message' => "Total COD price for order ID $order->id exceeds RM2000 limit."];
+                    continue;
+                }
+                
                 foreach ($mult_cn as $index => $parcelItems) {
                     // Ensure parcelItems array exists and is valid
                     if (!is_array($parcelItems) || empty($parcelItems)) {
@@ -2721,14 +2728,6 @@ class ShippingController extends Controller
         $totalWeight = get_order_weight($order) / 1000 ?? ''; // Total weight in kg
         $totalPrice = $order->total_price / 100 ?? 0;
 
-        // If total price exceed RM2000
-        if ($totalPrice > 2000 && $order->purchase_type == PURCHASE_TYPE_COD) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Total COD price for this order exceed RM2000.'
-            ], 404);
-        }
-
         $jsonArray = [
             "service_type" => "Parcel",
             "service_level" => "Standard",
@@ -2837,14 +2836,6 @@ class ShippingController extends Controller
         $totalWeight = get_order_weight($order) / 1000 ?? ''; // Total weight in kg
         $weightPerParcel = $totalWeight / count($parcelItems);
         $totalPrice = $order->total_price / 100 ?? 0;
-
-        // If total price exceed RM2000
-        if ($totalPrice > 2000 && $order->purchase_type == PURCHASE_TYPE_COD) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Total COD price for this order exceed RM2000.'
-            ], 404);
-        }
 
         $parcel = [
             "service_type" => "Parcel",
