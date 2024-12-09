@@ -2718,7 +2718,8 @@ class ShippingController extends Controller
     {
         // Shipment details
         $product_list = $this->generate_product_description($order->id);
-        $totalWeight = get_order_weight($order) / 1000 ?? '';
+        $totalWeight = get_order_weight($order) / 1000 ?? ''; // Total weight in kg
+        $totalPrice = $order->total_price / 100 ?? 0;
 
         $jsonArray = [
             "service_type" => "Parcel",
@@ -2771,15 +2772,19 @@ class ShippingController extends Controller
                 "items" => [
                     [
                         "item_description" => $order->sales_remarks ?? 'N/A',
-                        "is_dangerous_good" => false,
                         "native_item_description" => "N/A",
-                        // "unit_value" => <total price>,
                         "unit_weight" => $totalWeight,
                         "made_in_country" => "MY"
                     ]
                 ]
             ]
         ];
+
+        // JSON for COD
+        if ($order->purchase_type == PURCHASE_TYPE_COD) {
+            $jsonArray['parcel_job']['cash_on_delivery'] = $totalPrice;
+            $jsonArray['parcel_job']['cash_on_delivery_currency'] = "MYR";
+        }
 
         $jsonSend = json_encode($jsonArray, JSON_PRETTY_PRINT);
 
@@ -2822,7 +2827,16 @@ class ShippingController extends Controller
     {
         $product_list = $this->generate_product_description($order->id);
         $totalWeight = get_order_weight($order) / 1000 ?? ''; // Total weight in kg
-        $weightPerParcel = $totalWeight / count($parcelItems); // Adjust weight if needed
+        $weightPerParcel = $totalWeight / count($parcelItems);
+        $totalPrice = $order->total_price / 100 ?? 0;
+
+        // If total price exceed RM2000
+        if ($totalPrice > 2000 && $order->purchase_type == PURCHASE_TYPE_COD) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Total COD price for this order exceed RM2000.'
+            ], 404);
+        }
 
         $parcel = [
             "service_type" => "Parcel",
@@ -2874,8 +2888,7 @@ class ShippingController extends Controller
                 ],
                 "items" => [
                     [
-                        "item_description" => "N/A",
-                        "is_dangerous_good" => false,
+                        "item_description" => $order->sales_remarks ?? "N/A",
                         "native_item_description" => "N/A",
                         "unit_weight" => $weightPerParcel,
                         "made_in_country" => "MY"
@@ -2883,6 +2896,12 @@ class ShippingController extends Controller
                 ]
             ]
         ];
+
+        // Include total price only for the first CN
+        if ($parcelNumber === 1 && $order->purchase_type == PURCHASE_TYPE_COD) {
+            $jsonArray['parcel_job']['cash_on_delivery'] = $totalPrice;
+            $jsonArray['parcel_job']['cash_on_delivery_currency'] = "MYR";
+        }
 
         $jsonSend = json_encode($parcel, JSON_PRETTY_PRINT);
 
