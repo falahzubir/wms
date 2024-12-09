@@ -2721,6 +2721,14 @@ class ShippingController extends Controller
         $totalWeight = get_order_weight($order) / 1000 ?? ''; // Total weight in kg
         $totalPrice = $order->total_price / 100 ?? 0;
 
+        // If total price exceed RM2000
+        if ($totalPrice > 2000 && $order->purchase_type == PURCHASE_TYPE_COD) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Total COD price for this order exceed RM2000.'
+            ], 404);
+        }
+
         $jsonArray = [
             "service_type" => "Parcel",
             "service_level" => "Standard",
