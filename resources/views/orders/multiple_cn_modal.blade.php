@@ -364,7 +364,7 @@
                                 })
                                 .then(response => {
                                     Swal.close();
-                                    if (response.data.status == 'error') {
+                                    if (response.data.status == 'error' || response.data.success == false) {
                                         Swal.fire({
                                             title: 'Error!',
                                             text: response.data.message,
@@ -372,7 +372,7 @@
                                             confirmButtonText: 'OK'
                                         })
                                         return;
-                                    } else if (response.data.status == 'success') {
+                                    } else if (response.data.status == 'success' || response.data.success == true) {
                                         Swal.fire({
                                             title: 'Success!',
                                             html: `<div class="text-muted" style="font-size:0.8rem;color:#777">${inc_packing_list_generated_cn_multiple_cn_checkbox_value ? 'Shipping label and packing list generated' : 'Shipping label generated'}</div>`,
