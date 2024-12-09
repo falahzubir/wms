@@ -74,6 +74,7 @@ Route::prefix('orders')->group(function () {
     Route::match(array('GET','POST'),'getStatusWMS', [OrderApiController::class, 'getStatusWMS']);
     Route::match(array('GET','POST'),'getStatusWMSFilter', [OrderApiController::class, 'getStatusWMSFilter']);
     Route::match(array('GET','POST'),'parcels', [OrderApiController::class, 'scanParcelRanking']);
+    Route::post('delete', [OrderApiController::class, 'delete']);
 });
 
 Route::prefix('shippings')->group(function () {
