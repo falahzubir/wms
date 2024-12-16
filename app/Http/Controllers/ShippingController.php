@@ -2283,7 +2283,7 @@ class ShippingController extends Controller
     {
         // Shipment details
         $shipmentNumber = shipment_num_format($order);
-        $itemDescription = get_shipping_remarks($order) ?? '';
+        $itemDescription = !empty(get_shipping_remarks($order)) ? get_shipping_remarks($order) : $order->sales_remarks;
         $product_list = $this->generate_product_description($order->id);
         $totalWeight = get_order_weight($order) / 1000 ?? '';
         $sgd_amount = (($order->total_price / 100) / $rate->rate) + 1;
@@ -2718,6 +2718,7 @@ class ShippingController extends Controller
     {
         // Shipment details
         $product_list = $this->generate_product_description($order->id);
+        $itemDescription = !empty(get_shipping_remarks($order)) ? get_shipping_remarks($order) : $order->sales_remarks;
         $totalWeight = get_order_weight($order) / 1000 ?? ''; // Total weight in kg
         $totalPrice = $order->total_price / 100 ?? 0;
 
@@ -2771,7 +2772,7 @@ class ShippingController extends Controller
                 ],
                 "items" => [
                     [
-                        "item_description" => $order->sales_remarks ?? 'N/A',
+                        "item_description" => $itemDescription,
                         "native_item_description" => "N/A",
                         "unit_weight" => $totalWeight,
                         "made_in_country" => "MY"
@@ -2826,6 +2827,7 @@ class ShippingController extends Controller
     private function ninjaVanMYMultipleCNOrder($order, $shipping, $accessToken, $parcelItems, $parcelNumber)
     {
         $product_list = $this->generate_product_description($order->id);
+        $itemDescription = !empty(get_shipping_remarks($order)) ? get_shipping_remarks($order) : $order->sales_remarks;
         $totalWeight = get_order_weight($order) / 1000 ?? ''; // Total weight in kg
         $weightPerParcel = $totalWeight / count($parcelItems);
         $totalPrice = $order->total_price / 100 ?? 0;
@@ -2880,7 +2882,7 @@ class ShippingController extends Controller
                 ],
                 "items" => [
                     [
-                        "item_description" => $order->sales_remarks ?? "N/A",
+                        "item_description" => $itemDescription,
                         "native_item_description" => "N/A",
                         "unit_weight" => $weightPerParcel,
                         "made_in_country" => "MY"
