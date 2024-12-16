@@ -2290,6 +2290,31 @@ class ShippingController extends Controller
         $sgd_amount = ceil($sgd_amount);
         $sgd_amount = (int)$sgd_amount;
 
+        // Prepare items
+        $items = $order->items->isEmpty() 
+            ? [[
+                "item_description" => $itemDescription,
+                "native_item_description" => "N/A",
+                "unit_value" => $sgd_amount,
+                "unit_weight" => $totalWeight,
+                "product_url" => "https://www.product.url/12346.pdf",
+                "invoice_url" => "https://www.invoice.url/12346.pdf",
+                "hs_code" => 543111,
+                "made_in_country" => "MY"
+            ]]
+            : $order->items->map(function ($item) {
+                return [
+                    "item_description" => $item->product->name ?? "N/A",
+                    "native_item_description" => "N/A",
+                    "unit_value" => (int)ceil((($order->total_price / 100) / $rate->rate) + 1),
+                    "unit_weight" => ($item->product->weight * $item->quantity) / 1000 ?? 0,
+                    "product_url" => "https://www.product.url/12346.pdf",
+                    "invoice_url" => "https://www.invoice.url/12346.pdf",
+                    "hs_code" => 543111,
+                    "made_in_country" => "MY"
+                ];
+            })->toArray();
+
         $jsonArray = [
             "service_type" => "International",
             "international" => [
@@ -2719,8 +2744,25 @@ class ShippingController extends Controller
         // Shipment details
         $product_list = $this->generate_product_description($order->id);
         $itemDescription = !empty(get_shipping_remarks($order)) ? get_shipping_remarks($order) : $order->sales_remarks;
-        $totalWeight = get_order_weight($order) / 1000 ?? ''; // Total weight in kg
+        $totalWeight = get_order_weight($order) / 1000 ?? 0; // Total weight in kg
         $totalPrice = $order->total_price / 100 ?? 0;
+
+        // Prepare items
+        $items = $order->items->isEmpty() 
+            ? [[
+                "item_description" => $itemDescription,
+                "native_item_description" => "N/A",
+                "unit_weight" => $totalWeight,
+                "made_in_country" => "MY"
+            ]]
+            : $order->items->map(function ($item) {
+                return [
+                    "item_description" => $item->product->name ?? "N/A",
+                    "native_item_description" => "N/A",
+                    "unit_weight" => ($item->product->weight * $item->quantity) / 1000 ?? 0,
+                    "made_in_country" => "MY"
+                ];
+            })->toArray();
 
         $jsonArray = [
             "service_type" => "Parcel",
@@ -2770,14 +2812,7 @@ class ShippingController extends Controller
                 "dimensions" => [
                     "weight" => $totalWeight
                 ],
-                "items" => [
-                    [
-                        "item_description" => $itemDescription,
-                        "native_item_description" => "N/A",
-                        "unit_weight" => $totalWeight,
-                        "made_in_country" => "MY"
-                    ]
-                ]
+                "items" => $items
             ]
         ];
 
@@ -2828,9 +2863,26 @@ class ShippingController extends Controller
     {
         $product_list = $this->generate_product_description($order->id);
         $itemDescription = !empty(get_shipping_remarks($order)) ? get_shipping_remarks($order) : $order->sales_remarks;
-        $totalWeight = get_order_weight($order) / 1000 ?? ''; // Total weight in kg
+        $totalWeight = get_order_weight($order) / 1000 ?? 0; // Total weight in kg
         $weightPerParcel = $totalWeight / count($parcelItems);
         $totalPrice = $order->total_price / 100 ?? 0;
+
+        // Prepare items
+        $items = $order->items->isEmpty() 
+            ? [[
+                "item_description" => $itemDescription,
+                "native_item_description" => "N/A",
+                "unit_weight" => $weightPerParcel,
+                "made_in_country" => "MY"
+            ]]
+            : $order->items->map(function ($item) {
+                return [
+                    "item_description" => $item->product->name ?? "N/A",
+                    "native_item_description" => "N/A",
+                    "unit_weight" => ($item->product->weight * $item->quantity) / 1000 ?? 0,
+                    "made_in_country" => "MY"
+                ];
+            })->toArray();
 
         $parcel = [
             "service_type" => "Parcel",
@@ -2880,14 +2932,7 @@ class ShippingController extends Controller
                 "dimensions" => [
                     "weight" => $weightPerParcel
                 ],
-                "items" => [
-                    [
-                        "item_description" => $itemDescription,
-                        "native_item_description" => "N/A",
-                        "unit_weight" => $weightPerParcel,
-                        "made_in_country" => "MY"
-                    ]
-                ]
+                "items" => $items
             ]
         ];
 
