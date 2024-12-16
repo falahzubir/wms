@@ -2373,18 +2373,7 @@ class ShippingController extends Controller
                 "dimensions" => [
                     "weight" => $totalWeight
                 ],
-                "items" => [
-                    [
-                        "item_description" => $itemDescription,
-                        "native_item_description" => "N/A",
-                        "unit_value" => $sgd_amount,
-                        "unit_weight" => $totalWeight,
-                        "product_url" => "https://www.product.url/12346.pdf",
-                        "invoice_url" => "https://www.invoice.url/12346.pdf",
-                        "hs_code" => 543111,
-                        "made_in_country" => "MY"
-                    ]
-                ]
+                "items" => $items
             ]
         ];
 
