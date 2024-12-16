@@ -1918,7 +1918,7 @@ class ShippingController extends Controller
                 $order_status = $detailsJson['data']['order_list'][0]['order_status'];
 
                 //check order status to arrange shipment
-                if ($order_status == '111') {
+                if ($order_status === '111') {
                     $process = TikTokTrait::shipOrder($additional_data,$company_id);
                     $processJson = json_decode($process, true);
                     if ($processJson['code'] != 0) {
