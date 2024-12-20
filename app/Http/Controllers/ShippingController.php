@@ -1901,15 +1901,19 @@ class ShippingController extends Controller
                     continue;
                 }
 
-                // TikTok Order ID
+                // TikTok Order ID and Company ID
                 $tiktok_order_id = $order->third_party_sn;
-                // Company ID
                 $company_id = $order->company_id;
 
                 //get order_status
                 $additional_data = json_decode($order->shippings->first()->additional_data, true);
-                $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id,$company_id);
+                $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id, $company_id);
                 $detailsJson = json_decode($order_details, true);
+
+                // Update the package_id in the additional_data array
+                $package_id = $detailsJson['data']['order_list'][0]['package_list'][0]['package_id'];
+                $additional_data['package_id'] = $package_id;
+
                 if ($detailsJson['code'] != 0) {
                     $responseFailed['order_id'][] = $order->id;
                     $responseFailed['message'][] = $detailsJson['message'];
@@ -1934,7 +1938,7 @@ class ShippingController extends Controller
                     $additional_data = json_encode([
                         'order_id' => $order->third_party_sn,
                         'shop_id' => $additional_data['shop_id'],
-                        'package_number' => $details['data']['order_list'][0]['package_list'][0]['package_id'],
+                        'package_number' => $package_id,
                         'tracking_no' => $details['data']['order_list'][0]['order_line_list'][0]['tracking_number']
                     ]);
 
@@ -1961,7 +1965,7 @@ class ShippingController extends Controller
                     $additional_data = json_encode([
                         'order_id' => $order->third_party_sn,
                         'shop_id' => $additional_data['shop_id'],
-                        'package_number' => $details['data']['order_list'][0]['package_list'][0]['package_id'],
+                        'package_number' => $package_id,
                         'tracking_no' => $details['data']['order_list'][0]['order_line_list'][0]['tracking_number']
                     ]);
 
