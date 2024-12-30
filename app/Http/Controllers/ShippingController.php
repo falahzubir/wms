@@ -1903,15 +1903,19 @@ class ShippingController extends Controller
                     continue;
                 }
 
-                // TikTok Order ID
+                // TikTok Order ID and Company ID
                 $tiktok_order_id = $order->third_party_sn;
-                // Company ID
                 $company_id = $order->company_id;
 
                 //get order_status
                 $additional_data = json_decode($order->shippings->first()->additional_data, true);
-                $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id,$company_id);
+                $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id, $company_id);
                 $detailsJson = json_decode($order_details, true);
+
+                // Update the package_id in the additional_data array
+                $package_id = $detailsJson['data']['order_list'][0]['package_list'][0]['package_id'];
+                $additional_data['package_id'] = $package_id;
+
                 if ($detailsJson['code'] != 0) {
                     $responseFailed['order_id'][] = $order->id;
                     $responseFailed['message'][] = $detailsJson['message'];
@@ -1920,7 +1924,7 @@ class ShippingController extends Controller
                 $order_status = $detailsJson['data']['order_list'][0]['order_status'];
 
                 //check order status to arrange shipment
-                if ($order_status == '111') {
+                if ($order_status === 111) {
                     $process = TikTokTrait::shipOrder($additional_data,$company_id);
                     $processJson = json_decode($process, true);
                     if ($processJson['code'] != 0) {
@@ -1931,13 +1935,13 @@ class ShippingController extends Controller
 
                     //run back to get tracking number
                     $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id,$company_id);
-                    $detailsJson = json_decode($order_details, true);
+                    $details = json_decode($order_details, true);
 
                     $additional_data = json_encode([
                         'order_id' => $order->third_party_sn,
                         'shop_id' => $additional_data['shop_id'],
-                        'package_number' => $detailsJson['data']['order_list'][0]['package_list'][0]['package_id'],
-                        'tracking_no' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number']
+                        'package_number' => $package_id,
+                        'tracking_no' => $details['data']['order_list'][0]['order_line_list'][0]['tracking_number']
                     ]);
 
                     Shipping::updateOrCreate(
@@ -1945,7 +1949,7 @@ class ShippingController extends Controller
                             'order_id' => $order->id
                         ],
                         [
-                            'tracking_number' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number'],
+                            'tracking_number' => $details['data']['order_list'][0]['order_line_list'][0]['tracking_number'],
                             'courier' => $order->code,
                             'created_by' => auth()->user()->id ?? 1,
                             'additional_data' => $additional_data,
@@ -1958,13 +1962,13 @@ class ShippingController extends Controller
                 } else {
                     //run back to get tracking number
                     $order_details = TiktokTrait::getOrderDetails($additional_data, $tiktok_order_id,$company_id);
-                    $detailsJson = json_decode($order_details, true);
+                    $details = json_decode($order_details, true);
 
                     $additional_data = json_encode([
                         'order_id' => $order->third_party_sn,
                         'shop_id' => $additional_data['shop_id'],
-                        'package_number' => $detailsJson['data']['order_list'][0]['package_list'][0]['package_id'],
-                        'tracking_no' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number']
+                        'package_number' => $package_id,
+                        'tracking_no' => $details['data']['order_list'][0]['order_line_list'][0]['tracking_number']
                     ]);
 
                     Shipping::updateOrCreate(
@@ -1972,7 +1976,7 @@ class ShippingController extends Controller
                             'order_id' => $order->id
                         ],
                         [
-                            'tracking_number' => $detailsJson['data']['order_list'][0]['order_line_list'][0]['tracking_number'],
+                            'tracking_number' => $details['data']['order_list'][0]['order_line_list'][0]['tracking_number'],
                             'courier' => $order->code,
                             'created_by' => auth()->user()->id ?? 1,
                             'additional_data' => $additional_data,
