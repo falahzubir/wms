@@ -2745,7 +2745,14 @@ class ShippingController extends Controller
         })->implode(", ");
 
         // Prepare items
-        $items = $order->items->map(function ($item) {
+        $items = $order->items->isEmpty() 
+        ? [[
+            "item_description" => "N/A",
+            "native_item_description" => "N/A",
+            "unit_weight" => $totalWeight,
+            "made_in_country" => "MY"
+        ]]
+        : $order->items->map(function ($item) {
             return [
                 "item_description" => ($item->product->name ?? "N/A") . " [" . $item->quantity . "]",
                 "native_item_description" => "N/A",
@@ -2862,7 +2869,14 @@ class ShippingController extends Controller
         })->implode(", ");
 
         // Prepare items
-        $items = $order->items->map(function ($item) {
+        $items = $order->items->isEmpty() 
+        ? [[
+            "item_description" => "N/A",
+            "native_item_description" => "N/A",
+            "unit_weight" => $weightPerParcel,
+            "made_in_country" => "MY"
+        ]]
+        : $order->items->map(function ($item) {
             return [
                 "item_description" => $item->product->name ?? "N/A",
                 "native_item_description" => "N/A",
