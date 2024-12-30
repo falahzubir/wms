@@ -2741,7 +2741,7 @@ class ShippingController extends Controller
 
         // Prepare delivery instructions
         $delivery_instructions = $order->items->map(function ($item) {
-            return ($item->product->name ?? "N/A") . " [" . $item->quantity . "]";
+            return ($item->product->code ?? "N/A") . " [" . $item->quantity . "]";
         })->implode(", ");
 
         // Prepare items
@@ -2865,7 +2865,7 @@ class ShippingController extends Controller
 
         // Prepare delivery instructions
         $delivery_instructions = $order->items->map(function ($item) {
-            return ($item->product->name ?? "N/A") . " [" . $item->quantity . "]";
+            return ($item->product->code ?? "N/A") . " [" . $item->quantity . "]";
         })->implode(", ");
 
         // Prepare items
