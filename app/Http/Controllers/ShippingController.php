@@ -2732,26 +2732,23 @@ class ShippingController extends Controller
     {
         // Shipment details
         $product_list = $this->generate_product_description($order->id);
-        $itemDescription = !empty(get_shipping_remarks($order)) ? get_shipping_remarks($order) : $order->sales_remarks;
         $totalWeight = get_order_weight($order) / 1000 ?? 0; // Total weight in kg
         $totalPrice = $order->total_price / 100 ?? 0;
 
+        // Prepare delivery instructions
+        $delivery_instructions = $order->items->map(function ($item) {
+            return ($item->product->name ?? "N/A") . " [" . $item->quantity . "]";
+        })->implode(", ");
+
         // Prepare items
-        $items = $order->items->isEmpty() 
-            ? [[
-                "item_description" => $itemDescription,
+        $items = $order->items->map(function ($item) {
+            return [
+                "item_description" => ($item->product->name ?? "N/A") . " [" . $item->quantity . "]",
                 "native_item_description" => "N/A",
-                "unit_weight" => $totalWeight,
+                "unit_weight" => ($item->product->weight * $item->quantity) / 1000 ?? 0,
                 "made_in_country" => "MY"
-            ]]
-            : $order->items->map(function ($item) {
-                return [
-                    "item_description" => $item->product->name ?? "N/A",
-                    "native_item_description" => "N/A",
-                    "unit_weight" => ($item->product->weight * $item->quantity) / 1000 ?? 0,
-                    "made_in_country" => "MY"
-                ];
-            })->toArray();
+            ];
+        })->toArray();
 
         $jsonArray = [
             "service_type" => "Parcel",
@@ -2791,7 +2788,7 @@ class ShippingController extends Controller
             ],
             "parcel_job" => [
                 "is_pickup_required" => false,
-                "delivery_instructions" => $order->sales_remarks ?? '',
+                "delivery_instructions" => $delivery_instructions,
                 "delivery_start_date" => Carbon::now()->format('Y-m-d'),
                 "delivery_timeslot" => [
                     "start_time" => "09:00",
@@ -2851,27 +2848,24 @@ class ShippingController extends Controller
     private function ninjaVanMYMultipleCNOrder($order, $shipping, $accessToken, $parcelItems, $parcelNumber)
     {
         $product_list = $this->generate_product_description($order->id);
-        $itemDescription = !empty(get_shipping_remarks($order)) ? get_shipping_remarks($order) : $order->sales_remarks;
         $totalWeight = get_order_weight($order) / 1000 ?? 0; // Total weight in kg
         $weightPerParcel = $totalWeight / count($parcelItems);
         $totalPrice = $order->total_price / 100 ?? 0;
 
+        // Prepare delivery instructions
+        $delivery_instructions = $order->items->map(function ($item) {
+            return ($item->product->name ?? "N/A") . " [" . $item->quantity . "]";
+        })->implode(", ");
+
         // Prepare items
-        $items = $order->items->isEmpty() 
-            ? [[
-                "item_description" => $itemDescription,
+        $items = $order->items->map(function ($item) {
+            return [
+                "item_description" => $item->product->name ?? "N/A",
                 "native_item_description" => "N/A",
-                "unit_weight" => $weightPerParcel,
+                "unit_weight" => ($item->product->weight * $item->quantity) / 1000 ?? 0,
                 "made_in_country" => "MY"
-            ]]
-            : $order->items->map(function ($item) {
-                return [
-                    "item_description" => $item->product->name ?? "N/A",
-                    "native_item_description" => "N/A",
-                    "unit_weight" => ($item->product->weight * $item->quantity) / 1000 ?? 0,
-                    "made_in_country" => "MY"
-                ];
-            })->toArray();
+            ];
+        })->toArray();
 
         $parcel = [
             "service_type" => "Parcel",
@@ -2911,7 +2905,7 @@ class ShippingController extends Controller
             ],
             "parcel_job" => [
                 "is_pickup_required" => false,
-                "delivery_instructions" => $order->sales_remarks ?? '',
+                "delivery_instructions" => $delivery_instructions,
                 "delivery_start_date" => Carbon::now()->format('Y-m-d'),
                 "delivery_timeslot" => [
                     "start_time" => "09:00",
