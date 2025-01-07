@@ -2603,6 +2603,15 @@ class ShippingController extends Controller
         }
 
         foreach ($order_ninja as $order) {
+            // Check if COD price exceed RM2000
+            $totalPrice = $order->total_price / 100 ?? 0;
+            if ($totalPrice > 2000) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Maximum value allowed for COD is 2000.'
+                ], 404);
+            }
+
             $accessToken = NinjaVanInternationalTrait::checkAccessToken($order->company->id);
             $shipmentNumberBase = shipment_num_format($order);
 
