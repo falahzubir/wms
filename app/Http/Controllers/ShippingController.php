@@ -2306,11 +2306,11 @@ class ShippingController extends Controller
                 "hs_code" => 543111,
                 "made_in_country" => "MY"
             ]]
-            : $order->items->map(function ($item) {
+            : $order->items->map(function ($item) use ($rate) {
                 return [
                     "item_description" => $item->product->name ?? "N/A",
                     "native_item_description" => "N/A",
-                    "unit_value" => (int)ceil((($order->total_price / 100) / $rate->rate) + 1),
+                    "unit_value" => (int)ceil((($item->price / 100) / $rate->rate) + 1),
                     "unit_weight" => ($item->product->weight * $item->quantity) / 1000 ?? 0,
                     "product_url" => "https://www.product.url/12346.pdf",
                     "invoice_url" => "https://www.invoice.url/12346.pdf",
