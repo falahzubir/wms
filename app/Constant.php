@@ -143,6 +143,7 @@ if(!defined('CLAIM_DATE_TYPES')) define('CLAIM_DATE_TYPES', [
 if(!defined('DHL_ID')) define('DHL_ID',15);
 if(!defined('POSMALAYSIA_ID')) define('POSMALAYSIA_ID', 76);
 if(!defined('EMZIEXPRESS_ID')) define('EMZIEXPRESS_ID', 100);
+if(!defined('NINJAVAN_MALAYSIA_ID')) define('NINJAVAN_MALAYSIA_ID', 47);
 if(!defined('NINJAVAN_INTERNATIONAL_ID')) define('NINJAVAN_INTERNATIONAL_ID', 77);
 
 // courier id which will be auto shipping, other will have to set menually
@@ -171,6 +172,7 @@ if(!defined('DHL_ED_CLIENT_PASS')) define('DHL_ED_CLIENT_PASS','MTM0MjQzM0208211
 // MAXIMUM QUANTITY PER BOX
 if(!defined('MAXIMUM_QUANTITY_PER_BOX')) define('MAXIMUM_QUANTITY_PER_BOX', 40);
 if(!defined('MAX_DHL_COD_PER_PARCEL')) define('MAX_DHL_COD_PER_PARCEL', 200000); // RM2000
+if(!defined('MAX_NINJAVAN_COD_PER_PARCEL')) define('MAX_NINJAVAN_COD_PER_PARCEL', 200000); // RM2000
 
 // Courier Others
 if(!defined('COURIER_OTHERS')) define('COURIER_OTHERS', 99);
