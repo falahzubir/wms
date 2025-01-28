@@ -182,7 +182,7 @@ if(!defined('PAYMENT_TYPE_SHOPEE')) define('PAYMENT_TYPE_SHOPEE', 22);
 if(!defined('PAYMENT_TYPE_TIKTOK')) define('PAYMENT_TYPE_TIKTOK', 23);
 
 // auto reject dhl option
-if(!defined('AUTO_REJECT_DHL')) define('AUTO_REJECT_DHL', true);
+if(!defined('AUTO_REJECT_DHL')) define('AUTO_REJECT_DHL', false);
 
 //blast id
 if(!defined('OP_BLAST_ID')) define('OP_BLAST_ID', 16);
