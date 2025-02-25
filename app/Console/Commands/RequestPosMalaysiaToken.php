@@ -39,8 +39,8 @@ class RequestPosMalaysiaToken extends Command
             try {
                 $response = Http::asForm()
                     ->post($posmalaysia_tokens_url, [
-                        'client_id' => config('app.env') == 'production' ? '64dda61cfa1b1b000ed9fb30' : 'b3d254f7-4b9f-4dd7-b86c-bc5aa9eb898d',
-                        'client_secret' => config('app.env') == 'production' ? 'cpy70tObJYUXa+67Wtw4+nQ44JCcCKkowXN5RV/sIgE=' : '2ef405f9-55eb-4c01-ae02-b72d1ffab343',
+                        'client_id' => config('app.env') == 'production' ? 'cea0dd40-67d0-4a70-a1a8-9ede1a42085a' : 'b3d254f7-4b9f-4dd7-b86c-bc5aa9eb898d',
+                        'client_secret' => config('app.env') == 'production' ? 'cfc648c9-50a6-4780-acae-63550c5bc597' : '2ef405f9-55eb-4c01-ae02-b72d1ffab343',
                         'grant_type' => 'client_credentials',
                         // 'scope' => 'as2corporate.v2trackntracewebapijson.all as2corporate.tracking-event-list.all as2corporate.tracking-office-list.all as2corporate.tracking-reason-list.all as2poslaju.poslaju-poscode-coverage.all as01.gen-connote.all as01.generate-pl9-with-connote.all as2corporate.preacceptancessingle.all',
                     ]);
