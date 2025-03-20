@@ -409,7 +409,7 @@ class PosMalaysiaController extends ShippingController
                     'postCode' => config('settings.genpreacceptedsingle_post_code'),
                     'ItemType' => config('settings.genpreacceptedsingle_item_type'),
                     'totalQuantityToPickup' => count($data),
-                    'totalWeight' => get_order_weight($order, $cn)/1000, // KG
+                    'totalWeight' => get_order_weight($order)/1000, // KG
                     'ConsignmentNoteNumber' => $connote_array[$key], // parent connote, first child
                     'PaymentType' => $order->purchase_type == PURCHASE_TYPE_COD ? 0 : 2,
                     'Amount' => $order->total_price/100,
