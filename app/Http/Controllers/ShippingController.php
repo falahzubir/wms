@@ -956,11 +956,20 @@ class ShippingController extends Controller
             'attempt_time' => 'required|date',
         ]);
 
-        $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
+        $shipping = Shipping::with(['order.customer'])->where('tracking_number', $request->tracking_id)->first();
 
         if ($shipping) {
             if (set_shipping_events($shipping->id, $request->attempt_status, $request->description, $request->attempt_time)) {
                 if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "Attempt Order List")) {
+
+                    // Prepare Out For Delivery Data to Qiscus
+                    $messageData = [
+                        'customer_name' => $shipping->order->customer->name,
+                        'customer_tel' => $shipping->order->customer->phone,
+                    ];
+
+                    $this->qiscusService->send_ofd_data_to_qiscus($messageData);
+
                     return response()->json(['success' => 'ok']);
                 } else {
                     return response()->json(['error' => 'Failed to update order status'], 500);
@@ -988,13 +997,13 @@ class ShippingController extends Controller
 
         if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
 
-            // Send Received Data to Qiscus
+            // Prepare Received Data to Qiscus
             $messageData = [
                 'customer_name' => $shipping->order->customer->name,
                 'customer_tel' => $shipping->order->customer->phone,
             ];
 
-            $this->qiscusService->send_received_data_to_qiscus($messageData);
+            $this->qiscusService->sendDeliveredMessage($messageData);
 
             return response()->json(['success' => 'ok']);
         } else {

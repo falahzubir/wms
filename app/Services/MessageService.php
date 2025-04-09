@@ -6,113 +6,92 @@ use Illuminate\Support\Facades\Http;
 
 class MessageService
 {
-    public function send_tracking_data_to_qiscus($data)
+    protected $appId;
+    protected $secretKey;
+    protected $baseUrl;
+
+    public function __construct()
     {
-        $post_data = [
-            "to" => $data['customer_tel'],
+        $this->appId = "jgmur-mcekka3f4629efg";
+        $this->secretKey = "cfc1664d9133e55fc8c47a01a93af9a1";
+        $this->baseUrl = "https://omnichannel.qiscus.com/whatsapp/v1";
+    }
+
+    protected function sendToQiscus($to, $templateName, $namespace, $parameters, $language = 'ms')
+    {
+        $url = "{$this->baseUrl}/{$this->appId}/6454/messages";
+
+        $request = [
+            "to" => $to,
             "type" => "template",
             "template" => [
-                "namespace" => "19a1824a_70c9_4025_be18_5c34a91a83",
-                "name" => "onboarding_tracking_2",
+                "namespace" => $namespace,
+                "name" => $templateName,
                 "language" => [
                     "policy" => "deterministic",
-                    "code" => "ms"
+                    "code" => $language,
                 ],
                 "components" => [
                     [
                         "type" => "body",
-                        "parameters" => [
-                            ["type" => "text", "text" => $data['customer_name']],
-                            ["type" => "text", "text" => $data['product']],
-                            ["type" => "text", "text" => $data['price']],
-                            ["type" => "text", "text" => $data['tracking_number']],
-                            ["type" => "text", "text" => "https://tracking.my/" . $data['courier_code'] . "/" . $data['tracking_number']],
-                        ]
+                        "parameters" => array_map(function ($param) {
+                            return [
+                                "type" => "text",
+                                "text" => $param
+                            ];
+                        }, $parameters)
                     ]
                 ]
             ]
         ];
 
-        $url = 'https://omnichannel.qiscus.com/whatsapp/v1/jgmur-mcekka3f4629efg/6454/messages';
-
-        $curl = curl_init();
-
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($post_data));
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, [
+        $headers = [
             'Content-Type: application/json',
-            'Qiscus-App-Id: jgmur-mcekka3f4629efg',
-            'Qiscus-Secret-Key: cfc1664d9133e55fc8c47a01a93af9a1'
-        ]);
-
-        $result = curl_exec($curl);
-
-        if (curl_errno($curl)) {
-            curl_close($curl);
-            return ['status' => 'error', 'message' => curl_error($curl)];
-        }
-
-        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
-
-        $response = json_decode($result, true);
-    }
-
-    public function send_received_data_to_qiscus($data)
-    {
-        $post_data = [
-            "to" => $data['customer_tel'],
-            "type" => "template",
-            "template" => [
-                "namespace" => "191824а_70c9_4025_be18_5cc34a91a83",
-                "name" => "order_receive_onboarding_1",
-                "language" => [
-                    "policy" => "deterministic",
-                    "code" => "ms"
-                ],
-                "components" => [
-                    [
-                        "type" => "body",
-                        "parameters" => [
-                            ["type" => "text", "text" => $data['customer_name'] ?? 'Customer']
-                        ]
-                    ]
-                ]
-            ]
+            'Qiscus-App-Id: ' . $this->appId,
+            'Qiscus-Secret-Key: ' . $this->secretKey,
         ];
 
-        $url = 'https://omnichannel.qiscus.com/whatsapp/v1/jgmur-mcekka3f4629efg/6454/messages';
-
         $curl = curl_init();
-
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($post_data));
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Qiscus-App-Id: jgmur-mcekka3f4629efg',
-            'Qiscus-Secret-Key: cfc1664d9133e55fc8c47a01a93af9a1'
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POSTFIELDS => json_encode($request),
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_TIMEOUT => 30,
         ]);
 
         $result = curl_exec($curl);
-
-        if (curl_errno($curl)) {
-            curl_close($curl);
-            return ['status' => 'error', 'message' => curl_error($curl)];
-        }
-
-        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
 
-        $response = json_decode($result, true);
+        return json_decode($result, true);
     }
+
+    public function sendTrackingMessage($data)
+    {
+        $tracking_url = "https://tracking.my/" . $data['courier_code'] . "/" . $data['tracking_number'];
+
+        $parameters = [
+            $data['customer_name'],
+            $data['product'],
+            $data['price'],
+            $data['tracking_number'],
+            $tracking_url,
+        ];
+
+        return $this->sendToQiscus($data['customer_tel'], 'onboarding_tracking_2', '19a1824a_70c9_4025_be18_5c34a91a83', $parameters);
+    }
+
+    public function sendDeliveredMessage($data)
+    {
+        $parameters = [
+            $data['customer_name']
+        ];
+
+        return $this->sendToQiscus($data['customer_tel'], 'order_receive_onboarding_1', '191824а_70c9_4025_be18_5cc34a91a83', $parameters);
+    }
+    
 }

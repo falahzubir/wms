@@ -130,7 +130,7 @@ class ShippingApiController extends ShippingController
                 'courier_code' => $order->courier->code,
             ];
 
-            $this->qiscusService->send_tracking_data_to_qiscus($messageData);
+            $this->qiscusService->sendTrackingMessage($messageData);
 
             $count[$order->company_id]++;
         }
