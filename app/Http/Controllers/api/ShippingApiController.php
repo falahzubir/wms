@@ -15,11 +15,11 @@ use Illuminate\Support\Facades\Log;
 
 class ShippingApiController extends ShippingController
 {
-    protected $messageService;
+    protected $qiscusService;
 
-    public function __construct(MessageService $messageService)
+    public function __construct(MessageService $qiscusService)
     {
-        $this->messageService = $messageService;
+        $this->qiscusService = $qiscusService;
     }
     
     /**
@@ -130,7 +130,7 @@ class ShippingApiController extends ShippingController
                 'courier_code' => $order->courier->code,
             ];
 
-            $this->messageService->send_tracking_data_to_qiscus($messageData);
+            $this->qiscusService->send_tracking_data_to_qiscus($messageData);
 
             $count[$order->company_id]++;
         }
