@@ -963,14 +963,17 @@ class ShippingController extends Controller
                 if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "Attempt Order List")) {
 
                     // Prepare Out For Delivery Data to Qiscus
-                    $messageData = [
-                        'customer_name' => $shipping->order->customer->name,
-                        'customer_tel' => $shipping->order->customer->phone,
-                    ];
+                    if (in_array($request->attempt_status, ['77090', 'EM013'])) {
+                        $messageData = [
+                            'customer_name' => $shipping->order->customer->name,
+                            'customer_tel' => $shipping->order->customer->phone,
+                        ];
 
-                    $this->qiscusService->send_ofd_data_to_qiscus($messageData);
+                        $this->qiscusService->sendOutForDeliveryMessage($messageData);
+                    }
 
                     return response()->json(['success' => 'ok']);
+
                 } else {
                     return response()->json(['error' => 'Failed to update order status'], 500);
                 }

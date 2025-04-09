@@ -17,6 +17,10 @@ class MessageService
         $this->baseUrl = "https://omnichannel.qiscus.com/whatsapp/v1";
     }
 
+    /**
+     * API Template For Qiscus 
+     * Just provide the parameters that needs
+     */
     protected function sendToQiscus($to, $templateName, $namespace, $parameters, $language = 'ms')
     {
         $url = "{$this->baseUrl}/{$this->appId}/6454/messages";
@@ -70,6 +74,9 @@ class MessageService
         return json_decode($result, true);
     }
 
+    /**
+     * For sending tracking number message 
+     */
     public function sendTrackingMessage($data)
     {
         $tracking_url = "https://tracking.my/" . $data['courier_code'] . "/" . $data['tracking_number'];
@@ -85,6 +92,21 @@ class MessageService
         return $this->sendToQiscus($data['customer_tel'], 'onboarding_tracking_2', '19a1824a_70c9_4025_be18_5c34a91a83', $parameters);
     }
 
+    /**
+     * For sending out for delivery message 
+     */
+    public function sendOutForDeliveryMessage($data)
+    {
+        $parameters = [
+            $data['customer_name']
+        ];
+
+        return $this->sendToQiscus($data['customer_tel'], 'template_name', 'namespace', $parameters);
+    }
+
+    /**
+     * For sending delivered message 
+     */
     public function sendDeliveredMessage($data)
     {
         $parameters = [
@@ -93,5 +115,5 @@ class MessageService
 
         return $this->sendToQiscus($data['customer_tel'], 'order_receive_onboarding_1', '191824а_70c9_4025_be18_5cc34a91a83', $parameters);
     }
-    
+
 }
