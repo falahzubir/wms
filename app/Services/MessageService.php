@@ -101,7 +101,7 @@ class MessageService
             $data['customer_name']
         ];
 
-        return $this->sendToQiscus($data['customer_tel'], 'template_name', 'namespace', $parameters);
+        return $this->sendToQiscus($data['customer_tel'], 'onboarding_parcel_ofd_1', '191824a_70c9_4025_be18_5cc34aa91a83', $parameters);
     }
 
     /**
