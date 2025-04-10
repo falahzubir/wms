@@ -963,7 +963,7 @@ class ShippingController extends Controller
                 if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "Attempt Order List")) {
 
                     // Prepare Out For Delivery Data to Qiscus
-                    if (in_array($request->attempt_status, ['77090', 'EM013'])) {
+                    if (in_array($request->attempt_status, ['77090', 'EM013', 'EM080'])) {
                         $messageData = [
                             'customer_name' => $shipping->order->customer->name,
                             'customer_tel' => $shipping->order->customer->phone,
