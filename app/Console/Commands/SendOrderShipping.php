@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\api\ShippingApiController;
+use App\Services\MessageService;
 use Illuminate\Console\Command;
 
 class SendOrderShipping extends Command
@@ -28,7 +29,8 @@ class SendOrderShipping extends Command
      */
     public function handle()
     {
-        $shipping = new ShippingApiController;
+        $qiscusService = new MessageService();
+        $shipping = new ShippingApiController($qiscusService);
         $shipping->send_shipping_info();
         return Command::SUCCESS;
     }
