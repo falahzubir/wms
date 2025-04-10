@@ -21,7 +21,7 @@ class ShippingApiController extends ShippingController
     {
         $this->qiscusService = $qiscusService;
     }
-    
+
     /**
      * DHL access token request, response and save to database, CRON job to run every 20 hours
      * @return void
@@ -114,6 +114,11 @@ class ShippingApiController extends ShippingController
             $data[$order->company_id]['trackings'][$count[$order->company_id]]['courier_id'] = $order->courier_id;
             $data[$order->company_id]['trackings'][$count[$order->company_id]]['shipping_date'] = $order->shippings->first()->created_at->format('Y-m-d');
 
+            // only message order other that tiktok and shopee
+            if ($order->payment_type == PAYMENT_TYPE_SHOPEE || $order->payment_type == PAYMENT_TYPE_TIKTOK) {
+                $count[$order->company_id]++;
+                continue;
+            }
             // Prepare data for Qiscus
             $productNames = $order->items->map(function ($item) {
                 return $item->product->name ?? ''; // just in case product is null
