@@ -34,6 +34,7 @@ use Illuminate\Support\Facades\Storage;
 use Karriere\PdfMerge\PdfMerge as PDFMerger;
 use Maatwebsite\Excel\Facades\Excel;
 use Monolog\Logger as MonologLogger;
+use App\Services\MessageService;
 
 class ShippingController extends Controller
 {
@@ -46,11 +47,12 @@ class ShippingController extends Controller
     protected $posmalaysia_generate_connote;
     protected $posmalaysia_generate_pl9;
     protected $posmalaysia_download_connote;
+    protected $qiscusService;
 
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct(MessageService $qiscusService)
     {
         $dhl_access_live = 'https://api.dhlecommerce.dhl.com/rest/v1/OAuth/AccessToken';
         $dhl_label_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label';
@@ -79,6 +81,8 @@ class ShippingController extends Controller
         $this->posmalaysia_generate_connote = config('app.env') == 'production' ? $posmalaysia_generate_connote_live : $posmalaysia_generate_connote_test;
         $this->posmalaysia_generate_pl9 = config('app.env') == 'production' ? $posmalaysia_generate_pl9_live : $posmalaysia_generate_pl9_test;
         $this->posmalaysia_download_connote = config('app.env') == 'production' ? $posmalaysia_download_connote_live : $posmalaysia_download_connote_test;
+
+        $this->qiscusService = $qiscusService;
     }
 
     /**
@@ -952,12 +956,24 @@ class ShippingController extends Controller
             'attempt_time' => 'required|date',
         ]);
 
-        $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
+        $shipping = Shipping::with(['order.customer'])->where('tracking_number', $request->tracking_id)->first();
 
         if ($shipping) {
             if (set_shipping_events($shipping->id, $request->attempt_status, $request->description, $request->attempt_time)) {
                 if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "Attempt Order List")) {
+
+                    // Prepare Out For Delivery Data to Qiscus
+                    if (in_array($request->attempt_status, ['77090', 'EM013', 'EM080'])) {
+                        $messageData = [
+                            'customer_name' => $shipping->order->customer->name,
+                            'customer_tel' => $shipping->order->customer->phone,
+                        ];
+
+                        $this->qiscusService->sendOutForDeliveryMessage($messageData);
+                    }
+
                     return response()->json(['success' => 'ok']);
+
                 } else {
                     return response()->json(['error' => 'Failed to update order status'], 500);
                 }
@@ -980,9 +996,18 @@ class ShippingController extends Controller
             'tracking_id' => 'required|exists:shippings,tracking_number',
         ]);
 
-        $shipping = Shipping::with(['order'])->where('tracking_number', $request->tracking_id)->first();
+        $shipping = Shipping::with(['order.customer'])->where('tracking_number', $request->tracking_id)->first();
 
         if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
+
+            // Prepare Received Data to Qiscus
+            $messageData = [
+                'customer_name' => $shipping->order->customer->name,
+                'customer_tel' => $shipping->order->customer->phone,
+            ];
+
+            $this->qiscusService->sendDeliveredMessage($messageData);
+
             return response()->json(['success' => 'ok']);
         } else {
             return response()->json(['error' => 'Failed to update order status'], 500);

@@ -7,6 +7,7 @@ use App\Models\AccessToken;
 use App\Models\Company;
 use App\Models\Order;
 use App\Models\Shipping;
+use App\Services\MessageService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -14,6 +15,13 @@ use Illuminate\Support\Facades\Log;
 
 class ShippingApiController extends ShippingController
 {
+    protected $qiscusService;
+
+    public function __construct(MessageService $qiscusService)
+    {
+        $this->qiscusService = $qiscusService;
+    }
+
     /**
      * DHL access token request, response and save to database, CRON job to run every 20 hours
      * @return void
@@ -82,7 +90,7 @@ class ShippingApiController extends ShippingController
      */
     public function send_shipping_info()
     {
-        $orders = Order::with(['shippings', 'company'])
+        $orders = Order::with(['shippings', 'company', 'customer', 'courier', 'items'])
             ->withWhereHas('shippings', function ($query) {
                 $query->where('status', 1)->whereNotNull('tracking_number')->where('is_send', 0);
             });
@@ -105,6 +113,29 @@ class ShippingApiController extends ShippingController
             $data[$order->company_id]['trackings'][$count[$order->company_id]]['tracking_number'] = $order->shippings->first()->tracking_number;
             $data[$order->company_id]['trackings'][$count[$order->company_id]]['courier_id'] = $order->courier_id;
             $data[$order->company_id]['trackings'][$count[$order->company_id]]['shipping_date'] = $order->shippings->first()->created_at->format('Y-m-d');
+
+            // only message order other that tiktok and shopee
+            if ($order->payment_type == PAYMENT_TYPE_SHOPEE || $order->payment_type == PAYMENT_TYPE_TIKTOK) {
+                $count[$order->company_id]++;
+                continue;
+            }
+            // Prepare data for Qiscus
+            $productNames = $order->items->map(function ($item) {
+                return $item->product->name ?? ''; // just in case product is null
+            })->filter()->toArray();
+
+            $productText = implode(', ', $productNames);
+
+            $messageData = [
+                'customer_name' => $order->customer->name,
+                'customer_tel' => $order->customer->phone,
+                'product' => $productText,
+                'price' => 'RM' . $order->total_price / 100,
+                'tracking_number' => $order->shippings->first()->tracking_number,
+                'courier_code' => $order->courier->code,
+            ];
+
+            $this->qiscusService->sendTrackingMessage($messageData);
 
             $count[$order->company_id]++;
         }
