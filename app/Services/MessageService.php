@@ -89,7 +89,7 @@ class MessageService
             $tracking_url,
         ];
 
-        return $this->sendToQiscus($data['customer_tel'], 'onboarding_tracking_2', '19a1824a_70c9_4025_be18_5c34a91a83', $parameters);
+        return $this->sendToQiscus($data['customer_tel'], 'onboarding_trackingnumber_2', '19a1824a_70c9_4025_be18_5cc34aa91a83', $parameters);
     }
 
     /**
@@ -101,7 +101,7 @@ class MessageService
             $data['customer_name']
         ];
 
-        return $this->sendToQiscus($data['customer_tel'], 'onboarding_parcel_ofd_1', '191824a_70c9_4025_be18_5cc34aa91a83', $parameters);
+        return $this->sendToQiscus($data['customer_tel'], 'onboarding_parcelofd_2', '19a1824a_70c9_4025_be18_5cc34aa91a83', $parameters);
     }
 
     /**
@@ -113,7 +113,7 @@ class MessageService
             $data['customer_name']
         ];
 
-        return $this->sendToQiscus($data['customer_tel'], 'order_receive_onboarding_1', '191824а_70c9_4025_be18_5cc34a91a83', $parameters);
+        return $this->sendToQiscus($data['customer_tel'], 'onboarding_orderreceived_2', '19a1824a_70c9_4025_be18_5cc34aa91a83', $parameters);
     }
 
 }
