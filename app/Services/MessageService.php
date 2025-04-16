@@ -71,6 +71,12 @@ class MessageService
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
 
+        // Log response and HTTP code
+        Log::info('Qiscus CURL Response - ', [
+            'http_code' => $httpCode,
+            'response' => $result,
+        ]);
+
         return json_decode($result, true);
     }
 
