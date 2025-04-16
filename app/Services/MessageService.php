@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class MessageService
 {
@@ -70,6 +71,12 @@ class MessageService
         $result = curl_exec($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
+
+        // Log response and HTTP code
+        Log::info('Qiscus CURL Response - ', [
+            'http_code' => $httpCode,
+            'response' => $result,
+        ]);
 
         return json_decode($result, true);
     }
