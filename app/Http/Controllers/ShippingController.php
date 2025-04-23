@@ -1001,12 +1001,14 @@ class ShippingController extends Controller
         if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
 
             // Prepare Received Data to Qiscus
-            $messageData = [
-                'customer_name' => $shipping->order->customer->name,
-                'customer_tel' => $shipping->order->customer->phone,
-            ];
+            if (!in_array($shipping->order->payment_type, [PAYMENT_TYPE_SHOPEE, PAYMENT_TYPE_TIKTOK])) {
+                $messageData = [
+                    'customer_name' => $shipping->order->customer->name,
+                    'customer_tel' => $shipping->order->customer->phone,
+                ];
 
-            $this->qiscusService->sendDeliveredMessage($messageData);
+                $this->qiscusService->sendDeliveredMessage($messageData);
+            }
 
             return response()->json(['success' => 'ok']);
         } else {
