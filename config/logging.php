@@ -117,6 +117,12 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        'qiscus' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/qiscus.log'),
+            'level' => 'info',
+        ],
     ],
 
 ];

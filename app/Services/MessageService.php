@@ -73,7 +73,7 @@ class MessageService
         curl_close($curl);
 
         // Log response and HTTP code
-        Log::info('Qiscus CURL Response - ', [
+        Log::channel('qiscus')->info('Qiscus CURL Response - ', [
             'http_code' => $httpCode,
             'response' => $result,
         ]);
