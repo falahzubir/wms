@@ -52,7 +52,7 @@ class ShippingController extends Controller
     /**
      * Constructor
      */
-    public function __construct(MessageService $qiscusService)
+    public function __construct()
     {
         $dhl_access_live = 'https://api.dhlecommerce.dhl.com/rest/v1/OAuth/AccessToken';
         $dhl_label_url_live = 'https://api.dhlecommerce.dhl.com/rest/v2/Label';
@@ -82,7 +82,7 @@ class ShippingController extends Controller
         $this->posmalaysia_generate_pl9 = config('app.env') == 'production' ? $posmalaysia_generate_pl9_live : $posmalaysia_generate_pl9_test;
         $this->posmalaysia_download_connote = config('app.env') == 'production' ? $posmalaysia_download_connote_live : $posmalaysia_download_connote_test;
 
-        $this->qiscusService = $qiscusService;
+        $this->qiscusService = new MessageService();
     }
 
     /**
@@ -1707,7 +1707,7 @@ class ShippingController extends Controller
                 'id' => $value->id,
                 'company_id' => $value->company_id,
             ];
-        
+
             $company_id = $order[$key]['company_id'];
 
             if (isset($value->shippings) && !count($value->shippings) > 0 || empty($value->shippings[0]->tracking_number)) {
@@ -1769,7 +1769,7 @@ class ShippingController extends Controller
         ], 200);
     }
 
-    public function arrange_shipment(Request $request) 
+    public function arrange_shipment(Request $request)
     {
         $responseSuccess = [];
         $responseProcessing = [];
@@ -2322,7 +2322,7 @@ class ShippingController extends Controller
         $sgd_amount = (int)$sgd_amount;
 
         // Prepare items
-        $items = $order->items->isEmpty() 
+        $items = $order->items->isEmpty()
             ? [[
                 "item_description" => $itemDescription,
                 "native_item_description" => "N/A",
@@ -2703,7 +2703,7 @@ class ShippingController extends Controller
 
                         // Create order in NinjaVan
                         $orderCreated = $this->ninjaVanMYSingleCNOrder($order, $shipping, $accessToken);
-                        
+
                         if ($orderCreated === true) {
                             $success['order_ids'][] = $order->id;
                             $success['attachment'][] = $shipping->attachment;
@@ -2781,7 +2781,7 @@ class ShippingController extends Controller
         })->implode(", ");
 
         // Prepare items
-        $items = $order->items->isEmpty() 
+        $items = $order->items->isEmpty()
         ? [[
             "item_description" => "N/A",
             "native_item_description" => "N/A",
@@ -2905,7 +2905,7 @@ class ShippingController extends Controller
         })->implode(", ");
 
         // Prepare items
-        $items = $order->items->isEmpty() 
+        $items = $order->items->isEmpty()
         ? [[
             "item_description" => "N/A",
             "native_item_description" => "N/A",
@@ -3009,7 +3009,7 @@ class ShippingController extends Controller
         }
 
         return 'Unknown error occurred while creating parcel.';
-       
+
     }
 
     private function requestNinjaVanMYWaybill($shipping, $order, $accessToken, &$errors, &$success, $parcelNumber = null)
