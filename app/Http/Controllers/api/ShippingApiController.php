@@ -17,9 +17,9 @@ class ShippingApiController extends ShippingController
 {
     protected $qiscusService;
 
-    public function __construct(MessageService $qiscusService)
+    public function __construct()
     {
-        $this->qiscusService = $qiscusService;
+        $this->qiscusService = new MessageService();
     }
 
     /**
