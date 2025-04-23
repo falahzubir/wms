@@ -119,23 +119,26 @@ class ShippingApiController extends ShippingController
                 $count[$order->company_id]++;
                 continue;
             }
-            // Prepare data for Qiscus
-            $productNames = $order->items->map(function ($item) {
-                return $item->product->name ?? ''; // just in case product is null
-            })->filter()->toArray();
 
-            $productText = implode(', ', $productNames);
+            // Proceed if the payment type is not Shopee and TikTok.
+            if ($order->payment_type != PAYMENT_TYPE_SHOPEE && $order->payment_type != PAYMENT_TYPE_TIKTOK) {
+                $productNames = $order->items->map(function ($item) {
+                    return $item->product->name ?? ''; // just in case product is null
+                })->filter()->toArray();
 
-            $messageData = [
-                'customer_name' => $order->customer->name,
-                'customer_tel' => $order->customer->phone,
-                'product' => $productText,
-                'price' => 'RM' . $order->total_price / 100,
-                'tracking_number' => $order->shippings->first()->tracking_number,
-                'courier_code' => $order->courier->code,
-            ];
+                $productText = implode(', ', $productNames);
 
-            $this->qiscusService->sendTrackingMessage($messageData);
+                $messageData = [
+                    'customer_name' => $order->customer->name,
+                    'customer_tel' => $order->customer->phone,
+                    'product' => $productText,
+                    'price' => 'RM' . $order->total_price / 100,
+                    'tracking_number' => $order->shippings->first()->tracking_number,
+                    'courier_code' => $order->courier->code,
+                ];
+
+                $this->qiscusService->sendTrackingMessage($messageData);
+            }
 
             $count[$order->company_id]++;
         }
