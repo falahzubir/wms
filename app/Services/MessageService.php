@@ -75,7 +75,7 @@ class MessageService
 
         // Save to third party request table
         ThirdPartyRequest::create([
-            'parameters'   => isset($request) ? json_encode($request) : null,
+            'parameters'   => json_encode($request),
             'response'     => $result,
             'status_code'  => $httpCode,
             'url'          => $url,
