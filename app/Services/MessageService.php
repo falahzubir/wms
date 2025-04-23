@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ThirdPartyRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -72,10 +73,14 @@ class MessageService
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
 
-        // Log response and HTTP code
-        Log::channel('qiscus')->info('Qiscus CURL Response - ', [
-            'http_code' => $httpCode,
-            'response' => $result,
+        // Save to third party request table
+        ThirdPartyRequest::create([
+            'parameters'   => isset($request) ? json_encode($request) : null,
+            'response'     => $result,
+            'status_code'  => $httpCode,
+            'url'          => $url,
+            'method'       => 'POST',
+            'requested_at' => now(),
         ]);
 
         return json_decode($result, true);
