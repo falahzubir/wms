@@ -29,8 +29,7 @@ class SendOrderShipping extends Command
      */
     public function handle()
     {
-        $qiscusService = new MessageService();
-        $shipping = new ShippingApiController($qiscusService);
+        $shipping = new ShippingApiController();
         $shipping->send_shipping_info();
         return Command::SUCCESS;
     }
