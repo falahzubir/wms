@@ -2361,7 +2361,7 @@ class ShippingController extends Controller
                 "gst_registration_number" => ""
             ],
             "service_level" => "Standard",
-            "requested_tracking_number" => "NV" . $order->sales_id,
+            // "requested_tracking_number" => "NV" . $order->sales_id, // remove this line to let NinjaVan generate the tracking number
             "reference" => [
                 "merchant_order_number" => $order->sales_id
             ],
