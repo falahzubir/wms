@@ -963,7 +963,7 @@ class ShippingController extends Controller
                 if (set_order_status($shipping->order, ORDER_STATUS_SHIPPING, "Attempt Order List")) {
 
                     // Prepare Out For Delivery Data to Qiscus
-                    if (in_array($request->attempt_status, ['77090', 'EM013', 'EM080']) && !in_array($shipping->order->payment_type, [PAYMENT_TYPE_SHOPEE, PAYMENT_TYPE_TIKTOK])) {
+                    if (in_array($request->attempt_status, ['77090', 'EM013']) && !in_array($shipping->order->payment_type, [PAYMENT_TYPE_SHOPEE, PAYMENT_TYPE_TIKTOK])) {
                         $messageData = [
                             'customer_name' => $shipping->order->customer->name,
                             'customer_tel' => $shipping->order->customer->phone,
@@ -1001,7 +1001,7 @@ class ShippingController extends Controller
         if (set_order_status($shipping->order, ORDER_STATUS_DELIVERED)) {
 
             // Prepare Received Data to Qiscus
-            if (!in_array($shipping->order->payment_type, [PAYMENT_TYPE_SHOPEE, PAYMENT_TYPE_TIKTOK])) {
+            if (in_array($request->attempt_status, ['77093', 'EM053']) && !in_array($shipping->order->payment_type, [PAYMENT_TYPE_SHOPEE, PAYMENT_TYPE_TIKTOK])) {
                 $messageData = [
                     'customer_name' => $shipping->order->customer->name,
                     'customer_tel' => $shipping->order->customer->phone,
