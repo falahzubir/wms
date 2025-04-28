@@ -15,13 +15,6 @@ use Illuminate\Support\Facades\Log;
 
 class ShippingApiController extends ShippingController
 {
-    protected $qiscusService;
-
-    public function __construct()
-    {
-        $this->qiscusService = new MessageService();
-    }
-
     /**
      * DHL access token request, response and save to database, CRON job to run every 20 hours
      * @return void
@@ -30,7 +23,7 @@ class ShippingApiController extends ShippingController
     {
         $url = $this->dhl_access;
 
-        $dhl_tokens = AccessToken::where('type', 'dhl');
+        $dhl_tokens = AccessToken::where('type', 'dhl')->where('client_id', '!=', null)->where('client_secret', '!=', null);
         if($company_id){
             $dhl_tokens = $dhl_tokens->where('company_id', $company_id);
         }
