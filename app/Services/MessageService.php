@@ -146,7 +146,7 @@ class MessageService
     public function sendDeliveredMessage($data)
     {
         $parameters = [
-            $data['customer_name']
+            $data['customer_name'] 
         ];
 
         if (app()->environment(['local', 'development'])) {
