@@ -133,11 +133,11 @@ class MessageService
             $data['customer_name']
         ];
 
-        // Sandbox
-        // Template : out_for_devlivery
-        // Namespace : 6616bb93_d895_41e7_8bbe_2c528219e56e
-        
-        return $this->sendToQiscus($data['customer_tel'], 'onboarding_parcelofd_2', '19a1824a_70c9_4025_be18_5cc34aa91a83', $parameters);
+        if (app()->environment(['local', 'development'])) {
+            return $this->sendToQiscus($data['customer_tel'], 'out_for_devlivery', '6616bb93_d895_41e7_8bbe_2c528219e56e', $parameters); // Sandbox
+        } else {
+            return $this->sendToQiscus($data['customer_tel'], 'onboarding_parcelofd_2', '19a1824a_70c9_4025_be18_5cc34aa91a83', $parameters); // Live
+        }
     }
 
     /**
@@ -149,11 +149,11 @@ class MessageService
             $data['customer_name']
         ];
 
-        // Sandbox
-        // Template : out_for_devlivery
-        // Namespace : 6616bb93_d895_41e7_8bbe_2c528219e56e
-
-        return $this->sendToQiscus($data['customer_tel'], 'onboarding_orderreceived_2', '19a1824a_70c9_4025_be18_5cc34aa91a83', $parameters);
+        if (app()->environment(['local', 'development'])) {
+            return $this->sendToQiscus($data['customer_tel'], 'out_for_devlivery', '6616bb93_d895_41e7_8bbe_2c528219e56e', $parameters); // Sandbox
+        } else {
+            return $this->sendToQiscus($data['customer_tel'], 'onboarding_orderreceived_2', '19a1824a_70c9_4025_be18_5cc34aa91a83', $parameters); // Live
+        }
     }
 
 }
