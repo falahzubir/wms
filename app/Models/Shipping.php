@@ -9,6 +9,9 @@ class Shipping extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    protected $casts = [
+        'sent_message_log' => 'array',
+    ];
 
     public function order()
     {
