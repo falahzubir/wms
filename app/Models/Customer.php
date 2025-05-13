@@ -14,7 +14,7 @@ class Customer extends Model
 
     public function orders()
     {
-        return $this->hasOne(Order::class);
+        return $this->hasMany(Order::class)->where('is_active', IS_ACTIVE);
     }
 
     protected function address(): Attribute
