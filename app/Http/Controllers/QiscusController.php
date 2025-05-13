@@ -2,33 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customer;
+use App\Models\Order;
+use App\Models\Shipping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class QiscusController extends Controller
 {
-    public function getParcelStatus($number)
+    public function getParcelStatus($trackingNumber)
     {
-        $customer = Customer::where('phone', $number)->first();
+        $shipping = Shipping::where('tracking_number', $trackingNumber)->first();
 
-        if (!$customer) {
-            return response()->json(['message' => 'Customer not found'], 404);
+        if (!$shipping) {
+            return response()->json(['message' => 'No shipping found for this tracking number'], 404);
         }
 
-        $latestOrder = $customer->orders()->latest()->first();
+        $latestOrder = Order::where('id', $shipping->order_id)->first();
 
         if (!$latestOrder) {
-            return response()->json(['message' => 'No orders found for this customer'], 404);
+            return response()->json(['message' => 'No orders found for this tracking number'], 404);
         }
-
-        $latestShipping = $latestOrder->shippings()->latest()->first();
-
-        if (!$latestShipping) {
-            return response()->json(['message' => 'No shipping found for the latest order'], 404);
-        }
-
-        $trackingNumber = trim($latestShipping->tracking_number);
 
         // Send a GET request to the external API
         $response = Http::get("https://phantom.groobok.com/api/tracking/{$trackingNumber}");

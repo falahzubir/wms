@@ -194,4 +194,4 @@ Route::prefix('weight-category')->group(function() {
     Route::get('download-sample-csv', [ShippingCostController::class, 'download_sample_csv'])->middleware('can:weight_category.create');
 });
 
-Route::get('parcel-status/phone/{number}', [QiscusController::class, 'getParcelStatus']);
+Route::get('parcel-status/{trackingNumber}', [QiscusController::class, 'getParcelStatus']);
