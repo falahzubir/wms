@@ -113,8 +113,12 @@ class ShippingApiController extends ShippingController
                 continue;
             }
 
+            // Check if message tracking have been send
+            $shipping = $order->shippings->first();
+            $eventsSent = optional($shipping)->sent_message_log ?? [];
+
             // Proceed if the payment type is not Shopee and TikTok.
-            if ($order->payment_type != PAYMENT_TYPE_SHOPEE && $order->payment_type != PAYMENT_TYPE_TIKTOK) {
+            if (empty($eventsSent['tracking_number']) && $order->payment_type != PAYMENT_TYPE_SHOPEE && $order->payment_type != PAYMENT_TYPE_TIKTOK) {
                 $productNames = $order->items->map(function ($item) {
                     return $item->product->name ?? ''; // just in case product is null
                 })->filter()->toArray();

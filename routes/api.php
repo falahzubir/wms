@@ -1,27 +1,29 @@
 <?php
 
-use Maatwebsite\Excel\Row;
-use Illuminate\Http\Request;
-use Illuminate\Auth\Events\Login;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TestController;
-use App\Http\Controllers\ClaimController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\BucketController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\CourierController;
-use App\Http\Controllers\ShippingController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\api\WebhookController;
 use App\Http\Controllers\api\OrderApiController;
 use App\Http\Controllers\api\ShippingApiController;
-use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
-use App\Http\Controllers\ThirdParty\PosMalaysiaController;
+use App\Http\Controllers\api\WebhookController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BucketController;
+use App\Http\Controllers\ClaimController;
+use App\Http\Controllers\CourierController;
 use App\Http\Controllers\CourierServiceLevelAgreementController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FixcodeController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\QiscusController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\ShippingCostController;
+use App\Http\Controllers\TestController;
+use App\Http\Controllers\ThirdParty\PosMalaysiaController;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Row;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -191,3 +193,5 @@ Route::prefix('weight-category')->group(function() {
     Route::post('upload-bulk', [ShippingCostController::class,'upload_bulk'])->middleware(('can:weight_category.create'));
     Route::get('download-sample-csv', [ShippingCostController::class, 'download_sample_csv'])->middleware('can:weight_category.create');
 });
+
+Route::get('parcel-status/{trackingNumber}', [QiscusController::class, 'getParcelStatus']);
