@@ -25,7 +25,7 @@ This is a Warehouse Management System (WMS) built with Laravel. It is designed t
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/wms.git
+git clone https://github.com/falahzubir/wms.git
 
 # Enter project folder
 cd wms
